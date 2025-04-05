@@ -1,0 +1,129 @@
+[
+    {
+        "id": "684b9066e98b9722",
+        "type": "tab",
+        "label": "Disabled node",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "7858c408d5bd9924",
+        "type": "inject",
+        "z": "684b9066e98b9722",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "topic",
+        "payload": "",
+        "payloadType": "date",
+        "x": 464,
+        "y": 484,
+        "wires": [
+            [
+                "db8bceace56b9372",
+                "5f1037b340fd4a2a"
+            ]
+        ]
+    },
+    {
+        "id": "db8bceace56b9372",
+        "type": "change",
+        "z": "684b9066e98b9722",
+        "d": true,
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 780,
+        "y": 628,
+        "wires": [
+            [
+                "6ffb42994558d036"
+            ]
+        ]
+    },
+    {
+        "id": "6ffb42994558d036",
+        "type": "debug",
+        "z": "684b9066e98b9722",
+        "name": "debug connected to disabled node",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1256,
+        "y": 456,
+        "wires": []
+    },
+    {
+        "id": "5f1037b340fd4a2a",
+        "type": "change",
+        "z": "684b9066e98b9722",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "hello world",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 780,
+        "y": 385,
+        "wires": [
+            [
+                "12d6fbd6df506ff4"
+            ]
+        ]
+    },
+    {
+        "id": "12d6fbd6df506ff4",
+        "type": "debug",
+        "z": "684b9066e98b9722",
+        "name": "enabled node debug",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1234,
+        "y": 385,
+        "wires": []
+    }
+]

@@ -6,6 +6,7 @@
 -export([create_pid_for_node/1]).
 -export([send_msg_to_connected_nodes/2]).
 -export([get_prop_value_from_map/2]).
+-export([send_msg_on/2]).
 
 %%
 %% This is an internal exports
@@ -61,9 +62,9 @@ node_noop(_F) ->
 send_msg_to_connected_nodes(NodeDef,Msg) ->
     case maps:find(wires,NodeDef) of
         {ok,[Val]} ->
-            sendMsg(Val,Msg);
+            send_msg_on(Val,Msg);
         {ok,Val} ->
-            sendMsg(Val,Msg)
+            send_msg_on(Val,Msg)
     end.
 
 %%
@@ -80,16 +81,16 @@ get_prop_value_from_map(Prop,Map) ->
 %%
 %% Helper for passing on messages once a node has completed with the message
 %%
-sendMsg([],_) ->
+send_msg_on([],_) ->
     ok;
 
-sendMsg([WireId|Wires],Msg) ->
+send_msg_on([WireId|Wires],Msg) ->
     NodeIdToPid = binary_to_atom(
                     list_to_binary(
                          lists:flatten(
                              io_lib:format("~s~s",["node_pid_",WireId])))),
     NodeIdToPid ! {incoming, Msg},
-    sendMsg(Wires,Msg).
+    send_msg_on(Wires,Msg).
 
 %%
 %% Lookup table for mapping node type to function. Also here we respect the

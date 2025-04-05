@@ -42,6 +42,9 @@ parse_props([Prop|RestProps],NodeDef,Msg) ->
             parse_props(RestProps,NodeDef, Msg)
     end.
 
+%%
+%% Listen for messages
+%%
 receive_loop(NodeDef) ->
     receive
         %%
@@ -56,9 +59,8 @@ receive_loop(NodeDef) ->
             end,
 
             io:format("INJECT: Msg being sent\n"),
-            Msg2 = parse_props(Props,NodeDef,Msg),
-            io:format("INJECT: Msg: ~p\n", [ Msg2 ]),
-            nodes:send_msg_to_connected_nodes(NodeDef,Msg2),
+            nodes:send_msg_to_connected_nodes(NodeDef,
+                                              parse_props(Props,NodeDef,Msg)),
 
             receive_loop(NodeDef);
 

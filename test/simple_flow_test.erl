@@ -13,8 +13,12 @@ first_test() ->
 
     Pids = nodes:create_pid_for_node(Ary),
 
-    io:format("sending message\n"),
+    io:format("sending message - 1st inject\n"),
     node_pid_f9504da94c59e69f ! { outgoing, #{} },
+
+
+    io:format("sending message - 2nd inject\n"),
+    node_pid_034562d7b8d76ac9 ! { outgoing, #{} },
 
     receive
         helo ->
