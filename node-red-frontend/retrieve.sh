@@ -48,13 +48,24 @@ for fle in vendor/jquery/css/base/jquery-ui.min.css \
            vendor/font-awesome/fonts/fontawesome-webfont.ttf \
            vendor/font-awesome/fonts/fontawesome-webfont.woff2 \
            vendor/font-awesome/fonts/fontawesome-webfont.woff \
-           red/images/node-red-icon-black.svg \
+           vendor/mermaid/mermaid.min.js \
+           vendor/purify.min.js.map \
            red/style.min.css \
            red/red.min.js \
            red/main.min.js \
-           red/images/node-red.svg \
            red/keymap.json \
+           red/tours/welcome.js \
+           red/images/deploy-full.svg \
+           red/images/deploy-full-o.svg \
+           red/images/deploy-flows.svg \
+           red/images/deploy-nodes.svg \
+           red/images/deploy-reload.svg \
+           red/images/grip.svg \
+           red/images/grip-horizontal.svg \
+           red/images/node-red.svg \
+           red/images/node-red-icon-black.svg \
            red/images/spin.svg \
+           red/images/subflow_tab.svg \
            settings/user \
            types/node-red/util.d.ts \
            types/node-red/func.d.ts \
@@ -63,15 +74,8 @@ for fle in vendor/jquery/css/base/jquery-ui.min.css \
            types/node/buffer.d.ts \
            types/node/timers.d.ts \
            types/node/util.d.ts \
-           red/images/deploy-full.svg \
-           red/images/deploy-full-o.svg \
-           red/images/deploy-flows.svg \
-           red/images/deploy-nodes.svg \
-           red/images/deploy-reload.svg \
-           red/images/grip.svg \
-           red/images/grip-horizontal.svg \
-           debug/view/debug-utils.js \
            theme \
+           debug/view/debug-utils.js \
           ; do
     mkdir -p $(dirname $fle)
     curl -s "${NODERED_URL}/${fle}?v=${CBSTMP}" > ${fle}
@@ -80,8 +84,8 @@ done
 ##
 ## these two should only be retrieved once since they will be altered
 ##
-curl -s "${NODERED_URL}/?_=${CBSTMP}" -H 'Accept: application/html' -o index.html
-curl -s "${NODERED_URL}/red/red.js?_=${CBSTMP}" -o red/red.js
+#curl -s "${NODERED_URL}/?_=${CBSTMP}" -H 'Accept: application/html' -o index.html
+#curl -s "${NODERED_URL}/red/red.js?_=${CBSTMP}" -o red/red.js
 
 LoCaLeS="en-US en-GB en de-DE de fr ja ko pt-BR ru zh-CN zh-TW"
 

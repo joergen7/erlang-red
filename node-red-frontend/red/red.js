@@ -114,7 +114,7 @@ var RED = (function() {
                 "Accept":"application/json"
             },
             cache: false,
-            url: 'plugins',
+            url: 'plugins/plugins.json',
             success: function(data) {
                 RED.plugins.setPluginList(data);
                 loader.reportProgress(RED._("event.loadPlugins"), 13)
@@ -136,7 +136,7 @@ var RED = (function() {
                 "Accept-Language": lang
             },
             cache: false,
-            url: 'plugins',
+            url: 'plugins/plugins.html',
             success: function(data) {
                 var configs = data.trim().split(/(?=<!-- --- \[red-plugin:\S+\] --- -->)/);
                 var totalCount = configs.length;
@@ -239,7 +239,7 @@ var RED = (function() {
                 "Accept":"application/json"
             },
             cache: false,
-            url: 'nodes',
+            url: 'nodes/nodes.json',
             success: function(data) {
                 RED.nodes.setNodeList(data);
                 loader.reportProgress(RED._("event.loadNodeCatalogs"), 25)
@@ -276,7 +276,7 @@ var RED = (function() {
                 "Accept-Language": lang
             },
             cache: false,
-            url: 'nodes',
+            url: 'nodes/nodes.html',
             success: function(data) {
                 var configs = data.trim().split(/(?=<!-- --- \[red-module:\S+\] --- -->)/);
                 var totalCount = configs.length;
@@ -890,6 +890,33 @@ var RED = (function() {
     }
 
     function loadEditor() {
+        $.ajaxPrefilter(function( options, originalOptions, jqXHR ) {
+          let mth = undefined;
+
+          // locales and messages - convert parameter to be part of the file
+          // name - differentiate between languages on a _static_ server.
+
+          // LoCaLeS is taken from retrieve.sh and should be kept in sync.
+          const LoCaLeS="en-US en-GB en de-DE de fr ja ko pt-BR ru zh-CN zh-TW"
+
+          // convert from /messages?lng=xx-YY to /messages.xx-YY but this means
+          // missing locale files will halt loading of the editor (at loading
+          // plugins) so we need to ensure the locale files for a specific locale
+          // _always_ exist. (Conversion to .xx-YY allows for support of
+          // multiple locales on a _static_ server).
+          mth = options.url.match(/^(nodes|plugins)\/messages/i)
+          if ( mth ) {
+            var d = new URLSearchParams(options.url.split("?")[1])
+            if ( LoCaLeS.split(/[\t \n]+/).indexOf(d.get("lng")) > -1 ) {
+              options.url = mth[1] + "/messages." + d.get("lng")
+            }
+          }
+
+          if ( options.url == "flows" && options.type == "GET" ) {
+            options.url = "flows.initial.json"
+          }
+        })
+
         RED.workspaces.init();
         RED.statusBar.init();
         RED.view.init();
@@ -1285,7 +1312,7 @@ RED.i18n = (function() {
             var opts = {
                 compatibilityJSON: 'v3',
                 backend: {
-                    loadPath: apiRootUrl+'locales/__ns__?lng=__lng__',
+                    loadPath: apiRootUrl+'locales/__ns__.__lng__',
                 },
                 lng: 'en-US',
                 // debug: true,
@@ -1545,7 +1572,7 @@ RED.settings = (function () {
             },
             dataType: "json",
             cache: false,
-            url: 'settings',
+            url: 'settings.json',
             success: function (data) {
                 setProperties(data);
                 done(null, data);
