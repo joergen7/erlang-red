@@ -1,21 +1,28 @@
 -module(nodes).
 
 -export([create_pid_for_node/1]).
+-export([send_msg_to_connected_nodes/2]).
 
 
 %%
 %% This is internal exports
 %%
--export([node_noop/1, node_switch/1, node_debug/1, node_inject/1]).
+-compile(node_switch).
+-compile(node_inject).
+
+-export([node_noop/1, node_junction/1, node_debug/1]).
 
 
 create_pid_for_node([]) ->
-  ok;
+    ok;
 
 create_pid_for_node([NodeDef|T]) ->
     {ok, IdStr} = maps:find(id,NodeDef),
     {ok, TypeStr} = maps:find(type,NodeDef),
 
+    %% TODO: here have to respect the 'd' (disabled)  attribute.
+    %% TODO: if true, then the node does not need to have a Pid
+    %% TODO: created for it.
     {Module, Fun} = node_type_to_fun(TypeStr),
     Pid = spawn(Module, Fun, [NodeDef]),
 
@@ -23,6 +30,7 @@ create_pid_for_node([NodeDef|T]) ->
                     list_to_binary(
                       lists:flatten(
                         io_lib:format("~s~s",["node_pid_",IdStr])))),
+
     register(NodeIdToPid, Pid),
 
     %% io:format("~p ~p\n",[Pid,NodeIdToPid]),
@@ -36,16 +44,15 @@ create_pid_for_node([NodeDef|T]) ->
 node_noop(_) ->
   ok.
 
-
 %%
-%% Inject node should have at least one outgoing wire
+%% junctions are decorative elements that are "transparent" - they just
+%% pass through the messages that they receive (having cloned the messages)
 %%
-node_inject(NodeDef) ->
-   io:format("inject node init\n"),
+node_junction(NodeDef) ->
    receive
-       {message,Msg} ->
+       {incoming, Msg} ->
            send_msg_to_connected_nodes(NodeDef,Msg),
-           io:format("inject got something\n")
+           io:format("junction node passed on msg\n")
    end.
 
 
@@ -55,28 +62,23 @@ node_inject(NodeDef) ->
 node_debug(_NodeDef) ->
    io:format("debug node init\n"),
    receive
-    {message, Msg} ->
-        io:format("debug got message ~p\n",[Msg])
+       {incoming, Msg} ->
+           io:format("debug got message ~p\n",[Msg])
    end.
-
-%%
-%% representation of a switch node, these can or cannot have
-%% outgoing wires, although not having any would be very unusual.
-%%
-node_switch(_NodeDef) ->
-   io:format("switch node init\n"),
-   receive
-      {message,_Msg} ->
-         io:format("switch got something\n")
-   end.
-
 
 
 send_msg_to_connected_nodes(NodeDef,Msg) ->
+    %%
+    %% The wires attribute is an array of arrays. The toplevel
+    %% array has one entry per port that a node has. (Port being the connectors
+    %% from which wires leave the node.)
+    %% If a node only has one port, then wires will be an array containing
+    %% exactly one array. This is the [Val] case and is the most common case.
+    %%
     case maps:find(wires,NodeDef) of
-       {ok,[Val]} ->
+        {ok,[Val]} ->
             sendMsg(Val,Msg);
-       {ok,Val} ->
+        {ok,Val} ->
             sendMsg(Val,Msg)
     end.
 
@@ -91,14 +93,14 @@ sendMsg([WireId|Wires],Msg) ->
                     list_to_binary(
                          lists:flatten(
                              io_lib:format("~s~s",["node_pid_",WireId])))),
-    NodeIdToPid ! {message, Msg},
+    NodeIdToPid ! {incoming, Msg},
     sendMsg(Wires,Msg).
 
 %%
 %% Lookup table for node type to function.
 %%
-node_type_to_fun(<<"inject">>) -> {?MODULE, node_inject};
-node_type_to_fun(<<"switch">>) -> {?MODULE, node_switch};
+node_type_to_fun(<<"inject">>) -> {node_inject, node_inject};
+node_type_to_fun(<<"switch">>) -> {node_switch, node_switch};
 node_type_to_fun(<<"debug">>) -> {?MODULE, node_debug};
 
 node_type_to_fun(Unknown) ->

@@ -14,4 +14,15 @@ main() ->
 
     %% This is a random inject node that actually generates a message,
     %% it does not receive messages. But for testing ...
-    node_pid_f9504da94c59e69f ! { message, "message" }.
+    node_pid_f9504da94c59e69f ! { outgoing, #{} },
+
+    io:format("sending message\n"),
+    node_pid_f9504da94c59e69f ! { outgoing, #{} },
+    io:format("sending message\n"),
+    node_pid_f9504da94c59e69f ! { outgoing, #{} },
+    io:format("sending message\n"),
+    node_pid_f9504da94c59e69f ! { outgoing, #{} },
+    io:format("sending message\n"),
+    node_pid_f9504da94c59e69f ! { outgoing, #{} },
+    io:format("sending message\n"),
+    node_pid_f9504da94c59e69f ! { outgoing, #{} }.
