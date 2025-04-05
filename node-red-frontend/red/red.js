@@ -1081,7 +1081,7 @@ var RED = (function() {
          }
          if (handlers[evt]) {
              let cpyHandlers = [...handlers[evt]];
-          
+
              for (var i=0;i<cpyHandlers.length;i++) {
                  try {
                      cpyHandlers[i].apply(null, args);
@@ -2501,7 +2501,7 @@ RED.comms = (function() {
                         $(this).show()
                     }
                 })
-                if (users.length < maxShown + 1) { 
+                if (users.length < maxShown + 1) {
                     userCountIcon.hide()
                 } else {
                     userCountSpan.text('+'+(users.length - maxShown))
@@ -2654,7 +2654,7 @@ RED.comms = (function() {
                     $(cursorIcon).css({
                         transform: `translate( ${location.cursor.x}px, ${location.cursor.y}px)`
                     })
-    
+
                 }
             } else if (sessions[sessionId].cursor) {
                 removeUserCursor(sessionId)
@@ -2738,8 +2738,8 @@ RED.comms = (function() {
     return {
         init: function () {
 
-            
-            
+
+
             RED.view.annotations.register("red-ui-multiplayer",{
                 type: 'badge',
                 align: 'left',
@@ -2780,7 +2780,7 @@ RED.comms = (function() {
             // } else {
                 log('Session ID', activeSessionId)
             // }
-            
+
             headerWidget = $('<li><ul id="red-ui-multiplayer-user-list"></ul></li>').prependTo('.red-ui-header-toolbar')
 
             RED.comms.on('connect', () => {
@@ -2848,7 +2848,7 @@ RED.comms = (function() {
                 RED.comms.send('multiplayer/disconnect', disconnectInfo)
                 RED.settings.removeLocal('multiplayer:sessionId')
             })
-            
+
             const chart = $('#red-ui-workspace-chart')
             chart.on('mousemove', function (evt) {
                 lastPosition[0] = evt.clientX
@@ -4809,9 +4809,9 @@ RED.nodes = (function() {
             },
             /**
              * Add an object to our dirty/clean tracking state
-             * @param {String} z 
-             * @param {String} id 
-             * @param {Boolean} isDirty 
+             * @param {String} z
+             * @param {String} id
+             * @param {Boolean} isDirty
              */
             addObjectToWorkspace: function (z, id, isDirty) {
                 if (isDirty) {
@@ -4824,8 +4824,8 @@ RED.nodes = (function() {
             },
             /**
              * Remove an object from our dirty/clean tracking state
-             * @param {String} z 
-             * @param {String} id 
+             * @param {String} z
+             * @param {String} id
              */
             removeObjectFromWorkspace: function (z, id) {
                 if (!addedDirtyObjects.has(id)) {
@@ -4847,7 +4847,7 @@ RED.nodes = (function() {
                 api.addNode(n)
             },
             /**
-             * @param {array} nodes 
+             * @param {array} nodes
              * @param {boolean} direction true:forwards false:back
              * @param {boolean} singleStep true:single-step false:all-the-way
              */
@@ -6656,7 +6656,7 @@ RED.nodes = (function() {
         // We need to sort new_nodes (which only contains config nodes at this point)
         // to ensure they get added in the right order. If NodeA depends on NodeB, then
         // NodeB must be added first.
-        
+
         // Limit us to 5 full iterations of the list - this should be more than
         // enough to process the list as config->config node relationships are
         // not very common
@@ -8694,7 +8694,7 @@ RED.history = (function() {
                     RED.nodes.dirty(false);
 
                     const flowsToLock = new Set()
-                    
+
                     imported.nodes.forEach(function(n) {
                         if (ev.changed[n.id]) {
                             ensureUnlocked(n.z, flowsToLock)
@@ -10503,8 +10503,8 @@ RED.utils = (function() {
      * Checks a typed property is valid according to the type.
      * Returns true if valid.
      * Return String error message if invalid
-     * @param {*} propertyType 
-     * @param {*} propertyValue 
+     * @param {*} propertyType
+     * @param {*} propertyValue
      * @returns true if valid, String if invalid
      */
     function validateTypedProperty(propertyValue, propertyType, opt) {
@@ -10532,7 +10532,7 @@ RED.utils = (function() {
                 error = RED._("validator.errors.invalid-num");
             }
         } else if (propertyType === 'jsonata') {
-            try { 
+            try {
                 jsonata(propertyValue)
             } catch(err) {
                 error = RED._("validator.errors.invalid-expr", {
@@ -15309,7 +15309,7 @@ RED.stack = (function() {
         if(match.post) { els.push($('<span/>').text(match.post)); }
         return els;
     }
-    
+
     const msgAutoComplete = function(options) {
         return function(val) {
             var matches = [];
@@ -15466,7 +15466,7 @@ RED.stack = (function() {
                             contextKnownKeys[scope][store].set(keyPrefix + key, keyInfo)
                         } else {
                             contextKnownKeys[scope][store].set(searchKey + "[\""+key.replace(/"/,"\\\"")+"\"]", keyInfo)
-                        }                        
+                        }
                     })
                     done()
                 })
@@ -15493,7 +15493,7 @@ RED.stack = (function() {
             }
             const store = (contextStoreOptions.length === 1) ? contextStoreOptions[0].value : that.optionValue
             const searchKey = keyParts.join('.')
-           
+
             getContextKeysFromRuntime(scope, store, searchKey, function() {
                 if (contextKnownKeys[scope][store].has(key) || key.endsWith(']')) {
                     getContextKeysFromRuntime(scope, store, key, function() {
@@ -15889,7 +15889,7 @@ RED.stack = (function() {
                     const row1Name = $('<div>').text(def.type)
                     const row2Module = $('<div style="font-size: 0.8em; color: var(--red-ui-tertiary-text-color);">').text(def.set.module)
                     container.append(row1Name, row2Module)
-        
+
                     return {
                         value: def.type,
                         name: def.type,
@@ -15906,7 +15906,7 @@ RED.stack = (function() {
         }
     };
 
-    
+
     // For a type with options, check value is a valid selection
     // If !opt.multiple, returns the valid option object
     // if opt.multiple, returns an array of valid option objects
@@ -17106,8 +17106,8 @@ RED.stack = (function() {
     });
     function parseInteger(input, def, min, max) {
         if(input == null) { return (def || 0); }
-        min = min == null ? Number.NEGATIVE_INFINITY : min; 
-        max = max == null ? Number.POSITIVE_INFINITY : max; 
+        min = min == null ? Number.NEGATIVE_INFINITY : min;
+        max = max == null ? Number.POSITIVE_INFINITY : max;
         let n = parseInt(input);
         if(isNaN(n) || n < min || n > max) { n = def || 0; }
         return n;
@@ -17339,7 +17339,7 @@ RED.deploy = (function() {
             }
             if (state.dirty) {
                 // window.onbeforeunload = function() {
-                //     return 
+                //     return
                 // }
                 $("#red-ui-header-button-deploy").removeClass("disabled");
             } else {
@@ -19171,7 +19171,7 @@ RED.diagnostics = (function () {
             }
             const currentConfigJSON = JSON.stringify(currentConfig.all[id])
             const newConfigJSON = JSON.stringify(newConfig.all[id])
-            
+
             if (currentConfigJSON !== newConfigJSON) {
                 changed[id] = true;
                 if (currentConfig.all[id].z !== newConfig.all[id].z) {
@@ -19195,7 +19195,7 @@ RED.diagnostics = (function () {
                     delete newNodeClone.y
                     delete newNodeClone.w
                     delete newNodeClone.h
-                    
+
                     if (JSON.stringify(currentNodeClone) === JSON.stringify(newNodeClone)) {
                         // Only the position has changed - everything else is the same
                         positionChanged[id] = true
@@ -19288,7 +19288,7 @@ RED.diagnostics = (function () {
         }
         options = options || {};
         var mode = options.mode || 'merge';
-        
+
         options.hidePositionChanges = true
 
         var localDiff = diff.localDiff;
@@ -19481,7 +19481,7 @@ RED.diagnostics = (function () {
 
         // Clear all change flags from the import
         RED.nodes.dirty(false);
-        
+
         const flowsToLock = new Set()
         function ensureUnlocked(id) {
             const flow = id && (RED.nodes.workspace(id) || RED.nodes.subflow(id) || null);
@@ -20582,7 +20582,7 @@ RED.keyboard = (function() {
                     return resolveKeyEvent(evt);
                 }
                 if (Object.keys(handler).length > 0) {
-                    // check if there's a potential combined handler initiated by this keyCode 
+                    // check if there's a potential combined handler initiated by this keyCode
                     for (let h in handler) {
                         if (matchHandlerToEvent(evt,handler[h]) > -1) {
                             partialState = handler;
@@ -21485,7 +21485,7 @@ RED.workspaces = (function() {
             )
 
         }
-        
+
         menuItems.push(
             {
                 id:"red-ui-tabs-menu-option-add-hide-all-flows",
@@ -22321,15 +22321,15 @@ RED.view = (function() {
 
     /**
      * The jQuery object for the workspace chart `#red-ui-workspace-chart` div element
-     * @type {JQuery<HTMLElement>} #red-ui-workspace-chart HTML Element 
-     */ 
+     * @type {JQuery<HTMLElement>} #red-ui-workspace-chart HTML Element
+     */
     let chart;
     /**
      * The d3 object `#red-ui-workspace-chart` svg element
      * @type {d3.Selection<HTMLElement, Any, Any, Any>}
-     */ 
+     */
     let outer;
-    /** 
+    /**
      * The d3 object `#red-ui-workspace-chart` svg element (specifically for events)
      * @type {d3.Selection<d3.BaseType, any, any, any>}
      */
@@ -22399,7 +22399,7 @@ RED.view = (function() {
             /**
              * Make the specified node the first node of the moving set, if
              * it is already in the set.
-             * @param {Node} node 
+             * @param {Node} node
              */
             makePrimary: function (node) {
                 const index = set.findIndex(n => n.n === node)
@@ -22683,7 +22683,7 @@ RED.view = (function() {
                     }
                     d3.event.preventDefault();
             });
-            
+
 
         const handleAltToggle = (event) => {
             if (mouse_mode === RED.state.MOVING_ACTIVE && event.key === 'Alt' && groupAddParentGroup) {
@@ -22924,8 +22924,8 @@ RED.view = (function() {
 
                     var group = $(ui.helper).data("group");
                     if (group) {
-                        var oldX = group.x; 
-                        var oldY = group.y; 
+                        var oldX = group.x;
+                        var oldY = group.y;
                         RED.group.addToGroup(group, nn);
                         var moveEvent = null;
                         if ((group.x !== oldX) ||
@@ -23291,7 +23291,7 @@ RED.view = (function() {
             let topX, topY, bottomX, bottomY
             let cp
             let midX = Math.floor(destX-dx/2);
-            let midY = Math.floor(destY-dy/2);          
+            let midY = Math.floor(destY-dy/2);
             if (Math.abs(dy) < 10) {
                 bottomY = Math.max(origY, destY) + (hasStatus?35:25)
                 let startCurveHeight = bottomY - origY
@@ -23752,8 +23752,8 @@ RED.view = (function() {
                 RED.editor.validateNode(nn);
 
                 if (targetGroup) {
-                    var oldX = targetGroup.x; 
-                    var oldY = targetGroup.y; 
+                    var oldX = targetGroup.x;
+                    var oldY = targetGroup.y;
                     RED.group.addToGroup(targetGroup, nn);
                     var moveEvent = null;
                     if ((targetGroup.x !== oldX) ||
@@ -24481,8 +24481,8 @@ RED.view = (function() {
             // to this group. But it could be a mix of nodes and existing groups.
             // In which case, we don't want to rehome all of the nodes inside
             // existing groups - we just want to rehome the top level objects.
-            var oldX = activeHoverGroup.x; 
-            var oldY = activeHoverGroup.y; 
+            var oldX = activeHoverGroup.x;
+            var oldY = activeHoverGroup.y;
             if (groupAddParentGroup) {
                 removedFromGroup = RED.nodes.group(groupAddParentGroup)
             }
@@ -24490,7 +24490,7 @@ RED.view = (function() {
             for (let j=0;j<movingSet.length();j++) {
                 const n = movingSet.get(j)
                 if (!n.n.g || (removedFromGroup && n.n.g === removedFromGroup.id)) {
-                    rehomedNodes.add(n)  
+                    rehomedNodes.add(n)
                     RED.group.addToGroup(activeHoverGroup, n.n);
                 }
             }
@@ -24514,7 +24514,7 @@ RED.view = (function() {
             for (let j=0;j<movingSet.length();j++) {
                 const n = movingSet.get(j)
                 if (n.n.g && n.n.g === removedFromGroup.id) {
-                    rehomedNodes.add(n)  
+                    rehomedNodes.add(n)
                     RED.group.removeFromGroup(removedFromGroup, n.n);
                 }
             }
@@ -25473,7 +25473,7 @@ RED.view = (function() {
                                         links:oldDstLinks
                                     }
                                 });
-                               
+
                                 src.changed = true;
                                 dst.changed = true;
                             }
@@ -25959,7 +25959,7 @@ RED.view = (function() {
             clickElapsed < dblClickInterval &&
             d.type !== 'junction'
         lastClickNode = mousedown_node;
-     
+
         if (d.selected && isControlPressed(d3.event)) {
             mousedown_node.selected = false;
             movingSet.remove(mousedown_node);
@@ -26876,7 +26876,7 @@ RED.view = (function() {
                 statusBackground.setAttribute("height",13);
                 statusBackground.setAttribute("rx",2);
                 statusBackground.setAttribute("ry",2);
-                
+
                 statusEl.appendChild(statusBackground);
                 node[0][0].__statusBackground__ = statusBackground;
 
@@ -28004,7 +28004,7 @@ RED.view = (function() {
                     }
                     if (!touchImport) {
                         mouse_mode = RED.state.IMPORT_DRAGGING;
-                        startSelectionMove()  
+                        startSelectionMove()
                     }
                 }
 
@@ -29897,9 +29897,9 @@ RED.view.tools = (function() {
                 for (i = 0; i < selection.nodes.length - 1; i++) {
                     var sourceNode = selection.nodes[i];
                     if (sourceNode.outputs > 0) {
-                        
+
                         // Wire the first output to the target that has no link to the target yet.
-                        // This allows for connecting all combinations of inputs/outputs. 
+                        // This allows for connecting all combinations of inputs/outputs.
                         // The user may then delete links quickly that aren't needed.
                         var sourceConnectedOutports = RED.nodes.filterLinks({
                             source: sourceNode,
@@ -29915,7 +29915,7 @@ RED.view.tools = (function() {
                         if (sourceFreeOutportIndices.length == 0) {
                             continue;
                         }
-                        
+
                         // Connect the first free outport to the target
                         var newLink = {
                             source: sourceNode,
@@ -30367,7 +30367,7 @@ RED.view.tools = (function() {
      * @param {[Number,Number]} mouse_position The x,y position of the mouse
      * @param {Number} [marginX=0] - A margin to add or deduct from the x position (to increase the hit area)
      * @param {Number} [marginY=0] - A margin to add or deduct from the y position (to increase the hit area)
-     * @returns 
+     * @returns
      */
     function isPointInNode (node, [x, y], marginX, marginY) {
         marginX = marginX || 0
@@ -30376,7 +30376,7 @@ RED.view.tools = (function() {
         let w = node.w || 10 // junctions dont have any w or h value
         let h = node.h || 10
         let x1, x2, y1, y2
-        
+
         if (node.type === "junction" || node.type === "group") {
             // x/y is the top left of the node
             x1 = node.x
@@ -34445,7 +34445,7 @@ RED.palette.editor = (function() {
                             }
                         }
                     }
-                    
+
                     nodeEntry.setCount.text(RED._('palette.editor.pluginCount',{count:pluginCount,label:pluginCount}));
 
                 } else {
@@ -34676,14 +34676,14 @@ RED.palette.editor = (function() {
                     updateCatalogFilter(catalogEntries, maxRetry - 1)
                 }, 100);
                 return;
-            } 
+            }
             return; // give up
         }
         catalogSelection.off("change") // remove any existing event handlers
         catalogSelection.attr('disabled', 'disabled')
         catalogSelection.empty()
         catalogSelection.append($('<option>', { value: "loading", text: RED._('palette.editor.loading'), disabled: true, selected: true }));
-        
+
         fullList = loadedList.slice()
         catalogSelection.empty() // clear the select list
 
@@ -34694,7 +34694,7 @@ RED.palette.editor = (function() {
         }
         // select the 1st option in the select list
         catalogSelection.val(catalogSelection.find('option:first').val())
-        
+
         // if there is only 1 catalog, hide the select
         if (catalogEntries.length > 1) {
             catalogSelection.prepend(`<option value="all">${RED._('palette.editor.allCatalogs')}</option>`)
@@ -35157,7 +35157,7 @@ RED.palette.editor = (function() {
         })
 
         const toolBar = $('<div>',{class:"red-ui-palette-editor-toolbar"}).appendTo(installTab);
-        
+
         const searchDiv = $('<div>',{class:"red-ui-palette-search"}).appendTo(installTab);
         searchInput = $('<input type="text" data-i18n="[placeholder]palette.search"></input>')
             .appendTo(searchDiv)
@@ -35181,7 +35181,7 @@ RED.palette.editor = (function() {
 
         const catalogSelection = $('<select id="red-catalogue-filter-select">').appendTo(toolBar);
         catalogSelection.addClass('red-ui-palette-editor-catalogue-filter');
- 
+
         const toolBarActions = $('<div>',{class:"red-ui-palette-editor-toolbar-actions"}).appendTo(toolBar);
 
         $('<span>').text(RED._("palette.editor.sort")+' ').appendTo(toolBarActions);
@@ -35307,7 +35307,7 @@ RED.palette.editor = (function() {
                 }
             }
         });
-        
+
 
         if (RED.settings.get('externalModules.palette.allowUpload', true) !== false) {
             var uploadSpan = $('<span class="button-group">').prependTo(toolBarActions);
@@ -35497,7 +35497,7 @@ RED.palette.editor = (function() {
                                                 }
                                             }
                                         ]
-                                    });                                
+                                    });
                                 }
                             } else {
                                 // dedicated list management for plugins
@@ -35545,7 +35545,7 @@ RED.palette.editor = (function() {
                                             ]
                                         });
                                     }
-                                }        
+                                }
                             }
                         })
                         notification.close();
@@ -36570,7 +36570,7 @@ RED.editor = (function() {
                         }
                     }
                 });
- 
+
                 // as includeSubflowEnvvars is true, this is a subflow.
                 // include any 'conf-types' env vars as a list of avaiable configs
                 // in the config dropdown as `[env] node-name`
@@ -37181,7 +37181,7 @@ RED.editor = (function() {
                         changed: false,
                         outputMap: null
                     };
-                    
+
                     // Call `oneditsave` and search for changes
                     handleEditSave(editing_config_node, editState);
 
@@ -38714,7 +38714,7 @@ RED.editor = (function() {
                                 editState.changed = true;
                             }
                             delete prop.value;
-                        } else if (prop.type === "conf-type" && prop.value) {  
+                        } else if (prop.type === "conf-type" && prop.value) {
                             const configNode = RED.nodes.node(prop.value);
                             if (configNode) {
                                 if (configNode.users.indexOf(node) === -1) {
@@ -38952,7 +38952,7 @@ RED.editor = (function() {
     });
 
     /**
-     * Compares `newValue` with `originalValue` for equality.  
+     * Compares `newValue` with `originalValue` for equality.
      * @param {*} originalValue Original value
      * @param {*} newValue New value
      * @returns {boolean} true if originalValue equals newValue, otherwise false
@@ -38960,7 +38960,7 @@ RED.editor = (function() {
      function isEqual(originalValue, newValue) {
         try {
             if(originalValue == newValue) {
-                return true; 
+                return true;
             }
             return JSON.stringify(originalValue) === JSON.stringify(newValue);
         } catch (err) {
@@ -40737,7 +40737,7 @@ RED.editor = (function() {
                                         testResultEditor.setValue(RED._("expressionEditor.errors.clone-unsupported"),-1);
                                         return;
                                     }
-        
+
                                     var formattedResult;
                                     if (result !== undefined) {
                                         formattedResult = JSON.stringify(result,null,4);
@@ -40747,7 +40747,7 @@ RED.editor = (function() {
                                     testResultEditor.setValue(formattedResult,-1);
                                 }
                             });
-                        } catch(err) {                            
+                        } catch(err) {
                             testResultEditor.setValue(RED._("expressionEditor.errors.eval",{message:err.message}),-1);
                         }
                     }
@@ -41889,7 +41889,7 @@ RED.editor = (function() {
                         else {
                             expressionEditor.gotoLine(0, 0, false);
                         }
-                    }                        
+                    }
                     dialogForm.i18n();
                 },
                 close: function() {
@@ -41971,12 +41971,12 @@ RED.editor = (function() {
         // $(selector).hide()
         if (!loaded) {
             pendingEvals.push(selector)
-            
+
             if (!initializing) {
                 initializing = true
                 // Find the cache-buster:
                 let cacheBuster
-                $('script').each(function (i, el) { 
+                $('script').each(function (i, el) {
                     if (!cacheBuster) {
                         const src = el.getAttribute('src')
                         const m = /\?v=(.+)$/.exec(src)
@@ -42023,7 +42023,7 @@ RED.editor = (function() {
                 }
             })
         }
-    }  
+    }
     return {
         render: render,
     };
@@ -42140,7 +42140,7 @@ RED.editor.codeEditor.ace = (function() {
     var initOptions = {};
 
     function init(options) {
-        initOptions = options || {}; 
+        initOptions = options || {};
         initialised = true;
         return initialised;
     }
@@ -43013,7 +43013,7 @@ RED.editor.codeEditor.monaco = (function() {
                         2322,  //Type 'unknown' is not assignable to type 'string'
                         2339,  //property does not exist on
                         2345,  //Argument of type xxx is not assignable to parameter of type 'DateTimeFormatOptions'
-                        2538,  //Ignore symbols as index property error. 
+                        2538,  //Ignore symbols as index property error.
                         7043,  //i forget what this one is,
                         80001, //Convert to ES6 module
                         80004, //JSDoc types may be moved to TypeScript types.
@@ -43099,7 +43099,7 @@ RED.editor.codeEditor.monaco = (function() {
             return mode;
         }
 
-        
+
         if(!options.stateId && options.stateId !== false) {
             options.stateId = RED.editor.generateViewStateId("monaco", options, (options.mode || options.title || "").split("/").pop());
         }
@@ -44081,7 +44081,7 @@ RED.eventLog = (function() {
                     } else if(options.focusElement !== false) {
                         //focusElement IS specified, focus that instead (if not false)
                         $(options.focusElement).trigger("focus");
-                    } 
+                    }
 
                 },150);
                 el.css({right:0});
@@ -44931,7 +44931,7 @@ RED.clipboard = (function() {
         $("#red-ui-clipboard-dialog-tab-library-name").val("flows.json").select();
 
         dialogContainer.i18n();
-        
+
         var format = RED.settings.flowFilePretty ? "red-ui-clipboard-dialog-export-fmt-full" : "red-ui-clipboard-dialog-export-fmt-mini";
         const userFormat = RED.settings.get("editor.dialog.export.pretty")
         if (userFormat === false || userFormat === true) {
@@ -46096,7 +46096,7 @@ RED.library = (function() {
                             }).show();
 
                         }).appendTo(itemTools);
-                    
+
                     itemTools.appendTo(item.treeList.label);
                 }
             });
@@ -49863,7 +49863,7 @@ RED.subflow = (function() {
         return 'node-input-subflow-env-'+name.replace(/[^a-z0-9-_]/ig,"_");
     }
 
-    
+
     /**
      * Build the subflow edit form
      * Called by subflow.oneditprepare for both instances and templates
