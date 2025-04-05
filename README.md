@@ -18,12 +18,12 @@ It’s an extremely simple demo but the underlying workflow is this:
 
 4. generate a message and send to a random process. In the demo this happens to be an “inject” node that is responsible (in the Node-RED world) for generating messages. That process that alters the message before passing it on.
 
-The demo is based on a simple Node-RED flow (see README @ repo) that has been exported as Json and then interpreted - no modification of the exported Json was made.
+The demo is based on simple Node-RED flows that have been exported as Json and then interpreted - no modification of the exported Jsons has made.
 
 Flows
 ----
 
-All Node-RED flows upon which this is tested are located in `[priv/](priv/)` and can be viewed in Node-RED using the [serverless instance of Node-RED](https://cdn.flowhub.org).
+All Node-RED flows upon which this is tested are located in [priv/](priv/) and can be viewed in Node-RED using the [serverless instance of Node-RED](https://cdn.flowhub.org).
 
 Use the import functionality and paste the included .json into the dialog.
 
