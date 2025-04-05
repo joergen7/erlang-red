@@ -5,16 +5,21 @@
 %%
 -export([create_pid_for_node/1]).
 -export([send_msg_to_connected_nodes/2]).
+-export([get_prop_value_from_map/2]).
 
 %%
 %% This is an internal exports
 %%
 -export([node_noop/1]).
 
-create_pid_for_node([]) ->
-    ok;
+create_pid_for_node(Ary) ->
+    create_pid_for_node(Ary,[]).
 
-create_pid_for_node([NodeDef|T]) ->
+
+create_pid_for_node([],Pids) ->
+    Pids;
+
+create_pid_for_node([NodeDef|T],Pids) ->
     {ok, IdStr} = maps:find(id,NodeDef),
     {ok, TypeStr} = maps:find(type,NodeDef),
 
@@ -32,7 +37,7 @@ create_pid_for_node([NodeDef|T]) ->
     register(NodeIdToPid, Pid),
 
     %% io:format("~p ~p\n",[Pid,NodeIdToPid]),
-    create_pid_for_node(T).
+    create_pid_for_node(T,[NodeIdToPid|Pids]).
 
 
 
@@ -40,9 +45,11 @@ create_pid_for_node([NodeDef|T]) ->
 %% placeholder node for all types that aren't supported yet and for
 %% nodes that have been disabled.
 %%
-node_noop(_) ->
-  ok.
-
+node_noop(_F) ->
+    receive
+        stop -> ok;
+        _ -> node_noop(_F)
+    end.
 
 %%
 %% The wires attribute is an array of arrays. The toplevel
@@ -60,6 +67,17 @@ send_msg_to_connected_nodes(NodeDef,Msg) ->
     end.
 
 %%
+%% Avoid having to create the same case all the time.
+%%
+get_prop_value_from_map(Prop,Map) ->
+    case maps:find(Prop,Map) of
+        {ok, Val} ->
+            Val;
+        _ ->
+            ""
+    end.
+
+%%
 %% Helper for passing on messages once a node has completed with the message
 %%
 sendMsg([],_) ->
@@ -74,7 +92,9 @@ sendMsg([WireId|Wires],Msg) ->
     sendMsg(Wires,Msg).
 
 %%
-%% Lookup table for node type to function.
+%% Lookup table for mapping node type to function. Also here we respect the
+%% disabled flag: if node is disabled, give it a noop node else continue
+%% on checking by type.
 %%
 node_type_to_fun(_Type, {ok, true}) ->
     io:format("node disabled, ignoring\n"),
@@ -84,10 +104,11 @@ node_type_to_fun(Type,_) ->
     node_type_to_fun(Type).
 
 
-node_type_to_fun(<<"inject">>)   -> {node_inject, node_inject};
-node_type_to_fun(<<"switch">>)   -> {node_switch, node_switch};
-node_type_to_fun(<<"debug">>)    -> {node_debug, node_debug};
+node_type_to_fun(<<"inject">>)   -> {node_inject,   node_inject};
+node_type_to_fun(<<"switch">>)   -> {node_switch,   node_switch};
+node_type_to_fun(<<"debug">>)    -> {node_debug,    node_debug};
 node_type_to_fun(<<"junction">>) -> {node_junction, node_junction};
+node_type_to_fun(<<"change">>)   -> {node_change,   node_change};
 
 node_type_to_fun(Unknown) ->
     io:format("noop node initiated for unknown type: ~p\n", [Unknown]),

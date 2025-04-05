@@ -12,7 +12,10 @@ receive_loop(NodeDef) ->
     receive
         {incoming,_Msg} ->
             io:format("switch got something\n"),
-            receive_loop(NodeDef)
+            receive_loop(NodeDef);
+
+        stop ->
+            ok
     end.
 
 node_switch(NodeDef) ->

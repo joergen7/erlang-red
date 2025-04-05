@@ -10,7 +10,10 @@ receive_loop(NodeDef) ->
     receive
         {incoming,Msg} ->
             nodes:send_msg_to_connected_nodes(NodeDef,Msg),
-            receive_loop(NodeDef)
+            receive_loop(NodeDef);
+
+        stop ->
+            ok
     end.
 
 node_junction(NodeDef) ->

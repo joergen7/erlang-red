@@ -15,8 +15,16 @@ receive_loop(NodeDef) ->
                 _ ->
                     NodeName = "undefined"
             end,
-            io:format("DEBUG [~s]: ~p\n",[NodeName, Msg]),
-            receive_loop(NodeDef)
+
+            %%
+            %% TODO this has to go down websocket connection in the long term
+            %%
+            io:format("DEBUG [~s]: ~p\n", [NodeName, Msg]),
+            receive_loop(NodeDef);
+
+        stop ->
+            ok
+
     end.
 
 node_debug(NodeDef) ->
