@@ -1,0 +1,122 @@
+#!/bin/bash
+#
+# retrieve.sh
+#
+# Author: Gerrit Riessen, gerrit@openmindmap.org
+# Copyright (C) 2023-2025 Gerrit Riessen
+# This code is licensed under the GNU Public License.
+#
+# $Id$
+#
+
+# This script will retrieve certain configuration files from an existing
+# node red instance and copy these here. It retrieves:
+#
+#   - icons configuration and all icons
+#   - nodes configuration .json, .html and locales
+#   - plugin configuration .json, .html and locales
+#   - locales in the locales directory
+#
+# other things will need to be updated manually.
+
+### TODO change the following.
+# NODERED_URL=http://nodered-host:1880/httpAdminRoot
+
+NODERED_URL=http://renderbox:1890/cfg
+
+### TODO remove this also
+#echo "Edit retrieve.sh before use"
+#exit
+
+CBSTMP=$(date +%s)
+PyTHON=/usr/bin/python3
+
+echo "==> html, javascript & css"
+
+curl -s "${NODERED_URL}/favicon.ico?_=${CBSTMP}" -o favicon.ico
+curl -s "${NODERED_URL}/settings?_=${CBSTMP}" -o settings.json
+
+##
+## These are all text files.
+##
+for fle in vendor/jquery/css/base/jquery-ui.min.css \
+           vendor/font-awesome/css/font-awesome.min.css \
+           vendor/monaco/style.css \
+           vendor/monaco/dist/editor.js \
+           vendor/monaco/monaco-bootstrap.js \
+           vendor/vendor.js \
+           vendor/font-awesome/fonts/fontawesome-webfont.ttf \
+           vendor/font-awesome/fonts/fontawesome-webfont.woff2 \
+           vendor/font-awesome/fonts/fontawesome-webfont.woff \
+           red/images/node-red-icon-black.svg \
+           red/style.min.css \
+           red/red.min.js \
+           red/main.min.js \
+           red/images/node-red.svg \
+           red/keymap.json \
+           red/images/spin.svg \
+           settings/user \
+           types/node-red/util.d.ts \
+           types/node-red/func.d.ts \
+           types/node/globals.d.ts \
+           types/node/console.d.ts \
+           types/node/buffer.d.ts \
+           types/node/timers.d.ts \
+           types/node/util.d.ts \
+           red/images/deploy-full.svg \
+           red/images/deploy-full-o.svg \
+           red/images/deploy-flows.svg \
+           red/images/deploy-nodes.svg \
+           red/images/deploy-reload.svg \
+           red/images/grip.svg \
+           red/images/grip-horizontal.svg \
+           debug/view/debug-utils.js \
+           theme \
+          ; do
+    mkdir -p $(dirname $fle)
+    curl -s "${NODERED_URL}/${fle}?v=${CBSTMP}" > ${fle}
+done
+
+##
+## these two should only be retrieved once since they will be altered
+##
+curl -s "${NODERED_URL}/?_=${CBSTMP}" -H 'Accept: application/html' -o index.html
+curl -s "${NODERED_URL}/red/red.js?_=${CBSTMP}" -o red/red.js
+
+LoCaLeS="en-US en-GB en de-DE de fr ja ko pt-BR ru zh-CN zh-TW"
+
+echo "==> icons.json"
+curl -s "${NODERED_URL}/icons?_=${CBSTMP}" -H 'Accept: application/json' | $PyTHON .py/json_pretty.py > icons.json
+
+for lnk in `cat icons.json | $PyTHON .py/icon_urls.py` ; do
+    echo "==> ${lnk}"
+    mkdir -p `dirname ${lnk}`
+    curl -s ${NODERED_URL}/${lnk} > ${lnk}
+done
+
+for typ in nodes plugins ; do
+
+    mkdir -p ${typ}
+
+    for lng in ${LoCaLeS} ; do
+        echo "==> ${typ}/messages/${lng}"
+        curl -s "${NODERED_URL}/${typ}/messages?lng=${lng}&_=${CBSTMP}" | $PyTHON .py/json_pretty.py > ${typ}/messages.${lng}
+    done
+    cp ${typ}/messages.en-US ${typ}/messages
+
+    echo "==> ${typ}/nodes.json"
+    curl -s "${NODERED_URL}/${typ}?_=${CBSTMP}" -H 'Accept: application/json' | $PyTHON .py/json_pretty.py > ${typ}/${typ}.json
+
+    echo "==> ${typ}/nodes.html"
+    curl -s "${NODERED_URL}/${typ}?_=${CBSTMP}" -H 'Accept: text/html' > ${typ}/${typ}.html
+
+done
+
+for lcls in editor infotips node-red jsonata ; do
+    mkdir -p locales
+
+    for lng in ${LoCaLeS} ; do
+        echo "==> locales/${lcls}/${lng}"
+        curl -s "${NODERED_URL}/locales/${lcls}?lng=${lng}" | $PyTHON .py/json_pretty.py > locales/${lcls}.${lng}
+    done
+done
