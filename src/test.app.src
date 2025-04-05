@@ -8,8 +8,6 @@
     ]},
     {env, []},
     {modules, [
-           "nodes",
-           "flows"
     ]},
     {licenses, ["Apache-2.0"]},
     {links, []}

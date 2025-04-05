@@ -1,5 +1,4 @@
 -module(node_inject).
-
 -export([node_inject/1]).
 
 %%
