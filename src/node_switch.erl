@@ -24,34 +24,38 @@ int_to_float(Val) ->
         {error,_} ->
             io:format("Unabel to convert to num ~p\n", [Val]),
             {0,error};
-        {V,P} ->
-            {V,P}
+        {V,R} ->
+            {V,R}
     end.
 
 to_num(Val) ->
     case string:to_float(Val) of
         {error,_} ->
             int_to_float(Val);
-        {V,P} ->
-            {V,P}
+        {V,R} ->
+            {V,R}
     end.
 
+to_num(V1,V2) ->
+    {V1num,_} = to_num(V1),
+    {V2num,_} = to_num(V2),
+    {V1num,V2num}.
+
+%%
+%%
 does_rule_match(<<"eq">>,<<"str">>,OpVal,MsgVal) ->
     is_same(OpVal,MsgVal);
 
 does_rule_match(<<"eq">>,<<"num">>,OpVal,MsgVal) ->
-    {V1,_} = to_num(OpVal),
-    {V2,_} = to_num(MsgVal),
-    is_same(V1,V2);
+    {Vop,Vmsg} = to_num(OpVal, MsgVal),
+    is_same(Vop,Vmsg);
 
 does_rule_match(<<"gt">>,_,OpVal,MsgVal) ->
-    {Vop,_} = to_num(OpVal),
-    {Vmsg,_} = to_num(MsgVal),
+    {Vop,Vmsg} = to_num(OpVal, MsgVal),
     Vmsg > Vop;
 
 does_rule_match(<<"lt">>,_,OpVal,MsgVal) ->
-    {Vop,_} = to_num(OpVal),
-    {Vmsg,_} = to_num(MsgVal),
+    {Vop,Vmsg} = to_num(OpVal, MsgVal),
     Vmsg < Vop;
 
 does_rule_match(Op,Type,_OpVal,_MsgVal) ->
