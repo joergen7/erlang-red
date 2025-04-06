@@ -1,7 +1,11 @@
 -module(erlang_red).
 
 -behaviour(application).
--export([start/0, start/2, stop/1, stop/0]).
+-export([start/0, start/2, stop/1, stop/0,constraint/2]).
+
+constraint(Arg1,Arg2) ->
+    io:format("Constraint: ~p ~p\n",[Arg1,Arg2]),
+    {ok, Arg2}.
 
 start() ->
     application:ensure_all_started([cowboy, erlang_red]).
@@ -10,9 +14,18 @@ start(_Type, _Args) ->
     io:format("start/2 called on erlang_red\n"),
     Dispatch = cowboy_router:compile([
         {'_', [
-               {"/node-red", cowboy_static,
+               %%
+               %% POST handlers
+               %%
+               {"/settings/user", cowboy_post_blow_handler, []},
+               {"/nodes", cowboy_post_blow_handler, []},
+               {"/flows", cowboy_flow_deploy_handler, []},
+               %%
+               %% GET handlers for delivery of the static content
+               %%
+               {"/node-red", [{method,<<"GET">>}],  cowboy_static,
                 {file, "./node-red-frontend/index.html"} },
-               {"/[...]", cowboy_static,
+               {"/[...]", [{method,<<"GET">>}], cowboy_static,
                 {dir, "./node-red-frontend",
                  [{mimetypes, node_red_mimetypes, mt}]
                }}

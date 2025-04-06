@@ -33,8 +33,9 @@ PyTHON=/usr/bin/python3
 
 echo "==> html, javascript & css"
 
+mkdir -p settings
+
 curl -s "${NODERED_URL}/favicon.ico?_=${CBSTMP}" -o favicon.ico
-curl -s "${NODERED_URL}/settings?_=${CBSTMP}" -o settings.json
 
 ##
 ## These are all text files.
@@ -43,6 +44,7 @@ for fle in vendor/jquery/css/base/jquery-ui.min.css \
            vendor/font-awesome/css/font-awesome.min.css \
            vendor/monaco/style.css \
            vendor/monaco/dist/editor.js \
+           vendor/monaco/dist/editor.worker.js \
            vendor/monaco/monaco-bootstrap.js \
            vendor/vendor.js \
            vendor/font-awesome/fonts/fontawesome-webfont.ttf \
@@ -53,7 +55,6 @@ for fle in vendor/jquery/css/base/jquery-ui.min.css \
            red/style.min.css \
            red/red.min.js \
            red/main.min.js \
-           red/keymap.json \
            red/tours/welcome.js \
            red/images/deploy-full.svg \
            red/images/deploy-full-o.svg \
@@ -66,7 +67,6 @@ for fle in vendor/jquery/css/base/jquery-ui.min.css \
            red/images/node-red-icon-black.svg \
            red/images/spin.svg \
            red/images/subflow_tab.svg \
-           settings/user \
            types/node-red/util.d.ts \
            types/node-red/func.d.ts \
            types/node/globals.d.ts \
@@ -74,7 +74,6 @@ for fle in vendor/jquery/css/base/jquery-ui.min.css \
            types/node/buffer.d.ts \
            types/node/timers.d.ts \
            types/node/util.d.ts \
-           theme \
            debug/view/debug-utils.js \
           ; do
     mkdir -p $(dirname $fle)
@@ -86,6 +85,10 @@ done
 ##
 #curl -s "${NODERED_URL}/?_=${CBSTMP}" -H 'Accept: application/html' -o index.html
 #curl -s "${NODERED_URL}/red/red.js?_=${CBSTMP}" -o red/red.js
+#curl -s "${NODERED_URL}/settings/user?_=${CBSTMP}" -o settings/user.json
+#curl -s "${NODERED_URL}/theme?_=${CBSTMP}" -o theme
+#curl -s "${NODERED_URL}/red/keymap.json?_=${CBSTMP}" -o red/keymap.json
+#curl -s "${NODERED_URL}/settings?_=${CBSTMP}" -o settings.json
 
 LoCaLeS="en-US en-GB en de-DE de fr ja ko pt-BR ru zh-CN zh-TW"
 

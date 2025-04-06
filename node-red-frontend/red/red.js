@@ -915,8 +915,51 @@ var RED = (function() {
             if ( options.url == "icons" && options.type == "GET" ) {
                 options.url = "icons.json"
             }
+
+            // retrieve the current flow but if its storeed in the browser
+            // then use that.
             if ( options.url == "flows" && options.type == "GET" ) {
-                options.url = "flows.initial.json"
+                let flowdata = RED.settings.getLocal( "flowdata" )
+
+                if ( !flowdata ) {
+                    options.url = "flows.initial.json"
+                } else {
+                    try {
+                        options.success({
+                            "rev": "ea246f68766c8630ea246f68766c8630",
+                            "revision": "fb0df6d24f37fbdf5b3ff97b723416ab4d5f00f9",
+                            "flowid": "ea246f68766c8630",
+                            "flows": JSON.parse(flowdata)["flows"]
+                        })
+
+                        jqXHR.abort();
+                    } catch(ex) {
+                        options.url = "flows.initial.json"
+                    }
+                }
+            }
+
+            // called once the deploy restart flow is called.
+            function reloadFlows() {
+                stopExecution = true;
+
+                setTimeout( () => {
+                    stopExecution = false
+                    executionState = {};
+                    RED.nodes.eachNode( (nde) => { clearStatusForNode(nde.id) });
+                }, 2000);
+            }
+
+            // Store all changes locally in the browser, but we still pretend
+            // to send it off to the server ... hahaha it's all fake, just like
+            // many others.
+            if ( options.url == "flows" && options.type == "POST" ) {
+                if ( options.headers &&
+                     options.headers["Node-RED-Deployment-Type"] == "reload" ) {
+                    reloadFlows()
+                } else {
+                    RED.settings.setLocal( "flowdata", options.data)
+                }
             }
         })
 
@@ -1618,7 +1661,7 @@ RED.settings = (function () {
             },
             dataType: "json",
             cache: false,
-            url: 'settings/user',
+            url: 'settings/user.json',
             success: function (data) {
                 setUserSettings(data);
                 done();
