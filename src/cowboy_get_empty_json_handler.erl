@@ -1,8 +1,11 @@
 -module(cowboy_get_empty_json_handler).
 
 %%
-%% Post blower - anything that is posted here gets an "ok, you're doing good"
-%% response. A feel-good poster person.
+%% Get blower - this returns an empty hash. This is used for returning the
+%% credentials for a flow tab. Double click on a flow tab and this request
+%% is set.
+%%
+%% Also used for the contexts - that are forever empty.
 %%
 
 -behaviour(cowboy_rest).
@@ -19,13 +22,11 @@ init(Req, State) ->
 allowed_methods(Req, State) ->
     {[<<"GET">>], Req, State}.
 
-
 content_types_provided(Req,State) ->
     { [{{ <<"application">>, <<"json">>, '*'}, handle_response}], Req, State }.
 
 handle_response(Req, State) ->
     {<<"{}">>, Req, State}.
-
 
 format_error(Reason, Req) ->
     {[

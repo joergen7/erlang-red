@@ -20,12 +20,16 @@ start(_Type, _Args) ->
                {"/settings/user", cowboy_post_blow_handler, []},
                {"/nodes", cowboy_post_blow_handler, []},
                {"/flows", cowboy_flow_deploy_handler, []},
+
                %%
                %% GET handlers for delivery of the static content
                %% TODO the constraints here DONT WORK - Cowboy just
                %% ignores them.
                %%
                {"/credentials/[...]", [{method,<<"GET">>}],
+                cowboy_get_empty_json_handler, []},
+
+               {"/context/[...]", [{method,<<"GET">>}],
                 cowboy_get_empty_json_handler, []},
 
                {"/node-red", [{method,<<"GET">>}], cowboy_static,
