@@ -891,30 +891,33 @@ var RED = (function() {
 
     function loadEditor() {
         $.ajaxPrefilter(function( options, originalOptions, jqXHR ) {
-          let mth = undefined;
+            let mth = undefined;
 
-          // locales and messages - convert parameter to be part of the file
-          // name - differentiate between languages on a _static_ server.
+            // locales and messages - convert parameter to be part of the file
+            // name - differentiate between languages on a _static_ server.
 
-          // LoCaLeS is taken from retrieve.sh and should be kept in sync.
-          const LoCaLeS="en-US en-GB en de-DE de fr ja ko pt-BR ru zh-CN zh-TW"
+            // LoCaLeS is taken from retrieve.sh and should be kept in sync.
+            const LoCaLeS="en-US en-GB en de-DE de fr ja ko pt-BR ru zh-CN zh-TW"
 
-          // convert from /messages?lng=xx-YY to /messages.xx-YY but this means
-          // missing locale files will halt loading of the editor (at loading
-          // plugins) so we need to ensure the locale files for a specific locale
-          // _always_ exist. (Conversion to .xx-YY allows for support of
-          // multiple locales on a _static_ server).
-          mth = options.url.match(/^(nodes|plugins)\/messages/i)
-          if ( mth ) {
-            var d = new URLSearchParams(options.url.split("?")[1])
-            if ( LoCaLeS.split(/[\t \n]+/).indexOf(d.get("lng")) > -1 ) {
-              options.url = mth[1] + "/messages." + d.get("lng")
+            // convert from /messages?lng=xx-YY to /messages.xx-YY but this means
+            // missing locale files will halt loading of the editor (at loading
+            // plugins) so we need to ensure the locale files for a specific locale
+            // _always_ exist. (Conversion to .xx-YY allows for support of
+            // multiple locales on a _static_ server).
+            mth = options.url.match(/^(nodes|plugins)\/messages/i)
+            if ( mth ) {
+                var d = new URLSearchParams(options.url.split("?")[1])
+                if ( LoCaLeS.split(/[\t \n]+/).indexOf(d.get("lng")) > -1 ) {
+                    options.url = mth[1] + "/messages." + d.get("lng")
+                }
             }
-          }
 
-          if ( options.url == "flows" && options.type == "GET" ) {
-            options.url = "flows.initial.json"
-          }
+            if ( options.url == "icons" && options.type == "GET" ) {
+                options.url = "icons.json"
+            }
+            if ( options.url == "flows" && options.type == "GET" ) {
+                options.url = "flows.initial.json"
+            }
         })
 
         RED.workspaces.init();
