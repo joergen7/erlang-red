@@ -1,0 +1,16 @@
+{application, erlang_red, [
+    {description, "an web app to demonstrate Node-RED with Erlang backend"},
+    {vsn, "0.1.0"},
+    {registered, [erlang_red_sup]},
+    {applications, [
+        kernel,
+        stdlib,
+        cowboy
+    ]},
+    {env, []},
+    {mod, {erlang_red, []}},
+    {modules, [
+    ]},
+    {licenses, ["Apache-2.0"]},
+    {links, []}
+ ]}.

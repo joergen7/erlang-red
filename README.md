@@ -32,7 +32,7 @@ Eventually this repository will contain a serverless version of Node-RED that wi
 Build
 -----
 
-    $ rebar3 escriptize
+    $ rebar3 compile
 
 Test
 -----
@@ -42,5 +42,4 @@ Test
 Run
 ---
 
-    $ rebar3 shell
-    1> test:main().
+    $ rebar3 shell --apps erlang_red
