@@ -22,9 +22,15 @@ start(_Type, _Args) ->
                {"/flows", cowboy_flow_deploy_handler, []},
                %%
                %% GET handlers for delivery of the static content
+               %% TODO the constraints here DONT WORK - Cowboy just
+               %% ignores them.
                %%
-               {"/node-red", [{method,<<"GET">>}],  cowboy_static,
+               {"/credentials/[...]", [{method,<<"GET">>}],
+                cowboy_get_empty_json_handler, []},
+
+               {"/node-red", [{method,<<"GET">>}], cowboy_static,
                 {file, "./node-red-frontend/index.html"} },
+
                {"/[...]", [{method,<<"GET">>}], cowboy_static,
                 {dir, "./node-red-frontend",
                  [{mimetypes, node_red_mimetypes, mt}]
