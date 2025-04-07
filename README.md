@@ -27,14 +27,14 @@ All Node-RED flows upon which this is tested are located in [priv/](priv/) and c
 
 Use the import functionality and paste the included .json into the dialog.
 
-Eventually this repository will contain a serverless version of Node-RED that will interact with a Erlang backend - but that's future works.
+~~Eventually this repository will contain a serverless version of Node-RED that will interact with a Erlang backend - but that's future works.~~ This is now the [case](node-red-frontend/).
 
 Why?
 ---
 
 [Node-RED](https://nodered.org) is a amazing[*] tool for creating flows that describe concurrent processing, it is just a shame the NodeJS is single threaded. So why not use something that is multi-process from the ground up? That way concurrency is guaranteed.
 
-Also Erlang isn't the most understandable of programming language - unless one was born in a vat of Prolog and Lisp!
+Also Erlang isn't the most understandable of programming language - unless one was ~~born~~ fell into in a cauldron of Prolog and Lisp! (Think [Asterix and Obelix](https://en.wikipedia.org/wiki/Obelix)).
 
 So it won't be great to have the simplicity of low-code visual flow based programming and the performance (and distribution) of Erlang?
 
