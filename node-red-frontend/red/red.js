@@ -923,6 +923,11 @@ var RED = (function() {
 
                 if ( !flowdata ) {
                     options.url = "flows.initial.json"
+
+                    setTimeout( () => {
+                        RED.nodes.dirty(true);
+                        RED.actions.invoke("core:deploy-flows")
+                    },2300);
                 } else {
                     try {
                         options.success({
@@ -937,7 +942,7 @@ var RED = (function() {
                         setTimeout( () => {
                             RED.nodes.dirty(true);
                             RED.actions.invoke("core:deploy-flows")
-                        },300);
+                        },1300);
 
                         jqXHR.abort();
                     } catch(ex) {
