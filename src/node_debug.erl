@@ -48,8 +48,7 @@ receive_loop(NodeDef) ->
                              format => <<"Object">>
                     },
 
-                    websocket_pid ! { data, jiffy:encode([#{ topic => debug,
-                                                          data => Data } ])}
+                    websocket_pid ! { debug, Data }
             end,
 
             receive_loop(NodeDef);

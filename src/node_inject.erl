@@ -18,14 +18,24 @@ parse_props([],_,Msg) ->
 parse_props([Prop|RestProps],NodeDef,Msg) ->
     %%
     %% TODO ignoring type definitions here - so be it. Type is defined by the
-    %% TODO 'vt' attribute of the Prop map.
+    %% TODO 'vt' attribute of the Prop map except in the case of payload.
+    %% TODO payload has payloadType on the NodeDef.
     %%
     io:format("Prop: ~p\n",[Prop]),
     case maps:find(p,Prop) of
         {ok, <<"payload">>} ->
             Val = nodes:get_prop_value_from_map(payload,NodeDef),
-            io:format("Prop: Payload: ~p\n",[Val]),
-            parse_props(RestProps,NodeDef, maps:put(payload, Val, Msg));
+            PType = nodes:get_prop_value_from_map(payloadType,NodeDef),
+            io:format("Prop: Payload: ~p of type ~p\n",[Val,PType]),
+
+            case PType of
+                <<"date">> ->
+                    parse_props(RestProps,NodeDef,
+                                maps:put(payload,
+                                         erlang:system_time(millisecond), Msg));
+                _ ->
+                    parse_props(RestProps,NodeDef, maps:put(payload, Val, Msg))
+            end;
 
         {ok, <<"topic">>} ->
             Val = handle_topic_value(NodeDef,Prop,maps:find(vt,Prop)),
@@ -35,7 +45,8 @@ parse_props([Prop|RestProps],NodeDef,Msg) ->
         {ok, PropName} ->
             Val = nodes:get_prop_value_from_map(v,Prop),
             io:format("Prop: Name: ~p = ~p\n",[PropName,Val]),
-            parse_props(RestProps,NodeDef, maps:put(binary_to_atom(PropName), Val, Msg));
+            parse_props(RestProps,NodeDef,
+                        maps:put(binary_to_atom(PropName), Val, Msg));
 
         _ ->
             io:format("Prop: NoMATCH: ~p\n",[Prop]),

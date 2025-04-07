@@ -34,6 +34,9 @@ start(_Type, _Args) ->
                %% TODO the constraints here DONT WORK - Cowboy just
                %% TODO ignores them because Bindings is empty.
                %%
+               {"/library/local/flows/", [{method,<<"GET">>}],
+                cowboy_get_empty_json_handler, []},
+
                {"/credentials/[...]", [{method,<<"GET">>}],
                 cowboy_get_empty_json_handler, []},
 

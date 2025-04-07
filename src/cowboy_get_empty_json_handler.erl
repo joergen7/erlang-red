@@ -26,7 +26,12 @@ content_types_provided(Req,State) ->
     { [{{ <<"application">>, <<"json">>, '*'}, handle_response}], Req, State }.
 
 handle_response(Req, State) ->
-    {<<"{}">>, Req, State}.
+    case maps:find(path,Req) of
+        {ok, <<"/library/local/flows/">>} ->
+            {<<"[]">>, Req, State};
+        _ ->
+            {<<"{}">>, Req, State}
+    end.
 
 format_error(Reason, Req) ->
     {[

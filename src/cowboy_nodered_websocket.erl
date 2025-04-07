@@ -34,6 +34,12 @@ websocket_info({data, Msg}, [{stats_interval, SInterval}]) ->
     io:format("sending on socket ~p~n",[Msg]),
     {reply, {text, Msg}, [{stats_interval, SInterval}]};
 
+websocket_info({debug, Data}, [{stats_interval, SInterval}]) ->
+    io:format("sending debug on socket ~p~n",[Data]),
+    Msg = jiffy:encode([#{ topic => debug, data => Data } ]),
+    {reply, {text, Msg}, [{stats_interval, SInterval}]};
+
+
 websocket_info(_Info, State) ->
     {ok, State}.
 

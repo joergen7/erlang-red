@@ -8,11 +8,18 @@
 -export([get_prop_value_from_map/2]).
 -export([get_prop_value_from_map/3]).
 -export([send_msg_on/2]).
+-export([generate_id/0]).
 
 %%
 %% This is an internal exports
 %%
 -export([node_noop/1]).
+
+generate_id() ->
+    string:lowercase(
+      list_to_binary(
+        [ io_lib:format("~2.16.0B",
+                        [X]) || <<X>> <= crypto:strong_rand_bytes(8) ])).
 
 create_pid_for_node(Ary) ->
     create_pid_for_node(Ary,[]).
