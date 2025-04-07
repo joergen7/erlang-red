@@ -40,7 +40,6 @@ So it won't be great to have the simplicity of low-code visual flow based progra
 
 [*] = amazing in the sense of extendability (the codebase is Javascript both front and back), understandability (Node-RED [terminology](https://blog.openmindmap.org/blog/pipes-wires-nodes) is straightforward) and usability (many would disagree but once a rectangle becomes a unit of computation and a line becomes a pathway for data - it's simple!).
 
-
 Build
 -----
 
@@ -67,10 +66,6 @@ I use docker to develop this so for me, the following works:
 
     prompt$ git clone git@github.com:gorenje/erlang-red.git
     prompt$ docker run -it -v $(pwd)/erlang-red:/code -p 9090:8080 -w /code --rm erlang bash
-    docker> DEBUG=1 rebar3 compile ## might have dependency issues because of docker container
-    docker> git config --global --add safe.directory /code/_build/default/lib/ranch
-    docker> git config --global --add safe.directory /code/_build/default/lib/cowlib
-    docker> git config --global --add safe.directory /code/_build/default/lib/cowboy
     docker> rebar3 shell --apps erlang_red
 
 Then from the docker host machine, open a browser:

@@ -8,33 +8,39 @@
 -export([ws_send/2]).
 
 init(Req, State) ->
-    io:format("websocket connection initiated~n~p~n~nstate: ~p~n", [Req, State]),
     {cowboy_websocket, Req, State}.
 
-
-websocket_handle(Data, State) ->
-    io:format("websocket data from client: ~p~n", [Data]),
+websocket_handle(_Data, State) ->
     {ok, State}.
 
 websocket_init([{stats_interval, SInterval}]) ->
     ws_send(self(), SInterval),
+    register(websocket_pid, self()),
+    erlang:start_timer(
+      1000,
+      websocket_pid,
+      jiffy:encode([#{ topic => <<"notification/runtime-state">>,
+                       data => #{ state => start,
+                                  deploy => true
+                                }}])
+    ),
     {ok, [{stats_interval, SInterval}]}.
-
 
 websocket_info({timeout, _Ref, Msg}, [{stats_interval, SInterval}]) ->
     ws_send(self(), SInterval),
+    {reply, {text, Msg}, [{stats_interval, SInterval}]};
+
+websocket_info({data, Msg}, [{stats_interval, SInterval}]) ->
+    io:format("sending on socket ~p~n",[Msg]),
     {reply, {text, Msg}, [{stats_interval, SInterval}]};
 
 websocket_info(_Info, State) ->
     {ok, State}.
 
 ws_send(Pid, SInterval) ->
-    io:format("websocket sending data ~p ~p\n", [Pid, SInterval]),
     Millis = erlang:system_time(millisecond),
-    Data_jsonb = <<"{\"topic\": \"hb\", \"data\": 1222311}">>,
+    Data_jsonb = jiffy:encode([#{ topic => hb, data => Millis }]),
     erlang:start_timer(SInterval, Pid, Data_jsonb).
 
-
-terminate(_Reason, Req, _State) ->
-    io:format("websocket connection terminated~n~p~n", [maps:get(peer, Req)]),
+terminate(_Reason, _Req, _State) ->
     ok.

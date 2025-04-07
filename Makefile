@@ -15,3 +15,6 @@ shell:
 
 app-start:
 	rebar3 shell --apps erlang_red
+
+eunit-test:
+	rebar3 eunit

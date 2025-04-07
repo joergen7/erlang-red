@@ -6,6 +6,7 @@
 -export([create_pid_for_node/1]).
 -export([send_msg_to_connected_nodes/2]).
 -export([get_prop_value_from_map/2]).
+-export([get_prop_value_from_map/3]).
 -export([send_msg_on/2]).
 
 %%
@@ -28,13 +29,21 @@ create_pid_for_node([NodeDef|T],Pids) ->
     %% TODO: if true, then the node does not need to have a Pid
     %% TODO: created for it.
     {Module, Fun} = node_type_to_fun(TypeStr, maps:find(d,NodeDef)),
-    Pid = spawn(Module, Fun, [NodeDef]),
 
     NodeIdToPid = binary_to_atom(
                     list_to_binary(
                       lists:flatten(
                         io_lib:format("~s~s",["node_pid_",IdStr])))),
 
+    case whereis(NodeIdToPid) of
+        undefined ->
+            ok;
+        _ ->
+            NodeIdToPid ! stop,
+            unregister(NodeIdToPid)
+    end,
+
+    Pid = spawn(Module, Fun, [NodeDef]),
     register(NodeIdToPid, Pid),
 
     %% io:format("~p ~p\n",[Pid,NodeIdToPid]),
@@ -70,13 +79,16 @@ send_msg_to_connected_nodes(NodeDef,Msg) ->
 %%
 %% Avoid having to create the same case all the time.
 %%
-get_prop_value_from_map(Prop,Map) ->
+get_prop_value_from_map(Prop,Map,Default) ->
     case maps:find(Prop,Map) of
         {ok, Val} ->
             Val;
         _ ->
-            ""
+            Default
     end.
+
+get_prop_value_from_map(Prop,Map) ->
+    get_prop_value_from_map(Prop,Map,"").
 
 %%
 %% Helper for passing on messages once a node has completed with the message
