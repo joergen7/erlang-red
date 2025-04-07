@@ -41,6 +41,7 @@ curl -s "${NODERED_URL}/favicon.ico?_=${CBSTMP}" -o favicon.ico
 ## These are all text files.
 ##
 for fle in vendor/jquery/css/base/jquery-ui.min.css \
+           vendor/jquery/css/base/images/ui-icons_777777_256x240.png \
            vendor/font-awesome/css/font-awesome.min.css \
            vendor/monaco/style.css \
            vendor/monaco/dist/editor.js \
@@ -67,6 +68,13 @@ for fle in vendor/jquery/css/base/jquery-ui.min.css \
            red/images/node-red-icon-black.svg \
            red/images/spin.svg \
            red/images/subflow_tab.svg \
+           red/images/typedInput/az.svg \
+           red/images/typedInput/09.svg \
+           red/images/typedInput/bool.svg \
+           red/images/typedInput/json.svg \
+           red/images/typedInput/bin.svg \
+           red/images/typedInput/expr.svg \
+           red/images/typedInput/env.svg \
            types/node-red/util.d.ts \
            types/node-red/func.d.ts \
            types/node/globals.d.ts \

@@ -932,6 +932,13 @@ var RED = (function() {
                             "flows": JSON.parse(flowdata)["flows"]
                         })
 
+                        // update the server with the flow that was stored
+                        // locally, trigger a deploy.
+                        setTimeout( () => {
+                            RED.nodes.dirty(true);
+                            RED.actions.invoke("core:deploy-flows")
+                        },300);
+
                         jqXHR.abort();
                     } catch(ex) {
                         options.url = "flows.initial.json"
