@@ -15,6 +15,12 @@ start(_Type, _Args) ->
     Dispatch = cowboy_router:compile([
         {'_', [
                %%
+               %% Sock'em in the eye websocket
+               %%
+               {"/node-red/comms", cowboy_nodered_websocket,
+                [{stats_interval, 1500}]},
+
+               %%
                %% POST handlers
                %%
                {"/settings/user", cowboy_post_blow_handler, []},
