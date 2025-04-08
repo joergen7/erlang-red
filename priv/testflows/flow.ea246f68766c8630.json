@@ -28,13 +28,15 @@
         "topic": "no real topic",
         "payload": "",
         "payloadType": "date",
-        "x": 660,
-        "y": 600,
+        "x": 680,
+        "y": 480,
         "wires": [
             [
                 "78fab79eaaa268c3",
                 "d320af7910f3e3af",
-                "690408f46e330b2f"
+                "690408f46e330b2f",
+                "6013d0cf2542e862",
+                "f5e202f68ce6572f"
             ]
         ]
     },
@@ -157,8 +159,64 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 990,
-        "y": 480,
+        "x": 1040,
+        "y": 400,
         "wires": []
+    },
+    {
+        "id": "6013d0cf2542e862",
+        "type": "ut-assert-values",
+        "z": "ea246f68766c8630",
+        "name": "",
+        "rules": [
+            {
+                "t": "noteql",
+                "p": "payload",
+                "pt": "msg",
+                "to": "",
+                "tot": "str"
+            }
+        ],
+        "x": 1040,
+        "y": 340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "49c425f110d125a1",
+        "type": "ut-assert-failure",
+        "z": "ea246f68766c8630",
+        "name": "",
+        "x": 1290,
+        "y": 520,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f5e202f68ce6572f",
+        "type": "switch",
+        "z": "ea246f68766c8630",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "lt",
+                "v": "10000",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 1010,
+        "y": 500,
+        "wires": [
+            [
+                "49c425f110d125a1"
+            ]
+        ]
     }
 ]
