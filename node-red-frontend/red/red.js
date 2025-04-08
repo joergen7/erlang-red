@@ -44387,6 +44387,26 @@ RED.clipboard = (function() {
         }
     }
 
+    function sendOffToServerAsTestCase(data) {
+        $.ajax({
+            headers: {
+            },
+            cache: false,
+            url: `testcase/${RED.workspaces.active()}/create`,
+            method: 'POST',
+            data: JSON.stringify({ "flow": data }),
+            contentType: "application/json",
+            success: function(data) {
+                data = JSON.parse(data)
+                RED.notify(`Created testcase ${data.name}`, "success" )
+            },
+            error: function() {
+                RED.notify(`something went wrong creating testcase`, "error" )
+            }
+        });
+
+    }
+
     function setupDialogs() {
         dialog = $('<div id="red-ui-clipboard-dialog" class="hide"><form class="dialog-form form-horizontal"></form></div>')
             .appendTo("#red-ui-editor")
@@ -44406,6 +44426,17 @@ RED.clipboard = (function() {
                         text: RED._("common.label.cancel"),
                         click: function() {
                             $( this ).dialog( "close" );
+                            RED.view.focus();
+                        }
+                    },
+                    {
+                        id: "red-ui-clipboard-dialog-create-testcase",
+                        text: "Create Test Case",
+                        class: "primary",
+                        click: function() {
+                            $( this ).dialog( "close" );
+                            var data = $("#red-ui-clipboard-dialog-export-text").val();
+                            sendOffToServerAsTestCase(data);
                             RED.view.focus();
                         }
                     },
