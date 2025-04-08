@@ -1,7 +1,15 @@
-Node-RED to Erlang
+Erlang-RED - A Node-RED backend written in Erlang
 =====
 
-A Proof of Work in Progress.
+An experiment to see how far is it possible to build an Erlang backend for the Node-RED flow editor that seemlessly executes existing Node-RED flows.
+
+The idea is not to provide Erlang nodes for NodeRED rather the idea is to replace the NodeJS backend of Node-RED with an Erlang equivalent.
+
+The goal is to offer the advanages of visual flow based programming using a programming language that is designed for message passing and concurrency from the ground up - that's why Erlang was selected.
+
+
+Implementation Ramblings
+----
 
 The idea is to convert Node-RED flows into Erlang processes to which message are sent.
 
@@ -23,7 +31,7 @@ The demo is based on simple Node-RED flows that have been exported as Json and t
 Flows
 ----
 
-All Node-RED flows upon which this is tested are located in [priv/](priv/) and can be viewed in Node-RED using the [serverless instance of Node-RED](https://cdn.flowhub.org).
+All Node-RED flows upon which this is tested are located in [priv/](priv/testflows) and can be viewed in Node-RED using the [serverless instance of Node-RED](https://cdn.flowhub.org).
 
 Use the import functionality and paste the included .json into the dialog.
 
@@ -114,9 +122,11 @@ Also remember these flow tests are designed to ensure the Erlang backend is corr
 Contributing
 ---
 
-All contribution should be printed out on DIN A4 paper, copied in triplicate  and snail mailed to me c/o GitHub (only one copy). The other copies should be filed away in some dusty filing cabinet at the bottom of a dark basement. Please remove the stairs that lead to the basement.
+All contributions should be printed out on sheets of A4 paper (not US-Letter), copied in triplicate, one copy should filed away and forgotten. Another can be snail mailed to me at c/o GitHub (only one copy). The other copies should be filed away in some dusty filing cabinet at the bottom of a dark basement, preferably before removing the stairs that lead to the basement.
 
 Alternatively just create a pull request, whichever is simpler.
+
+Questions and Answers at either the [Erlang Forum](https://erlangforums.com/t/erlang-red-visual-flow-based-programming-for-erlang/4656) or the [Node-RED Forum](https://discourse.nodered.org/t/erlang-red-erlang-backed-node-red/96458).
 
 Acknowledgement
 ---
