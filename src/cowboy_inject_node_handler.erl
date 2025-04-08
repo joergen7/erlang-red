@@ -40,7 +40,7 @@ handle_json_body(Req, State) ->
                 _ ->
                     io:format("Inject action found pid!~n"),
                     NodeIdToPid ! { outgoing,
-                                    #{ '_msgid' => nodes:generate_id()} }
+                                    #{ '_msgid' => nodes:generate_id() } }
             end
     end,
 

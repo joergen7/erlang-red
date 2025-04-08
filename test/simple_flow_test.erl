@@ -14,11 +14,11 @@ first_test() ->
     Pids = nodes:create_pid_for_node(Ary),
 
     io:format("sending message - 1st inject\n"),
-    node_pid_f9504da94c59e69f ! { outgoing, #{} },
+    node_pid_f9504da94c59e69f ! { outgoing, #{ '_msgid' => nodes:generate_id() }},
 
 
     io:format("sending message - 2nd inject\n"),
-    node_pid_034562d7b8d76ac9 ! { outgoing, #{} },
+    node_pid_034562d7b8d76ac9 ! { outgoing, #{ '_msgid' => nodes:generate_id() }},
 
     receive
         helo ->
@@ -37,7 +37,7 @@ junction_nodes_test() ->
     Pids = nodes:create_pid_for_node(Ary),
 
     io:format("sending message\n"),
-    node_pid_323c39235c019b84 ! { outgoing, #{} },
+    node_pid_323c39235c019b84 ! { outgoing, #{ '_msgid' => nodes:generate_id() } },
 
     receive
         helo ->
@@ -56,7 +56,7 @@ disabled_node_test() ->
     Pids = nodes:create_pid_for_node(Ary),
 
     io:format("sending message\n"),
-    node_pid_7858c408d5bd9924 ! { outgoing, #{} },
+    node_pid_7858c408d5bd9924 ! { outgoing, #{ '_msgid' => nodes:generate_id() } },
 
     receive
         helo ->
@@ -75,7 +75,7 @@ attribute_setting_test() ->
     Pids = nodes:create_pid_for_node(Ary),
 
     io:format("sending message\n"),
-    node_pid_1460cac9a329205a ! { outgoing, #{} },
+    node_pid_1460cac9a329205a ! { outgoing, #{ '_msgid' => nodes:generate_id() } },
 
     receive
         helo ->
