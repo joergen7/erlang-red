@@ -455,5 +455,29 @@
         ],
         "user": false,
         "version": "4.0.9"
+    },
+    {
+        "enabled": true,
+        "id": "@gorenje/erlang-red-unittest/ut-assert-failure",
+        "local": true,
+        "module": "@gorenje/erlang-red-unittest",
+        "name": "ut-assert-failure",
+        "types": [
+            "ut-assert-failure"
+        ],
+        "user": false,
+        "version": "0.1.0"
+    },
+    {
+        "enabled": true,
+        "id": "@gorenje/erlang-red-unittest/ut-assert-values",
+        "local": true,
+        "module": "@gorenje/erlang-red-unittest",
+        "name": "ut-assert-values",
+        "types": [
+            "ut-assert-values"
+        ],
+        "user": false,
+        "version": "0.1.0"
     }
 ]

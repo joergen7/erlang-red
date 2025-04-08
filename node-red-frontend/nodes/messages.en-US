@@ -1,1 +1,63 @@
-{}
+{
+    "@gorenje/erlang-red-unittest/ut-assert-failure": {
+        "ut-assert-failure": {
+            "label": {
+                "statusset": "Status Set"
+            },
+            "status": {
+                "timeout": "No more time to waiting",
+                "waiting": "Waiting for Godot"
+            }
+        }
+    },
+    "@gorenje/erlang-red-unittest/ut-assert-values": {
+        "ut-assert-values": {
+            "action": {
+                "change": "Change",
+                "debug": "Debug",
+                "delete": "Delete",
+                "eql": "Equal",
+                "move": "Move",
+                "mth": "Match",
+                "noteql": "Not Equal",
+                "notmth": "Not Match",
+                "replace": "Replace with",
+                "search": "Search for",
+                "set": "Set",
+                "to": "to",
+                "toValue": "to the value",
+                "unset": "Not Set"
+            },
+            "errors": {
+                "invalid-expr": "Invalid JSONata expression: __error__",
+                "invalid-from": "Invalid 'from' property: __error__",
+                "invalid-json": "Invalid 'to' JSON property",
+                "invalid-json-data": "Invalid JSON data: __error__",
+                "invalid-prop": "Invalid property expression: __property__",
+                "no-override": "Cannot set property of non-object type: __property__"
+            },
+            "label": {
+                "change": "change __property__",
+                "changeCount": "assert: __count__ values",
+                "debug": "debug __property__",
+                "deepCopy": "Deep copy value",
+                "delete": "delete __property__",
+                "eql": "equal __property__",
+                "move": "move __property__",
+                "mth": "match __property__",
+                "noteql": "not equal __property__",
+                "notmth": "not match __property__",
+                "regex": "Use regular expressions",
+                "rule": "rule",
+                "rules": "Rules",
+                "set": "set __property__",
+                "statusset": "Status Set",
+                "unset": "not set __property__"
+            },
+            "status": {
+                "timeout": "No more time to waiting",
+                "waiting": "Waiting for Godot"
+            }
+        }
+    }
+}

@@ -1,4 +1,5 @@
 {
+    "@gorenje/erlang-red-unittest": [],
     "node-red": [
         "alert.svg",
         "arduino.svg",
