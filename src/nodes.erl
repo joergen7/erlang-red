@@ -9,11 +9,37 @@
 -export([get_prop_value_from_map/3]).
 -export([send_msg_on/2]).
 -export([generate_id/0]).
+-export([nodeid_to_pid/1]).
+-export([node_init/1]).
+-export([enter_receivership/2]).
 
 %%
-%% This is an internal exports
+%% Common functionality
 %%
--export([node_noop/1]).
+enter_receivership(Module,NodeDef) ->
+    receive
+        stop ->
+            {ok, IdStr} = maps:find(id,NodeDef),
+            {ok, TypeStr} = maps:find(type,NodeDef),
+            io:format("node STOPPED id: [~p] type: [~p]\n",[IdStr,TypeStr]),
+            ok;
+
+        {incoming,Msg} ->
+            erlang:apply(Module, handle_incoming, [NodeDef,Msg]),
+            enter_receivership(Module,NodeDef);
+
+        %% Outgoing messages are message generators (e.g inject node) - send
+        %% this to the process to get it to generate a message, Those messages
+        %% become incoming messages
+        {outgoing,Msg} ->
+            erlang:apply(Module, handle_outgoing, [NodeDef,Msg]),
+            enter_receivership(Module,NodeDef)
+    end.
+
+node_init(NodeDef) ->
+    {ok, IdStr} = maps:find(id,NodeDef),
+    {ok, TypeStr} = maps:find(type,NodeDef),
+    io:format("node STARTED id: [~p] type: [~p]\n",[IdStr,TypeStr]).
 
 generate_id() ->
     string:lowercase(
@@ -21,10 +47,19 @@ generate_id() ->
         [ io_lib:format("~2.16.0B",
                         [X]) || <<X>> <= crypto:strong_rand_bytes(8) ])).
 
+nodeid_to_pid(IdStr) ->
+    binary_to_atom(
+      list_to_binary(
+        lists:flatten(
+          io_lib:format("~s~s", ["node_pid_",IdStr] )))).
+
 create_pid_for_node(Ary) ->
     create_pid_for_node(Ary,[]).
 
 
+%% TODO: a tab node (i.e. the tab containing a flow) also has a disabled
+%% TODO: flag but this is called 'disabled'. If it is set, then the entire
+%% TODO: flow should be ignoreed --> this is not handled at the moment.
 create_pid_for_node([],Pids) ->
     Pids;
 
@@ -32,41 +67,25 @@ create_pid_for_node([NodeDef|T],Pids) ->
     {ok, IdStr} = maps:find(id,NodeDef),
     {ok, TypeStr} = maps:find(type,NodeDef),
 
-    %% TODO: here have to respect the 'd' (disabled)  attribute.
-    %% TODO: if true, then the node does not need to have a Pid
-    %% TODO: created for it.
+    %% here have to respect the 'd' (disabled) attribute. if true, then
+    %% the node does not need to have a Pid created for it.
     {Module, Fun} = node_type_to_fun(TypeStr, maps:find(d,NodeDef)),
 
-    NodeIdToPid = binary_to_atom(
-                    list_to_binary(
-                      lists:flatten(
-                        io_lib:format("~s~s",["node_pid_",IdStr])))),
+    NodePid = nodeid_to_pid(IdStr),
 
-    case whereis(NodeIdToPid) of
+    case whereis(NodePid) of
         undefined ->
             ok;
         _ ->
-            NodeIdToPid ! stop,
-            unregister(NodeIdToPid)
+            NodePid ! stop,
+            unregister(NodePid)
     end,
 
     Pid = spawn(Module, Fun, [NodeDef]),
-    register(NodeIdToPid, Pid),
+    register(NodePid, Pid),
 
-    %% io:format("~p ~p\n",[Pid,NodeIdToPid]),
-    create_pid_for_node(T,[NodeIdToPid|Pids]).
-
-
-
-%%
-%% placeholder node for all types that aren't supported yet and for
-%% nodes that have been disabled.
-%%
-node_noop(_F) ->
-    receive
-        stop -> ok;
-        _ -> node_noop(_F)
-    end.
+    %% io:format("~p ~p\n",[Pid,NodePid]),
+    create_pid_for_node(T,[NodePid|Pids]).
 
 %%
 %% The wires attribute is an array of arrays. The toplevel
@@ -104,11 +123,13 @@ send_msg_on([],_) ->
     ok;
 
 send_msg_on([WireId|Wires],Msg) ->
-    NodeIdToPid = binary_to_atom(
-                    list_to_binary(
-                         lists:flatten(
-                             io_lib:format("~s~s",["node_pid_",WireId])))),
-    NodeIdToPid ! {incoming, Msg},
+    NodePid = nodeid_to_pid(WireId),
+    case whereis(NodePid) of
+        undefined ->
+            ok;
+        _ ->
+            NodePid ! {incoming, Msg}
+    end,
     send_msg_on(Wires,Msg).
 
 %%
@@ -118,7 +139,7 @@ send_msg_on([WireId|Wires],Msg) ->
 %%
 node_type_to_fun(_Type, {ok, true}) ->
     io:format("node disabled, ignoring\n"),
-    {?MODULE, node_noop};
+    {node_disabled, node_disabled};
 
 node_type_to_fun(Type,_) ->
     node_type_to_fun(Type).
@@ -132,4 +153,4 @@ node_type_to_fun(<<"change">>)   -> {node_change,   node_change};
 
 node_type_to_fun(Unknown) ->
     io:format("noop node initiated for unknown type: ~p\n", [Unknown]),
-    {?MODULE, node_noop}.
+    {node_noop, node_noop}.

@@ -1,5 +1,8 @@
 -module(node_inject).
+
 -export([node_inject/1]).
+-export([handle_outgoing/2]).
+-export([handle_incoming/2]).
 
 %%
 %% Inject node should have at least one outgoing wire, if not then the
@@ -53,36 +56,24 @@ parse_props([Prop|RestProps],NodeDef,Msg) ->
             parse_props(RestProps,NodeDef, Msg)
     end.
 
+
 %%
-%% Listen for messages
+%% outgoing messages are triggered by button presses on the UI
 %%
-receive_loop(NodeDef) ->
-    receive
-        %%
-        %% outgoing messages are triggered by button presses on the UI
-        %%
-        {outgoing,Msg} ->
-            case maps:find(props,NodeDef) of
-                {ok,Val} ->
-                    Props = Val;
-                _ ->
-                    Props = []
-            end,
+handle_outgoing(NodeDef,Msg) ->
+    case maps:find(props,NodeDef) of
+        {ok,Val} ->
+            Props = Val;
+        _ ->
+            Props = []
+    end,
+    nodes:send_msg_to_connected_nodes(NodeDef, parse_props(Props,NodeDef,Msg)).
 
-            io:format("INJECT: Msg being sent\n"),
-            nodes:send_msg_to_connected_nodes(NodeDef,
-                                              parse_props(Props,NodeDef,Msg)),
-
-            receive_loop(NodeDef);
-
-        {incoming,_} ->
-            io:format("ERROR: inject node should not receive message\n"),
-            receive_loop(NodeDef);
-
-        stop ->
-            ok
-    end.
+handle_incoming(NodeDef,_Msg) ->
+    {ok, IdStr} = maps:find(id,NodeDef),
+    io:format("ERROR: Inject node received msg: Id: ~p\n",[IdStr]),
+    error.
 
 node_inject(NodeDef) ->
-    io:format("inject node init\n"),
-    receive_loop(NodeDef).
+    nodes:node_init(NodeDef),
+    nodes:enter_receivership(?MODULE,NodeDef).

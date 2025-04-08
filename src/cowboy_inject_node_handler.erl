@@ -11,9 +11,6 @@
 init(Req, State) ->
     {cowboy_rest, Req, State}.
 
-%% init(_Transport, _Req, _Opts) ->
-%%     {ok, undefined}.
-
 allowed_methods(Req, State) ->
     {[<<"POST">>], Req, State}.
 
@@ -29,18 +26,14 @@ handle_json_body(Req, State) ->
         undefined ->
             ok;
         IdStr ->
-            NodeIdToPid = binary_to_atom(
-                            list_to_binary(
-                              lists:flatten(
-                                io_lib:format("~s~s",["node_pid_",IdStr])))),
+            NodePid = nodes:nodeid_to_pid(IdStr),
 
-            case whereis(NodeIdToPid) of
+            case whereis(NodePid) of
                 undefined ->
                     ok;
                 _ ->
                     io:format("Inject action found pid!~n"),
-                    NodeIdToPid ! { outgoing,
-                                    #{ '_msgid' => nodes:generate_id() } }
+                    NodePid ! { outgoing, #{ '_msgid' => nodes:generate_id() } }
             end
     end,
 

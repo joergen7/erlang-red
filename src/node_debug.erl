@@ -1,6 +1,7 @@
 -module(node_debug).
--export([node_debug/1]).
 
+-export([node_debug/1]).
+-export([handle_incoming/2]).
 
 %%
 %% Debug nodes have no outgoing wires.
@@ -19,45 +20,33 @@ to_binary_if_not_binary(Obj) ->
             end
     end.
 
-receive_loop(NodeDef) ->
-    receive
-        {incoming, Msg} ->
+handle_incoming(NodeDef,Msg) ->
+    NodeName = nodes:get_prop_value_from_map(name,NodeDef,"undefined"),
+    io:format("DEBUG [~s]: ~p\n", [NodeName, Msg]),
 
-            NodeName = nodes:get_prop_value_from_map(name,NodeDef,"undefined"),
-            io:format("DEBUG [~s]: ~p\n", [NodeName, Msg]),
+    case whereis(websocket_pid) of
+        undefined ->
+            ok;
+        _ ->
+            IdStr       = nodes:get_prop_value_from_map(id,NodeDef),
+            ZStr        = nodes:get_prop_value_from_map(z,NodeDef),
+            NameStr     = nodes:get_prop_value_from_map(name,NodeDef),
+            TopicStr    = nodes:get_prop_value_from_map(topic,Msg,""),
 
-            case whereis(websocket_pid) of
-                undefined ->
-                    ok;
-                _ ->
-                    {ok, IdStr} = maps:find(id,NodeDef),
-                    {ok, ZStr} = maps:find(z,NodeDef),
-                    IdStr = nodes:get_prop_value_from_map(id,NodeDef),
-                    ZStr = nodes:get_prop_value_from_map(z,NodeDef),
-                    NameStr = nodes:get_prop_value_from_map(name,NodeDef),
-                    TopicStr = nodes:get_prop_value_from_map(topic,Msg,""),
+            Data = #{
+                     id       => IdStr,
+                     z        => ZStr,
+                     '_alias' => IdStr,
+                     path     => ZStr,
+                     name     => NameStr,
+                     topic    => to_binary_if_not_binary(TopicStr),
+                     msg      => jiffy:encode(Msg),
+                     format   => <<"Object">>
+            },
 
-                    Data = #{
-                             id => IdStr,
-                             z => ZStr,
-                             '_alias' => IdStr,
-                             path => ZStr,
-                             name => NameStr,
-                             topic => to_binary_if_not_binary(TopicStr),
-                             msg => jiffy:encode(Msg),
-                             format => <<"Object">>
-                    },
-
-                    websocket_pid ! { debug, Data }
-            end,
-
-            receive_loop(NodeDef);
-
-        stop ->
-            ok
-
+            websocket_pid ! { debug, Data }
     end.
 
 node_debug(NodeDef) ->
-    io:format("debug node init\n"),
-    receive_loop(NodeDef).
+    nodes:node_init(NodeDef),
+    nodes:enter_receivership(?MODULE,NodeDef).

@@ -1,4 +1,4 @@
--module(node_red_mimetypes).
+-module(mimetypes_nodered).
 
 -export([mt/1]).
 

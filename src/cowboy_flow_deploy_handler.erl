@@ -46,7 +46,7 @@ handle_json_body(Req, State) ->
 
     io:format("Pids for flow: ~p\n",[Pids]),
 
-    Resp = cowboy_req:set_resp_body(<<"{\"rev\":\"dead73dabcdef12345\"}">>, Req2),
+    Resp = cowboy_req:set_resp_body(<<"{\"rev\":\"dead73d0\"}">>, Req2),
     %%cowboy_req:reply(201, Resp),
     {true, Resp, State}.
 

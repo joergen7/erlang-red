@@ -1,7 +1,7 @@
 -module(node_switch).
 
 -export([node_switch/1]).
-
+-export([handle_incoming/2]).
 
 %%
 %% representation of a switch node.
@@ -118,34 +118,29 @@ does_rule_match_stopafterone([Rule|Rules], Val, [Wires|MoreWires], Msg) ->
     end.
 
 %%
+%% Handler for incoming messages
 %%
-receive_loop(NodeDef) ->
-    receive
-        {incoming,Msg} ->
-            io:format("switch got something\n"),
+handle_incoming(NodeDef,Msg) ->
+    io:format("switch got something\n"),
 
-            {ok, Rules} = maps:find(rules,NodeDef),
-            {ok, Wires} = maps:find(wires,NodeDef),
+    {ok, Rules} = maps:find(rules,NodeDef),
+    {ok, Wires} = maps:find(wires,NodeDef),
 
-            Val = get_value_from_msg(maps:find(propertyType,NodeDef),
-                                     maps:find(property,NodeDef),
-                                     Msg),
+    Val = get_value_from_msg(maps:find(propertyType,NodeDef),
+                             maps:find(property,NodeDef),
+                             Msg),
 
-            case maps:find(checkall,NodeDef) of
-                {ok, <<"true">>} ->
-                    does_rule_match_catchall(Rules,Val,Wires,Msg);
-                {ok, true} ->
-                    does_rule_match_catchall(Rules,Val,Wires,Msg);
-                _ ->
-                    does_rule_match_stopafterone(Rules,Val,Wires,Msg)
-            end,
-
-            receive_loop(NodeDef);
-
-        stop ->
-            ok
+    case maps:find(checkall,NodeDef) of
+        {ok, <<"true">>} ->
+            does_rule_match_catchall(Rules,Val,Wires,Msg);
+        {ok, true} ->
+            does_rule_match_catchall(Rules,Val,Wires,Msg);
+        _ ->
+            does_rule_match_stopafterone(Rules,Val,Wires,Msg)
     end.
 
+%%
+%%
 node_switch(NodeDef) ->
-    io:format("switch node init\n"),
-    receive_loop(NodeDef).
+    nodes:node_init(NodeDef),
+    nodes:enter_receivership(?MODULE,NodeDef).

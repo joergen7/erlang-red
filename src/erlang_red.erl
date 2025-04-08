@@ -48,7 +48,7 @@ start(_Type, _Args) ->
 
                {"/[...]", [{method,<<"GET">>}], cowboy_static,
                 {dir, "./node-red-frontend",
-                 [{mimetypes, node_red_mimetypes, mt}]
+                 [{mimetypes, mimetypes_nodered, mt}]
                }}
               ]
         }
