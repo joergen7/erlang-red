@@ -28,8 +28,13 @@ is_lt(_,_) -> false.
 int_to_float(Val) ->
     case string:to_integer(Val) of
         {error,_} ->
-            io:format("Unabel to convert to num ~p\n", [Val]),
-            {0,error};
+            case is_integer(Val) of
+                true ->
+                    {Val,ok};
+                _ ->
+                    io:format("Unabel to convert to num ~p\n", [Val]),
+                    {0,error}
+            end;
         {V,R} ->
             {V,R}
     end.
