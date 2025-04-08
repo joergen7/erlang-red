@@ -96,6 +96,21 @@ To create unit tests for this, Node-RED frontend has been extended with a
 
 Then flow is then stored in the [testflows](priv/testflows) dir and will be picked up the next time `make eunit-test` is called. In this way it is possible to create unit tests visually.
 
+Assert Nodes
+---
+
+To better support testing of flows, two new nodes have been created:
+
+![img](.images/assert-nodes.png)
+
+"Assert Failed" node cases unit tests to fail if a message reaches it, regardless of any message values. It's basically the same as a `assert(false)` call. The intention is to ensure that specific parts of a flow aren't reached.
+
+The second node (in green) is a equivalent to a change node except it contains test on attributes of the message object. Possible tests include 'equal', 'match', 'unset' and their inverses. Here the intention is that a message passes through is tested for specific values else the unit test fails.
+
+These nodes are necessary since there is no other way to test whether flow is working or not.
+
+Also remember these flow tests are designed to ensure the Erlang backend is correctly implementing node functionality. The purpose of these nodes is *not* to ensure a flow is correct, rather that the *functionality* of implemented nodes works and continues to work correctly.
+
 Contributing
 ---
 
