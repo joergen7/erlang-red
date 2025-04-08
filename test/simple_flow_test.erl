@@ -2,6 +2,8 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+-export([not_happen_loop/0]).
+
 stop_all_pids([]) ->
     ok;
 stop_all_pids([Pid|Pids]) ->
@@ -33,6 +35,7 @@ send_all_injects_the_go([NodeDef|MoreNodes]) ->
 read_and_test_file([],Cnt) ->
     io:format("\n\n====> Total flows tested: [~p]\n\n",[Cnt]),
     ?debugMsg(?capturedOutput),
+    this_should_not_happen_service ! stop,
     ok;
 
 read_and_test_file([FileName|MoreFileNames],Cnt) ->
@@ -48,6 +51,22 @@ read_and_test_file([FileName|MoreFileNames],Cnt) ->
 
     read_and_test_file(MoreFileNames,Cnt).
 
+
+not_happen_loop() ->
+    receive
+        {it_happened, Arg } ->
+            io:format("TSNH: ~s\n",[Arg]),
+            throw(nodes:jstr(Arg));
+        stop ->
+            ok;
+        _ ->
+            not_happen_loop()
+    end.
+
+start_this_should_not_happen_service() ->
+    Pid = spawn(?MODULE, not_happen_loop, []),
+    register(this_should_not_happen_service, Pid).
+
 %%
 %% Because each test has too many Pids, the test waits 1.5 seconds for the
 %% messages to propogate through the flow.
@@ -55,6 +74,9 @@ read_and_test_file([FileName|MoreFileNames],Cnt) ->
 %% to extend the timeout of the unit test. Give each flow 2 seconds.
 %%
 all_testflows_test_() ->
+    %% setup a this-should-not-happen service
+    start_this_should_not_happen_service(),
+
     {Cnt,FileNames} = filelib:fold_files("priv/testflows", "",
                                    false,
                                    fun (Fname,Acc) ->

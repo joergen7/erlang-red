@@ -12,10 +12,37 @@
 -export([nodeid_to_pid/1]).
 -export([node_init/1]).
 -export([enter_receivership/2]).
+-export([this_should_not_happen/1]).
+-export([jstr/2]).
+-export([jstr/1]).
+-export([status/4]).
 
 %%
 %% Common functionality
 %%
+
+status(NodeDef,Txt,Clr,Shp) ->
+    case whereis(websocket_pid) of
+        undefined ->
+            ok;
+        _ ->
+            {ok, NodeId } = maps:find(id,NodeDef),
+            websocket_pid ! { status, NodeId, Txt, Clr, Shp }
+    end.
+
+jstr(Fmt,Args) ->
+    list_to_binary(lists:flatten(io_lib:format(Fmt,Args))).
+jstr(Str) ->
+    list_to_binary(lists:flatten(Str)).
+
+this_should_not_happen(Arg) ->
+    case whereis(this_should_not_happen_service) of
+        undefined ->
+            io:format("TSNH: ~s\n",[Arg]);
+        _ ->
+            this_should_not_happen_service ! {it_happened, Arg}
+    end.
+
 enter_receivership(Module,NodeDef) ->
     receive
         stop ->
@@ -150,6 +177,12 @@ node_type_to_fun(<<"switch">>)   -> {node_switch,   node_switch};
 node_type_to_fun(<<"debug">>)    -> {node_debug,    node_debug};
 node_type_to_fun(<<"junction">>) -> {node_junction, node_junction};
 node_type_to_fun(<<"change">>)   -> {node_change,   node_change};
+
+node_type_to_fun(<<"ut-assert-values">>) ->
+    {node_assert_values, node_assert_values};
+
+node_type_to_fun(<<"ut-assert-failure">>) ->
+    {node_assert_failure, node_assert_failure};
 
 node_type_to_fun(Unknown) ->
     io:format("noop node initiated for unknown type: ~p\n", [Unknown]),

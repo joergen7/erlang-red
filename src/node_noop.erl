@@ -11,13 +11,13 @@
 handle_incoming(NodeDef,_Msg) ->
     {ok, IdStr} = maps:find(id,NodeDef),
     {ok, TypeStr} = maps:find(type,NodeDef),
-    io:format("NOOP NODE HIT (incoming) Nothing Done for [~p](~p)\n",[TypeStr,IdStr]),
+    nodes:this_should_not_happen(io_lib:format("NOOP NODE HIT (incoming) Nothing Done for [~p](~p)\n",[TypeStr,IdStr])),
     error.
 
 handle_outgoing(NodeDef,_Msg) ->
     {ok, IdStr} = maps:find(id,NodeDef),
     {ok, TypeStr} = maps:find(type,NodeDef),
-    io:format("NOOP NODE HIT (outgoing) Nothing Done for [~p](~p)\n",[TypeStr,IdStr]),
+    nodes:this_should_not_happen(io_lib:format("NOOP NODE HIT (outgoing) Nothing Done for [~p](~p)\n",[TypeStr,IdStr])),
     error.
 
 node_noop(NodeDef) ->
