@@ -958,8 +958,13 @@ var RED = (function() {
                 setTimeout( () => {
                     stopExecution = false
                     executionState = {};
-                    RED.nodes.eachNode( (nde) => { clearStatusForNode(nde.id) });
-                }, 2000);
+                    RED.nodes.eachNode( (nde) => {
+                        RED.comms.emit([{
+                            "topic":`status/${nde.id}`,
+                            "data": {}
+                        }])
+                    });
+                }, 1000);
             }
 
             // Store all changes locally in the browser, but we still pretend
@@ -968,6 +973,7 @@ var RED = (function() {
             if ( options.url == "flows" && options.type == "POST" ) {
                 if ( options.headers &&
                      options.headers["Node-RED-Deployment-Type"] == "reload" ) {
+                    options.headers["Content-Type"] = "application/x-json-restart"
                     reloadFlows()
                 } else {
                     RED.settings.setLocal( "flowdata", options.data)
@@ -2355,13 +2361,26 @@ RED.comms = (function() {
         }
     }
 
+    // simulate a message coming in on the websocket
+    function emitErlangRed(data) {
+        if (ws) {
+            if ( Array.isArray( data ) ) {
+                ws.onmessage( { data: JSON.stringify(data) } )
+            } else {
+                ws.onmessage( { data: JSON.stringify([data]) } )
+            }
+        }
+    }
+
+
     return {
         connect: connectWS,
         subscribe: subscribe,
         unsubscribe:unsubscribe,
         on,
         off,
-        send
+        send,
+        emit: emitErlangRed
     }
 })();
 ;RED.runtime = (function() {
