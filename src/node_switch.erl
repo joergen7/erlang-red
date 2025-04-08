@@ -19,6 +19,12 @@
 is_same(Same,Same) -> true;
 is_same(_,_) -> false.
 
+is_gt(A,B) when A > B -> true;
+is_gt(_,_) -> false.
+
+is_lt(A,B) when A < B -> true;
+is_lt(_,_) -> false.
+
 int_to_float(Val) ->
     case string:to_integer(Val) of
         {error,_} ->
@@ -48,15 +54,15 @@ does_rule_match(<<"eq">>,<<"str">>,OpVal,MsgVal) ->
 
 does_rule_match(<<"eq">>,<<"num">>,OpVal,MsgVal) ->
     {Vop,Vmsg} = to_num(OpVal, MsgVal),
-    is_same(Vop,Vmsg);
+    is_same(Vmsg, Vop);
 
 does_rule_match(<<"gt">>,_,OpVal,MsgVal) ->
     {Vop,Vmsg} = to_num(OpVal, MsgVal),
-    Vmsg > Vop;
+    is_gt(Vmsg, Vop);
 
 does_rule_match(<<"lt">>,_,OpVal,MsgVal) ->
     {Vop,Vmsg} = to_num(OpVal, MsgVal),
-    Vmsg < Vop;
+    is_lt(Vmsg, Vop);
 
 does_rule_match(Op,Type,_OpVal,_MsgVal) ->
     io:format("switch: unsupported operator or type: ~p ~p\n",[Op, Type]),

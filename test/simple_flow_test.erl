@@ -8,80 +8,58 @@ stop_all_pids([Pid|Pids]) ->
     Pid ! stop,
     stop_all_pids(Pids).
 
-first_test() ->
-    Ary = flows:parse_flow_file('priv/flow.json'),
+%%
+%% Node-RED frontend has a "create test case" that allows exporting of flows
+%% to become cases. This test goes through and tests all off them.
+%%
 
+send_injects_the_go(<<"inject">>,IdStr) ->
+    io:format("==> sending creating message using inject [~p]\n",[IdStr]),
+    nodes:nodeid_to_pid(IdStr) ! {outgoing, #{'_msgid' => nodes:generate_id()}};
+
+send_injects_the_go(_,_) ->
+    ok.
+
+send_all_injects_the_go([]) ->
+    ok;
+
+send_all_injects_the_go([NodeDef|MoreNodes]) ->
+    {ok, IdStr} = maps:find(id,NodeDef),
+    {ok, TypeStr} = maps:find(type,NodeDef),
+    send_injects_the_go(TypeStr,IdStr),
+    send_all_injects_the_go(MoreNodes).
+
+
+read_and_test_file([],Cnt) ->
+    io:format("\n\n====> Total flows tested: [~p]\n\n",[Cnt]),
+    ?debugMsg(?capturedOutput),
+    ok;
+
+read_and_test_file([FileName|MoreFileNames],Cnt) ->
+    io:format("\n====> Test flow: [~p]\n",[FileName]),
+
+    Ary = flows:parse_flow_file(FileName),
     Pids = nodes:create_pid_for_node(Ary),
+    send_all_injects_the_go(Ary),
 
-    io:format("sending message - 1st inject\n"),
-    node_pid_f9504da94c59e69f ! { outgoing, #{ '_msgid' => nodes:generate_id() }},
+    timer:sleep(1500),
+    stop_all_pids(Pids),
+    ?debugMsg(?capturedOutput),
 
+    read_and_test_file(MoreFileNames,Cnt).
 
-    io:format("sending message - 2nd inject\n"),
-    node_pid_034562d7b8d76ac9 ! { outgoing, #{ '_msgid' => nodes:generate_id() }},
+%%
+%% Because each test has too many Pids, the test waits 1.5 seconds for the
+%% messages to propogate through the flow.
+%% But because we test all flow files, this will take longer so we need
+%% to extend the timeout of the unit test. Give each flow 2 seconds.
+%%
+all_testflows_test_() ->
+    {Cnt,FileNames} = filelib:fold_files("priv/testflows", "",
+                                   false,
+                                   fun (Fname,Acc) ->
+                                           { element(1,Acc) + 1,
+                                             [Fname|element(2,Acc)] } end,
+                                         {0,[]}),
 
-    receive
-        helo ->
-            ok
-        after 3000 ->
-            stop_all_pids(Pids),
-            ?debugMsg(?capturedOutput)
-    end,
-
-    ?assert(true).
-
-
-junction_nodes_test() ->
-    Ary = flows:parse_flow_file('priv/flow.junctions.json'),
-
-    Pids = nodes:create_pid_for_node(Ary),
-
-    io:format("sending message\n"),
-    node_pid_323c39235c019b84 ! { outgoing, #{ '_msgid' => nodes:generate_id() } },
-
-    receive
-        helo ->
-            ok
-        after 3000 ->
-            stop_all_pids(Pids),
-            ?debugMsg(?capturedOutput)
-    end,
-
-    ?assert(true).
-
-
-disabled_node_test() ->
-    Ary = flows:parse_flow_file('priv/flow.disabled.node.json'),
-
-    Pids = nodes:create_pid_for_node(Ary),
-
-    io:format("sending message\n"),
-    node_pid_7858c408d5bd9924 ! { outgoing, #{ '_msgid' => nodes:generate_id() } },
-
-    receive
-        helo ->
-            ok
-        after 3000 ->
-            stop_all_pids(Pids),
-            ?debugMsg(?capturedOutput)
-    end,
-
-    ?assert(true).
-
-
-attribute_setting_test() ->
-    Ary = flows:parse_flow_file('priv/flow.attribute.setting.json'),
-
-    Pids = nodes:create_pid_for_node(Ary),
-
-    io:format("sending message\n"),
-    node_pid_1460cac9a329205a ! { outgoing, #{ '_msgid' => nodes:generate_id() } },
-
-    receive
-        helo ->
-            ok
-        after 3000 ->
-            stop_all_pids(Pids),
-            ?debugMsg(?capturedOutput)
-    end,
-    ?assert(true).
+    {timeout, 2*Cnt, fun() -> read_and_test_file(FileNames,Cnt) end}.

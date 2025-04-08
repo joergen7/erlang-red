@@ -23,6 +23,11 @@ start(_Type, _Args) ->
                %%
                %% POST handlers
                %%
+               %% this is a special one for this project
+               {"/testcase/:workspaceid/create",
+                cowboy_testcase_post_handler, []},
+
+               %% these are required by Node-RED
                {"/settings/user", cowboy_post_blow_handler, []},
                {"/nodes", cowboy_post_blow_handler, []},
                {"/flows", cowboy_flow_deploy_handler, []},

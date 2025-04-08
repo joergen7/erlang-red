@@ -85,6 +85,24 @@ All nodes are are pids - that is shown on the left in the terminal window.
 
 Obviously this example is extremely trivial but it does lay the groundwork for expansion. I, for one, would rather code Erlang visually, low-code than in my Emacs ;)
 
+
+Testing
+---
+
+To create unit tests for this, Node-RED frontend has been extended with a
+"Create Test Case" button on the export dialog:
+
+![img](.images/create-test-case.png)
+
+Then flow is then stored in the [testflows](priv/testflows) dir and will be picked up the next time `make eunit-test` is called. In this way it is possible to create unit tests visually.
+
+Contributing
+---
+
+All contribution should be printed out on DIN A4 paper, copied in triplicate  and snail mailed to me c/o GitHub (only one copy). The other copies should be filed away in some dusty filing cabinet at the bottom of a dark basement. Please remove the stairs that lead to the basement.
+
+Alternatively just create a pull request, whichever is simpler.
+
 Acknowledgement
 ---
 

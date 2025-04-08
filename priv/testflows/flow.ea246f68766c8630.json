@@ -1,0 +1,164 @@
+[
+    {
+        "id": "ea246f68766c8630",
+        "type": "tab",
+        "label": "[Node-RED Learnings] - Switch - Check all rules v. Stop after first match",
+        "disabled": false,
+        "info": "### Aim\n\nHighlight the confusion I had with the switch node.\n\n### Flow Explanation\n\nThis is a very simple flow that uses a switch flow to direct the flow of a message. Each <a class=\"ahl-node-only\" data-ids=\"efe73152ecde8e3c,2d85270e48797ac5\">switch node</a> consists of three rules:\n\n```\nmsg.payload > 10 --> 1\nmsg.payload > 20 --> 2\nmsg.payload > 40 --> 3\n```\n\nWhen the payload of 50 is injected into the flows the following happens:\n\n![img](https://cdn.openmindmap.org/content/1691602731005_Screen_Shot_2023-08-09_at_19.38.31.png)\n\nThe blue squares indicate the message counts. The question is why in the <a class=\"ahl-group-only\" data-ids=\"cc824f892c9d20ec\">top flow</a> does each debug node got a message? My expectation for the switch node is that result in the <a class=\"ahl-group-only\" data-ids=\"d34f9271753933e9\">bottom flow</a> where only the condition `> 10` receives a message.\n\nHow come?\n\nThe difference is the checkbox in the <a class=\"ahl-node-only\" data-ids=\"efe73152ecde8e3c,2d85270e48797ac5\">switch node</a>:\n\n![img](https://cdn.openmindmap.org/content/1691602164361_Screen_Shot_2023-08-09_at_19.22.22.png)\n\n\nThis is the default behaviour within Node-RED and can lead to some strange happenings in the coal mine.\n\n### Background\n\nThe background to this behaviour are programming languages based on \"C\". In C a case statement is consider to work like a jump into a statement, taking the [example](https://en.wikipedia.org/wiki/Switch_statement) from Wikipedia:\n\n```C\nswitch (age) {\n  case 1:  printf(\"You're one.\");            break;\n  case 2:  printf(\"You're two.\");            break;\n  case 3:  printf(\"You're three.\");\n  case 4:  printf(\"You're three or four.\");  break;\n  default: printf(\"You're not 1, 2, 3 or 4!\");\n}\n```\n\nThe trick is the `break` which stops the execution of the `switch`. An age value of 3 will produce the following output:\n\n```\nYou're three. You're three or four.\n```\n\nbecause there is no `break` at the end of the `case 3` test. \n\nAnd that's what the checkbox in the switch node does: add or remove the `break` statements and the *default* Node-RED behaviour is that there are no breaks.\n\nMost higher level languages (python, ruby) implement the switch statement to have breaks or rather don't even allow the *fallthrough* behaviour of C.\n\n",
+        "env": []
+    },
+    {
+        "id": "b7b499f508ed8742",
+        "type": "inject",
+        "z": "ea246f68766c8630",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "no real topic",
+        "payload": "",
+        "payloadType": "date",
+        "x": 660,
+        "y": 600,
+        "wires": [
+            [
+                "78fab79eaaa268c3",
+                "d320af7910f3e3af",
+                "690408f46e330b2f"
+            ]
+        ]
+    },
+    {
+        "id": "e54dd3b6aa91939a",
+        "type": "debug",
+        "z": "ea246f68766c8630",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1200,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "78fab79eaaa268c3",
+        "type": "change",
+        "z": "ea246f68766c8630",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "fubar",
+                "tot": "str"
+            },
+            {
+                "t": "delete",
+                "p": "payload",
+                "pt": "msg"
+            },
+            {
+                "t": "move",
+                "p": "payload",
+                "pt": "msg",
+                "to": "eeee",
+                "tot": "msg"
+            },
+            {
+                "t": "change",
+                "p": "payload",
+                "pt": "msg",
+                "from": "",
+                "fromt": "str",
+                "to": "",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 960,
+        "y": 660,
+        "wires": [
+            [
+                "e54dd3b6aa91939a"
+            ]
+        ]
+    },
+    {
+        "id": "d320af7910f3e3af",
+        "type": "change",
+        "z": "ea246f68766c8630",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "fubar",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 960,
+        "y": 600,
+        "wires": [
+            [
+                "4955626fa1b55202"
+            ]
+        ]
+    },
+    {
+        "id": "4955626fa1b55202",
+        "type": "debug",
+        "z": "ea246f68766c8630",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1150,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "690408f46e330b2f",
+        "type": "debug",
+        "z": "ea246f68766c8630",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 990,
+        "y": 480,
+        "wires": []
+    }
+]

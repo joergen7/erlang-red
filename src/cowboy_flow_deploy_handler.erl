@@ -8,6 +8,8 @@
          handle_json_body/2,
          format_error/2]).
 
+-export([read_body/2]).
+
 init(Req, State) ->
     {cowboy_rest, Req, State}.
 
