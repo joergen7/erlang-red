@@ -39,6 +39,22 @@ websocket_info({debug, Data}, [{stats_interval, SInterval}]) ->
     Msg = jiffy:encode([#{ topic => debug, data => Data } ]),
     {reply, {text, Msg}, [{stats_interval, SInterval}]};
 
+%%
+%% Here are the details to the possible values of the status
+%% elements.
+%%
+%% From: https://nodered.org/docs/creating-nodes/status
+%%
+%% Clr: 'red', 'green', 'yellow', 'blue' or 'grey'
+%% Shp: 'ring' or 'dot'.
+%%
+websocket_info({status, NodeId, Txt, Clr, Shp}, [{stats_interval, SInterval}]) ->
+    Msg = jiffy:encode([#{ topic => nodes:jstr("status/~s",[NodeId]),
+                           data => #{ text => nodes:jstr(Txt),
+                                      fill => nodes:jstr(Clr),
+                                      shape => nodes:jstr(Shp)
+                                    }}]),
+    {reply, {text, Msg}, [{stats_interval, SInterval}]};
 
 websocket_info(_Info, State) ->
     {ok, State}.
