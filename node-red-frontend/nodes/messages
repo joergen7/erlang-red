@@ -10,6 +10,17 @@
             }
         }
     },
+    "@gorenje/erlang-red-unittest/ut-assert-success": {
+        "ut-assert-success": {
+            "label": {
+                "statusset": "Status Set"
+            },
+            "status": {
+                "timeout": "No more time to waiting",
+                "waiting": "Waiting for Godot"
+            }
+        }
+    },
     "@gorenje/erlang-red-unittest/ut-assert-values": {
         "ut-assert-values": {
             "action": {
@@ -21,12 +32,12 @@
                 "mth": "Match",
                 "noteql": "Not Equal",
                 "notmth": "Not Match",
+                "notset": "Not Defined",
                 "replace": "Replace with",
                 "search": "Search for",
-                "set": "Set",
+                "set": "Defined",
                 "to": "to",
-                "toValue": "to the value",
-                "unset": "Not Set"
+                "toValue": "to the value"
             },
             "errors": {
                 "invalid-expr": "Invalid JSONata expression: __error__",
@@ -47,12 +58,12 @@
                 "mth": "match __property__",
                 "noteql": "not equal __property__",
                 "notmth": "not match __property__",
+                "notset": "not set __property__",
                 "regex": "Use regular expressions",
                 "rule": "rule",
                 "rules": "Rules",
                 "set": "set __property__",
-                "statusset": "Status Set",
-                "unset": "not set __property__"
+                "statusset": "Status Set"
             },
             "status": {
                 "timeout": "No more time to waiting",

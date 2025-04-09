@@ -466,7 +466,7 @@
             "ut-assert-failure"
         ],
         "user": false,
-        "version": "0.1.0"
+        "version": "0.2.0"
     },
     {
         "enabled": true,
@@ -478,6 +478,18 @@
             "ut-assert-values"
         ],
         "user": false,
-        "version": "0.1.0"
+        "version": "0.2.0"
+    },
+    {
+        "enabled": true,
+        "id": "@gorenje/erlang-red-unittest/ut-assert-success",
+        "local": true,
+        "module": "@gorenje/erlang-red-unittest",
+        "name": "ut-assert-success",
+        "types": [
+            "ut-assert-success"
+        ],
+        "user": false,
+        "version": "0.2.0"
     }
 ]
