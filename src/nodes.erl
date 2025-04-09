@@ -43,6 +43,10 @@ this_should_not_happen(Arg) ->
             this_should_not_happen_service ! {it_happened, Arg}
     end.
 
+increment_message_counter(NodeDef, CntName) ->
+    {ok, V} = maps:find(CntName, NodeDef),
+    maps:put(CntName, V + 1, NodeDef).
+
 enter_receivership(Module,NodeDef) ->
     receive
         stop ->
@@ -52,15 +56,17 @@ enter_receivership(Module,NodeDef) ->
             ok;
 
         {incoming,Msg} ->
-            erlang:apply(Module, handle_incoming, [NodeDef,Msg]),
-            enter_receivership(Module,NodeDef);
+            NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
+            erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
+            enter_receivership(Module, NodeDef2);
 
         %% Outgoing messages are message generators (e.g inject node) - send
         %% this to the process to get it to generate a message, Those messages
         %% become incoming messages
         {outgoing,Msg} ->
-            erlang:apply(Module, handle_outgoing, [NodeDef,Msg]),
-            enter_receivership(Module,NodeDef)
+            NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
+            erlang:apply(Module, handle_outgoing, [NodeDef2,Msg]),
+            enter_receivership(Module, NodeDef2)
     end.
 
 node_init(NodeDef) ->
@@ -90,7 +96,7 @@ create_pid_for_node(Ary) ->
 create_pid_for_node([],Pids) ->
     Pids;
 
-create_pid_for_node([NodeDef|T],Pids) ->
+create_pid_for_node([NodeDef|MoreNodeDefs],Pids) ->
     {ok, IdStr} = maps:find(id,NodeDef),
     {ok, TypeStr} = maps:find(type,NodeDef),
 
@@ -108,11 +114,16 @@ create_pid_for_node([NodeDef|T],Pids) ->
             unregister(NodePid)
     end,
 
-    Pid = spawn(Module, Fun, [NodeDef]),
+    %% internal message counters, get updated automagically in
+    %% enter_receivership ==> 'mc' is message counter.
+    NodeDef2 = maps:put('_mc_incoming', 0,
+                       maps:put('_mc_outgoing', 0, NodeDef)),
+
+    Pid = spawn(Module, Fun, [NodeDef2]),
     register(NodePid, Pid),
 
     %% io:format("~p ~p\n",[Pid,NodePid]),
-    create_pid_for_node(T,[NodePid|Pids]).
+    create_pid_for_node(MoreNodeDefs, [NodePid|Pids]).
 
 %%
 %% The wires attribute is an array of arrays. The toplevel

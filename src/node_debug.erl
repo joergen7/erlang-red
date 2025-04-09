@@ -20,6 +20,14 @@ to_binary_if_not_binary(Obj) ->
             end
     end.
 
+handle_status_setting({ok,true},{ok,<<"counter">>},NodeDef,_Msg) ->
+    Cnt = nodes:get_prop_value_from_map('_mc_incoming',NodeDef),
+    nodes:status(NodeDef, io_lib:format("~p",[Cnt]), "blue", "ring");
+
+handle_status_setting(_,_,_,_) -> ok.
+
+
+
 handle_incoming(NodeDef,Msg) ->
     NodeName = nodes:get_prop_value_from_map(name,NodeDef,"undefined"),
     io:format("DEBUG [~s]: ~p\n", [NodeName, Msg]),
@@ -44,7 +52,12 @@ handle_incoming(NodeDef,Msg) ->
                      format   => <<"Object">>
             },
 
-            websocket_pid ! { debug, Data }
+            websocket_pid ! { debug, Data },
+
+            handle_status_setting( maps:find(tostatus,NodeDef),
+                                   maps:find(statusType,NodeDef),
+                                   NodeDef,
+                                   Msg )
     end.
 
 node_debug(NodeDef) ->

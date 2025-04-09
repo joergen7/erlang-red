@@ -28,8 +28,8 @@
         "topic": "no real topic",
         "payload": "",
         "payloadType": "date",
-        "x": 680,
-        "y": 480,
+        "x": 640,
+        "y": 500,
         "wires": [
             [
                 "78fab79eaaa268c3",
@@ -123,8 +123,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 960,
-        "y": 600,
+        "x": 1000,
+        "y": 580,
         "wires": [
             [
                 "4955626fa1b55202"
@@ -139,12 +139,13 @@
         "active": true,
         "tosidebar": true,
         "console": false,
-        "tostatus": false,
-        "complete": "false",
+        "tostatus": true,
+        "complete": "payload",
+        "targetType": "msg",
         "statusVal": "",
-        "statusType": "auto",
-        "x": 1150,
-        "y": 600,
+        "statusType": "counter",
+        "x": 1220,
+        "y": 660,
         "wires": []
     },
     {
@@ -160,7 +161,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1040,
-        "y": 400,
+        "y": 420,
         "wires": []
     },
     {
