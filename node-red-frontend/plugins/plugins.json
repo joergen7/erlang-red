@@ -1,1 +1,14 @@
-[]
+[
+    {
+        "editor": true,
+        "enabled": true,
+        "id": "@gorenje/erlang-red-unittest/unittesting_sidebar",
+        "local": true,
+        "module": "@gorenje/erlang-red-unittest",
+        "name": "unittesting_sidebar",
+        "plugins": [],
+        "runtime": false,
+        "user": false,
+        "version": "0.3.0"
+    }
+]
