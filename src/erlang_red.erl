@@ -18,7 +18,7 @@ start(_Type, _Args) ->
                %% Sock'em in the eye websocket
                %%
                {"/node-red/comms", cowboy_nodered_websocket,
-                [{stats_interval, 1500}]},
+                [{stats_interval, 15000}]},
 
                %%
                %% POST handlers
@@ -28,6 +28,13 @@ start(_Type, _Args) ->
                 cowboy_testcase_post_handler, []},
 
                %% these are required by Node-RED
+               {"/UnitTesting/tests.json",
+                cowboy_unittesting_tests_get_handler, []},
+               %% {"/UnitTesting/:flowid/runtest",
+               %%  cowboy_unittesting_runtests_get_handler, []},
+               {"/UnitTesting/:flowid/retrieve",
+                cowboy_unittesting_retrieve_flow_handler, []},
+
                {"/settings/user", cowboy_post_blow_handler, []},
                {"/nodes", cowboy_post_blow_handler, []},
                {"/flows", cowboy_flow_deploy_handler, []},
@@ -58,6 +65,9 @@ start(_Type, _Args) ->
               ]
         }
     ]),
+
+    flow_store_server:start(),
+
     {ok, _} = cowboy:start_clear(my_http_listener,
         [{port, 8080}],
         #{env => #{dispatch => Dispatch}}

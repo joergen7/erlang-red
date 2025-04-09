@@ -31,11 +31,9 @@ websocket_info({timeout, _Ref, Msg}, [{stats_interval, SInterval}]) ->
     {reply, {text, Msg}, [{stats_interval, SInterval}]};
 
 websocket_info({data, Msg}, [{stats_interval, SInterval}]) ->
-    io:format("sending on socket ~p~n",[Msg]),
     {reply, {text, Msg}, [{stats_interval, SInterval}]};
 
 websocket_info({debug, Data}, [{stats_interval, SInterval}]) ->
-    io:format("sending debug on socket ~p~n",[Data]),
     Msg = jiffy:encode([#{ topic => debug, data => Data } ]),
     {reply, {text, Msg}, [{stats_interval, SInterval}]};
 
@@ -53,6 +51,18 @@ websocket_info({status, NodeId, Txt, Clr, Shp}, [{stats_interval, SInterval}]) -
                            data => #{ text => nodes:jstr(Txt),
                                       fill => nodes:jstr(Clr),
                                       shape => nodes:jstr(Shp)
+                                    }}]),
+    {reply, {text, Msg}, [{stats_interval, SInterval}]};
+
+%%
+%% Results of a unit test run. The details are sent via a debug message if
+%% there were errors.
+%%
+websocket_info({unittest_results, FlowId, Status},
+               [{stats_interval, SInterval}]) ->
+    Msg = jiffy:encode([#{ topic => 'unittesting:testresults',
+                           data => #{ flowid => nodes:jstr(FlowId),
+                                      status => nodes:jstr(Status)
                                     }}]),
     {reply, {text, Msg}, [{stats_interval, SInterval}]};
 
