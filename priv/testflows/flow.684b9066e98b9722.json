@@ -2,7 +2,7 @@
     {
         "id": "684b9066e98b9722",
         "type": "tab",
-        "label": "Disabled node",
+        "label": "Disabled node should not be reached",
         "disabled": false,
         "info": "",
         "env": []
@@ -61,7 +61,8 @@
         "y": 628,
         "wires": [
             [
-                "6ffb42994558d036"
+                "6ffb42994558d036",
+                "173a318eaddf0cc9"
             ]
         ]
     },
@@ -78,8 +79,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1256,
-        "y": 456,
+        "x": 1220,
+        "y": 560,
         "wires": []
     },
     {
@@ -105,7 +106,8 @@
         "y": 385,
         "wires": [
             [
-                "12d6fbd6df506ff4"
+                "12d6fbd6df506ff4",
+                "28bb959129bdf18a"
             ]
         ]
     },
@@ -122,8 +124,26 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1234,
-        "y": 385,
+        "x": 1140,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "173a318eaddf0cc9",
+        "type": "ut-assert-failure",
+        "z": "684b9066e98b9722",
+        "name": "",
+        "x": 1170,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "28bb959129bdf18a",
+        "type": "ut-assert-success",
+        "z": "684b9066e98b9722",
+        "name": "",
+        "x": 1130,
+        "y": 260,
         "wires": []
     }
 ]

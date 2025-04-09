@@ -12,6 +12,7 @@
 -export([nodeid_to_pid/1]).
 -export([node_init/1]).
 -export([enter_receivership/2]).
+-export([enter_receivership/3]).
 -export([this_should_not_happen/1]).
 -export([jstr/2]).
 -export([jstr/1]).
@@ -49,6 +50,25 @@ this_should_not_happen(Arg) ->
 increment_message_counter(NodeDef, CntName) ->
     {ok, V} = maps:find(CntName, NodeDef),
     maps:put(CntName, V + 1, NodeDef).
+
+
+%% this is used  by the assert success node, since it does nothing with a
+%% message (i.e. it has no output ports), it only needs the stop notification
+%% so shortcut the callback stuff.
+enter_receivership(Module,NodeDef,only_stop) ->
+    receive
+        stop ->
+            erlang:apply(Module, handle_stop, [NodeDef]);
+
+        {incoming,_Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
+            enter_receivership(Module, NodeDef2, only_stop);
+
+        {outgoing,_Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
+            enter_receivership(Module, NodeDef2, only_stop)
+    end.
+
 
 enter_receivership(Module,NodeDef) ->
     receive
@@ -198,11 +218,15 @@ node_type_to_fun(<<"debug">>)    -> {node_debug,    node_debug};
 node_type_to_fun(<<"junction">>) -> {node_junction, node_junction};
 node_type_to_fun(<<"change">>)   -> {node_change,   node_change};
 
+%%
+%% Assert nodes for testing functionality of the nodes
+%%
 node_type_to_fun(<<"ut-assert-values">>) ->
     {node_assert_values, node_assert_values};
-
 node_type_to_fun(<<"ut-assert-failure">>) ->
     {node_assert_failure, node_assert_failure};
+node_type_to_fun(<<"ut-assert-success">>) ->
+    {node_assert_success, node_assert_success};
 
 node_type_to_fun(Unknown) ->
     io:format("noop node initiated for unknown type: ~p\n", [Unknown]),
