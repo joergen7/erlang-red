@@ -44453,10 +44453,16 @@ RED.clipboard = (function() {
                         text: "Create Test Case",
                         class: "primary",
                         click: function() {
-                            $( this ).dialog( "close" );
-                            var data = $("#red-ui-clipboard-dialog-export-text").val();
-                            sendOffToServerAsTestCase(data);
-                            RED.view.focus();
+                            // ensure that the current flow is selected and that
+                            // the json is formatted.
+                            $('#red-ui-clipboard-dialog-export-rng-flow').trigger('click')
+                            $('#red-ui-clipboard-dialog-export-fmt-full').trigger('click')
+                            setTimeout( () => {
+                                $( this ).dialog( "close" );
+                                var data = $("#red-ui-clipboard-dialog-export-text").val();
+                                sendOffToServerAsTestCase(data);
+                                RED.view.focus();
+                            }, 500)
                         }
                     },
                     { // red-ui-clipboard-dialog-download
