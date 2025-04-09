@@ -2,7 +2,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--export([not_happen_loop/0]).
+-export([not_happen_loop/1]).
 
 stop_all_pids([]) ->
     ok;
@@ -40,6 +40,7 @@ read_and_test_file([],Cnt) ->
 
 read_and_test_file([FileName|MoreFileNames],Cnt) ->
     io:format("\n====> Test flow: [~p]\n",[FileName]),
+    start_this_should_not_happen_service(FileName),
 
     Ary = flows:parse_flow_file(FileName),
     Pids = nodes:create_pid_for_node(Ary),
@@ -47,24 +48,35 @@ read_and_test_file([FileName|MoreFileNames],Cnt) ->
 
     timer:sleep(1500),
     stop_all_pids(Pids),
+
     ?debugMsg(?capturedOutput),
 
     read_and_test_file(MoreFileNames,Cnt).
 
 
-not_happen_loop() ->
+not_happen_loop(TestName) ->
     receive
-        {it_happened, Arg } ->
-            io:format("TSNH: ~s\n",[Arg]),
-            throw(nodes:jstr(Arg));
         stop ->
             ok;
+
+        {it_happened, Arg} ->
+            Str = io_lib:format("TSNH:IN ~s SHOULD NOT HAPPEN, HAPPENED: ~s\n",
+                                [TestName,Arg]),
+            io:format("~s~n",[list_to_binary(Str)]),
+            throw(nodes:jstr(Str));
+
         _ ->
-            not_happen_loop()
+            not_happen_loop(TestName)
     end.
 
-start_this_should_not_happen_service() ->
-    Pid = spawn(?MODULE, not_happen_loop, []),
+start_this_should_not_happen_service(TestName) ->
+    case whereis(this_should_not_happen_service) of
+        undefined -> ok;
+        _ ->
+            this_should_not_happen_service ! stop,
+            unregister(this_should_not_happen_service)
+    end,
+    Pid = spawn(?MODULE, not_happen_loop, [TestName]),
     register(this_should_not_happen_service, Pid).
 
 %%
@@ -74,8 +86,6 @@ start_this_should_not_happen_service() ->
 %% to extend the timeout of the unit test. Give each flow 2 seconds.
 %%
 all_testflows_test_() ->
-    %% setup a this-should-not-happen service
-    start_this_should_not_happen_service(),
 
     {Cnt,FileNames} = filelib:fold_files("priv/testflows", "",
                                    false,

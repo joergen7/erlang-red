@@ -132,8 +132,6 @@ does_rule_match_stopafterone([Rule|Rules], Val, [Wires|MoreWires], Msg) ->
 %% Handler for incoming messages
 %%
 handle_incoming(NodeDef,Msg) ->
-    io:format("switch got something\n"),
-
     {ok, Rules} = maps:find(rules,NodeDef),
     {ok, Wires} = maps:find(wires,NodeDef),
 

@@ -26,8 +26,6 @@ handle_status_setting({ok,true},{ok,<<"counter">>},NodeDef,_Msg) ->
 
 handle_status_setting(_,_,_,_) -> ok.
 
-
-
 handle_incoming(NodeDef,Msg) ->
     NodeName = nodes:get_prop_value_from_map(name,NodeDef,"undefined"),
     io:format("DEBUG [~s]: ~p\n", [NodeName, Msg]),

@@ -32,6 +32,9 @@ status(NodeDef,Txt,Clr,Shp) ->
 
 jstr(Fmt,Args) ->
     list_to_binary(lists:flatten(io_lib:format(Fmt,Args))).
+
+jstr(Str) when is_binary(Str) ->
+    Str;
 jstr(Str) ->
     list_to_binary(lists:flatten(Str)).
 
@@ -50,9 +53,14 @@ increment_message_counter(NodeDef, CntName) ->
 enter_receivership(Module,NodeDef) ->
     receive
         stop ->
-            {ok, IdStr} = maps:find(id,NodeDef),
-            {ok, TypeStr} = maps:find(type,NodeDef),
-            io:format("node STOPPED id: [~p] type: [~p]\n",[IdStr,TypeStr]),
+            %% {ok, IdStr} = maps:find(id,NodeDef),
+            %% {ok, TypeStr} = maps:find(type,NodeDef),
+            %% io:format("node STOPPED id: [~p] type: [~p]\n",[IdStr,TypeStr]),
+
+            case erlang:function_exported(Module,handle_stop,1) of
+                true -> erlang:apply(Module, handle_stop, [NodeDef]);
+                _ -> ignore
+            end,
             ok;
 
         {incoming,Msg} ->
@@ -69,10 +77,11 @@ enter_receivership(Module,NodeDef) ->
             enter_receivership(Module, NodeDef2)
     end.
 
-node_init(NodeDef) ->
-    {ok, IdStr} = maps:find(id,NodeDef),
-    {ok, TypeStr} = maps:find(type,NodeDef),
-    io:format("node STARTED id: [~p] type: [~p]\n",[IdStr,TypeStr]).
+node_init(_NodeDef) ->
+    ok.
+    %% {ok, IdStr} = maps:find(id,NodeDef),
+    %% {ok, TypeStr} = maps:find(type,NodeDef),
+    %% io:format("node STARTED id: [~p] type: [~p]\n",[IdStr,TypeStr]).
 
 generate_id() ->
     string:lowercase(
