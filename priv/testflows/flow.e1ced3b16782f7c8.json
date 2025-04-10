@@ -111,6 +111,7 @@
         "id": "f7a24fc5f5e4d2d5",
         "type": "ut-assert-failure",
         "z": "e1ced3b16782f7c8",
+        "d": true,
         "name": "",
         "x": 1151,
         "y": 250,

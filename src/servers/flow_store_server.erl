@@ -11,6 +11,7 @@
 -export([update_all_flows/0]).
 -export([update_flow/2]).
 -export([get_filename/1]).
+-export([all_flow_ids/0]).
 
 start() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []),
@@ -28,12 +29,19 @@ update_flow(FlowId,Filename) ->
 get_filename(FlowId) ->
     gen_server:call(?MODULE, {filename, FlowId}).
 
+all_flow_ids() ->
+    gen_server:call(?MODULE, {all_flow_ids}).
+
 init([]) ->
     {ok, #{}}.
 
 %%
 %% Specific implementation for the flow store
 %%
+handle_call({all_flow_ids}, _From, FlowStore) ->
+    AllFlowIds = maps:keys(FlowStore),
+    {reply, AllFlowIds, FlowStore};
+
 handle_call({get_store}, _From, FlowStore) ->
     {reply, FlowStore, FlowStore};
 

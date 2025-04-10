@@ -16,21 +16,12 @@
 -export([this_should_not_happen/2]).
 -export([jstr/2]).
 -export([jstr/1]).
--export([status/4]).
 -export([tabid_to_error_collector/1]).
 
 %%
 %% Common functionality
 %%
 
-status(NodeDef,Txt,Clr,Shp) ->
-    case whereis(websocket_pid) of
-        undefined ->
-            ok;
-        _ ->
-            {ok, NodeId } = maps:find(id,NodeDef),
-            websocket_pid ! { status, NodeId, Txt, Clr, Shp }
-    end.
 
 jstr(Fmt,Args) ->
     list_to_binary(lists:flatten(io_lib:format(Fmt,Args))).

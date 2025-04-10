@@ -33,25 +33,13 @@ append_tab_name_to_filename([NodeDef|MoreNodeDefs],FileName,{ok,TabId}) ->
             append_tab_name_to_filename(MoreNodeDefs, FileName,{ok,TabId})
     end.
 
-send_injects_the_go(<<"inject">>,IdStr) ->
-    io:format("==> sending creating message using inject [~p]\n",[IdStr]),
+send_injects_the_go({ok, <<"inject">>}, {ok, IdStr}) ->
     nodes:nodeid_to_pid(IdStr) ! {outgoing, #{'_msgid' => nodes:generate_id()}};
 
 send_injects_the_go(_,_) ->
     ok.
 
-send_all_injects_the_go([]) ->
-    ok;
-
-send_all_injects_the_go([NodeDef|MoreNodes]) ->
-    {ok, IdStr} = maps:find(id,NodeDef),
-    {ok, TypeStr} = maps:find(type,NodeDef),
-    send_injects_the_go(TypeStr,IdStr),
-    send_all_injects_the_go(MoreNodes).
-
 ensure_error_store_is_started(TabErrColl, TestName) ->
-    timer:sleep(100),
-
     case error_store:start() of
         {error, {already_started, ErrorStorePid}} ->
             Pid = spawn(?MODULE, not_happen_loop, [TestName, ErrorStorePid]),
@@ -118,7 +106,8 @@ create_test_for_flow_file([FileName|MoreFileNames], Acc) ->
                        error_store:reset_errors(TabId),
 
                        Pids = nodes:create_pid_for_node(Ary),
-                       send_all_injects_the_go(Ary),
+                       [send_injects_the_go(maps:find(type,ND),
+                                            maps:find(id,ND)) || ND <- Ary],
 
                        %% give the messages time to propagate through the
                        %% test flow

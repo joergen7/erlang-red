@@ -44,6 +44,12 @@ websocket_info({error_debug, Data}, [{stats_interval, SInterval}]) ->
     Msg = jiffy:encode([#{ topic => debug, data => Data3 } ]),
     {reply, {text, Msg}, [{stats_interval, SInterval}]};
 
+websocket_info({warning_debug, Data}, [{stats_interval, SInterval}]) ->
+    Data2 = maps:put( timestamp, erlang:system_time(millisecond), Data),
+    Data3 = maps:put( level, 30, Data2),
+    Msg = jiffy:encode([#{ topic => debug, data => Data3 } ]),
+    {reply, {text, Msg}, [{stats_interval, SInterval}]};
+
 %%
 %% Here are the details to the possible values of the status
 %% elements.

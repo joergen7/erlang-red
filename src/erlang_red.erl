@@ -29,8 +29,8 @@ start(_Type, _Args) ->
                %% these are required by Node-RED
                {"/UnitTesting/tests.json",
                 cowboy_unittesting_tests_get_handler, []},
-               %% {"/UnitTesting/:flowid/runtest",
-               %%  cowboy_unittesting_runtests_get_handler, []},
+               {"/UnitTesting/:flowid/runtest",
+                cowboy_unittesting_runtests_get_handler, []},
                {"/UnitTesting/:flowid/retrieve",
                 cowboy_unittesting_retrieve_flow_handler, []},
 

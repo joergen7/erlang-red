@@ -20,29 +20,23 @@ handle_incoming(NodeDef,Msg) ->
       io_lib:format("Assert Error: Node should not have been reached [~p](~p) ~p\n",[TypeStr,IdStr,Msg])
     ),
 
-    case whereis(websocket_pid) of
-        undefined ->
-            ok;
-        _ ->
-            IdStr       = nodes:get_prop_value_from_map(id,NodeDef),
-            ZStr        = nodes:get_prop_value_from_map(z,NodeDef),
-            NameStr     = nodes:get_prop_value_from_map(name,NodeDef,TypeStr),
-            TopicStr    = nodes:get_prop_value_from_map(topic,Msg,""),
+    IdStr       = nodes:get_prop_value_from_map(id,NodeDef),
+    ZStr        = nodes:get_prop_value_from_map(z,NodeDef),
+    NameStr     = nodes:get_prop_value_from_map(name,NodeDef,TypeStr),
+    TopicStr    = nodes:get_prop_value_from_map(topic,Msg,""),
 
-            Data = #{
-                     id       => IdStr,
-                     z        => ZStr,
-                     '_alias' => IdStr,
-                     path     => ZStr,
-                     name     => NameStr,
-                     topic    => to_binary_if_not_binary(TopicStr),
-                     msg      => jiffy:encode(Msg),
-                     format   => <<"Object">>
+    Data = #{
+             id       => IdStr,
+             z        => ZStr,
+             '_alias' => IdStr,
+             path     => ZStr,
+             name     => NameStr,
+             topic    => to_binary_if_not_binary(TopicStr),
+             msg      => jiffy:encode(Msg),
+             format   => <<"Object">>
             },
-
-            websocket_pid ! { error_debug, Data }
-    end,
-    nodes:status(NodeDef, "assert failed", "red", "dot").
+    nodered:debug(Data,error),
+    nodered:node_status(NodeDef, "assert failed", "red", "dot").
 
 
 node_assert_failure(NodeDef) ->

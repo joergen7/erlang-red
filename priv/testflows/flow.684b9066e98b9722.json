@@ -28,8 +28,8 @@
         "topic": "topic",
         "payload": "",
         "payloadType": "date",
-        "x": 395,
-        "y": 485,
+        "x": 445,
+        "y": 492,
         "wires": [
             [
                 "db8bceace56b9372",
@@ -152,6 +152,7 @@
         "id": "d5978770da9f8bc7",
         "type": "ut-assert-failure",
         "z": "684b9066e98b9722",
+        "d": true,
         "name": "",
         "x": 1039,
         "y": 193,
@@ -161,6 +162,7 @@
         "id": "056235b62ce89f51",
         "type": "ut-assert-success",
         "z": "684b9066e98b9722",
+        "d": true,
         "name": "",
         "x": 1047,
         "y": 740,
