@@ -5,7 +5,7 @@ An experiment to see how far is it possible to build an Erlang backend for the N
 
 The idea is not to provide Erlang nodes for NodeRED rather the idea is to replace the NodeJS backend of Node-RED with an Erlang equivalent.
 
-The goal is to offer the advanages of visual flow based programming using a programming language that is designed for message passing and concurrency from the ground up - that's why Erlang was selected.
+The goal is to offer the advantages of visual flow based programming using a programming language that is designed for message passing and concurrency from the ground up - that's why Erlang was selected.
 
 
 Implementation Ramblings
@@ -113,11 +113,27 @@ To better support testing of flows, two new nodes have been created:
 
 "Assert Failed" node cases unit tests to fail if a message reaches it, regardless of any message values. It's basically the same as a `assert(false)` call. The intention is to ensure that specific parts of a flow aren't reached.
 
-The second node (in green) is a equivalent to a change node except it contains test on attributes of the message object. Possible tests include 'equal', 'match', 'unset' and their inverses. Here the intention is that a message passes through is tested for specific values else the unit test fails.
+The second node (in green) is an equivalent to a change node except it contains test on attributes of the message object. Possible tests include 'equal', 'match', 'unset' and their inverses. Here the intention is that a message passes through is tested for specific values else the unit test fails.
 
 These nodes are necessary since there is no other way to test whether flow is working or not.
 
 Also remember these flow tests are designed to ensure the Erlang backend is correctly implementing node functionality. The purpose of these nodes is *not* to ensure a flow is correct, rather that the *functionality* of implemented nodes works and continues to work correctly.
+
+Visual Unit Testing
+---
+
+My plan is to create test flows that represent specific NodeRED functionality that needs to be implemented by Erlang-RED. This provides regression testing and todos for the implementation.
+
+I created a shortcut storing and creating these flows but I was still using the terminal to execute tests `make eunit-test` became painful. Instead I pulled this testing into Node-RED, as the gif demonstrates:
+
+![img](.images/unit-testing-inside-nodered.gif)
+
+What the gif shows is my list of unit tests, which at the press of a button, can all be tested. Notifications for each test shows the result. In addition, the tree list shows which tests failed/succeed (red 'x' or green check). Also tests can be executed individually so that fixes may be applied.
+
+The best bit though is that all errors are pushed to the debug panel and from there I get directly to the node causing the error. Unit testing is now completely integrated into Erlang-RED.
+
+My intention is to create many small flows that represent functionality that needs to be implemented by Erlang-RED. These unit tests shows the compatibility to Node-RED and less the correctness of the Erlang code.
+
 
 Contributing
 ---
