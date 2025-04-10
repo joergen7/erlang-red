@@ -35,7 +35,7 @@
         return {
           id: `flowid-treelist-${itm.id}`,
           label: itm.name,
-          icon: "fa " + (RED.nodes.workspace(itm.id) ? "fa-check-circle-o" : ""),
+          icon: "fa fa-minus",
           flowid: itm.id,
           sublabel: itm.id,
           selected: $('#node-input-flowhubpull-flowid').val() == itm.id,
@@ -59,7 +59,7 @@
       treeListItems.push({
         id: `flowid-treelist-${itm.id}`,
         label: itm.name,
-        icon: "fa " + (RED.nodes.workspace(itm.id) ? "fa-check-circle-o" : ""),
+        icon: "fa fa-minus",
         flowid: itm.id,
         sublabel: itm.id,
         selected: $('#node-input-flowhubpull-flowid').val() == itm.id,
@@ -78,61 +78,66 @@
   }).done((resp) => {
     handleResponse(resp)
   }).fail((e) => {
-    RED.notify( "Failed to obtain tests lists", "error")
+    RED.notify("Failed to obtain tests lists", "error")
   });
 };
 
 
 function doFlowImportForSidebarUnittesting() {
+  let flowid = $('#node-input-unittestingpull-flowid').val().trim();
 
-  RED.notify("Pull triggered", {
-    type: "warning",
-    timeout: 3000
-  });
+  if (RED.nodes.workspace(flowid) ) {
+    RED.workspaces.show(flowid, false, false, true);
+  } else {
+    RED.notify("Retrieving test", {
+      type: "warning",
+      timeout: 3000
+    });
 
-  $.get({
-    url: "/UnitTesting/" +
-      $('#node-input-unittestingpull-flowid').val().trim() +
-      "/retrieve?cb=" + new Date().getTime(),
-    headers: {
-    }
-  }).done((e, d) => {
-    try {
-      if (!e || !e.flowdata || !Array.isArray(e.flowdata)) {
-        return RED.notify("Access denied or revision not found.", {
+    $.get({
+      url: "/UnitTesting/" +
+        $('#node-input-unittestingpull-flowid').val().trim() +
+        "/retrieve?cb=" + new Date().getTime(),
+      headers: {
+      }
+    }).done((e, d) => {
+      try {
+        if (!e || !e.flowdata || !Array.isArray(e.flowdata)) {
+          return RED.notify("Access denied or revision not found.", {
+            type: "error",
+            timeout: 3000
+          });
+        }
+      } catch (ex) {
+        return RED.notify("Access Denied, parse error.", {
           type: "error",
           timeout: 3000
         });
       }
-    } catch( ex ) {
-      return RED.notify("Access Denied, parse error.", {
+
+      RED.clipboard.import();
+
+      setTimeout(() => {
+        var content = e.flowdata;
+
+
+        $('#red-ui-clipboard-dialog-import-text').val(
+          JSON.stringify(content)
+        ).trigger("paste");
+      }, 300);
+    }).fail(e => {
+      let msg = "<p>Failed to retrieve test flow data from server.</p>" +
+        $('#node-input-unittestingpull-flowid').val().trim() + "</p>" +
+        "<p>AdBlocker or uBlock might have prevented request.</p>" +
+        "<p>Please check browser console for more details.</p>" + e;
+
+      RED.notify(msg, {
         type: "error",
-        timeout: 3000
+        id: "UnitTesting",
+        timeout: 4000
       });
-    }
-
-    RED.clipboard.import();
-
-    setTimeout(() => {
-      var content = e.flowdata;
-
-
-      $('#red-ui-clipboard-dialog-import-text').val(
-        JSON.stringify(content)
-      ).trigger("paste");
-    }, 300);
-  }).fail( e => {
-    let msg = "<p>Failed to retrieve test flow data from server.</p>" +
-      $('#node-input-unittestingpull-flowid').val().trim() + "</p>" +
-      "<p>AdBlocker or uBlock might have prevented request.</p>" +
-      "<p>Please check browser console for more details.</p>" + e;
-
-    RED.notify(msg, {
-      type: "error",
-      id: "UnitTesting",
-      timeout: 4000
     });
-  });
+  }
 }
 
 function expandAllTests(dirList) {
@@ -141,7 +146,7 @@ function expandAllTests(dirList) {
   let next = (idx) => {
     if (idx < folders.length) {
       dirList.treeList('select', folders[idx]);
-      dirList.treeList('selected').treeList.expand(() => { next(idx+1) }) 
+      dirList.treeList('selected').treeList.expand(() => { next(idx + 1) })
     }
   }
 
@@ -163,18 +168,27 @@ function collapseAllTests(dirList) {
   next(0)
 }
 
-function removeAllTestResults(dirList) {
-  [...dirList.treeList('data').map(d => d.children).flat(), 
-   ...dirList.treeList('data').filter(d => !!d.id)
-  ].forEach(d => {
-    window.unitTestDirList.treeList('select', d)
-    $(window.unitTestDirList.treeList('selected').treeList.label).css('color', '')
-  }) 
+function resetTestResultsForFlowId(dirList,flowid) {
+  removeTestResultsForFlow(dirList,`flowid-treelist-${flowid}`);
 }
 
-function highlightTestResult(flowid, status) {
-  window.unitTestDirList.treeList('select', `flowid-treelist-${flowid}`)
-  $(window.unitTestDirList.treeList('selected').treeList.label).css('color', status == "failed"  ? 'red' : 'green')
+function removeTestResultsForFlow(dirList,listid) {
+  dirList.treeList('select', listid)
+  $($($(dirList.treeList('selected').treeList.container).find('.red-ui-treeList-icon')).find('i')).prop('class', 'fa fa-minus').css('color', '')
+}
+
+function removeAllTestResults(dirList) {
+  [...dirList.treeList('data').map(d => d.children).flat(),
+  ...dirList.treeList('data').filter(d => !!d.id)
+  ].forEach(d => {
+    removeTestResultsForFlow(dirList,d)
+  })
+}
+
+function highlightTestResult(dirList, flowid, status) {
+  dirList.treeList('select', `flowid-treelist-${flowid}`);
+
+  $($($(dirList.treeList('selected').treeList.container).find('.red-ui-treeList-icon')).find('i')).prop('class', status == "failed" ? 'fa fa-remove' : 'fa fa-check').css('color', status == "failed" ? 'red' : 'green')
 }
 
    // Add your plugin as a new tabsheet in the right sidebar AFTER the flow editor is completely started
@@ -271,8 +285,8 @@ $('#node-input-unittestingpull-sb-test-flow-but').on('click', function (e) {
   let flowid = $('#node-input-unittestingpull-flowid').val();
 
   if (flowid) {
-    removeAllTestResults(dirList);
-
+    resetTestResultsForFlowId(dirList,flowid)
+    
     $.get({
       url: `/UnitTesting/${flowid}/runtest?cb=${new Date().getTime()}`
     }).done((resp) => {
@@ -306,7 +320,7 @@ let handleTestResult = (event, data) => {
       timeout: data.status == "failed" ? 3000 : 2000
     });
 
-    highlightTestResult(data.flowid, data.status);
+    highlightTestResult(dirList, data.flowid, data.status);
   }
 }
 RED.comms.subscribe('unittesting:testresults', handleTestResult);
