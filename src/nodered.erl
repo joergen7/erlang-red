@@ -10,6 +10,8 @@
 -export([debug/2]).
 -export([unittest_result/2]).
 
+-export([debug_string/3]).
+
 send_on_if_ws(Msg) ->
     case whereis(websocket_pid) of
         undefined ->
@@ -29,10 +31,26 @@ debug(Data,error) ->
     send_on_if_ws({ error_debug, Data });
 
 debug(Data,warning) ->
-    send_on_if_ws({ warning_debug, Data }).
+    send_on_if_ws({ warning_debug, Data });
+
+debug(Data,notice) ->
+    send_on_if_ws({ notice_debug, Data }).
 
 unittest_result(FlowId,failed) ->
     send_on_if_ws({unittest_results, FlowId, <<"failed">>});
 
 unittest_result(FlowId,success) ->
     send_on_if_ws({unittest_results, FlowId, <<"success">>}).
+
+%%
+%% helper
+debug_string(NodeId,TabId,Msg) ->
+    #{
+      id       => NodeId,
+      z        => TabId,
+      path     => TabId,
+      name     => <<"Unit Test Error">>,
+      topic    => <<"">>,
+      msg      => Msg,
+      format   => <<"string">>
+    }.

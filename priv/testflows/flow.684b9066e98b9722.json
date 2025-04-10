@@ -2,7 +2,7 @@
     {
         "id": "684b9066e98b9722",
         "type": "tab",
-        "label": "[General] Disabled node should not be reached",
+        "label": "[.core] Disabled node should not be sent messages",
         "disabled": false,
         "info": "",
         "env": []

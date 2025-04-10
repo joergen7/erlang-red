@@ -1,0 +1,67 @@
+[
+    {
+        "id": "27804627fb8f56bd",
+        "type": "tab",
+        "label": "[http] nodes should be able handle requests",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "fc6d2a8652ac0a13",
+        "type": "http in",
+        "z": "27804627fb8f56bd",
+        "name": "",
+        "url": "/test/url",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 272,
+        "y": 277,
+        "wires": [
+            [
+                "1e3a49fdb9c9a6a1"
+            ]
+        ]
+    },
+    {
+        "id": "1e3a49fdb9c9a6a1",
+        "type": "template",
+        "z": "27804627fb8f56bd",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "This is the payload: {{payload}} !",
+        "output": "str",
+        "x": 415,
+        "y": 406,
+        "wires": [
+            [
+                "b35819f95cd15265",
+                "699782610b830366"
+            ]
+        ]
+    },
+    {
+        "id": "b35819f95cd15265",
+        "type": "http response",
+        "z": "27804627fb8f56bd",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 555,
+        "y": 528,
+        "wires": []
+    },
+    {
+        "id": "699782610b830366",
+        "type": "ut-assert-success",
+        "z": "27804627fb8f56bd",
+        "name": "",
+        "x": 723,
+        "y": 406,
+        "wires": []
+    }
+]

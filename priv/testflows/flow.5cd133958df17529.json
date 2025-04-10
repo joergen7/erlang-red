@@ -41,9 +41,9 @@
             "5282e7e0a7d7f126",
             "26d9b4eeb5d51317",
             "bd960cd9285b3c2f",
+            "92415be94ab3d709",
             "c0463fd487fb2164",
-            "bc284b16f1f20433",
-            "92415be94ab3d709"
+            "bc284b16f1f20433"
         ],
         "x": 123,
         "y": 588,
@@ -311,26 +311,6 @@
         "wires": []
     },
     {
-        "id": "bc284b16f1f20433",
-        "type": "ut-assert-failure",
-        "z": "5cd133958df17529",
-        "g": "757a2862cb2ba081",
-        "name": "",
-        "x": 828,
-        "y": 782,
-        "wires": []
-    },
-    {
-        "id": "c0463fd487fb2164",
-        "type": "ut-assert-failure",
-        "z": "5cd133958df17529",
-        "g": "757a2862cb2ba081",
-        "name": "",
-        "x": 763,
-        "y": 863,
-        "wires": []
-    },
-    {
         "id": "d8b63a3e1f38cfdd",
         "type": "ut-assert-success",
         "z": "5cd133958df17529",
@@ -355,6 +335,26 @@
         "name": "",
         "x": 908,
         "y": 490,
+        "wires": []
+    },
+    {
+        "id": "c0463fd487fb2164",
+        "type": "ut-assert-failure",
+        "z": "5cd133958df17529",
+        "g": "757a2862cb2ba081",
+        "name": "",
+        "x": 763,
+        "y": 863,
+        "wires": []
+    },
+    {
+        "id": "bc284b16f1f20433",
+        "type": "ut-assert-failure",
+        "z": "5cd133958df17529",
+        "g": "757a2862cb2ba081",
+        "name": "",
+        "x": 828,
+        "y": 782,
         "wires": []
     }
 ]

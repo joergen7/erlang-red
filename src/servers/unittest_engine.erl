@@ -91,8 +91,16 @@ send_injects_the_go(_,_) ->
 send_off_test_result(FlowId, []) ->
     nodered:unittest_result(FlowId,success);
 
-send_off_test_result(FlowId, _Ary) ->
-    nodered:unittest_result(FlowId,failed).
+send_off_test_result(FlowId, Ary) ->
+    nodered:unittest_result(FlowId,failed),
+    dump_errors_onto_nodered(Ary,FlowId).
+
+dump_errors_onto_nodered([],_FlowId) ->
+    ok;
+dump_errors_onto_nodered([{NodeId, Msg}|T],FlowId) ->
+    io:format("~p~n",[NodeId]),
+    nodered:debug(nodered:debug_string(NodeId,FlowId,Msg),notice),
+    dump_errors_onto_nodered(T,FlowId).
 
 handle_info({start_test,FlowId}, State) ->
     error_store:reset_errors(FlowId),

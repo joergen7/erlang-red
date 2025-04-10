@@ -1,0 +1,69 @@
+[
+    {
+        "id": "3ea113b4ec3b6e5e",
+        "type": "tab",
+        "label": "[delay] set delay via msg.delay",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "5ce3f61ddc3d2fb8",
+        "type": "inject",
+        "z": "3ea113b4ec3b6e5e",
+        "name": "",
+        "props": [
+            {
+                "p": "delay",
+                "v": "2",
+                "vt": "num"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 133,
+        "y": 252,
+        "wires": [
+            [
+                "a0b8ebd973feffa2"
+            ]
+        ]
+    },
+    {
+        "id": "a0b8ebd973feffa2",
+        "type": "delay",
+        "z": "3ea113b4ec3b6e5e",
+        "name": "",
+        "pauseType": "delayv",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 239,
+        "y": 339,
+        "wires": [
+            [
+                "cd33d1975a870a2c"
+            ]
+        ]
+    },
+    {
+        "id": "cd33d1975a870a2c",
+        "type": "ut-assert-success",
+        "z": "3ea113b4ec3b6e5e",
+        "name": "",
+        "x": 494,
+        "y": 338,
+        "wires": []
+    }
+]
