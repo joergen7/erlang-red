@@ -3,7 +3,6 @@
 -export([node_assert_success/1]).
 -export([handle_stop/1]).
 
-
 handle_stop(NodeDef) ->
     case maps:find('_mc_incoming',NodeDef) of
         {ok,0} ->
@@ -14,6 +13,29 @@ handle_stop(NodeDef) ->
               NodeDef,
               io_lib:format("Assert Error: Node was not reached [~p](~p)\n",[TypeStr,IdStr])
             ),
+
+            case whereis(websocket_pid) of
+                undefined ->
+                    ok;
+                _ ->
+                    IdStr       = nodes:get_prop_value_from_map(id,NodeDef),
+                    ZStr        = nodes:get_prop_value_from_map(z,NodeDef),
+                    NameStr     = nodes:get_prop_value_from_map(name,NodeDef,
+                                                                TypeStr),
+                    Data = #{
+                             id       => IdStr,
+                             z        => ZStr,
+                             '_alias' => IdStr,
+                             path     => ZStr,
+                             name     => NameStr,
+                             topic    => <<"">>,
+                             msg      => <<"Assert Success Not Reached">>,
+                             format   => <<"string">>
+                            },
+
+                    websocket_pid ! { error_debug, Data }
+            end,
+
             nodes:status(NodeDef, "assert failed", "red", "dot");
         _ ->
             ok

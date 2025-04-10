@@ -34,7 +34,14 @@ websocket_info({data, Msg}, [{stats_interval, SInterval}]) ->
     {reply, {text, Msg}, [{stats_interval, SInterval}]};
 
 websocket_info({debug, Data}, [{stats_interval, SInterval}]) ->
-    Msg = jiffy:encode([#{ topic => debug, data => Data } ]),
+    Data2 = maps:put( timestamp, erlang:system_time(millisecond), Data),
+    Msg = jiffy:encode([#{ topic => debug, data => Data2 } ]),
+    {reply, {text, Msg}, [{stats_interval, SInterval}]};
+
+websocket_info({error_debug, Data}, [{stats_interval, SInterval}]) ->
+    Data2 = maps:put( timestamp, erlang:system_time(millisecond), Data),
+    Data3 = maps:put( level, 20, Data2),
+    Msg = jiffy:encode([#{ topic => debug, data => Data3 } ]),
     {reply, {text, Msg}, [{stats_interval, SInterval}]};
 
 %%

@@ -7,18 +7,12 @@
 %% Debug nodes have no outgoing wires.
 %%
 
+to_binary_if_not_binary(Obj) when is_binary(Obj) ->
+    Obj;
+to_binary_if_not_binary(Obj) when is_list(Obj) ->
+    list_to_binary(Obj);
 to_binary_if_not_binary(Obj) ->
-    case is_binary(Obj) of
-        true ->
-            Obj;
-        _ ->
-            case is_list(Obj) of
-                true ->
-                    list_to_binary(Obj);
-                _ ->
-                    Obj
-            end
-    end.
+    Obj.
 
 handle_status_setting({ok,true},{ok,<<"counter">>},NodeDef,_Msg) ->
     Cnt = nodes:get_prop_value_from_map('_mc_incoming',NodeDef),
@@ -34,10 +28,11 @@ handle_incoming(NodeDef,Msg) ->
         undefined ->
             ok;
         _ ->
-            IdStr       = nodes:get_prop_value_from_map(id,NodeDef),
-            ZStr        = nodes:get_prop_value_from_map(z,NodeDef),
-            NameStr     = nodes:get_prop_value_from_map(name,NodeDef),
-            TopicStr    = nodes:get_prop_value_from_map(topic,Msg,""),
+            TypeStr  = nodes:get_prop_value_from_map(type,NodeDef),
+            IdStr    = nodes:get_prop_value_from_map(id,NodeDef),
+            ZStr     = nodes:get_prop_value_from_map(z,NodeDef),
+            NameStr  = nodes:get_prop_value_from_map(name,NodeDef,TypeStr),
+            TopicStr = nodes:get_prop_value_from_map(topic,Msg,""),
 
             Data = #{
                      id       => IdStr,

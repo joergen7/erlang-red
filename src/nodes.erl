@@ -202,7 +202,11 @@ send_msg_to_connected_nodes(NodeDef,Msg) ->
 get_prop_value_from_map(Prop,Map,Default) ->
     case maps:find(Prop,Map) of
         {ok, Val} ->
-            Val;
+            case Val of
+                <<"">> ->   Default;
+                "" ->       Default;
+                _ ->        Val
+            end;
         _ ->
             Default
     end.
