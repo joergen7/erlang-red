@@ -25,7 +25,7 @@ content_types_accepted(Req, State) ->
      ], Req, State}.
 
 handle_json_body(Req, State) ->
-    {ok, Body, Req2} = cowboy_req:read_urlencoded_body(Req),
+    {ok, _Body, Req2} = cowboy_req:read_urlencoded_body(Req),
     Resp = cowboy_req:set_resp_body(<<"{\"rev\":\"dead73dabcdef12345\"}">>, Req2),
     {true, Resp, State}.
 
