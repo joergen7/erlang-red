@@ -1,7 +1,7 @@
 
 <!-- --- [red-plugin:@gorenje/erlang-red-unittest/unittesting_sidebar] --- -->
 <script type="text/javascript">
-(function() {
+  (function() {
          
    function unitTestingPullUpdateFlows(cb = null, token = null) {
   let handleResponse = (resp) => {
@@ -135,145 +135,209 @@ function doFlowImportForSidebarUnittesting() {
   });
 }
 
+function expandAllTests(dirList) {
+  let folders = dirList.treeList('data').filter(d => !d.id);
+
+  let next = (idx) => {
+    if (idx < folders.length) {
+      dirList.treeList('select', folders[idx]);
+      dirList.treeList('selected').treeList.expand(() => { next(idx+1) }) 
+    }
+  }
+
+  next(0)
+}
+
+function collapseAllTests(dirList) {
+  let folders = dirList.treeList('data').filter(d => !d.id);
+
+  let next = (idx) => {
+    if (idx < folders.length) {
+      dirList.treeList('select', folders[idx]);
+      // for some strange reason, collapse does not have a callback
+      dirList.treeList('selected').treeList.collapse()
+      next(idx + 1)
+    }
+  }
+
+  next(0)
+}
+
+function removeAllTestResults(dirList) {
+  [...dirList.treeList('data').map(d => d.children).flat(), 
+   ...dirList.treeList('data').filter(d => !!d.id)
+  ].forEach(d => {
+    window.unitTestDirList.treeList('select', d)
+    $(window.unitTestDirList.treeList('selected').treeList.label).css('color', '')
+  }) 
+}
+
+function highlightTestResult(flowid, status) {
+  window.unitTestDirList.treeList('select', `flowid-treelist-${flowid}`)
+  $(window.unitTestDirList.treeList('selected').treeList.label).css('color', status == "failed"  ? 'red' : 'green')
+}
 
    // Add your plugin as a new tabsheet in the right sidebar AFTER the flow editor is completely started
    var initialiseConfigNodeOnce = () => {
       RED.events.off('runtime-state', initialiseConfigNodeOnce);
     
       var content = $($('script[type="text/x-red"][data-template-name="UnitTestingSidebar"]').i18n().html());
-      // Add a "Your sidebar" tabsheet to the right sidebar panel, in which this sidebar panel can be displayed
-      // --> more details: https://nodered.org/docs/api/ui/sidebar/
-      RED.sidebar.addTab({
-         id: "UnitTestingErlangRed",
-         label: "Testing", // short name for the tab
-         name: "Testing", // long name for the menu
-         content: content,
-         enableOnEdit: true,
-         iconClass: "fa fa-th",
-         visible: true
+
+// Add a "Your sidebar" tabsheet to the right sidebar panel, in which this sidebar panel can be displayed
+// --> more details: https://nodered.org/docs/api/ui/sidebar/
+
+RED.sidebar.addTab({
+  id: "UnitTestingErlangRed",
+  label: "Testing", // short name for the tab
+  name: "Testing", // long name for the menu
+  content: content,
+  enableOnEdit: true,
+  iconClass: "fa fa-th",
+  visible: true
+});
+
+
+var tabs = RED.tabs.create({
+  id: 'func-unittesting-tabs',
+  onchange: function (tab) {
+    $('#func-unittesting-tabs-content').children().hide();
+    $('#' + tab.id).show();
+  }
+});
+
+// Add pull tab
+tabs.addTab({
+  id: 'func-unittesting-tab-pull',
+  iconClass: 'fa fa-arrow-down',
+  label: 'Tests'
+});
+
+// Add compare tab
+tabs.addTab({
+  id: 'func-unittesting-tab-compare',
+  iconClass: 'fa fa-clone',
+  label: 'TBD'
+});
+
+// Add push tab
+tabs.addTab({
+  id: 'func-unittesting-tab-push',
+  iconClass: 'fa fa-arrow-up',
+  label: 'TBD'
+});
+
+tabs.activateTab("func-unittesting-tab-pull");
+
+var dirList = $("#node-input-unittestingpull-sb-target-container-div").css({
+  width: "100%",
+  height: "100%"
+}).treeList(
+  {
+    multi: false
+  }
+).on('treelistselect', function (event, item) {
+  if (item.flowid) {
+    $('#node-input-unittestingpull-flowid').val(item.flowid);
+  }
+}).on('treelistconfirm', function (event, item) {
+  if (item.flowid) {
+    $('#node-input-unittestingpull-flowid').val(item.flowid);
+    doFlowImportForSidebarUnittesting()
+  }
+});
+
+
+var search = $("#node-input-unittestingpull-sb-target-filter").searchBox({
+  style: "compact",
+  delay: 300,
+  change: function () {
+    var val = $(this).val().trim().toLowerCase();
+    if (val === "") {
+      dirList.treeList("filter", null);
+      search.searchBox("count", "");
+    } else {
+      var count = dirList.treeList("filter", function (item) {
+        return item.label.toLowerCase().indexOf(val) > -1 || item.sublabel.toLowerCase().indexOf(val) > -1
       });
-      
+      search.searchBox("count", count + " / " + dirList.treeList("data").length);
+    }
+  }
+});
 
-      var tabs = RED.tabs.create({
-            id: 'func-unittesting-tabs',
-            onchange: function(tab) {
-               $('#func-unittesting-tabs-content').children().hide();
-               $('#' + tab.id).show();
-            }
-      });
-      
-      // Add pull tab
-      tabs.addTab({
-            id: 'func-unittesting-tab-pull',
-            iconClass: 'fa fa-arrow-down',
-            label: 'Tests'
-      });
+$('#node-input-unittestingpull-sb-test-flow-but').on('click', function (e) {
+  e.preventDefault();
 
-      // Add compare tab
-      tabs.addTab({
-            id: 'func-unittesting-tab-compare',
-            iconClass: 'fa fa-clone',
-            label: 'TBD'
-      });
-      
-      // Add push tab
-      tabs.addTab({
-            id: 'func-unittesting-tab-push',
-            iconClass: 'fa fa-arrow-up',
-            label: 'TBD'
-      });
-      
-      tabs.activateTab("func-unittesting-tab-pull");
 
-      var dirList = $("#node-input-unittestingpull-sb-target-container-div").css({
-        width: "100%",
-        height: "100%"
-       }).treeList(
-         {
-           multi:false
-         }
-       ).on('treelistselect', function(event, item) {
-          if ( item.flowid ) {
-           $('#node-input-unittestingpull-flowid').val(item.flowid);
-         }
-       }).on('treelistconfirm', function(event, item) {
-         if ( item.flowid ) {
-           $('#node-input-unittestingpull-flowid').val(item.flowid);
-           doFlowImportForSidebarUnittesting()
-         }
-       });
+  let flowid = $('#node-input-unittestingpull-flowid').val();
 
-       var search = $("#node-input-unittestingpull-sb-target-filter").searchBox({
-         style: "compact",
-         delay: 300,
-         change: function() {
-           var val = $(this).val().trim().toLowerCase();
-           if (val === "") {
-             dirList.treeList("filter", null);
-             search.searchBox("count","");
-           } else {
-             var count = dirList.treeList("filter", function(item) {
-               return item.label.toLowerCase().indexOf(val) > -1 || item.sublabel.toLowerCase().indexOf(val) > -1
-             });
-             search.searchBox("count",count + " / " + dirList.treeList("data").length);
-           }
-         }
-       });
+  if (flowid) {
+    removeAllTestResults(dirList);
 
-       $('#node-input-unittestingpull-sb-test-flow-but').on('click', function(e) {
-        e.preventDefault();
+    $.get({
+      url: `/UnitTesting/${flowid}/runtest?cb=${new Date().getTime()}`
+    }).done((resp) => {
+      RED.notify(`Triggered test run for ${flowid}`, "success")
+    }).fail((e) => {
+      RED.notify("Failed to trigger test", "error")
+    });
+  }
+})
 
-         let flowid = $('#node-input-unittestingpull-flowid').val();
+$('#node-input-unittestingpull-sb-testall-but').on('click', function (e) {
+  e.preventDefault();
 
-         if ( flowid ) {
-            $.get({
-                url: `/UnitTesting/${flowid}/runtest?cb=${ new Date().getTime() }`
-            }).done((resp) => {
-                RED.notify( `Triggered test run for ${flowid}`, "success")
-            }).fail((e) => {
-                RED.notify( "Failed to trigger test", "error")
-            });
-         }
-       })
+  expandAllTests(dirList)
+  setTimeout(() => {
+    removeAllTestResults(dirList);
+    $.get({
+      url: `/UnitTesting/all/runtest?cb=${new Date().getTime()}`
+    }).done((resp) => {
+      RED.notify(`Triggered complete test run`, "success")
+    }).fail((e) => {
+      RED.notify("Failed to trigger tests", "error")
+    });
+  }, 200)
+})
 
-       $('#node-input-unittestingpull-sb-testall-but').on('click', function(e) {
-        e.preventDefault();
+let handleTestResult = (event, data) => {
+  if (data.flowid) {
+    RED.notify("Test result for flowid " + data.flowid + ": " + data.status, {
+      type: data.status == "failed" ? "error" : "success",
+      timeout: data.status == "failed" ? 3000 : 2000
+    });
 
-         let flowid = 'all'
-         
-         if ( flowid ) {
-            $.get({
-                url: `/UnitTesting/${flowid}/runtest?cb=${ new Date().getTime() }`
-            }).done((resp) => {
-                RED.notify( `Triggered complete test run`, "success")
-            }).fail((e) => {
-                RED.notify( "Failed to trigger tests", "error")
-            });
-         }
-       })
+    highlightTestResult(data.flowid, data.status);
+  }
+}
+RED.comms.subscribe('unittesting:testresults', handleTestResult);
 
-      RED.comms.subscribe('unittesting:testresults', (event,data) => {
-        if ( data.flowid) {
-          RED.notify("Test result for " + data.flowid + " was " + data.status, {
-            type: data.status == "failed" ? "error" : "success", 
-            timeout: data.status == "failed" ? 3000 : 2000
-          });
-        }
-      });
-      
-       $('#node-input-unittestingpull-sb-refresh-list-but').on('click', function(e) {
-        e.preventDefault();
+$('#node-input-unittestingpull-expand-all-but').on('click', function (e) {
+  e.preventDefault();
+  expandAllTests(dirList)
+})
 
-        setTimeout( () => {
-            unitTestingPullUpdateFlows( (lst) => { 
-              dirList.treeList('empty') 
-              $('#unittestingpull-sb-view-flow-link').hide()
-              setTimeout( () => {
-                dirList.treeList('data', lst) 
-              },300)
-            }, undefined);
-        }, 300);
-       });
+$('#node-input-unittestingpull-collapse-but').on('click', function (e) {
+  e.preventDefault();
+  collapseAllTests(dirList)
+})
+
+$('#node-input-unittestingpull-sb-refresh-list-but').on('click', function (e) {
+  e.preventDefault();
+
+  setTimeout(() => {
+    unitTestingPullUpdateFlows((lst) => {
+      dirList.treeList('empty')
+      $('#unittestingpull-sb-view-flow-link').hide()
+      setTimeout(() => {
+        dirList.treeList('data', lst)
+      }, 150)
+    }, undefined);
+  }, 150);
+});
+
+// debugging
+window.unitTestDirList = dirList;
+window.fakeTestResult = handleTestResult;
    };
    
    RED.events.on('runtime-state', initialiseConfigNodeOnce);
@@ -326,6 +390,13 @@ function doFlowImportForSidebarUnittesting() {
                   class="red-ui-button">Run all Tests</button>
          <button id="node-input-unittestingpull-sb-test-flow-but"
                   class="red-ui-button">Test flow</button>
+      </div>
+
+      <div class="form-row" style="margin-left: 10px; margin-top: 30px;">
+         <button id="node-input-unittestingpull-expand-all-but"
+                  class="red-ui-button">Expand</button>
+         <button id="node-input-unittestingpull-collapse-but"
+                  class="red-ui-button">Collapse</button>
       </div>
    </div>
 
