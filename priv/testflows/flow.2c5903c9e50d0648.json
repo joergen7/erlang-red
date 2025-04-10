@@ -11,7 +11,6 @@
         "id": "8ec3f85bb92fdd90",
         "type": "function",
         "z": "2c5903c9e50d0648",
-        "d": true,
         "name": "function 1",
         "func": "\nreturn msg;",
         "outputs": 1,

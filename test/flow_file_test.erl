@@ -14,17 +14,23 @@ stop_all_pids([Pid|Pids]) ->
 %% Node-RED frontend has a "create test case" that allows exporting of flows
 %% to become cases. This test goes through and tests all off them.
 %%
+append_tab_name_to_filename(Ary,FileName) ->
+    append_tab_name_to_filename(Ary, FileName, maps:find(z,lists:nth(2,Ary))).
 
-append_tab_name_to_filename([],FileName) ->
-    FileName;
+append_tab_name_to_filename([],FileName,{ok,TabId}) ->
+    {TabId,FileName};
 
-append_tab_name_to_filename([NodeDef|MoreNodeDefs],FileName) ->
+append_tab_name_to_filename([NodeDef|MoreNodeDefs],FileName,{ok,TabId}) ->
     case maps:find(type,NodeDef) of
         {ok, <<"tab">>} ->
             {ok,Val} = maps:find(label,NodeDef),
-            binary_to_list(list_to_binary(io_lib:format("~s (~s)", [Val, FileName])));
+            {ok,TabId2} = maps:find(id,NodeDef),
+
+            {TabId2,
+             binary_to_list(list_to_binary(io_lib:format("~s (~s)",
+                                                         [Val, FileName])))};
         _ ->
-            append_tab_name_to_filename(MoreNodeDefs,FileName)
+            append_tab_name_to_filename(MoreNodeDefs, FileName,{ok,TabId})
     end.
 
 send_injects_the_go(<<"inject">>,IdStr) ->
@@ -43,37 +49,50 @@ send_all_injects_the_go([NodeDef|MoreNodes]) ->
     send_injects_the_go(TypeStr,IdStr),
     send_all_injects_the_go(MoreNodes).
 
-stop_error_store(TestName) ->
+ensure_error_store_is_started(TabErrColl, TestName) ->
     timer:sleep(100),
 
     case error_store:start() of
-        {error, {already_started, _ErrorStorePid}} ->
-            error_store:stop(),
-            stop_error_store(TestName);
+        {error, {already_started, ErrorStorePid}} ->
+            Pid = spawn(?MODULE, not_happen_loop, [TestName, ErrorStorePid]),
+            register(TabErrColl, Pid),
+            TabErrColl;
 
         {ok, ErrorStorePid} ->
-            Pid = spawn(?MODULE, not_happen_loop,
-                        [TestName, ErrorStorePid]),
-            register(this_should_not_happen_service, Pid);
+            Pid = spawn(?MODULE, not_happen_loop, [TestName, ErrorStorePid]),
+            register(TabErrColl, Pid),
+            TabErrColl;
 
         _ ->
-            ok
+            error
     end.
 
-start_this_should_not_happen_service(TestName) ->
-    case whereis(this_should_not_happen_service) of
-        undefined -> ok;
-        _ ->
-            this_should_not_happen_service ! stop,
-            unregister(this_should_not_happen_service)
-    end,
+%% Define this because the ErrorStorePid cannot be registered under a new
+%% name. The point is that each error node in a flow sends its errors
+%% to a specific error collector called "error_collector_<tabid>" (see
+%% nodes:tabid_to_error_collector/1 for details).
+%%
+%% This allows tests to be run in parallel and errors are separated out
+%% by their flow ids
+%%
+%% The error store is required because the spawn isn't a gen_server, i.e.,
+%% I haven't found a way to get the data back from the error collector
+%% service ...
+start_this_should_not_happen_service(TabId,TestName) ->
+    TabErrColl = nodes:tabid_to_error_collector(TabId),
 
-    stop_error_store(TestName).
+    case whereis(TabErrColl) of
+        undefined ->
+            error;
+        _ ->
+            TabErrColl ! stop,
+            unregister(TabErrColl)
+    end,
+    ensure_error_store_is_started(TabErrColl,TestName).
 
 not_happen_loop(TestName,ErrorStorePid) ->
     receive
         stop ->
-            ErrorStorePid ! stop,
             ok;
 
         {it_happened, {NodeId,TabId}, Arg} ->
@@ -90,8 +109,13 @@ create_test_for_flow_file([], Acc) ->
     Acc;
 
 create_test_for_flow_file([FileName|MoreFileNames], Acc) ->
-    TestFunc = fun (Ary,TestName) ->
-                       start_this_should_not_happen_service(TestName),
+    Ary = flows:parse_flow_file(FileName),
+    {TabId,TestName} = append_tab_name_to_filename(Ary,FileName),
+
+    TestFunc = fun () ->
+                       ErCo = start_this_should_not_happen_service(TabId,
+                                                                   TestName),
+                       error_store:reset_errors(TabId),
 
                        Pids = nodes:create_pid_for_node(Ary),
                        send_all_injects_the_go(Ary),
@@ -108,16 +132,14 @@ create_test_for_flow_file([FileName|MoreFileNames], Acc) ->
                        %% some asserts work on the stop notification, give'em
                        %% time to generate their results.
                        timer:sleep(543),
+                       ErCo ! stop,
 
-                       ?assertEqual([], error_store:get_store())
+                       ?assertEqual([], error_store:get_errors(TabId))
                end,
-
-    Ary = flows:parse_flow_file(FileName),
-    TestName = append_tab_name_to_filename(Ary,FileName),
 
     create_test_for_flow_file(MoreFileNames,
                               [{list_to_binary(color:yellow(TestName)),
-                                fun() -> TestFunc(Ary, TestName) end}|Acc]).
+                                fun() -> TestFunc() end}|Acc]).
 
 
 foreach_testflow_test_() ->
