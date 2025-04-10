@@ -17,6 +17,7 @@
 -export([jstr/2]).
 -export([jstr/1]).
 -export([status/4]).
+-export([tabid_to_error_collector/1]).
 
 %%
 %% Common functionality
@@ -40,13 +41,16 @@ jstr(Str) ->
     list_to_binary(lists:flatten(Str)).
 
 this_should_not_happen(NodeDef,Arg) ->
-    case whereis(this_should_not_happen_service) of
+    {ok, TabId} = maps:find(z,NodeDef),
+    ErrCollector = tabid_to_error_collector(TabId),
+
+    case whereis(ErrCollector) of
         undefined ->
             io:format("TSNH: ~s\n",[Arg]);
         _ ->
             {ok, IdStr } = maps:find(id,NodeDef),
             {ok, ZStr } = maps:find(z,NodeDef),
-            this_should_not_happen_service ! {it_happened, {IdStr,ZStr}, Arg}
+            ErrCollector ! {it_happened, {IdStr,ZStr}, Arg}
     end.
 
 increment_message_counter(NodeDef, CntName) ->
@@ -131,6 +135,12 @@ nodeid_to_pid(IdStr) ->
       list_to_binary(
         lists:flatten(
           io_lib:format("~s~s", ["node_pid_",IdStr] )))).
+
+tabid_to_error_collector(IdStr) ->
+    binary_to_atom(
+      list_to_binary(
+        lists:flatten(
+          io_lib:format("~s~s", ["error_collector_",IdStr] )))).
 
 create_pid_for_node(Ary) ->
     create_pid_for_node(Ary,[]).

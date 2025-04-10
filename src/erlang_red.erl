@@ -1,7 +1,7 @@
 -module(erlang_red).
 
 -behaviour(application).
--export([start/0, start/2, stop/1, stop/0,constraint/2]).
+-export([start/0, start/2, stop/1, stop/0, constraint/2]).
 
 constraint(Arg1,Arg2) ->
     io:format("Constraint: ~p ~p\n",[Arg1,Arg2]),
@@ -11,7 +11,6 @@ start() ->
     application:ensure_all_started([cowboy, erlang_red]).
 
 start(_Type, _Args) ->
-    io:format("start/2 called on erlang_red\n"),
     Dispatch = cowboy_router:compile([
         {'_', [
                %%
@@ -67,6 +66,8 @@ start(_Type, _Args) ->
     ]),
 
     flow_store_server:start(),
+    unittest_engine:start(),
+    error_store:start(),
 
     {ok, _} = cowboy:start_clear(my_http_listener,
         [{port, 8080}],

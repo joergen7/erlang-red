@@ -31,11 +31,13 @@ get_filename(FlowId) ->
 init([]) ->
     {ok, #{}}.
 
+%%
+%% Specific implementation for the flow store
+%%
 handle_call({get_store}, _From, FlowStore) ->
     {reply, FlowStore, FlowStore};
 
 handle_call({update_all}, _From, _FlowStore) ->
-    io:format("called update all\n"),
     {reply, true, compile_file_store(compile_file_list(), #{})};
 
 handle_call({update_one, FlowId, Filename}, _From, FlowStore) ->
@@ -55,6 +57,9 @@ handle_call({filename, FlowId}, _From, FlowStore) ->
         _ ->
             {reply, error, FlowStore}
     end;
+
+%%
+%%
 
 handle_call(_Msg, _From, FlowStore) ->
     {reply, FlowStore, FlowStore}.
