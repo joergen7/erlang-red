@@ -35,7 +35,7 @@ handle_cast(stop, State) ->
 handle_cast(_Msg, Store) ->
     {noreply, Store}.
 
-handle_info({it_happened, Msg}, ErrorStore) ->
+handle_info({store_msg, Msg}, ErrorStore) ->
     {noreply, [ Msg | ErrorStore ] };
 
 handle_info(stop, ErrorStore) ->

@@ -7,11 +7,14 @@
 handle_incoming(NodeDef,Msg) ->
     {ok, IdStr} = maps:find(id,NodeDef),
     {ok, TypeStr} = maps:find(type,NodeDef),
-    nodes:this_should_not_happen(io_lib:format("ASSERT FAILED [~p](~p)\n",[TypeStr,IdStr])),
-    nodes:status(NodeDef, "assert failed", "red", "dot"),
-    nodes:send_msg_to_connected_nodes(NodeDef,Msg).
+
+    nodes:this_should_not_happen(
+      NodeDef,
+      io_lib:format("Assert Error: Node should not have been reached [~p](~p) ~p\n",[TypeStr,IdStr,Msg])
+    ),
+    nodes:status(NodeDef, "assert failed", "red", "dot").
 
 
 node_assert_failure(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE,NodeDef).
+    nodes:enter_receivership(?MODULE, NodeDef, only_incoming).

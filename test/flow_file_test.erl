@@ -76,10 +76,11 @@ not_happen_loop(TestName,ErrorStorePid) ->
             ErrorStorePid ! stop,
             ok;
 
-        {it_happened, Arg} ->
+        {it_happened, {NodeId,TabId}, Arg} ->
             Str = io_lib:format("~s in ~s\n", [Arg,TestName]),
-            io:format(list_to_binary(Str)),
-            ErrorStorePid ! {it_happened, list_to_binary(Str)};
+            %% io:format(list_to_binary(Str)),
+            ErrorStorePid ! {store_msg, {NodeId, TabId, list_to_binary(Str)}},
+            not_happen_loop(TestName,ErrorStorePid);
 
         _ ->
             not_happen_loop(TestName,ErrorStorePid)
@@ -95,8 +96,18 @@ create_test_for_flow_file([FileName|MoreFileNames], Acc) ->
                        Pids = nodes:create_pid_for_node(Ary),
                        send_all_injects_the_go(Ary),
 
-                       timer:sleep(1500),
+                       %% give the messages time to propagate through the
+                       %% test flow
+                       timer:sleep(1234),
+
+                       %% stop all nodes. Probably better would be to check
+                       %% the message queues of the nodes and if all are empty
+                       %% it's probably safe to end the test case.
                        stop_all_pids(Pids),
+
+                       %% some asserts work on the stop notification, give'em
+                       %% time to generate their results.
+                       timer:sleep(543),
 
                        ?assertEqual([], error_store:get_store())
                end,

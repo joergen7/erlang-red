@@ -9,7 +9,11 @@ handle_stop(NodeDef) ->
         {ok,0} ->
             {ok, IdStr} = maps:find(id,NodeDef),
             {ok, TypeStr} = maps:find(type,NodeDef),
-            nodes:this_should_not_happen(io_lib:format("ASSERT FAILED [~p](~p)\n",[TypeStr,IdStr])),
+
+            nodes:this_should_not_happen(
+              NodeDef,
+              io_lib:format("Assert Error: Node was not reached [~p](~p)\n",[TypeStr,IdStr])
+            ),
             nodes:status(NodeDef, "assert failed", "red", "dot");
         _ ->
             ok

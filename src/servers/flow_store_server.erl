@@ -35,6 +35,7 @@ handle_call({get_store}, _From, FlowStore) ->
     {reply, FlowStore, FlowStore};
 
 handle_call({update_all}, _From, _FlowStore) ->
+    io:format("called update all\n"),
     {reply, true, compile_file_store(compile_file_list(), #{})};
 
 handle_call({update_one, _FlowId}, _From, FlowStore) ->

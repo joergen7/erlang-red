@@ -8,17 +8,23 @@
 -export([handle_incoming/2]).
 -export([handle_outgoing/2]).
 
-handle_incoming(NodeDef,_Msg) ->
+handle_incoming(NodeDef,Msg) ->
     {ok, IdStr} = maps:find(id,NodeDef),
     {ok, TypeStr} = maps:find(type,NodeDef),
-    nodes:this_should_not_happen(io_lib:format("NOOP NODE HIT (incoming) Nothing Done for [~p](~p)\n",[TypeStr,IdStr])),
-    error.
+    nodes:this_should_not_happen(
+      NodeDef,
+      io_lib:format("Noop Node (incoming). Nothing Done for [~p](~p) ~p\n",
+                    [TypeStr,IdStr,Msg])
+    ).
 
-handle_outgoing(NodeDef,_Msg) ->
+handle_outgoing(NodeDef,Msg) ->
     {ok, IdStr} = maps:find(id,NodeDef),
     {ok, TypeStr} = maps:find(type,NodeDef),
-    nodes:this_should_not_happen(io_lib:format("NOOP NODE HIT (outgoing) Nothing Done for [~p](~p)\n",[TypeStr,IdStr])),
-    error.
+    nodes:this_should_not_happen(
+      NodeDef,
+      io_lib:format("Noop Node (outgoing) Nothing Done for [~p](~p) ~p\n",
+                    [TypeStr,IdStr,Msg])
+     ).
 
 node_noop(NodeDef) ->
     nodes:node_init(NodeDef),

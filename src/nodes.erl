@@ -13,7 +13,7 @@
 -export([node_init/1]).
 -export([enter_receivership/2]).
 -export([enter_receivership/3]).
--export([this_should_not_happen/1]).
+-export([this_should_not_happen/2]).
 -export([jstr/2]).
 -export([jstr/1]).
 -export([status/4]).
@@ -39,12 +39,14 @@ jstr(Str) when is_binary(Str) ->
 jstr(Str) ->
     list_to_binary(lists:flatten(Str)).
 
-this_should_not_happen(Arg) ->
+this_should_not_happen(NodeDef,Arg) ->
     case whereis(this_should_not_happen_service) of
         undefined ->
             io:format("TSNH: ~s\n",[Arg]);
         _ ->
-            this_should_not_happen_service ! {it_happened, Arg}
+            {ok, IdStr } = maps:find(id,NodeDef),
+            {ok, ZStr } = maps:find(z,NodeDef),
+            this_should_not_happen_service ! {it_happened, {IdStr,ZStr}, Arg}
     end.
 
 increment_message_counter(NodeDef, CntName) ->
@@ -67,6 +69,21 @@ enter_receivership(Module,NodeDef,only_stop) ->
         {outgoing,_Msg} ->
             NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
             enter_receivership(Module, NodeDef2, only_stop)
+    end;
+
+enter_receivership(Module,NodeDef,only_incoming) ->
+    receive
+        stop ->
+            ok;
+
+        {incoming,Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
+            erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
+            enter_receivership(Module, NodeDef2, only_incoming);
+
+        {outgoing,_Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
+            enter_receivership(Module, NodeDef2, only_incoming)
     end.
 
 
