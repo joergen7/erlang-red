@@ -2,7 +2,7 @@
     {
         "id": "09aab59a2455cf15",
         "type": "tab",
-        "label": "Payload, topic and fubar set on inject",
+        "label": "[inject] Payload, topic and fubar set on inject",
         "disabled": false,
         "info": "",
         "env": []
