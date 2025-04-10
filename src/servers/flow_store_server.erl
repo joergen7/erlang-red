@@ -9,7 +9,7 @@
 
 -export([get_flow_data/0]).
 -export([update_all_flows/0]).
--export([update_flow/1]).
+-export([update_flow/2]).
 -export([get_filename/1]).
 
 start() ->
@@ -22,8 +22,8 @@ get_flow_data() ->
 update_all_flows() ->
     gen_server:call(?MODULE, {update_all}).
 
-update_flow(FlowId) ->
-    gen_server:call(?MODULE, {update_one, FlowId}).
+update_flow(FlowId,Filename) ->
+    gen_server:call(?MODULE, {update_one, FlowId, Filename}).
 
 get_filename(FlowId) ->
     gen_server:call(?MODULE, {filename, FlowId}).
@@ -38,11 +38,9 @@ handle_call({update_all}, _From, _FlowStore) ->
     io:format("called update all\n"),
     {reply, true, compile_file_store(compile_file_list(), #{})};
 
-handle_call({update_one, _FlowId}, _From, FlowStore) ->
-    %%
-    %% TODO implement this
-    %%
-    {reply, true, FlowStore};
+handle_call({update_one, FlowId, Filename}, _From, FlowStore) ->
+    FlowDetails = compile_file_store([{FlowId,Filename}], #{}),
+    {reply, true, maps:merge(FlowStore, FlowDetails)};
 
 handle_call({filename, FlowId}, _From, FlowStore) ->
     case maps:find(FlowId,FlowStore) of
@@ -122,8 +120,8 @@ compile_file_store([FileDetails|MoreFileNames], FileStore) ->
     TestName = tab_name_or_filename(Ary,FlowId),
 
     compile_file_store(MoreFileNames,
-                       maps:put(list_to_binary(FlowId),
-                                #{ path => list_to_binary(FileName),
-                                   id   => list_to_binary(FlowId),
+                       maps:put(nodes:jstr(FlowId),
+                                #{ path => nodes:jstr(FileName),
+                                   id   => nodes:jstr(FlowId),
                                    name => TestName },
                                 FileStore )).
