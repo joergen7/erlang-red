@@ -2246,7 +2246,13 @@ RED.comms = (function() {
                                     var subscribers = subscriptions[t];
                                     if (subscribers) {
                                         for (var i=0;i<subscribers.length;i++) {
-                                            subscribers[i](msg.topic,msg.data);
+                                            try {
+                                                subscribers[i](msg.topic,msg.data);
+                                            } catch (ex) {
+                                                console.log( "Caught ex" )
+                                                console.log(ex)
+                                                console.log(subscribers[i])
+                                            }
                                         }
                                     }
                                 }

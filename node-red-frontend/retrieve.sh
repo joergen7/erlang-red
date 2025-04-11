@@ -33,7 +33,7 @@ PyTHON=/usr/bin/python3
 
 echo "==> html, javascript & css"
 
-mkdir -p settings
+mkdir -p settings nodes
 
 curl -s "${NODERED_URL}/favicon.ico?_=${CBSTMP}" -o favicon.ico
 
@@ -98,6 +98,8 @@ done
 #curl -s "${NODERED_URL}/red/keymap.json?_=${CBSTMP}" -o red/keymap.json
 #curl -s "${NODERED_URL}/settings?_=${CBSTMP}" -o settings.json
 
+#curl -s "${NODERED_URL}/nodes?_=${CBSTMP}" -H 'Accept: text/html' > nodes/nodes.html
+
 LoCaLeS="en-US en-GB en de-DE de fr ja ko pt-BR ru zh-CN zh-TW"
 
 echo "==> icons.json"
@@ -119,11 +121,13 @@ for typ in nodes plugins ; do
     done
     cp ${typ}/messages.en-US ${typ}/messages
 
-    echo "==> ${typ}/nodes.json"
+    echo "==> ${typ}/${typ}.json"
     curl -s "${NODERED_URL}/${typ}?_=${CBSTMP}" -H 'Accept: application/json' | $PyTHON .py/json_pretty.py > ${typ}/${typ}.json
 
-    echo "==> ${typ}/nodes.html"
-    curl -s "${NODERED_URL}/${typ}?_=${CBSTMP}" -H 'Accept: text/html' > ${typ}/${typ}.html
+    if [ "${typ}" != "nodes" ] ; then
+      echo "==> ${typ}/${typ}.html"
+      curl -s "${NODERED_URL}/${typ}?_=${CBSTMP}" -H 'Accept: text/html' > ${typ}/${typ}.html
+    fi
 
 done
 

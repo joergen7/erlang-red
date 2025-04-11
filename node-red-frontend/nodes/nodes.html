@@ -1151,13 +1151,19 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
                         // Highlight the subflow instance node.
                         sourceNode = RED.nodes.node(pathParts[1]);
                     }
-                    const getNodeLabel = (n) => n.name || (typeof n.label === "function" && n.label())  || (typeof n.label === "string" && n.label) || (n.type + ":" + n.id);
+                  const getNodeLabel = (n) => {
+                    n ? (n.name || (typeof n.label === "function" && n.label())  || (typeof n.label === "string" && n.label) || (n.type + ":" + n.id)) : "undefined"
+                  };
                     pathHierarchy = pathParts.map((id,index) => {
                         if (index === 0) {
                             if (id === "global") {
                                 return { id: sourceNode.id, label: getNodeLabel(sourceNode) }
-                            } 
-                            return { id: id, label: RED.nodes.workspace(id).label } //flow id + name
+                            }
+
+                          let wksp = RED.nodes.workspace(id)
+                          return {
+                            id: id, label: wksp ? wksp.label : id
+                          }
                         } else {
                             const instanceNode = RED.nodes.node(id)
                             const pathLabel = (instanceNode.name || RED.nodes.subflow(instanceNode.type.substring(8))?.name || instanceNode.type)
@@ -1194,6 +1200,18 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
                         pathHierarchy: pathHierarchy
                     };
                 }
+/*  Don't go there: this can be used to define a click on a debug message if a flow isn't
+    defined in Node-RED client BUT then there is an error "Uncaught TypeError: candidateNodes[i] is undefined" -
+    if that could be caught, then the flow (which is assumed to be a test flow) could be imported
+              else {
+                  o._source = {
+                    id: o.id,
+                    z: o.z,
+                    name: o.name,
+                    path: `${o.z}/${o.id}`
+                  }
+                }
+*/
                 RED.debug.handleDebugMessage(o);
                 if (subWindow) {
                     try {
@@ -2625,7 +2643,7 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
     <p>If no response is received within the configured timeout, default 30 seconds, the node
        will log an error that can be caught using the <code>catch</code> node.</p>
     <p>When the option <b>Link Type</b> is set to "Dynamic target" <code>msg.target</code> can be used to call a
-       <code>link in</code> by name or id. 
+       <code>link in</code> by name or id.
     <ul>
       <li>If there is a <code>link in</code> nodes with the same id, it will be called</li>
       <li>If there are two or more <code>link in</code> nodes with the same name, an error will be raised</li>
@@ -4072,7 +4090,7 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
     <h4>Notes</h4>
     <p>The <code>is true/false</code> and <code>is null</code> rules perform strict
        comparisons against those types. They do not convert between types.</p>
-    <p>The <code>is empty</code> and <code>is not empty</code> rules can be used to test the length of Strings, Arrays and Buffers, or the number of properties an Object has. Neither rule will pass if the property being tested has a <code>boolean</code>, <code>null</code> 
+    <p>The <code>is empty</code> and <code>is not empty</code> rules can be used to test the length of Strings, Arrays and Buffers, or the number of properties an Object has. Neither rule will pass if the property being tested has a <code>boolean</code>, <code>null</code>
        or <code>undefined</code> value.</p>
     <h4>Handling message sequences</h4>
     <p>By default, the node does not modify the <code>msg.parts</code> property of messages
@@ -7321,7 +7339,7 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
     <dl class="message-properties">
        <dt>action <span class="property-type">string</span></dt>
        <dd>the name of the action the node should perform. Available actions are: <code>"connect"</code>,
-       <code>"disconnect"</code>, <code>"getSubscriptions"</code>, <code>"subscribe"</code> and 
+       <code>"disconnect"</code>, <code>"getSubscriptions"</code>, <code>"subscribe"</code> and
        <code>"unsubscribe"</code>.</dd>
        <dt class="optional">topic <span class="property-type">string|object|array</span></dt>
        <dd>For the <code>"subscribe"</code> and <code>"unsubscribe"</code> actions, this property
@@ -8278,10 +8296,10 @@ msg.cookies = {
                         height -= cr.outerHeight(true);
                 }
                 $("#node-input-headers-container").editableList('height',height);
-            } 
+            }
         }
     });
-})();    
+})();
 </script>
 <!--
   Copyright JS Foundation and other contributors, http://js.foundation
@@ -8456,7 +8474,7 @@ msg.cookies = {
         { value: "application/xml", label: "application/xml", hasValue: false },
         ...defaultOptions,
     ];
-    
+
     headerOptions["accept-encoding"] = [
         { value: "gzip", label: "gzip", hasValue: false },
         { value: "deflate", label: "deflate", hasValue: false },
@@ -8751,7 +8769,7 @@ msg.cookies = {
                     propertyName.on('change', function (event) {
                         propertyValue.typedInput('types', getHeaderOptions(propertyName.typedInput('type')));
                     });
-                
+
                 },
                 sortable: true,
                 removable: true
@@ -8764,7 +8782,7 @@ msg.cookies = {
             }
         },
         oneditsave: function() {
-            
+
             const node = this;
 
             if (!/^wss:/i.test($("#node-config-input-path").val())) {
@@ -8775,7 +8793,7 @@ msg.cookies = {
             }
 
             const headers = $("#node-input-headers-container").editableList('items');
-            
+
             node.headers = [];
             headers.each(function(i) {
                 const header = $(this);
@@ -8786,7 +8804,7 @@ msg.cookies = {
                 node.headers.push({
                     keyType, keyValue, valueType, valueValue
                 })
-                
+
             });
         },
         oneditresize: function(size) {
@@ -8801,7 +8819,7 @@ msg.cookies = {
                         height -= cr.outerHeight(true);
                 }
                 $("#node-input-headers-container").editableList('height',height);
-            } 
+            }
         }
     });
 
@@ -9710,7 +9728,7 @@ msg.cookies = {
                 <option value="" data-i18n="csv.spec.legacy"></option>
             </select>
             <div>
-                <div class="form-tips csv-lecacy-warning" data-i18n="node-red:csv.spec.legacy_warning" 
+                <div class="form-tips csv-lecacy-warning" data-i18n="node-red:csv.spec.legacy_warning"
                     style="width: calc(100% - 18px); margin-top: 4px; max-width: unset;">
                 </div>
             </div>
@@ -9830,7 +9848,7 @@ msg.cookies = {
                     $(".form-tips.csv-lecacy-warning").show();
                 }
             });
-            // new nodes will have `spec` set to "rfc" (default), but existing nodes will either not have 
+            // new nodes will have `spec` set to "rfc" (default), but existing nodes will either not have
             // a spec value or it will be empty - we need to maintain the legacy behaviour for existing
             // flows but default to rfc for new nodes
             let spec = !this.spec ? "" : "rfc"
@@ -11702,7 +11720,7 @@ msg.cookies = {
     <h3>Inputs</h3>
     <dl class="message-properties">
         <dt class="optional">filename <span class="property-type">string</span></dt>
-        <dd>The name of the file to be updated can be provided in the node configuration, or as a message property. 
+        <dd>The name of the file to be updated can be provided in the node configuration, or as a message property.
             By default it will use <code>msg.filename</code> but this can be customised in the node.
         </dd>
         <dt class="optional">encoding <span class="property-type">string</span></dt>
@@ -11727,7 +11745,7 @@ msg.cookies = {
     <h3>Inputs</h3>
     <dl class="message-properties">
         <dt class="optional">filename <span class="property-type">string</span></dt>
-        <dd>The name of the file to be read can be provided in the node configuration, or as a message property. 
+        <dd>The name of the file to be read can be provided in the node configuration, or as a message property.
             By default it will use <code>msg.filename</code> but this can be customised in the node.
         </dd>
     </dl>
@@ -11839,7 +11857,7 @@ msg.cookies = {
 <!-- --- [red-module:@gorenje/erlang-red-unittest/ut-assert-failure] --- -->
 <script type="text/javascript">
   (function(){
-  
+
 
   function frontendSupportFunction() {
   }
@@ -11847,7 +11865,7 @@ msg.cookies = {
   var functTwo = (arg) => {
 
   };
-  
+
   RED.nodes.registerType('ut-assert-failure',{
     color: '#E9967A',
     icon: "font-awesome/fa-frown-o",
@@ -11857,7 +11875,7 @@ msg.cookies = {
         value:"",
       },
     },
-    
+
     paletteLabel: 'Assert False',
     inputs: 1,
 
@@ -11911,7 +11929,7 @@ Attach this to any branch of a flow that is intended to fail.
 <!-- --- [red-module:@gorenje/erlang-red-unittest/ut-assert-values] --- -->
 <script type="text/javascript">
   (function(){
-  
+
   RED.nodes.registerType('ut-assert-values',{
     color: '#FDF0C2',
     icon: "font-awesome/fa-exclamation",
@@ -11948,7 +11966,7 @@ Attach this to any branch of a flow that is intended to fail.
       },
 
     },
-    
+
     paletteLabel: 'Assert Values',
     inputs: 1,
 
@@ -12042,9 +12060,9 @@ Attach this to any branch of a flow that is intended to fail.
 
           var selectField = $('<select/>', { class: "node-input-rule-type", style: "width:110px; margin-right:10px;" }).appendTo(row1);
           var selectOptions = [
-            { v: "eql" }, 
-            { v: "noteql" }, 
-            { v: "mth" }, 
+            { v: "eql" },
+            { v: "noteql" },
+            { v: "mth" },
             { v: "notmth" },
             { v: "set" },
             { v: "notset" },
@@ -12216,7 +12234,7 @@ If the values do not match, this node will cause and error.
 <!-- --- [red-module:@gorenje/erlang-red-unittest/ut-assert-success] --- -->
 <script type="text/javascript">
   (function(){
-  
+
 
   function frontendSupportFunction() {
   }
@@ -12224,7 +12242,7 @@ If the values do not match, this node will cause and error.
   var functTwo = (arg) => {
 
   };
-  
+
   RED.nodes.registerType('ut-assert-success',{
     color: '#87A980',
     icon: "font-awesome/fa-smile-o",
