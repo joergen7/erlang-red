@@ -37,22 +37,22 @@ handle_flow_restart(Req,State) ->
     {true, Resp, State}.
 
 handle_json_body(Req, State) ->
-    {ok, Body, Req2} = read_body(Req, <<"">>),
+    {ok, _Body, Req2} = read_body(Req, <<"">>),
 
     %%
     %% TODO all this stuff needs to be pushed off to another Pids doing
     %% TODO flow management.
     %%
-    Push = fun(Key, Value, Acc) ->
-       [{binary_to_atom(Key), Value} | Acc]
-    end,
+    %% Push = fun(Key, Value, Acc) ->
+    %%    [{binary_to_atom(Key), Value} | Acc]
+    %% end,
 
-    {FlowMap,_,_} = json:decode(Body, ok, #{object_push => Push}),
-    {ok, NodeAry} = maps:find(flows,FlowMap),
+    %% {FlowMap,_,_} = json:decode(Body, ok, #{object_push => Push}),
+    %% {ok, NodeAry} = maps:find(flows,FlowMap),
 
-    Pids = nodes:create_pid_for_node(NodeAry),
+    %% Pids = nodes:create_pid_for_node(NodeAry),
 
-    io:format("Pids for flow: ~p\n",[Pids]),
+    %% io:format("Pids for flow: ~p\n",[Pids]),
 
     Resp = cowboy_req:set_resp_body(<<"{\"rev\":\"dead73d0\"}">>, Req2),
     %%cowboy_req:reply(201, Resp),
