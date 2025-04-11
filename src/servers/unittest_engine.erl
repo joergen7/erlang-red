@@ -8,18 +8,13 @@
 -export([start/0]).
 
 -export([not_happen_loop/2]).
+-export([run_test_on_another_planet/1]).
 
 start() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
-
-%%
-
 init([]) ->
     {ok, #{}}.
-
-%%
-%%
 
 handle_call(_Msg, _From, State) ->
     {reply, State, State}.
@@ -103,6 +98,29 @@ dump_errors_onto_nodered([{NodeId, Msg}|T],FlowId) ->
     dump_errors_onto_nodered(T,FlowId).
 
 handle_info({start_test,FlowId}, State) ->
+    spawn(?MODULE, run_test_on_another_planet, [FlowId]),
+    {noreply, State};
+
+
+handle_info(stop, ErrorStore) ->
+    gen_server:cast(?MODULE, stop),
+    {noreply, ErrorStore };
+
+handle_info(_Msg, ErrorStore) ->
+    {noreply, ErrorStore }.
+
+code_change(_OldVersion, ErrorStore, _Extra) ->
+    {ok, ErrorStore}.
+
+stop() ->
+    gen_server:cast(?MODULE, stop).
+
+terminate(normal, _State) ->
+    ok.
+
+%%
+%% spawn it out function
+run_test_on_another_planet(FlowId) ->
     error_store:reset_errors(FlowId),
 
     FileName = flow_store_server:get_filename(FlowId),
@@ -128,23 +146,4 @@ handle_info({start_test,FlowId}, State) ->
     timer:sleep(543),
     ErrColl ! stop,
 
-    send_off_test_result(FlowId, error_store:get_errors(FlowId)),
-
-    {noreply, State};
-
-
-handle_info(stop, ErrorStore) ->
-    gen_server:cast(?MODULE, stop),
-    {noreply, ErrorStore };
-
-handle_info(_Msg, ErrorStore) ->
-    {noreply, ErrorStore }.
-
-code_change(_OldVersion, ErrorStore, _Extra) ->
-    {ok, ErrorStore}.
-
-stop() ->
-    gen_server:cast(?MODULE, stop).
-
-terminate(normal, _State) ->
-    ok.
+    send_off_test_result(FlowId, error_store:get_errors(FlowId)).
