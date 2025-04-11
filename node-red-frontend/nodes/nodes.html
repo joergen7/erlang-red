@@ -1152,17 +1152,16 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
                         sourceNode = RED.nodes.node(pathParts[1]);
                     }
                   const getNodeLabel = (n) => {
-                    n ? (n.name || (typeof n.label === "function" && n.label())  || (typeof n.label === "string" && n.label) || (n.type + ":" + n.id)) : "undefined"
-                  };
+                    n ? (n.name || (typeof n.label === "function" && n.label())  || (typeof n.label === "string" && n.label) || (n.type + ":" + n.id)) : "undefined";
+                  }
                     pathHierarchy = pathParts.map((id,index) => {
                         if (index === 0) {
                             if (id === "global") {
                                 return { id: sourceNode.id, label: getNodeLabel(sourceNode) }
                             }
-
                           let wksp = RED.nodes.workspace(id)
-                          return {
-                            id: id, label: wksp ? wksp.label : id
+                          return { id:
+                                   id, label: wksp ? wksp.label : id
                           }
                         } else {
                             const instanceNode = RED.nodes.node(id)
@@ -1200,18 +1199,6 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
                         pathHierarchy: pathHierarchy
                     };
                 }
-/*  Don't go there: this can be used to define a click on a debug message if a flow isn't
-    defined in Node-RED client BUT then there is an error "Uncaught TypeError: candidateNodes[i] is undefined" -
-    if that could be caught, then the flow (which is assumed to be a test flow) could be imported
-              else {
-                  o._source = {
-                    id: o.id,
-                    z: o.z,
-                    name: o.name,
-                    path: `${o.z}/${o.id}`
-                  }
-                }
-*/
                 RED.debug.handleDebugMessage(o);
                 if (subWindow) {
                     try {
@@ -11867,7 +11854,7 @@ msg.cookies = {
   };
 
   RED.nodes.registerType('ut-assert-failure',{
-    color: '#E9967A',
+    color: '#FFAAAA',
     icon: "font-awesome/fa-frown-o",
     category: 'testing',
     defaults: {
@@ -12018,16 +12005,22 @@ Attach this to any branch of a flow that is intended to fail.
         })
         return [propValInput, undefined];
       }
+
+
       function createFromValue(row3_1, defaultType) {
         return $('<input/>', { class: "node-input-rule-property-search-value", type: "text" })
           .appendTo(row3_1)
           .typedInput({ default: defaultType || 'str', types: ['msg', 'flow', 'global', 'str', 're', 'num', 'bool', 'env'] });
       }
+
+
       function createToValue(row3_2, defaultType) {
         return $('<input/>', { class: "node-input-rule-property-replace-value", type: "text" })
           .appendTo(row3_2)
           .typedInput({ default: defaultType || 'str', types: ['msg', 'flow', 'global', 'str', 'num', 'bool', 'json', 'bin', 'env'] });
       }
+
+
       function createMoveValue(row4, defaultType) {
         return $('<input/>', { class: "node-input-rule-property-move-value", type: "text" })
           .appendTo(row4)
@@ -12039,14 +12032,6 @@ Attach this to any branch of a flow that is intended to fail.
           var rule = opt;
           if (!rule.hasOwnProperty('t')) {
             rule = { t: "eql", p: "payload", to: "", tot: "str" };
-          }
-          if (rule.t === "set" && !rule.tot) {
-            if (rule.to.indexOf("msg.") === 0 && !rule.tot) {
-              rule.to = rule.to.substring(4);
-              rule.tot = "msg";
-            } else {
-              rule.tot = "str";
-            }
           }
           container.css({
             overflow: 'hidden',
@@ -12123,7 +12108,11 @@ Attach this to any branch of a flow that is intended to fail.
                 var parts = createPropertyValue(row2_1, row2_2);
                 propertyValue = parts[0];
               }
+
               propertyValue.typedInput('show');
+              propertyValue.typedInput('value', rule.to);
+              propertyValue.typedInput('type', rule.tot);
+
               row2.show();
               row3.hide();
               row4.hide();
@@ -12137,13 +12126,6 @@ Attach this to any branch of a flow that is intended to fail.
           selectField.val(rule.t);
           propertyName.typedInput('value', rule.p);
           propertyName.typedInput('type', rule.pt);
-          /*
-          if (rule.t == "set") {
-            var parts = createPropertyValue(row2_1, row2_2, rule.tot);
-            propertyValue = parts[0];
-            propertyValue.typedInput('value', rule.to);
-          }
-          */
           selectField.change();
           container[0].appendChild(fragment);
         },
@@ -12180,7 +12162,6 @@ Attach this to any branch of a flow that is intended to fail.
           r.to = rule.find(".node-input-rule-property-value").typedInput('value');
           r.tot = rule.find(".node-input-rule-property-value").typedInput('type');
         }
-
         node.rules.push(r);
       });
 
@@ -12244,7 +12225,7 @@ If the values do not match, this node will cause and error.
   };
 
   RED.nodes.registerType('ut-assert-success',{
-    color: '#87A980',
+    color: '#addb7b',
     icon: "font-awesome/fa-smile-o",
     category: 'testing',
     defaults: {
