@@ -7,6 +7,16 @@
 -export([stop/0]).
 -export([start/0]).
 
+%%
+%% This engine is designed to run unit tests just as eunit does. Therefore
+%% it also implements a listener for "should not happen" events. These are
+%% passed to the error store service and then retrieved at the end of a test
+%% to decided whether a test was successful or not.
+%%
+
+
+%%
+%% These aren't export to be used external, these are "internal" exports.
 -export([not_happen_loop/2]).
 -export([run_test_on_another_planet/1]).
 
@@ -24,10 +34,6 @@ handle_cast(stop, State) ->
 
 handle_cast(_Msg, Store) ->
     {noreply, Store}.
-
-
-%%
-%%
 
 stop_all_pids([]) ->
     ok;
@@ -77,12 +83,6 @@ start_this_should_not_happen_service(TabId,TestName) ->
     end,
     ensure_error_store_is_started(TabErrColl,TestName).
 
-send_injects_the_go({ok, <<"inject">>}, {ok, IdStr}) ->
-    nodes:nodeid_to_pid(IdStr) ! {outgoing, #{'_msgid' => nodes:generate_id()}};
-
-send_injects_the_go(_,_) ->
-    ok.
-
 send_off_test_result(FlowId, []) ->
     nodered:unittest_result(FlowId,success);
 
@@ -93,7 +93,6 @@ send_off_test_result(FlowId, Ary) ->
 dump_errors_onto_nodered([],_FlowId) ->
     ok;
 dump_errors_onto_nodered([{NodeId, Msg}|T],FlowId) ->
-    io:format("~p~n",[NodeId]),
     nodered:debug(nodered:debug_string(NodeId,FlowId,Msg),notice),
     dump_errors_onto_nodered(T,FlowId).
 
@@ -126,15 +125,17 @@ run_test_on_another_planet(FlowId) ->
     FileName = flow_store_server:get_filename(FlowId),
     Ary = flows:parse_flow_file(FileName),
 
-    ErrColl = start_this_should_not_happen_service(FlowId,<<"Irrevelant">>),
+    ErrColl = start_this_should_not_happen_service(FlowId,
+                                                   <<"UnitTestEngine TestRun">>),
 
     Pids = nodes:create_pid_for_node(Ary),
 
-    [send_injects_the_go(maps:find(type,ND),maps:find(id,ND)) || ND <- Ary],
+    [nodes:trigger_outgoing_messages(maps:find(type,ND),
+                                     maps:find(id,ND)) || ND <- Ary],
 
     %% give the messages time to propagate through the
     %% test flow
-    timer:sleep(1234),
+    timer:sleep(flows:compute_timeout(Ary)),
 
     %% stop all nodes. Probably better would be to checking
     %% the message queues of the nodes and if all are empty

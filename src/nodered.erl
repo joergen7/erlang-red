@@ -11,6 +11,7 @@
 -export([unittest_result/2]).
 
 -export([debug_string/3]).
+-export([debug_string/2]).
 
 send_on_if_ws(Msg) ->
     case whereis(websocket_pid) of
@@ -43,14 +44,19 @@ unittest_result(FlowId,success) ->
     send_on_if_ws({unittest_results, FlowId, <<"success">>}).
 
 %%
-%% helper
+%% helpers
+debug_string(NodeDef,Msg) ->
+    IdStr = nodes:get_prop_value_from_map(id,NodeDef),
+    ZStr  = nodes:get_prop_value_from_map(z,NodeDef),
+    debug_string(IdStr,ZStr,Msg).
+
 debug_string(NodeId,TabId,Msg) ->
     #{
-      id       => NodeId,
-      z        => TabId,
-      path     => TabId,
-      name     => <<"Unit Test Error">>,
-      topic    => <<"">>,
-      msg      => Msg,
-      format   => <<"string">>
+      id     => NodeId,
+      z      => TabId,
+      path   => TabId,
+      name   => <<"Unit Test Notice">>,
+      topic  => <<"">>,
+      msg    => Msg,
+      format => <<"string">>
     }.

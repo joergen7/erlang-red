@@ -14,30 +14,6 @@ stop_all_pids([Pid|Pids]) ->
 %% Node-RED frontend has a "create test case" that allows exporting of flows
 %% to become cases. This test goes through and tests all off them.
 %%
-append_tab_name_to_filename(Ary,FileName) ->
-    append_tab_name_to_filename(Ary, FileName, maps:find(z,lists:nth(2,Ary))).
-
-append_tab_name_to_filename([],FileName,{ok,TabId}) ->
-    {TabId,FileName};
-
-append_tab_name_to_filename([NodeDef|MoreNodeDefs],FileName,{ok,TabId}) ->
-    case maps:find(type,NodeDef) of
-        {ok, <<"tab">>} ->
-            {ok,Val} = maps:find(label,NodeDef),
-            {ok,TabId2} = maps:find(id,NodeDef),
-
-            {TabId2,
-             binary_to_list(list_to_binary(io_lib:format("~s (~s)",
-                                                         [Val, FileName])))};
-        _ ->
-            append_tab_name_to_filename(MoreNodeDefs, FileName,{ok,TabId})
-    end.
-
-send_injects_the_go({ok, <<"inject">>}, {ok, IdStr}) ->
-    nodes:nodeid_to_pid(IdStr) ! {outgoing, #{'_msgid' => nodes:generate_id()}};
-
-send_injects_the_go(_,_) ->
-    ok.
 
 ensure_error_store_is_started(TabErrColl, TestName) ->
     case error_store:start() of
@@ -83,7 +59,7 @@ not_happen_loop(TestName,ErrorStorePid) ->
         stop ->
             ok;
 
-        {it_happened, {NodeId,TabId}, Arg} ->
+        {it_happened, {NodeId, TabId}, Arg} ->
             Str = io_lib:format("~s in ~s\n", [Arg,TestName]),
             %% io:format(list_to_binary(Str)),
             ErrorStorePid ! {store_msg, {NodeId, TabId, list_to_binary(Str)}},
@@ -98,7 +74,7 @@ create_test_for_flow_file([], Acc) ->
 
 create_test_for_flow_file([FileName|MoreFileNames], Acc) ->
     Ary = flows:parse_flow_file(FileName),
-    {TabId,TestName} = append_tab_name_to_filename(Ary,FileName),
+    {TabId,TestName} = flows:append_tab_name_to_filename(Ary,FileName),
 
     TestFunc = fun () ->
                        ErCo = start_this_should_not_happen_service(TabId,
@@ -106,12 +82,14 @@ create_test_for_flow_file([FileName|MoreFileNames], Acc) ->
                        error_store:reset_errors(TabId),
 
                        Pids = nodes:create_pid_for_node(Ary),
-                       [send_injects_the_go(maps:find(type,ND),
-                                            maps:find(id,ND)) || ND <- Ary],
+
+                       [nodes:trigger_outgoing_messages(
+                          maps:find(type,ND), maps:find(id,ND)
+                         ) || ND <- Ary],
 
                        %% give the messages time to propagate through the
                        %% test flow
-                       timer:sleep(1234),
+                       timer:sleep(flows:compute_timeout(Ary)),
 
                        %% stop all nodes. Probably better would be to check
                        %% the message queues of the nodes and if all are empty

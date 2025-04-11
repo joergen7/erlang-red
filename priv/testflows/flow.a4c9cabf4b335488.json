@@ -5,7 +5,13 @@
         "label": "[delay] delay messages by 5 seconds",
         "disabled": false,
         "info": "",
-        "env": []
+        "env": [
+            {
+                "name": "TIMEOUT",
+                "value": "7",
+                "type": "num"
+            }
+        ]
     },
     {
         "id": "3e6251255b837690",
