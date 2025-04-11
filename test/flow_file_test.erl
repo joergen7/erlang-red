@@ -104,9 +104,13 @@ create_test_for_flow_file([FileName|MoreFileNames], Acc) ->
                        ?assertEqual([], error_store:get_errors(TabId))
                end,
 
+    %% So the timeout value here is 30 seconds. This is the upper limit
+    %% that eunit will wait, if the test exits early, then eunit does not
+    %% wait for thirty seconds in total. So this could also be a day and
+    %% half, it makes no difference.
     create_test_for_flow_file(MoreFileNames,
                               [{list_to_binary(color:yellow(TestName)),
-                                fun() -> TestFunc() end}|Acc]).
+                                {timeout, 30, fun() -> TestFunc() end}}|Acc]).
 
 
 foreach_testflow_test_() ->
@@ -120,4 +124,4 @@ foreach_testflow_test_() ->
 
     TestList = create_test_for_flow_file(FileNames,[]),
 
-    {foreach, fun () -> ok end, fun (_X) -> ok end, TestList}.
+    {inparallel, TestList}.
