@@ -53,7 +53,6 @@ for fle in vendor/jquery/css/base/jquery-ui.min.css \
            vendor/font-awesome/fonts/fontawesome-webfont.woff \
            vendor/mermaid/mermaid.min.js \
            vendor/purify.min.js.map \
-           red/style.min.css \
            red/red.min.js \
            red/main.min.js \
            red/tours/welcome.js \
@@ -93,6 +92,7 @@ done
 ##
 #curl -s "${NODERED_URL}/?_=${CBSTMP}" -H 'Accept: application/html' -o index.html
 #curl -s "${NODERED_URL}/red/red.js?_=${CBSTMP}" -o red/red.js
+#curl -s "${NODERED_URL}/red/style.min.css?_=${CBSTMP}" -o red/style.min.css
 #curl -s "${NODERED_URL}/settings/user?_=${CBSTMP}" -o settings/user.json
 #curl -s "${NODERED_URL}/theme?_=${CBSTMP}" -o theme
 #curl -s "${NODERED_URL}/red/keymap.json?_=${CBSTMP}" -o red/keymap.json

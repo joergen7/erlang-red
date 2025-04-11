@@ -86,7 +86,7 @@
 function doFlowImportForSidebarUnittesting() {
   let flowid = $('#node-input-unittestingpull-flowid').val().trim();
 
-  if (RED.nodes.workspace(flowid) ) {
+  if ( RED.nodes.workspace(flowid) ) {
     RED.workspaces.show(flowid, false, false, true);
   } else {
     RED.notify("Retrieving test", {
@@ -191,6 +191,31 @@ function highlightTestResult(dirList, flowid, status) {
   $($($(dirList.treeList('selected').treeList.container).find('.red-ui-treeList-icon')).find('i')).prop('class', status == "failed" ? 'fa fa-remove' : 'fa fa-check').css('color', status == "failed" ? 'red' : 'green')
 }
 
+function clearAllNodeStatus() {
+  if (typeof RED.comms.emit !== "undefined") {
+    RED.nodes.eachNode((nde) => {
+      RED.comms.emit([{
+        "topic": `status/${nde.id}`,
+        "data": {}
+      }])
+    });
+  }
+}
+
+function clearNodeStatusForFlow(flowid) {
+  if (typeof RED.comms.emit !== "undefined") {
+    RED.nodes.eachNode((nde) => {
+      if ( nde.z == flowid) {
+        RED.comms.emit([{
+          "topic": `status/${nde.id}`,
+          "data": {}
+        }])
+      }
+    });
+  }
+}
+
+
    // Add your plugin as a new tabsheet in the right sidebar AFTER the flow editor is completely started
    var initialiseConfigNodeOnce = () => {
       RED.events.off('runtime-state', initialiseConfigNodeOnce);
@@ -286,6 +311,7 @@ $('#node-input-unittestingpull-sb-test-flow-but').on('click', function (e) {
 
   if (flowid) {
     resetTestResultsForFlowId(dirList,flowid)
+    clearNodeStatusForFlow(flowid)
     
     $.get({
       url: `/UnitTesting/${flowid}/runtest?cb=${new Date().getTime()}`
@@ -301,6 +327,8 @@ $('#node-input-unittestingpull-sb-testall-but').on('click', function (e) {
   e.preventDefault();
 
   expandAllTests(dirList)
+  clearAllNodeStatus()
+
   setTimeout(() => {
     removeAllTestResults(dirList);
     $.get({
