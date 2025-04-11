@@ -45,7 +45,9 @@ handle_incoming(NodeDef,Msg) ->
 
     %%
     %% again for node red, show a status value for the corresponding node.
-    nodered:node_status(NodeDef, "type not implemented", "grey", "dot").
+    nodered:node_status(NodeDef, "type not implemented", "grey", "dot"),
+
+    NodeDef.
 
 
 handle_outgoing(NodeDef,Msg) ->
@@ -69,7 +71,9 @@ handle_outgoing(NodeDef,Msg) ->
 
     %%
     %% again for node red, show a status value for the corresponding node.
-    nodered:node_status(NodeDef, "type not implemented", "grey", "dot").
+    nodered:node_status(NodeDef, "type not implemented", "grey", "dot"),
+
+    NodeDef.
 
 node_noop(NodeDef) ->
     nodes:node_init(NodeDef),

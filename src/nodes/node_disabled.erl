@@ -14,11 +14,11 @@
 -export([handle_incoming/2]).
 -export([handle_outgoing/2]).
 
-handle_incoming(_NodeDef,_Msg) ->
-    ok.
+handle_incoming(NodeDef,_Msg) ->
+    NodeDef.
 
-handle_outgoing(_NodeDef,_Msg) ->
-    ok.
+handle_outgoing(NodeDef,_Msg) ->
+    NodeDef.
 
 node_disabled(NodeDef) ->
     nodes:node_init(NodeDef),

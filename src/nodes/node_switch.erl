@@ -146,10 +146,13 @@ handle_incoming(NodeDef,Msg) ->
             does_rule_match_catchall(Rules,Val,Wires,Msg);
         _ ->
             does_rule_match_stopafterone(Rules,Val,Wires,Msg)
-    end.
+    end,
+
+    NodeDef.
+
 
 %%
 %%
 node_switch(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE,NodeDef).
+    nodes:enter_receivership(?MODULE, NodeDef, only_incoming).

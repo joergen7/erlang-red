@@ -67,12 +67,13 @@ handle_outgoing(NodeDef,Msg) ->
         _ ->
             Props = []
     end,
-    nodes:send_msg_to_connected_nodes(NodeDef, parse_props(Props,NodeDef,Msg)).
+    nodes:send_msg_to_connected_nodes(NodeDef, parse_props(Props,NodeDef,Msg)),
+    NodeDef.
 
 handle_incoming(NodeDef,_Msg) ->
     {ok, IdStr} = maps:find(id,NodeDef),
     io:format("ERROR: Inject node received msg: Id: ~p\n",[IdStr]),
-    error.
+    NodeDef.
 
 node_inject(NodeDef) ->
     nodes:node_init(NodeDef),

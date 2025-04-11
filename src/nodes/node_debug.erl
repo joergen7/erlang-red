@@ -45,8 +45,9 @@ handle_incoming(NodeDef,Msg) ->
     handle_status_setting( maps:find(tostatus,NodeDef),
                            maps:find(statusType,NodeDef),
                            NodeDef,
-                           Msg ).
+                           Msg ),
+    NodeDef.
 
 node_debug(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE,NodeDef).
+    nodes:enter_receivership(?MODULE, NodeDef, only_incoming).

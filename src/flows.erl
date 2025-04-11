@@ -6,6 +6,15 @@
 
 %%
 %% Compute a timeout for the flow test, can be set in the flows.json file.
+%% Since flows have delays or even test the delay node, it must be possible
+%% to define a timeout per flow test. This is possible by using the ENV
+%% variables for a flow tab:
+%%
+%%   double-click on flow tab --> properties --> env --> TIMEOUT
+%%
+%% a timeout value is always in seconds.
+%%
+%% Default timeout is 1234 which allows eunit to complete.
 compute_timeout([],get_time_in_ms) ->
     1234;
 compute_timeout([H|T],get_time_in_ms) ->
@@ -37,7 +46,8 @@ compute_timeout([NodeDef|Ary]) ->
             compute_timeout(Ary)
     end.
 
-
+%%
+%%
 parse_flow_file(FileName) ->
     {ok, Json} = file:read_file(FileName),
 
@@ -50,7 +60,8 @@ parse_flow_file(FileName) ->
     Ary.
 
 
-
+%%
+%%
 append_tab_name_to_filename(Ary,FileName) ->
     append_tab_name_to_filename(Ary, FileName, maps:find(z,lists:nth(2,Ary))).
 

@@ -82,13 +82,13 @@ enter_receivership(Module,NodeDef,incoming_and_outgoing) ->
 
         {incoming,Msg} ->
             NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
-            erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
-            enter_receivership(Module, NodeDef2, incoming_and_outgoing);
+            NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
+            enter_receivership(Module, NodeDef3, incoming_and_outgoing);
 
         {outgoing,Msg} ->
             NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
-            erlang:apply(Module, handle_outgoing, [NodeDef2,Msg]),
-            enter_receivership(Module, NodeDef2, incoming_and_outgoing)
+            NodeDef3 = erlang:apply(Module, handle_outgoing, [NodeDef2,Msg]),
+            enter_receivership(Module, NodeDef3, incoming_and_outgoing)
     end;
 
 %%
@@ -102,8 +102,8 @@ enter_receivership(Module,NodeDef,link_call_node) ->
 
         {incoming,Msg} ->
             NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
-            erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
-            enter_receivership(Module, NodeDef2, link_call_node);
+            NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
+            enter_receivership(Module, NodeDef3, link_call_node);
 
         {outgoing,_Msg} ->
             NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
@@ -111,8 +111,8 @@ enter_receivership(Module,NodeDef,link_call_node) ->
 
         {link_return,Msg} ->
             NodeDef2 = increment_message_counter(NodeDef,'_mc_link_return'),
-            erlang:apply(Module, handle_link_return, [NodeDef2,Msg]),
-            enter_receivership(Module, NodeDef2, link_call_node)
+            NodeDef3 = erlang:apply(Module, handle_link_return, [NodeDef2,Msg]),
+            enter_receivership(Module, NodeDef3, link_call_node)
     end;
 
 
@@ -124,14 +124,17 @@ enter_receivership(Module,NodeDef,only_incoming) ->
 
         {incoming,Msg} ->
             NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
-            erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
-            enter_receivership(Module, NodeDef2, only_incoming);
+            NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
+            enter_receivership(Module, NodeDef3, only_incoming);
 
         {outgoing,_Msg} ->
             NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
             enter_receivership(Module, NodeDef2, only_incoming)
-    end.
+    end;
 
+enter_receivership(Module,NodeDef,Type) ->
+    throw(io_lib:format("Umatched receivership type '~p' for ~p ~p~n",
+                        [Type,Module,NodeDef])).
 
 enter_receivership(Module,NodeDef) ->
     receive
@@ -148,16 +151,16 @@ enter_receivership(Module,NodeDef) ->
 
         {incoming,Msg} ->
             NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
-            erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
-            enter_receivership(Module, NodeDef2);
+            NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
+            enter_receivership(Module, NodeDef3);
 
         %% Outgoing messages are message generators (e.g inject node) - send
         %% this to the process to get it to generate a message, Those messages
         %% become incoming messages
         {outgoing,Msg} ->
             NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
-            erlang:apply(Module, handle_outgoing, [NodeDef2,Msg]),
-            enter_receivership(Module, NodeDef2)
+            NodeDef3 = erlang:apply(Module, handle_outgoing, [NodeDef2,Msg]),
+            enter_receivership(Module, NodeDef3)
     end.
 
 node_init(_NodeDef) ->

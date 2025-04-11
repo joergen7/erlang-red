@@ -10,7 +10,6 @@ to_binary_if_not_binary(Obj) when is_list(Obj) ->
 to_binary_if_not_binary(Obj) ->
     Obj.
 
-
 handle_incoming(NodeDef,Msg) ->
     {ok, IdStr} = maps:find(id,NodeDef),
     {ok, TypeStr} = maps:find(type,NodeDef),
@@ -36,8 +35,8 @@ handle_incoming(NodeDef,Msg) ->
              format   => <<"Object">>
             },
     nodered:debug(Data,error),
-    nodered:node_status(NodeDef, "assert failed", "red", "dot").
-
+    nodered:node_status(NodeDef, "assert failed", "red", "dot"),
+    NodeDef.
 
 node_assert_failure(NodeDef) ->
     nodes:node_init(NodeDef),

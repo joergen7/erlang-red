@@ -9,8 +9,9 @@
 %%
 
 handle_incoming(NodeDef,Msg) ->
-    nodes:send_msg_to_connected_nodes(NodeDef,Msg).
+    nodes:send_msg_to_connected_nodes(NodeDef,Msg),
+    NodeDef.
 
 node_junction(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE,NodeDef).
+    nodes:enter_receivership(?MODULE,NodeDef,only_incoming).
