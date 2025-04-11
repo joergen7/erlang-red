@@ -207,8 +207,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "payload": "",
-        "payloadType": "date",
+        "payload": "this is the payload Wow!",
+        "payloadType": "str",
         "x": 118.5,
         "y": 378.9998779296875,
         "wires": [
@@ -508,7 +508,8 @@
         "wires": [
             [
                 "4e7584b022af2a6b",
-                "f55e05a40f9b239f"
+                "f55e05a40f9b239f",
+                "e2b8866af2cce742"
             ]
         ]
     },
@@ -673,5 +674,53 @@
         "x": 1498,
         "y": 288,
         "wires": []
+    },
+    {
+        "id": "e2b8866af2cce742",
+        "type": "ut-assert-values",
+        "z": "8a627c9bfe3b4aff",
+        "name": "",
+        "rules": [
+            {
+                "t": "eql",
+                "p": "payload",
+                "pt": "msg",
+                "to": "this is the payload Wow!",
+                "tot": "str"
+            },
+            {
+                "t": "eql",
+                "p": "level1",
+                "pt": "msg",
+                "to": "reached",
+                "tot": "str"
+            },
+            {
+                "t": "eql",
+                "p": "level2",
+                "pt": "msg",
+                "to": "reached",
+                "tot": "str"
+            },
+            {
+                "t": "eql",
+                "p": "level3",
+                "pt": "msg",
+                "to": "reached",
+                "tot": "str"
+            },
+            {
+                "t": "eql",
+                "p": "level4",
+                "pt": "msg",
+                "to": "reached",
+                "tot": "str"
+            }
+        ],
+        "x": 1521,
+        "y": 460.5,
+        "wires": [
+            []
+        ]
     }
 ]

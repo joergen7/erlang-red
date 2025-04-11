@@ -17,7 +17,8 @@
                 "p": "payload"
             },
             {
-                "p": "topic",
+                "p": "fubar",
+                "v": "should be set",
                 "vt": "str"
             }
         ],
@@ -26,9 +27,9 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 148,
+        "payload": "this is the payload",
+        "payloadType": "str",
+        "x": 178,
         "y": 364,
         "wires": [
             [
@@ -60,11 +61,16 @@
                 "t": "eql",
                 "p": "payload",
                 "pt": "msg",
-                "to": "",
+                "to": "this is the payload",
                 "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "fubar",
+                "pt": "msg"
             }
         ],
-        "x": 397.5,
+        "x": 387.5,
         "y": 590,
         "wires": [
             [
@@ -112,11 +118,18 @@
                 "t": "eql",
                 "p": "payload",
                 "pt": "msg",
-                "to": "",
+                "to": "this is the payload",
+                "tot": "str"
+            },
+            {
+                "t": "noteql",
+                "p": "fubar",
+                "pt": "msg",
+                "to": "should not be set",
                 "tot": "str"
             }
         ],
-        "x": 613,
+        "x": 603,
         "y": 309,
         "wires": [
             []
