@@ -7,6 +7,16 @@
 -export([terminate/3]).
 -export([ws_send/2]).
 
+register_universal_access_to_websocket(Pid) ->
+    case whereis(websocket_pid) of
+        undefined ->
+            ok;
+        _ ->
+            websocket_pid ! stop,
+            unregister(websocket_pid)
+    end,
+    register(websocket_pid, Pid).
+
 init(Req, State) ->
     {cowboy_websocket, Req, State}.
 
@@ -15,7 +25,9 @@ websocket_handle(_Data, State) ->
 
 websocket_init([{stats_interval, SInterval}]) ->
     ws_send(self(), SInterval),
-    register(websocket_pid, self()),
+
+    register_universal_access_to_websocket(self()),
+
     erlang:start_timer(
       1000,
       websocket_pid,
