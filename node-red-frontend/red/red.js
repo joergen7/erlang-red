@@ -890,6 +890,20 @@ var RED = (function() {
     }
 
     function loadEditor() {
+        // trigger the plugins to render their sidebar content
+        let initPlugins = () => {
+            // workspace dirty is the last event of the initialisation phase
+            // so use it to trigger the loading of the sidebar nodes but do it
+            // only once.
+            RED.events.off("workspace:dirty", initPlugins);
+
+
+            setTimeout( () => {
+                RED.events.emit('runtime-state', { state: 'start'});
+            }, 732);
+        };
+        RED.events.on( "workspace:dirty", initPlugins);
+
         $.ajaxPrefilter(function( options, originalOptions, jqXHR ) {
             let mth = undefined;
 
@@ -981,6 +995,20 @@ var RED = (function() {
             }
         })
 
+        RED.comms.subscribe("hb", function(topic,msg) {
+            RED.comms.send("pong",{ "timestamp": new Date().getTime() })
+        })
+        RED.comms.subscribe("cookie/set-wsname", function(topic,msg) {
+            setCookie = (cname,cvalue) => {
+                const d = new Date();
+                const exdays = 1;
+                d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+                let expires = "expires="+ d.toUTCString();
+                document.cookie = cname+"="+cvalue+";"+expires+";path=/";
+            }
+            setCookie("wsname",msg.name)
+        })
+
         RED.workspaces.init();
         RED.statusBar.init();
         RED.view.init();
@@ -1026,6 +1054,7 @@ var RED = (function() {
         if (RED.settings.theme("multiplayer.enabled",false)) {
             RED.multiplayer.init()
         }
+
         RED.comms.connect();
 
         $("#red-ui-main-container").show();
