@@ -1,0 +1,101 @@
+[
+    {
+        "id": "61847d719e50f83f",
+        "type": "tab",
+        "label": "[inject] jsonata and json support",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "ac4fe8553eafc3bf",
+        "type": "inject",
+        "z": "61847d719e50f83f",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "string",
+                "v": "one",
+                "vt": "str"
+            },
+            {
+                "p": "json_array",
+                "v": "[ 1,2,3,4 ]",
+                "vt": "json"
+            },
+            {
+                "p": "jsonata",
+                "v": "\"hello \" & \"world: \" & $$.string",
+                "vt": "jsonata"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 311,
+        "y": 342,
+        "wires": [
+            [
+                "5d9aef287149f8eb",
+                "6cda249a2ed28311"
+            ]
+        ]
+    },
+    {
+        "id": "5d9aef287149f8eb",
+        "type": "debug",
+        "z": "61847d719e50f83f",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 657,
+        "y": 343,
+        "wires": []
+    },
+    {
+        "id": "6cda249a2ed28311",
+        "type": "ut-assert-values",
+        "z": "61847d719e50f83f",
+        "name": "",
+        "rules": [
+            {
+                "t": "eql",
+                "p": "string",
+                "pt": "msg",
+                "to": "one",
+                "tot": "str"
+            },
+            {
+                "t": "eql",
+                "p": "jsonata",
+                "pt": "msg",
+                "to": "hello world one",
+                "tot": "str"
+            },
+            {
+                "t": "eql",
+                "p": "json",
+                "pt": "msg",
+                "to": "[1,2,3,4]",
+                "tot": "str"
+            }
+        ],
+        "x": 658,
+        "y": 209,
+        "wires": [
+            []
+        ]
+    }
+]

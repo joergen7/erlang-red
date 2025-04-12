@@ -48,6 +48,11 @@ So won't it be great to have the simplicity of low-code visual flow based progra
 
 [*] = amazing in the sense of extendability (the codebase is Javascript both front and back), understandability (Node-RED [terminology](https://blog.openmindmap.org/blog/pipes-wires-nodes) is straightforward) and usability (many would disagree but once a rectangle becomes a unit of computation and a line becomes a pathway for data - it's simple!).
 
+Development Strategy
+---
+
+Best described as [flow driven development](DevelopmentStrategy.md), it does require knowledge of the Node-RED flow editor.
+
 Build
 -----
 
