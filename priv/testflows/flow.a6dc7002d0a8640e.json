@@ -1,0 +1,104 @@
+[
+    {
+        "id": "a6dc7002d0a8640e",
+        "type": "tab",
+        "label": "[debug] if not active, no debug message in panel",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "421d2a14caa59804",
+        "type": "inject",
+        "z": "a6dc7002d0a8640e",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 363,
+        "y": 440,
+        "wires": [
+            [
+                "9d246621021e23a4"
+            ]
+        ]
+    },
+    {
+        "id": "9d246621021e23a4",
+        "type": "debug",
+        "z": "a6dc7002d0a8640e",
+        "name": "debug 6",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 603,
+        "y": 556,
+        "wires": []
+    },
+    {
+        "id": "8d7902b15abf716d",
+        "type": "comment",
+        "z": "a6dc7002d0a8640e",
+        "name": "Can't test this at the moment. This is a placeholder.",
+        "info": "",
+        "x": 377,
+        "y": 190,
+        "wires": []
+    },
+    {
+        "id": "0f876d7eed689272",
+        "type": "inject",
+        "z": "a6dc7002d0a8640e",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 254,
+        "y": 242.5,
+        "wires": [
+            [
+                "36405517abcc19a8"
+            ]
+        ]
+    },
+    {
+        "id": "36405517abcc19a8",
+        "type": "ut-assert-failure",
+        "z": "a6dc7002d0a8640e",
+        "name": "",
+        "x": 420,
+        "y": 271.5,
+        "wires": []
+    }
+]
