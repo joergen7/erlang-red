@@ -148,7 +148,7 @@ Contributing
 
 All contributions should be printed out on sheets of A4 paper (not US-Letter), copied in triplicate, one copy should filed away and forgotten. Another can be snail mailed to me at c/o GitHub (only one copy). The other copies should be filed away in some dusty filing cabinet at the bottom of a dark basement, preferably before removing the stairs that lead to the basement.
 
-Alternatively just create a pull request, whichever is simpler.
+Alternatively just create a pull request, whichever is simpler ;)
 
 Questions and Answers at either the [Erlang Forum](https://erlangforums.com/t/erlang-red-visual-flow-based-programming-for-erlang/4656) or the [Node-RED Forum](https://discourse.nodered.org/t/erlang-red-erlang-backed-node-red/96458).
 

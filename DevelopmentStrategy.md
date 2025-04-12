@@ -14,11 +14,11 @@ Node-RED consists of two parts:
 - the flow editor that runs in the browser (jQuery + Javascript), and 
 - the backend which executes flows (NodeJS).
 
-The flow editor communicates with backend via a set of [API calls](https://flowhub.org/f/15cc9fb0e94d56cd). To make the flow editor work with a different backend, these API calls need to be emulated. That is what this [cowboy code](src/http) does.
+The flow editor communicates with backend via a set of [API calls](https://flowhub.org/f/15cc9fb0e94d56cd). To make the flow editor work with a different backend, these API calls need to be emulated. That is what this [cowboy code](src/http) does. Note: *cowboy* is the name of the Erlang [web framework](https://ninenines.eu/docs/en/cowboy/2.13/guide/), not the style of coding!
 
 It is the flow editor codebase that is [included here](node-red-frontend) in the project. The Node-RED NodeJS backend has been discarded and will be replaced by Erlang :)
 
-*Step 1: Flows are Json arrays, understanding flow definitions*
+***Step 1: Flows are Json arrays, understanding flow definitions***
 
 The flow definition used by Node-RED is a single array of objects stored as Json files. There is no nesting of objects, there is no arrays of arrays: just one array containing all the nodes, tabs and groups the define a flow as objects.
 
@@ -140,7 +140,7 @@ This functionality is partly implemented in [Erlang code](src/nodes/node_debug.e
 
 For nodes that aren't implemented in Erlang, there is the [noop](src/nodes/node_noop.erl) node.
 
-*Step 2: Accessing node details*
+***Step 2: Accessing node details***
 
 The flow editor makes easy to view the insides of nodes by using the export functionality (shortcut  via `ctrl-e` or `cmd-e`):
 
@@ -158,7 +158,7 @@ I do this by trial & error: modify the configuration, try it out and make an gue
 
 Also the [NodeJS](https://github.com/node-red/node-red/tree/master/packages/node_modules/%40node-red/nodes) source code of the nodes is well documented and understandable.
 
-*Step 3: Creating test flows*
+***Step 3: Creating test flows***
 
 The flow editor included here has been extended to include easy test case creation. I did this to simplify my development process and because I wanted to avoid browser-terminal-browser-terminal-browser... context switching. 
 
@@ -179,7 +179,7 @@ The process is then:
 
 Note: deploying a flow isn't necessary. Also the deploy button does nothing in Erlang-RED: flows **cannot be executed** using the current implementation of the flow editor. The current flow editor is designed only for creating and executing tests.
 
-*Step 4: debugging test cases*
+***Step 4: debugging test cases***
 
 The testing panel has a couple of other features that make it simple to debug and fix test cases.
 
@@ -195,4 +195,108 @@ What happens:
 - using the debug panel, its possible to jump to exact nodes that are failing. Fixing a test is just editing the flow and exporting it again (as described above)
 
 **Note**: Because of my lack of Erlang skills is the Erlang server a single browser application. Meaning the web-socket implementation breaks when **two or more** browsers connect. This causes issues with messages to the browsers. Best not to open a second browser window to tab.
+
+***Step 5: Coding Erlang***
+
+I use [rebar3](http://rebar3.org/docs/getting-started/) to organise the build process, so the structure of the codebase is as expected by rebar. However, I do not claim to have done everything right - it works and seems to work, that's my main aim.
+
+Any suggestions on how the code is could be be improved would be greatly appreciated.
+
+So far, the code base is this:
+
+```
+.editorconfig      # Spaces not tabs
+Makefile           # I prefer using make rules to using rebar
+README.md
+include
+node-red-frontend  # Node-RED flow editor codebase
+priv
+ |---> testflows   # all flow test cases in form of .json files
+rebar.config
+rebar.lock
+src
+ |---> http/       # cowboy/http server code
+ |---> nodes/      # individual nodes and their functionality
+ |---> servers/    # gen_servers that I haved tried to create
+ |---> nodes.erl   # helper module for managing processes<-->node
+ |---> flows.erl   # helper module for parsing .json flow files
+ |---> erlang-red.erl # the main starter
+test
+ |---> flow_file_test.erl # eunit test that runs all flow test cases
+``` 
+
+Each node implements "a kind of behaviour" (I haven't codified this):
+
+```
+-module(node_debug).
+
+-export([node_debug/1]).
+-export([handle_incoming/2]).
+
+%%
+%% Debug nodes have no outgoing wires.
+%%
+
+to_binary_if_not_binary(Obj) when is_binary(Obj) ->
+    Obj;
+to_binary_if_not_binary(Obj) when is_list(Obj) ->
+    list_to_binary(Obj);
+to_binary_if_not_binary(Obj) ->
+    Obj.
+
+%% if tostatus is sent, send a status update to the flow
+%% editor. this message is then shown underneath the 
+%% corresponding debug node.
+handle_status_setting({ok,true},{ok,<<"counter">>},NodeDef,_Msg) ->
+    Cnt = nodes:get_prop_value_from_map('_mc_incoming',NodeDef),
+    nodered:node_status(NodeDef, io_lib:format("~p",[Cnt]), "blue", "ring");
+
+handle_status_setting(_,_,_,_) -> ok.
+
+%% The handler that is called when a Msg object is sent to
+%% this node
+handle_incoming(NodeDef,Msg) ->
+    NodeName = nodes:get_prop_value_from_map(name,NodeDef,"undefined"),
+    io:format("DEBUG [~s]: ~p\n", [NodeName, Msg]),
+
+    TypeStr  = nodes:get_prop_value_from_map(type,NodeDef),
+    IdStr    = nodes:get_prop_value_from_map(id,NodeDef),
+    ZStr     = nodes:get_prop_value_from_map(z,NodeDef),
+    NameStr  = nodes:get_prop_value_from_map(name,NodeDef,TypeStr),
+    TopicStr = nodes:get_prop_value_from_map(topic,Msg,""),
+
+    Data = #{
+             id       => IdStr,
+             z        => ZStr,
+             '_alias' => IdStr,
+             path     => ZStr,
+             name     => NameStr,
+             topic    => to_binary_if_not_binary(TopicStr),
+             msg      => jiffy:encode(Msg),
+             format   => <<"Object">>
+    },
+    %% send the data to the debug panel in the flow editor
+    nodered:debug(Data),
+
+		%% handle the "tostatus" attribute
+    handle_status_setting( maps:find(tostatus,NodeDef),
+                           maps:find(statusType,NodeDef),
+                           NodeDef,
+                           Msg ),
+    NodeDef.
+
+%% initialise the process. NodeDef is a map which is one-to-one
+%% the hash object contained in the .json of the flow.
+node_debug(NodeDef) ->
+    nodes:node_init(NodeDef),
+    nodes:enter_receivership(?MODULE, NodeDef, only_incoming).
+```
+
+That's basically the [debug node in Erlang](https://github.com/gorenje/erlang-red/blob/main/src/nodes/node_debug.erl) but with extra comments :)
+
+New nodes have to be added to a lookup table [over here](https://github.com/gorenje/erlang-red/blob/b13bc798d2ad7bfbcd902069f178fe19ce66d27e/src/nodes.erl#L301-L323).
+
+I use docker as development environment, I don't know whether natively using Erlang on a machine will also work but it should!
+
+That's my development process at the moment, from flow.json to Erlang code in five easy steps! :)
 

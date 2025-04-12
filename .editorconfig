@@ -2,3 +2,8 @@
 indent_size = 4
 tab_width = 4
 indent_style = space
+
+[*.erl]
+indent_size = 4
+tab_width = 4
+indent_style = space
