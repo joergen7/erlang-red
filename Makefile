@@ -18,3 +18,6 @@ app-start:
 
 eunit-test:
 	rebar3 eunit
+
+dialyzer:
+	rebar3 dialyzer
