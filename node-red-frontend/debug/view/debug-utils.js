@@ -401,6 +401,69 @@ RED.debug = (function() {
         }
     }
 
+window.importOrShowFlow = (elem) => {
+   window.doFlowImportForSidebarUnittesting($(elem).data('flowid'))
+}
+window.doFlowImportForSidebarUnittesting = (flowid) => {
+
+  if ( RED.nodes.workspace(flowid) ) {
+    RED.workspaces.show(flowid, false, false, true);
+  } else {
+    RED.notify("Retrieving test", {
+      type: "warning",
+      timeout: 3000
+    });
+
+    $.get({
+      url: "/UnitTesting/" +
+        flowid +
+        "/retrieve?cb=" + new Date().getTime(),
+      headers: {
+      }
+    }).done((e, d) => {
+      try {
+        if (!e || !e.flowdata || !Array.isArray(e.flowdata)) {
+          return RED.notify("Access denied or revision not found.", {
+            type: "error",
+            timeout: 3000
+          });
+        }
+      } catch (ex) {
+        return RED.notify("Access Denied, parse error.", {
+          type: "error",
+          timeout: 3000
+        });
+      }
+
+      RED.clipboard.import();
+
+      setTimeout(() => {
+        var content = e.flowdata;
+
+
+        $('#red-ui-clipboard-dialog-import-text').val(
+          JSON.stringify(content)
+        ).trigger("paste");
+      }, 300);
+    }).fail(e => {
+      let msg = "<p>Failed to retrieve test flow data from server.</p>" +
+        $('#node-input-unittestingpull-flowid').val().trim() + "</p>" +
+        "<p>AdBlocker or uBlock might have prevented request.</p>" +
+        "<p>Please check browser console for more details.</p>" + e;
+
+      RED.notify(msg, {
+        type: "error",
+        id: "UnitTesting",
+        timeout: 4000
+      });
+    });
+  }
+}
+
+
+
+
+
     function processDebugMessage(o) {
         var msg = $("<div/>");
         var sourceNode = o._source;
@@ -499,7 +562,8 @@ RED.debug = (function() {
                 });
             }
         } else if (name) {
-            $('<span class="red-ui-debug-msg-name">'+name+'</span>').appendTo(metaRow);
+            $('<span class="red-ui-debug-msg-name">'+name+`</span>`).appendTo(metaRow);
+            $(`<span onmouseover=""  data-flowid='${o.z}' onclick='javascript:window.importOrShowFlow(this)' class="red-ui-debug-msg-name" style="cursor: pointer; float: right; margin-right: 30px;">[${o.z}]</span>`).appendTo(metaRow);
         }
 
         payload = RED.utils.decodeObject(payload,format);
