@@ -29,7 +29,7 @@ websocket_init([{stats_interval, SInterval}]) ->
     register_universal_access_to_websocket(self()),
 
     erlang:start_timer(
-      1000,
+      500,
       websocket_pid,
       jiffy:encode([#{ topic => <<"notification/runtime-state">>,
                        data => #{ state => start,

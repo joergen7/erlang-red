@@ -924,10 +924,10 @@ var RED = (function() {
                 if ( !flowdata ) {
                     options.url = "flows.initial.json"
 
-                    setTimeout( () => {
-                        RED.nodes.dirty(true);
-                        RED.actions.invoke("core:deploy-flows")
-                    },2300);
+                    /* setTimeout( () => {
+                     *     RED.nodes.dirty(true);
+                     *     RED.actions.invoke("core:deploy-flows")
+                     * },2300);*/
                 } else {
                     try {
                         options.success({
@@ -939,11 +939,11 @@ var RED = (function() {
 
                         // update the server with the flow that was stored
                         // locally, trigger a deploy.
-                        setTimeout( () => {
-                            RED.nodes.dirty(true);
-                            RED.actions.invoke("core:deploy-flows")
-                        },1300);
-
+                        /* setTimeout( () => {
+                         *     RED.nodes.dirty(true);
+                         *     RED.actions.invoke("core:deploy-flows")
+                         * },1300);
+                         */
                         jqXHR.abort();
                     } catch(ex) {
                         options.url = "flows.initial.json"

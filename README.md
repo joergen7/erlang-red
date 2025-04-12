@@ -8,25 +8,6 @@ The idea is not to provide Erlang nodes for NodeRED rather the idea is to replac
 The goal is to offer the advantages of visual flow based programming using a programming language that is designed for message passing and concurrency from the ground up - that's why Erlang was selected.
 
 
-Implementation Ramblings
-----
-
-The idea is to convert Node-RED flows into Erlang processes to which message are sent.
-
-All this does is take an [example flow](https://cdn.flowhub.org/?t=0&fhid=ea246f68766c8630&tk=#flow/ea246f68766c8630) exported as [Json](priv/flow.json), parse the Json and create processes for each node found. It then sends a message to an inject node that then passes that message onto its connected nodes.
-
-
-It’s an extremely simple demo but the underlying workflow is this:
-
-1. take a Node-RED flows.json file containing nodes and their connections
-
-2. parse the JSON and create for each node a process.
-
-3. each process is assigned a different function depending on the node type (Node-RED is low-code so there are nodes for doing switch (i.e. case & if), change (add/deleting entries in hashes) and debug (for printing contents of messages). So each type has a function and multiple nodes of the same time are each assigned an Erlang process.
-
-4. generate a message and send to a random process. In the demo this happens to be an “inject” node that is responsible (in the Node-RED world) for generating messages. That process that alters the message before passing it on.
-
-The demo is based on simple Node-RED flows that have been exported as Json and then interpreted - no modification of the exported Jsons has made.
 
 Flows
 ----
@@ -51,7 +32,29 @@ So won't it be great to have the simplicity of low-code visual flow based progra
 Development Strategy
 ---
 
-Best described as [flow driven development](DevelopmentStrategy.md), it does require knowledge of the Node-RED flow editor.
+A kind of HOWTO describes my development process, best described as [flow driven development](DevelopmentStrategy.md).
+
+The description is aimed at folks who have never used Node-RED but who would like to contribute. Feel free to [send me](erlang.red@flowhub.org) questions relating to the project and its development.
+
+Implementation Ramblings
+----
+
+The idea is to convert Node-RED flows into Erlang processes to which message are sent.
+
+All this does is take an [example flow](https://cdn.flowhub.org/?t=0&fhid=ea246f68766c8630&tk=#flow/ea246f68766c8630) exported as [Json](priv/flow.json), parse the Json and create processes for each node found. It then sends a message to an inject node that then passes that message onto its connected nodes.
+
+
+It’s an extremely simple demo but the underlying workflow is this:
+
+1. take a Node-RED flows.json file containing nodes and their connections
+
+2. parse the JSON and create for each node a process.
+
+3. each process is assigned a different function depending on the node type (Node-RED is low-code so there are nodes for doing switch (i.e. case & if), change (add/deleting entries in hashes) and debug (for printing contents of messages). So each type has a function and multiple nodes of the same time are each assigned an Erlang process.
+
+4. generate a message and send to a random process. In the demo this happens to be an “inject” node that is responsible (in the Node-RED world) for generating messages. That process that alters the message before passing it on.
+
+The demo is based on simple Node-RED flows that have been exported as Json and then interpreted - no modification of the exported Jsons has made.
 
 Build
 -----
