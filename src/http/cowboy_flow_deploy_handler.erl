@@ -53,17 +53,8 @@ handle_json_body(Req, State) ->
     %% Pids = nodes:create_pid_for_node(NodeAry),
 
     %% io:format("Pids for flow: ~p\n",[Pids]),
-    erlang:start_timer(
-      100,
-      websocket_pid,
-      jiffy:encode([#{ topic => <<"notification/runtime-state">>,
-                       data => #{ state => start,
-                                  deploy => true
-                                }}])
-    ),
 
     Resp = cowboy_req:set_resp_body(<<"{\"rev\":\"dead73d0\"}">>, Req2),
-    %%cowboy_req:reply(201, Resp),
     {true, Resp, State}.
 
 format_error(Reason, Req) ->

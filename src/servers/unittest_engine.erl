@@ -18,7 +18,7 @@
 %%
 %% These aren't export to be used external, these are "internal" exports.
 -export([not_happen_loop/2]).
--export([run_test_on_another_planet/1]).
+-export([run_test_on_another_planet/2]).
 
 start() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
@@ -35,11 +35,11 @@ handle_cast(stop, State) ->
 handle_cast(_Msg, Store) ->
     {noreply, Store}.
 
-stop_all_pids([]) ->
+stop_all_pids([],_) ->
     ok;
-stop_all_pids([Pid|Pids]) ->
-    Pid ! stop,
-    stop_all_pids(Pids).
+stop_all_pids([Pid|Pids],WsName) ->
+    Pid ! {stop,WsName},
+    stop_all_pids(Pids,WsName).
 
 not_happen_loop(TestName,ErrorStorePid) ->
     receive
@@ -83,21 +83,21 @@ start_this_should_not_happen_service(TabId,TestName) ->
     end,
     ensure_error_store_is_started(TabErrColl,TestName).
 
-send_off_test_result(FlowId, []) ->
-    nodered:unittest_result(FlowId,success);
+send_off_test_result(WsName, FlowId, []) ->
+    nodered:unittest_result(WsName,FlowId,success);
 
-send_off_test_result(FlowId, Ary) ->
-    nodered:unittest_result(FlowId,failed),
-    dump_errors_onto_nodered(Ary,FlowId).
+send_off_test_result(WsName, FlowId, Ary) ->
+    nodered:unittest_result(WsName,FlowId,failed),
+    dump_errors_onto_nodered(Ary,FlowId,WsName).
 
-dump_errors_onto_nodered([],_FlowId) ->
+dump_errors_onto_nodered([],_FlowId,_WsName) ->
     ok;
-dump_errors_onto_nodered([{NodeId, Msg}|T],FlowId) ->
-    nodered:debug(nodered:debug_string(NodeId,FlowId,Msg),notice),
-    dump_errors_onto_nodered(T,FlowId).
+dump_errors_onto_nodered([{NodeId, Msg}|T],FlowId,WsName) ->
+    nodered:debug(WsName,nodered:debug_string(NodeId,FlowId,Msg),notice),
+    dump_errors_onto_nodered(T,FlowId,WsName).
 
-handle_info({start_test,FlowId}, State) ->
-    spawn(?MODULE, run_test_on_another_planet, [FlowId]),
+handle_info({start_test,FlowId, WsName}, State) ->
+    spawn(?MODULE, run_test_on_another_planet, [FlowId,WsName]),
     {noreply, State};
 
 
@@ -119,7 +119,7 @@ terminate(normal, _State) ->
 
 %%
 %% spawn it out function
-run_test_on_another_planet(FlowId) ->
+run_test_on_another_planet(FlowId,WsName) ->
     error_store:reset_errors(FlowId),
 
     FileName = flow_store_server:get_filename(FlowId),
@@ -131,7 +131,8 @@ run_test_on_another_planet(FlowId) ->
     Pids = nodes:create_pid_for_node(Ary),
 
     [nodes:trigger_outgoing_messages(maps:find(type,ND),
-                                     maps:find(id,ND)) || ND <- Ary],
+                                     maps:find(id,ND),
+                                     WsName) || ND <- Ary],
 
     %% give the messages time to propagate through the
     %% test flow
@@ -140,11 +141,11 @@ run_test_on_another_planet(FlowId) ->
     %% stop all nodes. Probably better would be to checking
     %% the message queues of the nodes and if all are empty
     %% it's probably safe to end the test case.
-    stop_all_pids(Pids),
+    stop_all_pids(Pids,WsName),
 
     %% some asserts work on the stop notification, give'em
     %% time to generate their results.
     timer:sleep(543),
     ErrColl ! stop,
 
-    send_off_test_result(FlowId, error_store:get_errors(FlowId)).
+    send_off_test_result(WsName, FlowId, error_store:get_errors(FlowId)).

@@ -36,14 +36,16 @@ handle_incoming(NodeDef,Msg) ->
                     ignore
             end;
 
-        {ok,LinkType} ->
+        {ok, LinkType} ->
             ErrMsg = nodes:jstr("Unknown LinkType: '~s'",[LinkType]),
             nodes:this_should_not_happen(
               NodeDef,
               io_lib:format("~p ~p\n",[ErrMsg,Msg])
             ),
-            nodered:debug(nodered:debug_string(NodeDef, ErrMsg), notice),
-            nodered:node_status(NodeDef, "unknown linkType", "red", "dot");
+            nodered:debug(nodered:ws(Msg),
+                          nodered:debug_string(NodeDef, ErrMsg), notice),
+            nodered:node_status(nodered:ws(Msg),
+                                NodeDef, "unknown linkType", "red", "dot");
         _ ->
             ignore
     end,

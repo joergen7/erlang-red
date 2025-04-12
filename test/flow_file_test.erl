@@ -7,7 +7,8 @@
 stop_all_pids([]) ->
     ok;
 stop_all_pids([Pid|Pids]) ->
-    Pid ! stop,
+    %% none is the websocket name - doesn't exist.
+    Pid ! {stop, none},
     stop_all_pids(Pids).
 
 %%
@@ -84,7 +85,7 @@ create_test_for_flow_file([FileName|MoreFileNames], Acc) ->
                        Pids = nodes:create_pid_for_node(Ary),
 
                        [nodes:trigger_outgoing_messages(
-                          maps:find(type,ND), maps:find(id,ND)
+                          maps:find(type,ND), maps:find(id,ND), none
                          ) || ND <- Ary],
 
                        %% give the messages time to propagate through the

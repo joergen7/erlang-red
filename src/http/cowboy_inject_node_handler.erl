@@ -32,8 +32,8 @@ handle_json_body(Req, State) ->
                 undefined ->
                     ok;
                 _ ->
-                    io:format("Inject action found pid!~n"),
-                    NodePid ! { outgoing, #{ '_msgid' => nodes:generate_id() } }
+                    NodePid ! nodered:create_outgoing_msg(
+                                nodered:websocket_name_from_request(Req))
             end
     end,
 

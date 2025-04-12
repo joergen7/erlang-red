@@ -74,7 +74,8 @@ check_rule_against_msg(<<"eql">>,<<"msg">>,Rule,Msg) ->
                 true ->
                     true;
                 _ ->
-                    {failed, nodes:jstr("Prop '~s': Exp: '~s' Was: '~s'",[Prop,ReqVal,Val])}
+                    {failed, nodes:jstr("Prop '~s': Exp: '~s' Was: '~s'",
+                                        [Prop,ReqVal,Val])}
             end;
         _ ->
             {failed, nodes:jstr("Prop not set on msg: '~p'",[Prop])}
@@ -102,7 +103,7 @@ check_rules([H|T],NodeDef,Msg,FCnt) ->
 
         unsupported ->
             ErrMsg = nodes:jstr("Assert values: unsupported operator: '~s'",[Op]),
-            nodered:debug(debug_data(NodeDef, ErrMsg), notice),
+            nodered:debug(nodered:ws(Msg), debug_data(NodeDef, ErrMsg), notice),
             check_rules(T,NodeDef,Msg,FCnt);
 
         {failed,ErrMsg} ->
@@ -110,7 +111,7 @@ check_rules([H|T],NodeDef,Msg,FCnt) ->
               NodeDef,
               io_lib:format("~p ~p\n",[ErrMsg,Msg])
             ),
-            nodered:debug(debug_data(NodeDef,ErrMsg), error),
+            nodered:debug(nodered:ws(Msg), debug_data(NodeDef,ErrMsg), error),
             check_rules(T,NodeDef,Msg,FCnt + 1)
     end.
 

@@ -1,9 +1,9 @@
 -module(node_assert_success).
 
 -export([node_assert_success/1]).
--export([handle_stop/1]).
+-export([handle_stop/2]).
 
-handle_stop(NodeDef) ->
+handle_stop(NodeDef,WsName) ->
     case maps:find('_mc_incoming',NodeDef) of
         {ok,0} ->
             {ok, IdStr} = maps:find(id,NodeDef),
@@ -11,7 +11,8 @@ handle_stop(NodeDef) ->
 
             nodes:this_should_not_happen(
               NodeDef,
-              io_lib:format("Assert Error: Node was not reached [~p](~p)\n",[TypeStr,IdStr])
+              io_lib:format("Assert Error: Node was not reached [~p](~p)\n",
+                            [TypeStr,IdStr])
             ),
 
             IdStr       = nodes:get_prop_value_from_map(id,NodeDef),
@@ -29,8 +30,8 @@ handle_stop(NodeDef) ->
                      format   => <<"string">>
             },
 
-            nodered:debug(Data,error),
-            nodered:node_status(NodeDef, "assert failed", "red", "dot");
+            nodered:debug(WsName, Data, error),
+            nodered:node_status(WsName, NodeDef, "assert failed", "red", "dot");
         _ ->
             ok
     end.

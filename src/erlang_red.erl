@@ -17,7 +17,7 @@ start(_Type, _Args) ->
                %% Sock'em in the eye websocket
                %%
                {"/node-red/comms", cowboy_nodered_websocket,
-                [{stats_interval, 15000}]},
+                #{stats_interval => 30000}},
 
                %%
                %% POST handlers
@@ -76,7 +76,6 @@ start(_Type, _Args) ->
 
 stop() ->
     application:stop(cowboy).
-
 
 stop(_State) ->
     ok.

@@ -44,10 +44,7 @@ handle_incoming(NodeDef,Msg) ->
 
                         {ok, LinkBack, NewAry} ->
                             send_to_link_call(maps:find(node,LinkBack),
-                                              maps:put('_linkSource',NewAry,Msg));
-
-                        _ ->
-                            ignore
+                                              maps:put('_linkSource',NewAry,Msg))
                     end;
                 _ ->
                     ignore
@@ -59,8 +56,11 @@ handle_incoming(NodeDef,Msg) ->
               NodeDef,
               io_lib:format("~p ~p\n",[ErrMsg,Msg])
             ),
-            nodered:debug(nodered:debug_string(NodeDef, ErrMsg), notice),
-            nodered:node_status(NodeDef, "unknown mode", "red", "dot");
+
+            nodered:debug(nodered:ws(Msg),
+                          nodered:debug_string(NodeDef, ErrMsg), notice),
+
+            nodered:node_status(nodered:ws(Msg), NodeDef, ErrMsg, "red", "dot");
 
         _ ->
             ignore

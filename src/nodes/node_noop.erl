@@ -41,11 +41,13 @@ handle_incoming(NodeDef,Msg) ->
     %%
     %% this output is for Node-RED frontend when doing unit testing
     %% inside node red.
-    nodered:debug(create_data_for_debug(NodeDef,TypeStr), warning),
+    nodered:debug(nodered:ws(Msg),
+                  create_data_for_debug(NodeDef,TypeStr), warning),
 
     %%
     %% again for node red, show a status value for the corresponding node.
-    nodered:node_status(NodeDef, "type not implemented", "grey", "dot"),
+    nodered:node_status(nodered:ws(Msg),
+                        NodeDef, "type not implemented", "grey", "dot"),
 
     NodeDef.
 
@@ -67,11 +69,13 @@ handle_outgoing(NodeDef,Msg) ->
     %%
     %% this output is for Node-RED frontend when doing unit testing
     %% inside node red.
-    nodered:debug(create_data_for_debug(NodeDef,TypeStr), warning),
+    nodered:debug(nodered:ws(Msg),
+                  create_data_for_debug(NodeDef,TypeStr), warning),
 
     %%
     %% again for node red, show a status value for the corresponding node.
-    nodered:node_status(NodeDef, "type not implemented", "grey", "dot"),
+    nodered:node_status(nodered:ws(Msg),
+                        NodeDef, "type not implemented", "grey", "dot"),
 
     NodeDef.
 

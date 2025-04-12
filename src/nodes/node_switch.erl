@@ -89,7 +89,7 @@ get_value_from_msg({ok,PropType},{ok,PropName}, _Msg) ->
     io_lib:format("switch: unsupported property: ~p.~p",[PropType, PropName]);
 
 get_value_from_msg(_,_,_) ->
-    io_lib:format("switch: property not found\n").
+    io_lib:format("switch: property not found\n",[]).
 
 %%
 %%

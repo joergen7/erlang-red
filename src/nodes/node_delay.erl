@@ -30,9 +30,15 @@ compute_pause({ok,<<"delay">>},NodeDef,_Msg) ->
 
 compute_pause(PType,NodeDef,Msg) ->
     ErrMsg = nodes:jstr("Unknown PauseType: '~p'",[PType]),
-    nodes:this_should_not_happen(NodeDef, io_lib:format("~p ~p\n", [ErrMsg,Msg])),
-    nodered:debug(nodered:debug_string(NodeDef, ErrMsg), notice),
-    nodered:node_status(NodeDef, "unknown pauseType", "red", "dot"),
+
+    nodes:this_should_not_happen(NodeDef,
+                                 io_lib:format("~p ~p\n", [ErrMsg,Msg])),
+
+    nodered:debug(nodered:ws(Msg),
+                  nodered:debug_string(NodeDef, ErrMsg), notice),
+
+    nodered:node_status(nodered:ws(Msg),
+                        NodeDef, "unknown pauseType", "red", "dot"),
     0.
 
 %%

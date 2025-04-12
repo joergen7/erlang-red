@@ -34,8 +34,9 @@ handle_incoming(NodeDef,Msg) ->
              msg      => jiffy:encode(Msg),
              format   => <<"Object">>
             },
-    nodered:debug(Data,error),
-    nodered:node_status(NodeDef, "assert failed", "red", "dot"),
+
+    nodered:debug(nodered:ws(Msg),Data,error),
+    nodered:node_status(nodered:ws(Msg),NodeDef, "assert failed", "red", "dot"),
     NodeDef.
 
 node_assert_failure(NodeDef) ->

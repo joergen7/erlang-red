@@ -16,7 +16,7 @@
 -export([jstr/2]).
 -export([jstr/1]).
 -export([tabid_to_error_collector/1]).
--export([trigger_outgoing_messages/2]).
+-export([trigger_outgoing_messages/3]).
 
 %% send_msg_to_connnected_nodes assues an attribute 'wires' while
 %% send send_msg_on is given an array of node ids and triggers the
@@ -63,8 +63,8 @@ increment_message_counter(NodeDef, CntName) ->
 %% TODO whenever messages are bounced around a flow.
 enter_receivership(Module,NodeDef,only_stop) ->
     receive
-        stop ->
-            erlang:apply(Module, handle_stop, [NodeDef]);
+        {stop,WsName} ->
+            erlang:apply(Module, handle_stop, [NodeDef,WsName]);
 
         {incoming,_Msg} ->
             NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
@@ -77,7 +77,7 @@ enter_receivership(Module,NodeDef,only_stop) ->
 
 enter_receivership(Module,NodeDef,incoming_and_outgoing) ->
     receive
-        stop ->
+        {stop,_WsName} ->
             ok;
 
         {incoming,Msg} ->
@@ -97,7 +97,7 @@ enter_receivership(Module,NodeDef,incoming_and_outgoing) ->
 %% not require an outgoing message type so ignore that.
 enter_receivership(Module,NodeDef,link_call_node) ->
     receive
-        stop ->
+        {stop,_WsName} ->
             ok;
 
         {incoming,Msg} ->
@@ -119,7 +119,7 @@ enter_receivership(Module,NodeDef,link_call_node) ->
 
 enter_receivership(Module,NodeDef,only_incoming) ->
     receive
-        stop ->
+        {stop,_WsName} ->
             ok;
 
         {incoming,Msg} ->
@@ -138,13 +138,13 @@ enter_receivership(Module,NodeDef,Type) ->
 
 enter_receivership(Module,NodeDef) ->
     receive
-        stop ->
+        {stop,WsName} ->
             %% {ok, IdStr} = maps:find(id,NodeDef),
             %% {ok, TypeStr} = maps:find(type,NodeDef),
             %% io:format("node STOPPED id: [~p] type: [~p]\n",[IdStr,TypeStr]),
 
-            case erlang:function_exported(Module,handle_stop,1) of
-                true -> erlang:apply(Module, handle_stop, [NodeDef]);
+            case erlang:function_exported(Module,handle_stop,2) of
+                true -> erlang:apply(Module, handle_stop, [NodeDef,WsName]);
                 _ -> ignore
             end,
             ok;
@@ -192,13 +192,19 @@ tabid_to_error_collector(IdStr) ->
         lists:flatten(
           io_lib:format("~s~s", ["error_collector_",IdStr] )))).
 
-create_pid_for_node(Ary) ->
-    create_pid_for_node(Ary,[]).
-
 
 %% TODO: a tab node (i.e. the tab containing a flow) also has a disabled
 %% TODO: flag but this is called 'disabled'. If it is set, then the entire
 %% TODO: flow should be ignoreed --> this is not handled at the moment.
+%%
+%% TODO2: Append the websocket name to the pid so that two browsers
+%% TODO2: don't test with the same set of nodes. Each node is given the
+%% TODO2: websocket name in the Msg object, so its not a problem for them
+%% TODO2: to send their messages to the correct processes.
+create_pid_for_node(Ary) ->
+    create_pid_for_node(Ary,[]).
+
+
 create_pid_for_node([],Pids) ->
     Pids;
 
@@ -322,17 +328,17 @@ node_type_to_fun(Unknown) ->
     io:format("noop node initiated for unknown type: ~p\n", [Unknown]),
     {node_noop, node_noop}.
 
+
 %% A list of all nodes that support outgoing messages, this was originally
 %% only the inject node but then I realised that for testing purposes there
 %% are in fact more.
+trigger_outgoing_messages({ok, <<"http in">>}, {ok, IdStr}, WsName) ->
+    nodes:nodeid_to_pid(IdStr) ! nodered:create_outgoing_msg(WsName);
 
-trigger_outgoing_messages({ok, <<"http in">>}, {ok, IdStr}) ->
-    nodes:nodeid_to_pid(IdStr) ! {outgoing, #{'_msgid' => nodes:generate_id()}};
+trigger_outgoing_messages({ok, <<"inject">>}, {ok, IdStr}, WsName) ->
+    nodes:nodeid_to_pid(IdStr) ! nodered:create_outgoing_msg(WsName);
 
-trigger_outgoing_messages({ok, <<"inject">>}, {ok, IdStr}) ->
-    nodes:nodeid_to_pid(IdStr) ! {outgoing, #{'_msgid' => nodes:generate_id()}};
-
-trigger_outgoing_messages(_,_) ->
+trigger_outgoing_messages(_,_,_) ->
     ok.
 
 
