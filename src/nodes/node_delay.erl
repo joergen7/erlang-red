@@ -3,6 +3,8 @@
 -export([node_delay/1]).
 -export([handle_incoming/2]).
 
+-import(node_receivership, [enter_receivership/3]).
+
 convert_units_to_milliseconds({ok,<<"days">>},{ok,Val}) ->
     element(1, string:to_integer(Val)) * 1000 * 60 * 60 * 24;
 
@@ -52,4 +54,4 @@ handle_incoming(NodeDef,Msg) ->
 
 node_delay(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE, NodeDef, only_incoming).
+    enter_receivership(?MODULE, NodeDef, only_incoming).

@@ -3,6 +3,8 @@
 -export([node_link_in/1]).
 -export([handle_incoming/2]).
 
+-import(node_receivership, [enter_receivership/3]).
+
 %%
 %% Strangely a "link in" node also has a "links" attribute (as does the link out node).
 %% Strange because the links in this case are the backward links to the link out nodes
@@ -15,4 +17,4 @@ handle_incoming(NodeDef,Msg) ->
 
 node_link_in(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE, NodeDef, only_incoming).
+    enter_receivership(?MODULE, NodeDef, only_incoming).

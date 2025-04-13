@@ -3,6 +3,8 @@
 -export([node_junction/1]).
 -export([handle_incoming/2]).
 
+-import(node_receivership, [enter_receivership/3]).
+
 %%
 %% junctions are decorative elements that are "transparent" - they just
 %% pass through the messages that they receive (having cloned the messages)
@@ -14,4 +16,4 @@ handle_incoming(NodeDef,Msg) ->
 
 node_junction(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE,NodeDef,only_incoming).
+    enter_receivership(?MODULE,NodeDef,only_incoming).

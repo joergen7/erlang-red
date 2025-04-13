@@ -9,6 +9,10 @@
 -export([handle_ws_event/2]).
 -export([handle_stop/2]).
 
+-import(node_receivership, [enter_receivership/3]).
+
+-export([post_failure/3]).
+
 is_same({A,A}) -> true;
 is_same({_,_}) -> false.
 
@@ -66,7 +70,7 @@ post_failure(NodeDef,WsName,ErrMsg) ->
 handle_stop(NodeDef,WsName) ->
     case maps:find('_mc_websocket',NodeDef) of
         {ok,0} ->
-            case maps:find('inverse',NodeDef) of
+            case maps:find(inverse,NodeDef) of
                 {ok,false} ->
                     {ok, NodeId} = maps:find(nodeid,NodeDef),
                     ErrMsg = nodes:jstr("Expected status from ~p\n",[NodeId]),
@@ -103,11 +107,11 @@ handle_ws_event(NodeDef, {status,WsName,NodeId,Txt,Clr,Shp}) ->
     end,
     NodeDef;
 
-handle_ws_event(_,_) ->
-    ignore.
+handle_ws_event(NodeDef,_) ->
+    NodeDef.
 
 %%
 %%
 node_assert_status(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE,NodeDef,only_ws_events_and_stop).
+    enter_receivership(?MODULE, NodeDef, websocket_events_and_stop).

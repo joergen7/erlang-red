@@ -3,6 +3,9 @@
 -export([node_assert_values/1]).
 -export([handle_incoming/2]).
 
+-import(node_receivership, [enter_receivership/3]).
+
+
 is_same(Same,Same) -> true;
 is_same(_,_) -> false.
 
@@ -29,7 +32,7 @@ check_rule_against_msg(<<"notset">>,<<"msg">>,Rule,Msg) ->
 
     case maps:find(binary_to_atom(Prop),Msg) of
         {ok,_} ->
-            {failed, nodes:jstr("Prop '~s' should not be set on Msg: ~p",[Prop,Msg])};
+            {failed, nodes:jstr("Prop '~p' should not be set on Msg: ~p",[Prop,Msg])};
         _ ->
             true
     end;
@@ -41,7 +44,7 @@ check_rule_against_msg(<<"set">>,<<"msg">>,Rule,Msg) ->
         {ok,_} ->
             true;
         _ ->
-            {failed, nodes:jstr("Prop '~s' not set on Msg: ~p",[Prop,Msg])}
+            {failed, nodes:jstr("Prop '~p' not set on Msg: ~p",[Prop,Msg])}
     end;
 
 check_rule_against_msg(<<"noteql">>,<<"msg">>,Rule,Msg) ->
@@ -53,7 +56,7 @@ check_rule_against_msg(<<"noteql">>,<<"msg">>,Rule,Msg) ->
             case is_same(ReqVal,Val) of
                 true ->
                     {failed, nodes:jstr(
-                               "Prop '~s': Unequal but same. Exp: '~s' Was: '~s'",
+                               "Prop '~p': Unequal but same. Exp: '~p' Was: '~p'",
                                [Prop,ReqVal,Val])};
                 _ ->
                     true
@@ -74,7 +77,7 @@ check_rule_against_msg(<<"eql">>,<<"msg">>,Rule,Msg) ->
                 true ->
                     true;
                 _ ->
-                    {failed, nodes:jstr("Prop '~s': Exp: '~s' Was: '~s'",
+                    {failed, nodes:jstr("Prop '~p': Exp: '~p' Was: '~p'",
                                         [Prop,ReqVal,Val])}
             end;
         _ ->
@@ -86,12 +89,13 @@ check_rule_against_msg(_Operator,_ObjectType,_,_) ->
 
 %%
 %%
-check_rules([],NodeDef,_,0) ->
-    nodered:node_status(NodeDef, <<"All checks correct">>, "green", "dot");
+check_rules([],NodeDef,Msg,0) ->
+    nodered:node_status(nodered:ws(Msg), NodeDef, <<"All checks succeed">>,
+                        "green", "dot");
 
-check_rules([],NodeDef,_,FCnt) ->
+check_rules([],NodeDef,Msg,FCnt) ->
     ErrMsg = nodes:jstr("~p check(s) failed",[FCnt]),
-    nodered:node_status(NodeDef, ErrMsg, "red", "dot");
+    nodered:node_status(nodered:ws(Msg), NodeDef, ErrMsg, "red", "dot");
 
 check_rules([H|T],NodeDef,Msg,FCnt) ->
     {ok, Op} = maps:find(t,H),
@@ -102,7 +106,7 @@ check_rules([H|T],NodeDef,Msg,FCnt) ->
             check_rules(T,NodeDef,Msg,FCnt);
 
         unsupported ->
-            ErrMsg = nodes:jstr("Assert values: unsupported operator: '~s'",[Op]),
+            ErrMsg = nodes:jstr("Assert values: unsupported operator: '~p'",[Op]),
             nodered:debug(nodered:ws(Msg), debug_data(NodeDef, ErrMsg), notice),
             check_rules(T,NodeDef,Msg,FCnt);
 
@@ -129,4 +133,4 @@ handle_incoming(NodeDef,Msg) ->
 
 node_assert_values(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE, NodeDef, only_incoming).
+    enter_receivership(?MODULE, NodeDef, only_incoming).

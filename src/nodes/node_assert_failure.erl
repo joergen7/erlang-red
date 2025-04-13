@@ -3,6 +3,8 @@
 -export([node_assert_failure/1]).
 -export([handle_incoming/2]).
 
+-import(node_receivership, [enter_receivership/3]).
+
 to_binary_if_not_binary(Obj) when is_binary(Obj) ->
     Obj;
 to_binary_if_not_binary(Obj) when is_list(Obj) ->
@@ -41,4 +43,4 @@ handle_incoming(NodeDef,Msg) ->
 
 node_assert_failure(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE, NodeDef, only_incoming).
+    enter_receivership(?MODULE, NodeDef, only_incoming).

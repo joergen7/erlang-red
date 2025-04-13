@@ -3,6 +3,8 @@
 -export([node_debug/1]).
 -export([handle_incoming/2]).
 
+-import(node_receivership, [enter_receivership/3]).
+
 %%
 %% Debug nodes have no outgoing wires.
 %%
@@ -65,4 +67,4 @@ handle_incoming(NodeDef,Msg) ->
 
 node_debug(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE, NodeDef, only_incoming).
+    enter_receivership(?MODULE, NodeDef, only_incoming).

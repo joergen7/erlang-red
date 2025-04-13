@@ -3,6 +3,8 @@
 -export([node_assert_success/1]).
 -export([handle_stop/2]).
 
+-import(node_receivership, [enter_receivership/3]).
+
 handle_stop(NodeDef,WsName) ->
     case maps:find('_mc_incoming',NodeDef) of
         {ok,0} ->
@@ -39,4 +41,4 @@ handle_stop(NodeDef,WsName) ->
 
 node_assert_success(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE,NodeDef,only_stop).
+    enter_receivership(?MODULE,NodeDef,only_stop).

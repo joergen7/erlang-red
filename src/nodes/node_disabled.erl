@@ -14,6 +14,8 @@
 -export([handle_incoming/2]).
 -export([handle_outgoing/2]).
 
+-import(node_receivership, [enter_receivership/3]).
+
 handle_incoming(NodeDef,_Msg) ->
     NodeDef.
 
@@ -22,4 +24,4 @@ handle_outgoing(NodeDef,_Msg) ->
 
 node_disabled(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE,NodeDef).
+    enter_receivership(?MODULE,NodeDef,incoming_and_outgoing).

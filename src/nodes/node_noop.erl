@@ -8,6 +8,8 @@
 -export([handle_incoming/2]).
 -export([handle_outgoing/2]).
 
+-import(node_receivership, [enter_receivership/3]).
+
 create_data_for_debug(NodeDef,TypeStr) ->
     IdStr       = nodes:get_prop_value_from_map(id,NodeDef),
     ZStr        = nodes:get_prop_value_from_map(z,NodeDef),
@@ -81,4 +83,4 @@ handle_outgoing(NodeDef,Msg) ->
 
 node_noop(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE,NodeDef,incoming_and_outgoing).
+    enter_receivership(?MODULE,NodeDef,incoming_and_outgoing).

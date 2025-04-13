@@ -4,6 +4,7 @@
 -export([handle_incoming/2]).
 -export([handle_link_return/2]).
 
+-import(node_receivership, [enter_receivership/3]).
 
 update_linksource(NodeDef,Msg) ->
     {ok, IdStr} = maps:find(id,NodeDef),
@@ -61,4 +62,4 @@ handle_link_return(NodeDef,Msg) ->
 
 node_link_call(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE, NodeDef, link_call_node).
+    enter_receivership(?MODULE, NodeDef, link_call_node).

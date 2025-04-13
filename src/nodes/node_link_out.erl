@@ -3,6 +3,8 @@
 -export([node_link_out/1]).
 -export([handle_incoming/2]).
 
+-import(node_receivership, [enter_receivership/3]).
+
 send_to_link_call({ok, NodeId},Msg) ->
     NodePid = nodes:nodeid_to_pid(nodered:ws(Msg), NodeId),
     case whereis(NodePid) of
@@ -70,4 +72,4 @@ handle_incoming(NodeDef,Msg) ->
 
 node_link_out(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE, NodeDef, only_incoming).
+    enter_receivership(?MODULE, NodeDef, only_incoming).

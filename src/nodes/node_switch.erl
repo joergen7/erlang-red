@@ -3,6 +3,8 @@
 -export([node_switch/1]).
 -export([handle_incoming/2]).
 
+-import(node_receivership, [enter_receivership/3]).
+
 %%
 %% representation of a switch node.
 %%
@@ -155,4 +157,4 @@ handle_incoming(NodeDef,Msg) ->
 %%
 node_switch(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE, NodeDef, only_incoming).
+    enter_receivership(?MODULE, NodeDef, only_incoming).

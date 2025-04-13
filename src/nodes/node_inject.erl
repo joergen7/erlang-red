@@ -4,6 +4,8 @@
 -export([handle_outgoing/2]).
 -export([handle_incoming/2]).
 
+-import(node_receivership, [enter_receivership/3]).
+
 %%
 %% Inject node should have at least one outgoing wire, if not then the
 %% needle won't hit the vein, i.e. the message won't flow through any nodes.
@@ -77,4 +79,4 @@ handle_incoming(NodeDef,_Msg) ->
 
 node_inject(NodeDef) ->
     nodes:node_init(NodeDef),
-    nodes:enter_receivership(?MODULE,NodeDef).
+    enter_receivership(?MODULE,NodeDef,incoming_and_outgoing).
