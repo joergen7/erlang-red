@@ -28,7 +28,7 @@ handle_json_body(Req, State) ->
     io:format("Handling testcase creationg\n"),
     WorkspaceId = cowboy_req:binding(workspaceid, Req),
 
-    {ok, Body, Req2} = cowboy_flow_deploy_handler:read_body(Req, <<"">>),
+    {ok, Body, Req2} = nodered_flow_deploy_handler:read_body(Req, <<"">>),
 
     Push = fun(Key, Value, Acc) ->
        [{binary_to_atom(Key), Value} | Acc]
