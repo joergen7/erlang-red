@@ -3,6 +3,7 @@
 -include_lib("eunit/include/eunit.hrl").
 
 -export([not_happen_loop/2]).
+-export([websocket_faker/1]).
 
 stop_all_pids([]) ->
     ok;
@@ -30,6 +31,47 @@ ensure_error_store_is_started(TabErrColl, TestName) ->
 
         _ ->
             error
+    end.
+
+websocket_faker(WsName) ->
+    receive
+        stop ->
+            ok;
+
+        {debug,Data} ->
+            websocket_event_exchange:debug_msg({ok,WsName},normal,Data),
+            websocket_faker(WsName);
+
+        {notice_debug,Data} ->
+            websocket_event_exchange:debug_msg({ok,WsName},notice,Data),
+            websocket_faker(WsName);
+
+        {warning_debug,Data} ->
+            websocket_event_exchange:debug_msg({ok,WsName},warning,Data),
+            websocket_faker(WsName);
+
+        {error_debug,Data} ->
+            websocket_event_exchange:debug_msg({ok,WsName},error,Data),
+            websocket_faker(WsName);
+
+        {status,NodeId,T,C,S} ->
+            websocket_event_exchange:node_status({ok,WsName},NodeId,T,C,S),
+            websocket_faker(WsName);
+
+        Unknown ->
+            io:format("WS faker got unknown msg: ~p~n",[Unknown]),
+            websocket_faker(WsName)
+    end.
+
+ensure_websocket_listener_is_running(WsName) ->
+    websocket_event_exchange:start(),
+
+    case whereis(WsName) of
+        undefined ->
+            Pid = spawn(?MODULE, websocket_faker, [WsName]),
+            register(WsName,Pid);
+        _ ->
+            is_running_ignore
     end.
 
 %% Define this because the ErrorStorePid cannot be registered under a new
@@ -82,10 +124,18 @@ create_test_for_flow_file([FileName|MoreFileNames], Acc) ->
                                                                    TestName),
                        error_store:reset_errors(TabId),
 
-                       Pids = nodes:create_pid_for_node(Ary,none),
+                       %% Websocket name becomes 'eunit_test'. This is picked
+                       %% up by the nodered module and directs it to send
+                       %% websocket data to the websocket exchange service
+                       %% instead. This males assert status and assert debug
+                       %% nodes work.
+                       WsName = eunit_test,
+                       ensure_websocket_listener_is_running(WsName),
+
+                       Pids = nodes:create_pid_for_node(Ary,WsName),
 
                        [nodes:trigger_outgoing_messages(
-                          maps:find(type,ND), maps:find(id,ND), none
+                          maps:find(type,ND), maps:find(id,ND), WsName
                          ) || ND <- Ary],
 
                        %% give the messages time to propagate through the
