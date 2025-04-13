@@ -21,19 +21,20 @@ content_types_accepted(Req, State) ->
 
 handle_json_body(Req, State) ->
     Resp = cowboy_req:set_resp_body(<<"OK">>, Req),
+    WsName = nodered:websocket_name_from_request(Req),
 
     case cowboy_req:binding(nodeid, Req) of
         undefined ->
             ok;
         IdStr ->
-            NodePid = nodes:nodeid_to_pid(IdStr),
+            NodePid = nodes:nodeid_to_pid(WsName,IdStr),
 
             case whereis(NodePid) of
                 undefined ->
                     ok;
                 _ ->
-                    NodePid ! nodered:create_outgoing_msg(
-                                nodered:websocket_name_from_request(Req))
+                    NodePid ! nodered:create_outgoing_msg(WsName)
+
             end
     end,
 

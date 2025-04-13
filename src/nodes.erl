@@ -8,7 +8,7 @@
 -export([get_prop_value_from_map/3]).
 -export([generate_id/0]).
 -export([generate_id/1]).
--export([nodeid_to_pid/1]).
+-export([nodeid_to_pid/2]).
 -export([node_init/1]).
 -export([enter_receivership/2]).
 -export([enter_receivership/3]).
@@ -61,6 +61,17 @@ increment_message_counter(NodeDef, CntName) ->
 %% TODO Not to self: once I get the hang of MACROS replace this receivership
 %% TODO stuff with MACROS - this stuff needs to be fast since its called
 %% TODO whenever messages are bounced around a flow.
+%%
+%% TODO2 enter_receivership is bullshit. Because this does not allow
+%% TODO2 module nodes to be defined in a single module. What I want to
+%% TODO2 do is put all the link nodes (link in, link out and link call) into
+%% TODO2 into a single module but because enter_receiveship calls
+%% TODO2 "Module, handling_incoming" (for example) there can only be one
+%% TODO2 handle_incoming per module ... that defeats the purpose of having
+%% TODO2 "module,func" pairs defining nodes. Damn.
+%% TODO2 Alternative would be to pass in functions that handle the callbacks
+%% TODO2 but is that the best alternative?
+%%
 enter_receivership(Module,NodeDef,only_stop) ->
     receive
         {stop,WsName} ->
@@ -180,6 +191,12 @@ generate_id(Length) ->
 generate_id() ->
     generate_id(16).
 
+%%
+%% TODO ignore the WsName for now, but use it everywhere where it can
+%% TODO already be used.
+nodeid_to_pid(_WsName,IdStr) ->
+    nodeid_to_pid(IdStr).
+
 nodeid_to_pid(IdStr) ->
     binary_to_atom(
       list_to_binary(
@@ -276,13 +293,13 @@ get_prop_value_from_map(Prop,Map) ->
 %%
 
 %% Here 'on' is the same 'pass on' not as in 'on & off'. Standing on the
-%% shoulders of great people is also not the same on as here. You turn me on
-%% would also not be equivalent ... you have been warned.
+%% shoulders of great people is also not the same 'on' as here.
 send_msg_on([],_) ->
     ok;
 
 send_msg_on([NodeId|Wires],Msg) ->
-    NodePid = nodeid_to_pid(NodeId),
+    NodePid = nodeid_to_pid(nodered:ws(Msg), NodeId),
+
     case whereis(NodePid) of
         undefined ->
             ok;
@@ -333,15 +350,10 @@ node_type_to_fun(Unknown) ->
 %% only the inject node but then I realised that for testing purposes there
 %% are in fact more.
 trigger_outgoing_messages({ok, <<"http in">>}, {ok, IdStr}, WsName) ->
-    nodes:nodeid_to_pid(IdStr) ! nodered:create_outgoing_msg(WsName);
+    nodeid_to_pid(WsName,IdStr) ! nodered:create_outgoing_msg(WsName);
 
 trigger_outgoing_messages({ok, <<"inject">>}, {ok, IdStr}, WsName) ->
-    nodes:nodeid_to_pid(IdStr) ! nodered:create_outgoing_msg(WsName);
+    nodeid_to_pid(WsName,IdStr) ! nodered:create_outgoing_msg(WsName);
 
 trigger_outgoing_messages(_,_,_) ->
     ok.
-
-
-%% TODO by the time I get down here, I always think that this functionality
-%% TODO should be split out into a utilities/helper module but I never get
-%% TODO around to it because I'm constantly adding to this module.

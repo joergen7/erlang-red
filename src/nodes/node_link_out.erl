@@ -4,7 +4,7 @@
 -export([handle_incoming/2]).
 
 send_to_link_call({ok, NodeId},Msg) ->
-    NodePid = nodes:nodeid_to_pid(NodeId),
+    NodePid = nodes:nodeid_to_pid(nodered:ws(Msg), NodeId),
     case whereis(NodePid) of
         undefined ->
             ok;
@@ -25,17 +25,17 @@ handle_incoming(NodeDef,Msg) ->
         {ok, <<"link">>} ->
             case maps:find(links,NodeDef) of
                 {ok, Links} ->
-                    %% this are all link in nodes and they have no incoming wires so
-                    %% we can send them their messages using the "incoming" message type
-                    %% this is what send_msg_on does.
+                    %% this are all link in nodes and they have no incoming
+                    %% wires so we can send them their messages using the
+                    %% "incoming" message type this is what send_msg_on does.
                     nodes:send_msg_on(Links,Msg);
                 _ ->
                     ignore
             end;
 
         {ok, <<"return">>} ->
-            %% careful, what this does is take the last entry and respond to that.
-            %% link calls can be nested hence this logic
+            %% careful, what this does is take the last entry and respond
+            %% to that. link calls can be nested hence this logic
             case maps:find('_linkSource',Msg) of
                 {ok,Ary} ->
                     case last_value(Ary,[]) of
