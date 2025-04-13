@@ -11,8 +11,6 @@
 -export([generate_id/1]).
 -export([nodeid_to_pid/2]).
 -export([node_init/1]).
--export([enter_receivership/2]).
--export([enter_receivership/3]).
 -export([this_should_not_happen/2]).
 -export([jstr/2]).
 -export([jstr/1]).
@@ -48,143 +46,6 @@ this_should_not_happen(NodeDef,Arg) ->
             {ok, IdStr } = maps:find(id,NodeDef),
             {ok, ZStr } = maps:find(z,NodeDef),
             ErrCollector ! {it_happened, {IdStr,ZStr}, Arg}
-    end.
-
-increment_message_counter(NodeDef, CntName) ->
-    {ok, V} = maps:find(CntName, NodeDef),
-    maps:put(CntName, V + 1, NodeDef).
-
-
-%% this is used  by the assert success node, since it does nothing with a
-%% message (i.e. it has no output ports), it only needs the stop notification
-%% so shortcut the callback stuff.
-%%
-%% TODO Not to self: once I get the hang of MACROS replace this receivership
-%% TODO stuff with MACROS - this stuff needs to be fast since its called
-%% TODO whenever messages are bounced around a flow.
-%%
-%% TODO2 enter_receivership is bullshit. Because this does not allow
-%% TODO2 module nodes to be defined in a single module. What I want to
-%% TODO2 do is put all the link nodes (link in, link out and link call) into
-%% TODO2 into a single module but because enter_receiveship calls
-%% TODO2 "Module, handling_incoming" (for example) there can only be one
-%% TODO2 handle_incoming per module ... that defeats the purpose of having
-%% TODO2 "module,func" pairs defining nodes. Damn.
-%% TODO2 Alternative would be to pass in functions that handle the callbacks
-%% TODO2 but is that the best alternative?
-%%
-enter_receivership(Module,NodeDef,only_stop) ->
-    receive
-        {stop,WsName} ->
-            erlang:apply(Module, handle_stop, [NodeDef,WsName]);
-
-        {incoming,_Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
-            enter_receivership(Module, NodeDef2, only_stop);
-
-        {outgoing,_Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
-            enter_receivership(Module, NodeDef2, only_stop)
-    end;
-
-enter_receivership(Module,NodeDef,only_ws_events_and_stop) ->
-    receive
-        {stop,WsName} ->
-            erlang:apply(Module, handle_stop, [NodeDef,WsName]);
-
-        {ws_event,Details} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_websocket'),
-            NodeDef3 = erlang:apply(Module, handle_ws_event, [NodeDef2, Details]),
-            enter_receivership(Module, NodeDef3, only_ws_events_and_stop)
-    end;
-
-
-enter_receivership(Module,NodeDef,incoming_and_outgoing) ->
-    receive
-        {stop,_WsName} ->
-            ok;
-
-        {incoming,Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
-            NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
-            enter_receivership(Module, NodeDef3, incoming_and_outgoing);
-
-        {outgoing,Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
-            NodeDef3 = erlang:apply(Module, handle_outgoing, [NodeDef2,Msg]),
-            enter_receivership(Module, NodeDef3, incoming_and_outgoing)
-    end;
-
-%%
-%% link call nodes need a third type of message and that is the response
-%% from a link out node that is in return mode. But a link call node does
-%% not require an outgoing message type so ignore that.
-enter_receivership(Module,NodeDef,link_call_node) ->
-    receive
-        {stop,_WsName} ->
-            ok;
-
-        {incoming,Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
-            NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
-            enter_receivership(Module, NodeDef3, link_call_node);
-
-        {outgoing,_Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
-            enter_receivership(Module, NodeDef2, link_call_node);
-
-        {link_return,Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_link_return'),
-            NodeDef3 = erlang:apply(Module, handle_link_return, [NodeDef2,Msg]),
-            enter_receivership(Module, NodeDef3, link_call_node)
-    end;
-
-
-
-enter_receivership(Module,NodeDef,only_incoming) ->
-    receive
-        {stop,_WsName} ->
-            ok;
-
-        {incoming,Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
-            NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
-            enter_receivership(Module, NodeDef3, only_incoming);
-
-        {outgoing,_Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
-            enter_receivership(Module, NodeDef2, only_incoming)
-    end;
-
-enter_receivership(Module,NodeDef,Type) ->
-    throw(io_lib:format("Umatched receivership type '~p' for ~p ~p~n",
-                        [Type,Module,NodeDef])).
-
-enter_receivership(Module,NodeDef) ->
-    receive
-        {stop,WsName} ->
-            %% {ok, IdStr} = maps:find(id,NodeDef),
-            %% {ok, TypeStr} = maps:find(type,NodeDef),
-            %% io:format("node STOPPED id: [~p] type: [~p]\n",[IdStr,TypeStr]),
-
-            case erlang:function_exported(Module,handle_stop,2) of
-                true -> erlang:apply(Module, handle_stop, [NodeDef,WsName]);
-                _ -> ignore
-            end,
-            ok;
-
-        {incoming,Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
-            NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
-            enter_receivership(Module, NodeDef3);
-
-        %% Outgoing messages are message generators (e.g inject node) - send
-        %% this to the process to get it to generate a message, Those messages
-        %% become incoming messages
-        {outgoing,Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
-            NodeDef3 = erlang:apply(Module, handle_outgoing, [NodeDef2,Msg]),
-            enter_receivership(Module, NodeDef3)
     end.
 
 node_init(_NodeDef) ->
@@ -263,21 +124,21 @@ create_pid_for_node([NodeDef|MoreNodeDefs],Pids,WsName) ->
                                  maps:put('_mc_websocket', 0,
                                           maps:put('_mc_outgoing', 0,NodeDef)))),
 
-    Pid = spawn(Module, Fun, [NodeDef2]),
+    NodeDef3 = maps:put('_node_pid_', NodePid, NodeDef2),
+    Pid = spawn(Module, Fun, [NodeDef3]),
     register(NodePid, Pid),
 
     %% subscribe the assert nodes that listen to websocket events to the
     %% the websocket event exchange.
-    case maps:find(type,NodeDef2) of
+    case maps:find(type,NodeDef3) of
         {ok, <<"ut-assert-status">>} ->
-            case maps:find(nodeid,NodeDef2) of
-                {ok, TgtNodeId} ->
-                    websocket_event_exchange:subscribe(WsName,
-                                                       TgtNodeId,
-                                                       status,
-                                                       NodePid);
-                _ -> ignore
-            end;
+            {ok, TgtNodeId} = maps:find(nodeid,NodeDef3),
+            websocket_event_exchange:subscribe(WsName, TgtNodeId, status, NodePid);
+        {ok, <<"ut-assert-debug">>} ->
+            {ok, TgtNodeId} = maps:find(nodeid,NodeDef3),
+            {ok, MsgType} = maps:find(msgtype,NodeDef3),
+            websocket_event_exchange:subscribe(WsName, TgtNodeId, debug, MsgType,
+                                               NodePid);
         _ ->
             ignore
     end,
@@ -372,6 +233,8 @@ node_type_to_fun(<<"ut-assert-success">>) ->
     {node_assert_success, node_assert_success};
 node_type_to_fun(<<"ut-assert-status">>) ->
     {node_assert_status, node_assert_status};
+node_type_to_fun(<<"ut-assert-debug">>) ->
+    {node_assert_debug, node_assert_debug};
 
 node_type_to_fun(Unknown) ->
     io:format("noop node initiated for unknown type: ~p\n", [Unknown]),
