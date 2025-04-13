@@ -5,7 +5,7 @@
 -export([websocket_handle/2]).
 -export([websocket_info/2]).
 -export([terminate/3]).
--export([ws_send/2]).
+-export([ws_send_heartbeat/2]).
 
 init(Req, State) ->
     {cowboy_websocket, Req, State, #{ idle_timeout => 120000 }}.
@@ -17,18 +17,18 @@ websocket_init(State) ->
     %% TODO this won't work for two tabs in the same browser since
     %% TODO the cookie is attached to the host, not the tab. Same server
     %% TODO host, same cookie, same value.
+
     WsName = nodered:get_websocket_name(),
     register(WsName, self()),
-
-    %% io:format("WebSocket websocket init : ~p ==> ~p~n",[self(),WsName]),
-
     State2 = maps:merge(State, #{ wsname => WsName}),
-    ws_send(self(), State2),
+
+    Millis = erlang:system_time(millisecond),
 
     erlang:start_timer(
       500,
       WsName,
-      jiffy:encode([#{ topic => <<"notification/runtime-state">>,
+      jiffy:encode([#{ topic => hb, data => Millis },
+                    #{ topic => <<"notification/runtime-state">>,
                        data => #{ state => start, deploy => true }},
                     #{ topic => <<"cookie/set-wsname">>,
                        data => #{ name => WsName }}
@@ -37,8 +37,10 @@ websocket_init(State) ->
 
     {ok, State2}.
 
+%% This the endpoint that is hit when erlang:start_timer hits the timeout
+%% - this causes an loop of sending out a heartbeat (hb).
 websocket_info({timeout, _Ref, Msg}, State) ->
-    ws_send(self(), State),
+    ws_send_heartbeat(self(), State),
     {reply, {text, Msg}, State};
 
 websocket_info({data, Msg}, State) ->
@@ -99,7 +101,7 @@ websocket_info({unittest_results, FlowId, Status}, State) ->
 websocket_info(_Info, State) ->
     {ok, State}.
 
-ws_send(Pid, State) ->
+ws_send_heartbeat(Pid, State) ->
     {ok, SInterval} = maps:find(stats_interval,State),
     {ok, WsName} = maps:find(wsname,State),
 
@@ -114,13 +116,8 @@ ws_send(Pid, State) ->
 terminate(_Reason, _Req, State) ->
     case  maps:find(wsname,State) of
         {ok, WsName} ->
-            %% io:format("WebSocket websocket terminate : [~p] ~p ==> ~p~n",
-            %%           [Reason,self(),WsName]),
             unregister(WsName);
-
         _ ->
-            %% io:format("WebSocket websocket terminate : [~p] ~p~n",
-            %%           [Reason,self()]),
             ok
     end,
     ok.
