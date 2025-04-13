@@ -28,8 +28,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 318,
-        "y": 509,
+        "x": 266,
+        "y": 562,
         "wires": [
             [
                 "d5f4066d0a2c803f"
@@ -49,8 +49,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "counter",
-        "x": 376,
-        "y": 387,
+        "x": 573,
+        "y": 333,
         "wires": []
     },
     {
@@ -59,11 +59,24 @@
         "z": "700c94899fdd3334",
         "name": "",
         "nodeid": "d5f4066d0a2c803f",
-        "content": "",
-        "colour": "grey",
-        "shape": "dot",
-        "x": 619,
-        "y": 552.5,
+        "content": "1",
+        "colour": "blue",
+        "shape": "ring",
+        "inverse": false,
+        "x": 701,
+        "y": 580.5,
+        "wires": []
+    },
+    {
+        "id": "7a1fe79fe2b1d5b0",
+        "type": "ut-assert-debug",
+        "z": "700c94899fdd3334",
+        "name": "",
+        "nodeid": "d5f4066d0a2c803f",
+        "msgtype": "normal",
+        "inverse": false,
+        "x": 698,
+        "y": 520.5,
         "wires": []
     }
 ]

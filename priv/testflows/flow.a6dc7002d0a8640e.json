@@ -28,8 +28,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 363,
-        "y": 440,
+        "x": 234,
+        "y": 401,
         "wires": [
             [
                 "9d246621021e23a4"
@@ -40,7 +40,7 @@
         "id": "9d246621021e23a4",
         "type": "debug",
         "z": "a6dc7002d0a8640e",
-        "name": "debug 6",
+        "name": "inactive debug node",
         "active": false,
         "tosidebar": true,
         "console": false,
@@ -49,56 +49,34 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "counter",
-        "x": 603,
-        "y": 556,
+        "x": 514,
+        "y": 517,
         "wires": []
     },
     {
-        "id": "8d7902b15abf716d",
-        "type": "comment",
+        "id": "2ae253cd0e91a29d",
+        "type": "ut-assert-status",
         "z": "a6dc7002d0a8640e",
-        "name": "Can't test this at the moment. This is a placeholder.",
-        "info": "",
-        "x": 377,
-        "y": 190,
+        "name": "",
+        "nodeid": "9d246621021e23a4",
+        "content": "1",
+        "colour": "blue",
+        "shape": "ring",
+        "inverse": false,
+        "x": 686,
+        "y": 701,
         "wires": []
     },
     {
-        "id": "0f876d7eed689272",
-        "type": "inject",
+        "id": "cbcd79500f4e3c4a",
+        "type": "ut-assert-debug",
         "z": "a6dc7002d0a8640e",
         "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 254,
-        "y": 242.5,
-        "wires": [
-            [
-                "36405517abcc19a8"
-            ]
-        ]
-    },
-    {
-        "id": "36405517abcc19a8",
-        "type": "ut-assert-failure",
-        "z": "a6dc7002d0a8640e",
-        "name": "",
-        "x": 420,
-        "y": 271.5,
+        "nodeid": "9d246621021e23a4",
+        "msgtype": "normal",
+        "inverse": false,
+        "x": 683,
+        "y": 641,
         "wires": []
     }
 ]
