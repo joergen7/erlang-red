@@ -1163,7 +1163,6 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
                           return { id:
                                    id, label: wksp ? wksp.label : id
                           }
-
                         } else {
                             const instanceNode = RED.nodes.node(id)
                             const pathLabel = (instanceNode.name || RED.nodes.subflow(instanceNode.type.substring(8))?.name || instanceNode.type)
@@ -12320,6 +12319,10 @@ If this node isn't reached, then the test will fail.
       shape: {
         value: "dot",
         required: true
+      },
+      inverse: {
+        value: false,
+        required: true
       }
     },
 
@@ -12334,7 +12337,12 @@ If this node isn't reached, then the test will fail.
         if (node) {
           nodeLabel = RED.utils.getNodeLabel(node)
         }
-        return `Assert Status for ${nodeLabel}: ${this.colour} ${this.shape}`
+
+        if ( this.inverse )  {
+          return `Assert No Status for ${nodeLabel}`
+        } else {
+          return `Assert Status for ${nodeLabel}: ${this.colour} ${this.shape}`
+        }
       } else { return (this.name || this._def.paletteLabel) }
     },
 
@@ -12349,6 +12357,13 @@ If this node isn't reached, then the test will fail.
     },
 
     oneditprepare: function() {
+      $('#node-input-inverse').on('change', () => {
+        if ($('#node-input-inverse').is(":checked")) {
+          $('#ut-assert-status-opts-to-hide-on-inverse').fadeOut(300);
+        } else {
+          $('#ut-assert-status-opts-to-hide-on-inverse').fadeIn(300);
+        }
+      });
     },
 
     oneditcancel: function() {
@@ -12379,35 +12394,43 @@ If this node isn't reached, then the test will fail.
   </div>
 
   <div class="form-row">
-    <label for="node-input-content"><i class="fa fa-tag"></i> <span data-i18n="ut-assert-status.label.content"></span></label>
-    <input type="text" id="node-input-content" data-i18n="[placeholder]ut-assert-status.label.content">
+    <input type="checkbox" id="node-input-inverse"
+             style="display:inline-block; width:15px; vertical-align:baseline;">
+    <label for="node-input-inverse"><span data-i18n="ut-assert-status.label.inverse"></span></label>
   </div>
 
-  <div class="form-row">
-    <label for="node-input-colour">
-          <i class="fa fa-tag"></i>
-          <span>Colour</span>
-        </label>
+  <div id="ut-assert-status-opts-to-hide-on-inverse">
+    <div class="form-row">
+      <label for="node-input-content"><i class="fa fa-tag"></i> <span data-i18n="ut-assert-status.label.content"></span></label>
+      <input type="text" id="node-input-content" data-i18n="[placeholder]ut-assert-status.label.content">
+    </div>
 
-    <select id="node-input-colour">
-      <option value="red" selected=selected>Red</option>
-      <option value="grey">Grey</option>
-      <option value="blue">Blue</option>
-      <option value="yellow">Yellow</option>
-      <option value="green">Green</option>
-    </select>
-  </div>
+    <div class="form-row">
+      <label for="node-input-colour">
+            <i class="fa fa-tag"></i>
+            <span>Colour</span>
+          </label>
 
-  <div class="form-row">
-    <label for="node-input-shape">
-          <i class="fa fa-tag"></i>
-          <span>Shape</span>
-        </label>
+      <select id="node-input-colour">
+        <option value="red" selected=selected>Red</option>
+        <option value="grey">Grey</option>
+        <option value="blue">Blue</option>
+        <option value="yellow">Yellow</option>
+        <option value="green">Green</option>
+      </select>
+    </div>
 
-    <select id="node-input-shape">
-      <option value="dot" selected=selected>Dot</option>
-      <option value="ring">Ring</option>
-    </select>
+    <div class="form-row">
+      <label for="node-input-shape">
+            <i class="fa fa-tag"></i>
+            <span>Shape</span>
+          </label>
+
+      <select id="node-input-shape">
+        <option value="dot" selected=selected>Dot</option>
+        <option value="ring">Ring</option>
+      </select>
+    </div>
   </div>
 
 </script>
@@ -12419,14 +12442,6 @@ If this node isn't reached, then the test will fail.
 <!-- --- [red-module:@gorenje/erlang-red-unittest/ut-assert-debug] --- -->
 <script type="text/javascript">
   (function(){
-
-
-  function frontendSupportFunction() {
-  }
-
-  var functTwo = (arg) => {
-
-  };
 
   RED.nodes.registerType('ut-assert-debug',{
     color: '#D8BFD8',
@@ -12445,6 +12460,10 @@ If this node isn't reached, then the test will fail.
         value: "normal",
         required: true
       },
+      inverse: {
+        value: false,
+        required: true
+      },
     },
 
     inputs: 0,
@@ -12458,7 +12477,12 @@ If this node isn't reached, then the test will fail.
         if (node) {
           nodeLabel = RED.utils.getNodeLabel(node)
         }
-        return `Assert Debug of ${this.msgtype} for ${nodeLabel}`
+
+        if ( this.inverse ) {
+          return `Assert No Debug from ${nodeLabel}`
+        } else {
+          return `Assert Debug of ${this.msgtype} for ${nodeLabel}`
+        }
       } else { return (this.name || this._def.paletteLabel) }
     },
 
@@ -12473,6 +12497,13 @@ If this node isn't reached, then the test will fail.
     },
 
     oneditprepare: function() {
+      $('#node-input-inverse').on('change', () => {
+        if ($('#node-input-inverse').is(":checked")) {
+          $('#ut-assert-debug-opts-to-hide-on-inverse').fadeOut(300);
+        } else {
+          $('#ut-assert-debug-opts-to-hide-on-inverse').fadeIn(300);
+        }
+      });
     },
 
     oneditcancel: function() {
@@ -12496,22 +12527,30 @@ If this node isn't reached, then the test will fail.
     <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
   </div>
 
-    <div class="form-row">
-      <label for="node-input-nodeid"><i class="fa fa-tag"></i> <span data-i18n="ut-assert-debug.label.nodeid"></span></label>
-      <input type="text" id="node-input-nodeid" data-i18n="[placeholder]ut-assert-debug.label.nodeid">
-    </div>
+  <div class="form-row">
+    <label for="node-input-nodeid"><i class="fa fa-tag"></i> <span data-i18n="ut-assert-debug.label.nodeid"></span></label>
+    <input type="text" id="node-input-nodeid" data-i18n="[placeholder]ut-assert-debug.label.nodeid">
+  </div>
 
   <div class="form-row">
-    <label for="node-input-msgtype">
-            <i class="fa fa-tag"></i>
-            <span>Msg Type</span>
-          </label>
+      <input type="checkbox" id="node-input-inverse"
+           style="display:inline-block; width:15px; vertical-align:baseline;">
+    <label for="node-input-inverse"><span data-i18n="ut-assert-debug.label.inverse"></span></label>
+  </div>
 
-    <select id="node-input-msgtype">
-        <option value="normal">Normal</option>
-        <option value="warning">Warning</option>
-        <option value="error">Error</option>
-      </select>
+  <div id="ut-assert-debug-opts-to-hide-on-inverse">
+    <div class="form-row">
+      <label for="node-input-msgtype">
+              <i class="fa fa-tag"></i>
+              <span>Msg Type</span>
+            </label>
+
+      <select id="node-input-msgtype">
+          <option value="normal">Normal</option>
+          <option value="warning">Warning</option>
+          <option value="error">Error</option>
+        </select>
+    </div>
   </div>
 </script>
 <script type="text/html" data-help-name="ut-assert-debug">

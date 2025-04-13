@@ -2,6 +2,7 @@
     "@gorenje/erlang-red-unittest/ut-assert-debug": {
         "ut-assert-debug": {
             "label": {
+                "inverse": "Inverse, no debug message.",
                 "nodeid": "Node Id",
                 "statusset": "Status Set"
             },
@@ -26,6 +27,7 @@
         "ut-assert-status": {
             "label": {
                 "content": "Content",
+                "inverse": "Inverse, no status message",
                 "nodeid": "Node Id",
                 "statusset": "Status Set"
             },
