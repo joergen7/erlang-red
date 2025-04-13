@@ -24,7 +24,7 @@ handle_rule(<<"set">>,Rule,Msg) ->
         {ok, <<"msg">>} ->
             {ok, Prop} = maps:find(p,Rule),
             {ok, Value} = maps:find(to,Rule),
-            io:format("Setting ~p to ~p on ~p\n",[Prop,Value,Msg]),
+            io:format("Setting ~p to ~p\n",[Prop,Value]),
             %%
             %% TODO there is also a tot which is the type - ignore
             %%
