@@ -128,7 +128,7 @@ run_test_on_another_planet(FlowId,WsName) ->
     ErrColl = start_this_should_not_happen_service(FlowId,
                                                    <<"UnitTestEngine TestRun">>),
 
-    Pids = nodes:create_pid_for_node(Ary),
+    Pids = nodes:create_pid_for_node(Ary,WsName),
 
     [nodes:trigger_outgoing_messages(maps:find(type,ND),
                                      maps:find(id,ND),

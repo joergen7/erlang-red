@@ -3,7 +3,8 @@
 %%
 %% External exports, should be used by others.
 %%
--export([create_pid_for_node/1]).
+-export([create_pid_for_node/2]).
+
 -export([get_prop_value_from_map/2]).
 -export([get_prop_value_from_map/3]).
 -export([generate_id/0]).
@@ -85,6 +86,18 @@ enter_receivership(Module,NodeDef,only_stop) ->
             NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
             enter_receivership(Module, NodeDef2, only_stop)
     end;
+
+enter_receivership(Module,NodeDef,only_ws_events_and_stop) ->
+    receive
+        {stop,WsName} ->
+            erlang:apply(Module, handle_stop, [NodeDef,WsName]);
+
+        {ws_event,Details} ->
+            NodeDef2 = increment_message_counter(NodeDef,'_mc_websocket'),
+            NodeDef3 = erlang:apply(Module, handle_ws_event, [NodeDef2, Details]),
+            enter_receivership(Module, NodeDef3, only_ws_events_and_stop)
+    end;
+
 
 enter_receivership(Module,NodeDef,incoming_and_outgoing) ->
     receive
@@ -218,14 +231,14 @@ tabid_to_error_collector(IdStr) ->
 %% TODO2: don't test with the same set of nodes. Each node is given the
 %% TODO2: websocket name in the Msg object, so its not a problem for them
 %% TODO2: to send their messages to the correct processes.
-create_pid_for_node(Ary) ->
-    create_pid_for_node(Ary,[]).
+create_pid_for_node(Ary,WsName) ->
+    create_pid_for_node(Ary,[],WsName).
 
 
-create_pid_for_node([],Pids) ->
+create_pid_for_node([],Pids,_WsName) ->
     Pids;
 
-create_pid_for_node([NodeDef|MoreNodeDefs],Pids) ->
+create_pid_for_node([NodeDef|MoreNodeDefs],Pids,WsName) ->
     {ok, IdStr} = maps:find(id,NodeDef),
     {ok, TypeStr} = maps:find(type,NodeDef),
 
@@ -233,7 +246,7 @@ create_pid_for_node([NodeDef|MoreNodeDefs],Pids) ->
     %% the node does not need to have a Pid created for it.
     {Module, Fun} = node_type_to_fun(TypeStr, maps:find(d,NodeDef)),
 
-    NodePid = nodeid_to_pid(IdStr),
+    NodePid = nodeid_to_pid(WsName,IdStr),
 
     case whereis(NodePid) of
         undefined ->
@@ -247,13 +260,30 @@ create_pid_for_node([NodeDef|MoreNodeDefs],Pids) ->
     %% enter_receivership ==> 'mc' is message counter.
     NodeDef2 = maps:put('_mc_incoming', 0,
                         maps:put('_mc_link_return', 0,
-                                 maps:put('_mc_outgoing', 0, NodeDef))),
+                                 maps:put('_mc_websocket', 0,
+                                          maps:put('_mc_outgoing', 0,NodeDef)))),
 
     Pid = spawn(Module, Fun, [NodeDef2]),
     register(NodePid, Pid),
 
+    %% subscribe the assert nodes that listen to websocket events to the
+    %% the websocket event exchange.
+    case maps:find(type,NodeDef2) of
+        {ok, <<"ut-assert-status">>} ->
+            case maps:find(nodeid,NodeDef2) of
+                {ok, TgtNodeId} ->
+                    websocket_event_exchange:subscribe(WsName,
+                                                       TgtNodeId,
+                                                       status,
+                                                       NodePid);
+                _ -> ignore
+            end;
+        _ ->
+            ignore
+    end,
+
     %% io:format("~p ~p\n",[Pid,NodePid]),
-    create_pid_for_node(MoreNodeDefs, [NodePid|Pids]).
+    create_pid_for_node(MoreNodeDefs, [NodePid|Pids], WsName).
 
 %%
 %% The wires attribute is an array of arrays. The toplevel
@@ -340,6 +370,8 @@ node_type_to_fun(<<"ut-assert-failure">>) ->
     {node_assert_failure, node_assert_failure};
 node_type_to_fun(<<"ut-assert-success">>) ->
     {node_assert_success, node_assert_success};
+node_type_to_fun(<<"ut-assert-status">>) ->
+    {node_assert_status, node_assert_status};
 
 node_type_to_fun(Unknown) ->
     io:format("noop node initiated for unknown type: ~p\n", [Unknown]),

@@ -82,7 +82,7 @@ create_test_for_flow_file([FileName|MoreFileNames], Acc) ->
                                                                    TestName),
                        error_store:reset_errors(TabId),
 
-                       Pids = nodes:create_pid_for_node(Ary),
+                       Pids = nodes:create_pid_for_node(Ary,none),
 
                        [nodes:trigger_outgoing_messages(
                           maps:find(type,ND), maps:find(id,ND), none

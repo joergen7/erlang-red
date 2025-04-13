@@ -54,51 +54,16 @@
         "wires": []
     },
     {
-        "id": "a0a50574dafc1a88",
-        "type": "comment",
-        "z": "700c94899fdd3334",
-        "name": "Can't test this at the moment. This is a placeholder.",
-        "info": "",
-        "x": 407,
-        "y": 687,
-        "wires": []
-    },
-    {
-        "id": "5ae0dd52a4be6165",
-        "type": "inject",
+        "id": "805fcc499e5801e2",
+        "type": "ut-assert-status",
         "z": "700c94899fdd3334",
         "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 284,
-        "y": 739.5,
-        "wires": [
-            [
-                "c6961e5b3456ba45"
-            ]
-        ]
-    },
-    {
-        "id": "c6961e5b3456ba45",
-        "type": "ut-assert-failure",
-        "z": "700c94899fdd3334",
-        "name": "",
-        "x": 450,
-        "y": 768.5,
+        "nodeid": "d5f4066d0a2c803f",
+        "content": "",
+        "colour": "grey",
+        "shape": "dot",
+        "x": 619,
+        "y": 552.5,
         "wires": []
     }
 ]

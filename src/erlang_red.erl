@@ -60,6 +60,7 @@ start(_Type, _Args) ->
         }
     ]),
 
+    websocket_event_exchange:start(),
     flow_store_server:start(),
     unittest_engine:start(),
     error_store:start(),

@@ -8,6 +8,7 @@
 -export([ws_send_heartbeat/2]).
 
 init(Req, State) ->
+    %% runs in a different process so can't send out cookie to sent ws name
     {cowboy_websocket, Req, State, #{ idle_timeout => 120000 }}.
 
 websocket_handle(_Data, State) ->
@@ -38,7 +39,8 @@ websocket_init(State) ->
     {ok, State2}.
 
 %% This the endpoint that is hit when erlang:start_timer hits the timeout
-%% - this causes an loop of sending out a heartbeat (hb).
+%% - this causes a loop of sending out heartbeats (hb). node red responds
+%% with a 'pong' and that keeps the websocket connected.
 websocket_info({timeout, _Ref, Msg}, State) ->
     ws_send_heartbeat(self(), State),
     {reply, {text, Msg}, State};
@@ -46,29 +48,36 @@ websocket_info({timeout, _Ref, Msg}, State) ->
 websocket_info({data, Msg}, State) ->
     {reply, {text, Msg}, State};
 
+%%
+%% All the possible debug message that end up in the debug panel.
+%% Four types: normal, notice, warning and error, each has a different
+%% colour in the debug panel.
 websocket_info({debug, Data}, State) ->
     Data2 = maps:put( timestamp, erlang:system_time(millisecond), Data),
+    websocket_event_exchange:debug_msg(maps:find(wsname,State),normal,Data2),
     Msg = jiffy:encode([#{ topic => debug, data => Data2 } ]),
     {reply, {text, Msg}, State};
 
-websocket_info({error_debug, Data}, State) ->
+websocket_info({notice_debug, Data}, State) ->
     Data2 = maps:put( timestamp, erlang:system_time(millisecond), Data),
-    Data3 = maps:put( level, 20, Data2),
+    Data3 = maps:put( level, 40, Data2),
+    websocket_event_exchange:debug_msg(maps:find(wsname,State),notice,Data3),
     Msg = jiffy:encode([#{ topic => debug, data => Data3 } ]),
     {reply, {text, Msg}, State};
 
 websocket_info({warning_debug, Data}, State) ->
     Data2 = maps:put( timestamp, erlang:system_time(millisecond), Data),
     Data3 = maps:put( level, 30, Data2),
+    websocket_event_exchange:debug_msg(maps:find(wsname,State),warning,Data3),
     Msg = jiffy:encode([#{ topic => debug, data => Data3 } ]),
     {reply, {text, Msg}, State};
 
-websocket_info({notice_debug, Data}, State) ->
+websocket_info({error_debug, Data}, State) ->
     Data2 = maps:put( timestamp, erlang:system_time(millisecond), Data),
-    Data3 = maps:put( level, 40, Data2),
+    Data3 = maps:put( level, 20, Data2),
+    websocket_event_exchange:debug_msg(maps:find(wsname,State),error,Data3),
     Msg = jiffy:encode([#{ topic => debug, data => Data3 } ]),
     {reply, {text, Msg}, State};
-
 
 %%
 %% Here are the details to the possible values of the status
@@ -85,6 +94,10 @@ websocket_info({status, NodeId, Txt, Clr, Shp}, State) ->
                                       fill => nodes:jstr(Clr),
                                       shape => nodes:jstr(Shp)
                                     }}]),
+
+    websocket_event_exchange:node_status(maps:find(wsname,State),
+                                         NodeId,Txt,Clr,Shp),
+
     {reply, {text, Msg}, State};
 
 %%
@@ -116,6 +129,7 @@ ws_send_heartbeat(Pid, State) ->
 terminate(_Reason, _Req, State) ->
     case  maps:find(wsname,State) of
         {ok, WsName} ->
+            websocket_event_exchange:remove_ws(WsName),
             unregister(WsName);
         _ ->
             ok

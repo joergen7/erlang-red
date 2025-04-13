@@ -49,8 +49,9 @@ handle_json_body(Req, State) ->
 
     %% {FlowMap,_,_} = json:decode(Body, ok, #{object_push => Push}),
     %% {ok, NodeAry} = maps:find(flows,FlowMap),
+    %% WsName = nodered:websocket_name_from_request(Req),
 
-    %% Pids = nodes:create_pid_for_node(NodeAry),
+    %% Pids = nodes:create_pid_for_node(NodeAry, WsName),
 
     %% io:format("Pids for flow: ~p\n",[Pids]),
 
