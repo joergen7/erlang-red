@@ -32,6 +32,8 @@ jstr(Fmt,Args) ->
 
 jstr(Str) when is_binary(Str) ->
     Str;
+jstr(Str) when is_atom(Str) ->
+    atom_to_binary(Str);
 jstr(Str) ->
     list_to_binary(lists:flatten(Str)).
 
@@ -65,17 +67,14 @@ generate_id(Length) ->
 generate_id() ->
     generate_id(16).
 
-%%
-%% TODO ignore the WsName for now, but use it everywhere where it can
-%% TODO already be used.
-nodeid_to_pid(_WsName,IdStr) ->
-    nodeid_to_pid(IdStr).
-
-nodeid_to_pid(IdStr) ->
+%% processes for nodes are scoped by the websocket name so that each
+%% each websocket connection gets its own collection of processes for nodes.
+nodeid_to_pid(WsName,IdStr) ->
     binary_to_atom(
       list_to_binary(
         lists:flatten(
-          io_lib:format("~s~s", ["node_pid_",IdStr] )))).
+          io_lib:format("~s~s~s", ["node_pid_", jstr(WsName), IdStr] )))).
+
 
 tabid_to_error_collector(IdStr) ->
     binary_to_atom(
