@@ -2,7 +2,7 @@
     {
         "id": "5a06352874fa379d",
         "type": "tab",
-        "label": "[debug] only send debug message to server console if asked to",
+        "label": "[debug] (F) only send debug message to server console if asked to",
         "disabled": false,
         "info": "",
         "env": []

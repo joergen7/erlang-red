@@ -1,0 +1,98 @@
+[
+    {
+        "id": "4657dbc0aa4a97bb",
+        "type": "tab",
+        "label": "[change] set functionality",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "38e09ddf95db5069",
+        "type": "change",
+        "z": "4657dbc0aa4a97bb",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fubar",
+                "pt": "msg",
+                "to": "snafu",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 427,
+        "y": 425,
+        "wires": [
+            [
+                "1211d0e78178856d"
+            ]
+        ]
+    },
+    {
+        "id": "f86ba5f64447659b",
+        "type": "inject",
+        "z": "4657dbc0aa4a97bb",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "topic",
+        "payload": "",
+        "payloadType": "date",
+        "x": 253,
+        "y": 260,
+        "wires": [
+            [
+                "38e09ddf95db5069"
+            ]
+        ]
+    },
+    {
+        "id": "1211d0e78178856d",
+        "type": "ut-assert-values",
+        "z": "4657dbc0aa4a97bb",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg"
+            },
+            {
+                "t": "eql",
+                "p": "fubar",
+                "pt": "msg",
+                "to": "snafu",
+                "tot": "str"
+            },
+            {
+                "t": "eql",
+                "p": "topic",
+                "pt": "msg",
+                "to": "topic",
+                "tot": "str"
+            }
+        ],
+        "x": 634,
+        "y": 575,
+        "wires": [
+            []
+        ]
+    }
+]

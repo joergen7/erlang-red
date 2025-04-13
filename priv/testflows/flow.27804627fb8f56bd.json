@@ -2,7 +2,7 @@
     {
         "id": "27804627fb8f56bd",
         "type": "tab",
-        "label": "[http] nodes should be able handle requests",
+        "label": "[http] (F) nodes should be able handle requests",
         "disabled": false,
         "info": "",
         "env": []

@@ -2,7 +2,7 @@
     {
         "id": "6ff45e2a0ce77393",
         "type": "tab",
-        "label": "[debug] only debug specific property",
+        "label": "[debug] (F) only debug specific property",
         "disabled": false,
         "info": "",
         "env": []

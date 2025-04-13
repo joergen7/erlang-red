@@ -2,10 +2,16 @@
     {
         "id": "b6d4e4592b27a344",
         "type": "tab",
-        "label": "[link nodes] implement time out on link call node",
+        "label": "[link nodes] (F) implement time out on link call node",
         "disabled": false,
         "info": "",
-        "env": []
+        "env": [
+            {
+                "name": "TIMEOUT",
+                "value": "10",
+                "type": "str"
+            }
+        ]
     },
     {
         "id": "619a6a95f2109be9",

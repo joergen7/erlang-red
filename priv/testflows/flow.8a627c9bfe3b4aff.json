@@ -722,5 +722,17 @@
         "wires": [
             []
         ]
+    },
+    {
+        "id": "3601f011798f3c99",
+        "type": "ut-assert-debug",
+        "z": "8a627c9bfe3b4aff",
+        "name": "",
+        "nodeid": "4e7584b022af2a6b",
+        "msgtype": "normal",
+        "inverse": false,
+        "x": 1777,
+        "y": 294.5,
+        "wires": []
     }
 ]

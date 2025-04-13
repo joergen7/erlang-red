@@ -2,7 +2,7 @@
     {
         "id": "38616d22e1569aa5",
         "type": "tab",
-        "label": "[link nodes] link call to a dynamic link in node - by name",
+        "label": "[link nodes] (F) link call to a dynamic link in node - by name",
         "disabled": false,
         "info": "From the doco:\n\n```\nWhen the option Link Type is set to \"Dynamic target\" msg.target can be used to call a link in by name or id.\n\n    1. If there is a link in nodes with the same id, it will be called\n    2. If there are two or more link in nodes with the same name, an error will be raised\n    3. A link call cannot call a link in node inside a subflow\n```",
         "env": []

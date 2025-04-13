@@ -2,7 +2,7 @@
     {
         "id": "3ea113b4ec3b6e5e",
         "type": "tab",
-        "label": "[delay] set delay via msg.delay",
+        "label": "[delay] (F) set delay via msg.delay",
         "disabled": false,
         "info": "",
         "env": []

@@ -74,8 +74,8 @@
         "name": "",
         "nodeid": "9d246621021e23a4",
         "msgtype": "normal",
-        "inverse": false,
-        "x": 683,
+        "inverse": true,
+        "x": 673,
         "y": 641,
         "wires": []
     }
