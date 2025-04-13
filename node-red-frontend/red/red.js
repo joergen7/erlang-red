@@ -44943,6 +44943,7 @@ RED.clipboard = (function() {
 
         $("#red-ui-clipboard-dialog-ok").show();
         $("#red-ui-clipboard-dialog-cancel").show();
+        $("#red-ui-clipboard-dialog-create-testcase").hide();
         $("#red-ui-clipboard-dialog-export").hide();
         $("#red-ui-clipboard-dialog-download").hide();
         $("#red-ui-clipboard-dialog-import-conflict").hide();
@@ -45027,10 +45028,12 @@ RED.clipboard = (function() {
                 activeTab = tab.id;
                 if (tab.id === "red-ui-clipboard-dialog-export-tab-clipboard") {
                     $("#red-ui-clipboard-dialog-export").button("option","label", RED._("clipboard.export.copy"))
+                    $("#red-ui-clipboard-dialog-create-testcase").show();
                     $("#red-ui-clipboard-dialog-download").show();
                     $("#red-ui-clipboard-dialog-export-tab-library-filename").hide();
                 } else {
                     $("#red-ui-clipboard-dialog-export").button("option","label", RED._("clipboard.export.export"))
+                    $("#red-ui-clipboard-dialog-create-testcase").hide();
                     $("#red-ui-clipboard-dialog-download").hide();
                     $("#red-ui-clipboard-dialog-export-tab-library-filename").show();
                     activeLibraries[activeTab].focus();
@@ -45250,6 +45253,7 @@ RED.clipboard = (function() {
         $("#red-ui-clipboard-dialog-export-text").trigger("focus");
         $("#red-ui-clipboard-dialog-cancel").show();
         $("#red-ui-clipboard-dialog-export").show();
+        $("#red-ui-clipboard-dialog-create-testcase").show();
         $("#red-ui-clipboard-dialog-download").show();
         $("#red-ui-clipboard-dialog-import-conflict").hide();
 
@@ -45607,6 +45611,7 @@ RED.clipboard = (function() {
         $("#red-ui-clipboard-dialog-ok").hide();
         $("#red-ui-clipboard-dialog-cancel").show();
         $("#red-ui-clipboard-dialog-export").hide();
+        $("#red-ui-clipboard-dialog-create-testcase").hide();
         $("#red-ui-clipboard-dialog-download").hide();
         $("#red-ui-clipboard-dialog-import-conflict").show();
 

@@ -1,7 +1,32 @@
 {
+    "@gorenje/erlang-red-unittest/ut-assert-debug": {
+        "ut-assert-debug": {
+            "label": {
+                "nodeid": "Node Id",
+                "statusset": "Status Set"
+            },
+            "status": {
+                "timeout": "No more time to waiting",
+                "waiting": "Waiting for Godot"
+            }
+        }
+    },
     "@gorenje/erlang-red-unittest/ut-assert-failure": {
         "ut-assert-failure": {
             "label": {
+                "statusset": "Status Set"
+            },
+            "status": {
+                "timeout": "No more time to waiting",
+                "waiting": "Waiting for Godot"
+            }
+        }
+    },
+    "@gorenje/erlang-red-unittest/ut-assert-status": {
+        "ut-assert-status": {
+            "label": {
+                "content": "Content",
+                "nodeid": "Node Id",
                 "statusset": "Status Set"
             },
             "status": {

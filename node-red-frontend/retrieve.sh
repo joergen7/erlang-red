@@ -33,7 +33,7 @@ PyTHON=/usr/bin/python3
 
 echo "==> html, javascript & css"
 
-mkdir -p settings nodes
+mkdir -p settings nodes debug/view
 
 curl -s "${NODERED_URL}/favicon.ico?_=${CBSTMP}" -o favicon.ico
 
@@ -81,7 +81,6 @@ for fle in vendor/jquery/css/base/jquery-ui.min.css \
            types/node/buffer.d.ts \
            types/node/timers.d.ts \
            types/node/util.d.ts \
-           debug/view/debug-utils.js \
           ; do
     mkdir -p $(dirname $fle)
     curl -s "${NODERED_URL}/${fle}?v=${CBSTMP}" > ${fle}
@@ -97,6 +96,8 @@ done
 #curl -s "${NODERED_URL}/theme?_=${CBSTMP}" -o theme
 #curl -s "${NODERED_URL}/red/keymap.json?_=${CBSTMP}" -o red/keymap.json
 #curl -s "${NODERED_URL}/settings?_=${CBSTMP}" -o settings.json
+
+#curl -s "${NODERED_URL}/debug/view/debug-utils.js?_=${CBSTMP}" -o debug/view/debug-utils.js
 
 #curl -s "${NODERED_URL}/nodes?_=${CBSTMP}" -H 'Accept: text/html' > nodes/nodes.html
 
