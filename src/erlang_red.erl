@@ -16,28 +16,28 @@ start(_Type, _Args) ->
                %%
                %% Sock'em in the eye websocket
                %%
-               {"/node-red/comms", cowboy_nodered_websocket,
-                #{stats_interval => 30000}},
+               {"/node-red/comms",
+                nodered_websocket, #{stats_interval => 30000}},
 
                %%
                %% POST handlers
                %%
                %% this is a special one for this project
                {"/testcase/:workspaceid/create",
-                cowboy_testcase_post_handler, []},
+                erlangred_testcase_post_handler, []},
 
                %% these are required by Node-RED
                {"/UnitTesting/tests.json",
-                cowboy_unittesting_tests_get_handler, []},
+                erlangred_unittesting_tests_get_handler, []},
                {"/UnitTesting/:flowid/runtest",
-                cowboy_unittesting_runtests_get_handler, []},
+                erlangred_unittesting_runtests_get_handler, []},
                {"/UnitTesting/:flowid/retrieve",
-                cowboy_unittesting_retrieve_flow_handler, []},
+                erlangred_unittesting_retrieve_flow_handler, []},
 
-               {"/settings/user", cowboy_post_blow_handler, []},
-               {"/nodes", cowboy_post_blow_handler, []},
-               {"/flows", cowboy_flow_deploy_handler, []},
-               {"/inject/:nodeid", cowboy_inject_node_handler, []},
+               {"/settings/user",  return_empty_json, []},
+               {"/nodes",          return_empty_json, []},
+               {"/flows",          nodered_flow_deploy_handler, []},
+               {"/inject/:nodeid", nodered_inject_node_button_handler, []},
 
                %%
                %% GET handlers for delivery of the static content
@@ -45,14 +45,9 @@ start(_Type, _Args) ->
                %% TODO the constraints here DONT WORK - Cowboy just
                %% TODO ignores them because Bindings is empty.
                %%
-               {"/library/local/flows/", [{method,<<"GET">>}],
-                cowboy_get_empty_json_handler, []},
-
-               {"/credentials/[...]", [{method,<<"GET">>}],
-                cowboy_get_empty_json_handler, []},
-
-               {"/context/[...]", [{method,<<"GET">>}],
-                cowboy_get_empty_json_handler, []},
+               {"/library/local/flows/", [{method,<<"GET">>}], return_empty_json, []},
+               {"/credentials/[...]", [{method,<<"GET">>}], return_empty_json, []},
+               {"/context/[...]", [{method,<<"GET">>}], return_empty_json, []},
 
                {"/node-red", [{method,<<"GET">>}], cowboy_static,
                 {file, "./node-red-frontend/index.html"} },

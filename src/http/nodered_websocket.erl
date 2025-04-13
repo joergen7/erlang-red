@@ -1,4 +1,4 @@
--module(cowboy_nodered_websocket).
+-module(nodered_websocket).
 
 -export([init/2]).
 -export([websocket_init/1]).

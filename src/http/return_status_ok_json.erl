@@ -1,4 +1,9 @@
--module(cowboy_inject_node_handler).
+-module(return_status_ok_json).
+
+%%
+%% Post blower - anything that is posted here gets an "ok, you're doing good"
+%% response. A feel-good poster person.
+%%
 
 -behaviour(cowboy_rest).
 
@@ -20,24 +25,10 @@ content_types_accepted(Req, State) ->
      ], Req, State}.
 
 handle_json_body(Req, State) ->
-    Resp = cowboy_req:set_resp_body(<<"OK">>, Req),
-
-    case cowboy_req:binding(nodeid, Req) of
-        undefined ->
-            ok;
-        IdStr ->
-            NodePid = nodes:nodeid_to_pid(IdStr),
-
-            case whereis(NodePid) of
-                undefined ->
-                    ok;
-                _ ->
-                    NodePid ! nodered:create_outgoing_msg(
-                                nodered:websocket_name_from_request(Req))
-            end
-    end,
-
+    {ok, _Body, Req2} = cowboy_req:read_urlencoded_body(Req),
+    Resp = cowboy_req:set_resp_body(<<"{\"status\":\"ok\"}">>, Req2),
     {true, Resp, State}.
+
 
 format_error(Reason, Req) ->
     {[

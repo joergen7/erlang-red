@@ -1,4 +1,4 @@
--module(cowboy_testcase_post_handler).
+-module(erlangred_testcase_post_handler).
 
 %%
 %% Post blower - anything that is posted here gets an "ok, you're doing good"

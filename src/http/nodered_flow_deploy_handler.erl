@@ -1,4 +1,4 @@
--module(cowboy_flow_deploy_handler).
+-module(nodered_flow_deploy_handler).
 
 -behaviour(cowboy_rest).
 

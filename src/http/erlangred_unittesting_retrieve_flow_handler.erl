@@ -1,4 +1,4 @@
--module(cowboy_unittesting_retrieve_flow_handler).
+-module(erlangred_unittesting_retrieve_flow_handler).
 
 -behaviour(cowboy_rest).
 

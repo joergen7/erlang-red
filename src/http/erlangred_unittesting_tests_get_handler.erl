@@ -1,12 +1,4 @@
--module(cowboy_get_empty_json_handler).
-
-%%
-%% Get blower - this returns an empty hash. This is used for returning the
-%% credentials for a flow tab. Double click on a flow tab and this request
-%% is set.
-%%
-%% Also used for the contexts - that are forever empty.
-%%
+-module(erlangred_unittesting_tests_get_handler).
 
 -behaviour(cowboy_rest).
 
@@ -20,18 +12,18 @@ init(Req, State) ->
     {cowboy_rest, Req, State}.
 
 allowed_methods(Req, State) ->
-    {[<<"GET">>], Req, State}.
+    {ok,CurrMeth} = maps:find(method,Req),
+    {[CurrMeth], Req, State}.
 
 content_types_provided(Req,State) ->
     { [{{ <<"application">>, <<"json">>, '*'}, handle_response}], Req, State }.
 
 handle_response(Req, State) ->
-    case maps:find(path,Req) of
-        {ok, <<"/library/local/flows/">>} ->
-            {<<"[]">>, Req, State};
-        _ ->
-            {<<"{}">>, Req, State}
-    end.
+    flow_store_server:update_all_flows(),
+    Response = #{ status => ok,
+                  last_updated_at => "",
+                  data => flow_store_server:get_flow_data() },
+    { jiffy:encode(Response), Req, State}.
 
 format_error(Reason, Req) ->
     {[
