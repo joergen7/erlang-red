@@ -1,8 +1,9 @@
--module(flows).
+-module(ered_flows).
 
 -export([parse_flow_file/1]).
 -export([compute_timeout/1]).
 -export([append_tab_name_to_filename/2]).
+-export([is_test_case_pending/1]).
 
 %%
 %% Compute a timeout for the flow test, can be set in the flows.json file.
@@ -82,4 +83,36 @@ append_tab_name_to_filename([NodeDef | MoreNodeDefs], FileName, {ok, TabId}) ->
                 )};
         _ ->
             append_tab_name_to_filename(MoreNodeDefs, FileName, {ok, TabId})
+    end.
+
+%%
+%%
+get_pending_envvar([]) ->
+    false;
+get_pending_envvar([H | T]) ->
+    case maps:find(name, H) of
+        {ok, <<"PENDING">>} ->
+            case maps:find(value, H) of
+                {ok, Val} ->
+                    (Val == <<"true">>) or (Val == <<"TRUE">>);
+                _ ->
+                    false
+            end;
+        _ ->
+            get_pending_envvar(T)
+    end.
+
+is_test_case_pending([]) ->
+    false;
+is_test_case_pending([NodeDef | MoreNodeDefs]) ->
+    case maps:find(type, NodeDef) of
+        {ok, <<"tab">>} ->
+            case maps:find(env, NodeDef) of
+                {ok, EnvAry} ->
+                    get_pending_envvar(EnvAry);
+                _ ->
+                    1234
+            end;
+        _ ->
+            is_test_case_pending(MoreNodeDefs)
     end.

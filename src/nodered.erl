@@ -60,6 +60,10 @@ debug(WsName, Data, normal) ->
 
 unittest_result(WsName, FlowId, failed) ->
     send_on_if_ws(WsName, {unittest_results, FlowId, <<"failed">>});
+unittest_result(WsName, FlowId, pending) ->
+    send_on_if_ws(WsName, {unittest_results, FlowId, <<"pending">>});
+unittest_result(WsName, FlowId, unknown_testcase) ->
+    send_on_if_ws(WsName, {unittest_results, FlowId, <<"unknown_testcase">>});
 unittest_result(WsName, FlowId, success) ->
     send_on_if_ws(WsName, {unittest_results, FlowId, <<"success">>}).
 

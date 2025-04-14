@@ -129,7 +129,7 @@ compile_file_store([FileDetails|MoreFileNames], FileStore) ->
     FlowId = element(1,FileDetails),
     FileName = element(2,FileDetails),
 
-    Ary = flows:parse_flow_file(FileName),
+    Ary = ered_flows:parse_flow_file(FileName),
     TestName = tab_name_or_filename(Ary,FlowId),
 
     compile_file_store(MoreFileNames,

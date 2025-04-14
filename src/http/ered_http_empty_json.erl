@@ -1,4 +1,4 @@
--module(return_empty_json).
+-module(ered_http_empty_json).
 
 %%
 %% Get blower - this returns an empty hash. This is used for returning the

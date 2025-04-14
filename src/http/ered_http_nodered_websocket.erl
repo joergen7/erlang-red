@@ -1,4 +1,4 @@
--module(nodered_websocket).
+-module(ered_http_nodered_websocket).
 
 -export([init/2]).
 -export([websocket_init/1]).

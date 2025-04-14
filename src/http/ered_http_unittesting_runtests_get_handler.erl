@@ -1,4 +1,4 @@
--module(erlangred_unittesting_runtests_get_handler).
+-module(ered_http_unittesting_runtests_get_handler).
 
 -behaviour(cowboy_rest).
 

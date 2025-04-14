@@ -122,30 +122,43 @@ terminate(normal, _State) ->
 run_test_on_another_planet(FlowId,WsName) ->
     error_store:reset_errors(FlowId),
 
-    FileName = flow_store_server:get_filename(FlowId),
-    Ary = flows:parse_flow_file(FileName),
+    case flow_store_server:get_filename(FlowId) of
+        error ->
+            nodered:unittest_result(WsName,FlowId,unknown_testcase);
 
-    ErrColl = start_this_should_not_happen_service(FlowId,
-                                                   <<"UnitTestEngine TestRun">>),
+        FileName ->
+            Ary = ered_flows:parse_flow_file(FileName),
 
-    Pids = nodes:create_pid_for_node(Ary,WsName),
+            case ered_flows:is_test_case_pending(Ary) of
+                true ->
+                    nodered:unittest_result(WsName,FlowId,pending);
 
-    [nodes:trigger_outgoing_messages(maps:find(type,ND),
-                                     maps:find(id,ND),
-                                     WsName) || ND <- Ary],
+                false ->
+                    ErrColl = start_this_should_not_happen_service(
+                                FlowId,
+                                <<"UnitTestEngine TestRun">>
+                    ),
 
-    %% give the messages time to propagate through the
-    %% test flow
-    timer:sleep(flows:compute_timeout(Ary)),
+                    Pids = nodes:create_pid_for_node(Ary,WsName),
 
-    %% stop all nodes. Probably better would be to checking
-    %% the message queues of the nodes and if all are empty
-    %% it's probably safe to end the test case.
-    stop_all_pids(Pids,WsName),
+                    [nodes:trigger_outgoing_messages(maps:find(type,ND),
+                                                     maps:find(id,ND),
+                                                     WsName) || ND <- Ary],
 
-    %% some asserts work on the stop notification, give'em
-    %% time to generate their results.
-    timer:sleep(543),
-    ErrColl ! stop,
+                    %% give the messages time to propagate through the
+                    %% test flow
+                    timer:sleep(ered_flows:compute_timeout(Ary)),
 
-    send_off_test_result(WsName, FlowId, error_store:get_errors(FlowId)).
+                    %% stop all nodes. Probably better would be to checking
+                    %% the message queues of the nodes and if all are empty
+                    %% it's probably safe to end the test case.
+                    stop_all_pids(Pids,WsName),
+
+                    %% some asserts work on the stop notification, give'em
+                    %% time to generate their results.
+                    timer:sleep(543),
+                    ErrColl ! stop,
+
+                    send_off_test_result(WsName, FlowId, error_store:get_errors(FlowId))
+            end
+    end.

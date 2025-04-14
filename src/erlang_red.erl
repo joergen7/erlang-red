@@ -18,25 +18,29 @@ start(_Type, _Args) ->
           %%
           %% Sock'em in the eye websocket
           %%
-          {"/node-red/comms", nodered_websocket, #{stats_interval => 30000}},
+          {"/node-red/comms",
+              ered_http_nodered_websocket,
+              #{stats_interval => 30000}},
 
           %%
           %% POST handlers
           %%
 
           %% these are unique to Erlang-RED
-          {"/testcase/:workspaceid/create", erlangred_testcase_post_handler,
-              []},
-          {"/UnitTesting/tests.json", erlangred_unittesting_tests_get_handler,
-              []},
+          {"/testcase/:workspaceid/create",
+              erlangred_testcase_post_handler, []},
+          {"/UnitTesting/tests.json",
+              erlangred_unittesting_tests_get_handler, []},
           {"/UnitTesting/:flowid/runtest",
-              erlangred_unittesting_runtests_get_handler, []},
+              ered_http_unittesting_runtests_get_handler, []},
           {"/UnitTesting/:flowid/retrieve",
               erlangred_unittesting_retrieve_flow_handler, []},
+          {"/UnitTesting/halt",
+              ered_http_unittesting_halt_handler, []},
 
           %% these are required by Node-RED
-          {"/settings/user",  return_empty_json, []},
-          {"/nodes",          return_empty_json, []},
+          {"/settings/user",  ered_http_empty_json, []},
+          {"/nodes",          ered_http_empty_json, []},
           {"/flows",          nodered_flow_deploy_handler, []},
           {"/inject/:nodeid", nodered_inject_node_button_handler, []},
 
@@ -47,11 +51,12 @@ start(_Type, _Args) ->
           %% TODO the constraints here DONT WORK - Cowboy just
           %% TODO ignores them because Bindings is empty.
           %%
-          {"/library/local/flows/", [{method, <<"GET">>}], return_empty_json,
+          {"/library/local/flows/", [{method, <<"GET">>}],
+              ered_http_empty_json,
               []},
-          {"/credentials/[...]", [{method, <<"GET">>}], return_empty_json,
+          {"/credentials/[...]", [{method, <<"GET">>}], ered_http_empty_json,
               []},
-          {"/context/[...]", [{method, <<"GET">>}], return_empty_json, []},
+          {"/context/[...]", [{method, <<"GET">>}], ered_http_empty_json, []},
 
           {"/node-red", [{method, <<"GET">>}], cowboy_static,
               {file, "./node-red-frontend/index.html"}},
