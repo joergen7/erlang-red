@@ -69,7 +69,7 @@ unittest_result(WsName,FlowId,success) ->
 %%
 %%
 get_websocket_name() ->
-    binary_to_atom(list_to_binary(io_lib:format("ws~s",[nodes:generate_id(32)]))).
+    binary_to_atom(list_to_binary(io_lib:format("ws~s",[nodes:generate_id(6)]))).
 
 %%
 %% Obtain the WsName from the HTTP Req or empty atom
