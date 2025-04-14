@@ -5,7 +5,13 @@
         "label": "[delay] (F) set delay via msg.delay",
         "disabled": false,
         "info": "",
-        "env": []
+        "env": [
+            {
+                "name": "PENDING",
+                "value": "true",
+                "type": "str"
+            }
+        ]
     },
     {
         "id": "5ce3f61ddc3d2fb8",

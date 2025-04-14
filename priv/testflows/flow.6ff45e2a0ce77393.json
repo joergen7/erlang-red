@@ -5,7 +5,13 @@
         "label": "[debug] (F) only debug specific property",
         "disabled": false,
         "info": "",
-        "env": []
+        "env": [
+            {
+                "name": "PENDING",
+                "value": "true",
+                "type": "str"
+            }
+        ]
     },
     {
         "id": "fb8dfcf01789e02d",

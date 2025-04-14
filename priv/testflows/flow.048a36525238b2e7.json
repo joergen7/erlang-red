@@ -5,7 +5,13 @@
         "label": "[link nodes] (F) across flow tabs",
         "disabled": false,
         "info": "Need a test for doing this but that will required two flow tabs.",
-        "env": []
+        "env": [
+            {
+                "name": "PENDING",
+                "value": "true",
+                "type": "str"
+            }
+        ]
     },
     {
         "id": "fbef55d3850f8284",

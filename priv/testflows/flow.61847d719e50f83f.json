@@ -5,7 +5,13 @@
         "label": "[inject] (F) jsonata and json support",
         "disabled": false,
         "info": "",
-        "env": []
+        "env": [
+            {
+                "name": "PENDING",
+                "value": "true",
+                "type": "str"
+            }
+        ]
     },
     {
         "id": "ac4fe8553eafc3bf",

@@ -5,7 +5,13 @@
         "label": "[http] (F) nodes should be able handle requests",
         "disabled": false,
         "info": "",
-        "env": []
+        "env": [
+            {
+                "name": "PENDING",
+                "value": "true",
+                "type": "str"
+            }
+        ]
     },
     {
         "id": "fc6d2a8652ac0a13",

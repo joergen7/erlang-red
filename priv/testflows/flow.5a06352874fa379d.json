@@ -5,7 +5,13 @@
         "label": "[debug] (F) only send debug message to server console if asked to",
         "disabled": false,
         "info": "",
-        "env": []
+        "env": [
+            {
+                "name": "PENDING",
+                "value": "true",
+                "type": "str"
+            }
+        ]
     },
     {
         "id": "533fccaf269f163c",

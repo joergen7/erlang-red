@@ -10,6 +10,11 @@
                 "name": "TIMEOUT",
                 "value": "10",
                 "type": "str"
+            },
+            {
+                "name": "PENDING",
+                "value": "true",
+                "type": "str"
             }
         ]
     },
