@@ -37,19 +37,16 @@ init([]) ->
 %% specific implementaions
 handle_call({store}, _From, ErrorStore) ->
     {reply, ErrorStore, ErrorStore};
-
 handle_call({clear_errors, FlowId}, _From, ErrorStore) ->
     NewStore = maps:put(FlowId, [], ErrorStore),
-    {reply, NewStore, NewStore };
-
+    {reply, NewStore, NewStore};
 handle_call({get_errors, FlowId}, _From, ErrorStore) ->
-    case maps:find(FlowId,ErrorStore) of
+    case maps:find(FlowId, ErrorStore) of
         {ok, V} ->
-            {reply, V, ErrorStore };
+            {reply, V, ErrorStore};
         _ ->
-            {reply, [], ErrorStore }
+            {reply, [], ErrorStore}
     end;
-
 %%
 handle_call(_Msg, _From, ErrorStore) ->
     {reply, ErrorStore, ErrorStore}.
@@ -62,7 +59,6 @@ terminate(normal, _State) ->
 
 handle_cast(stop, State) ->
     {stop, normal, State};
-
 handle_cast(_Msg, Store) ->
     {noreply, Store}.
 
@@ -70,15 +66,14 @@ handle_cast(_Msg, Store) ->
 handle_info({store_msg, {NodeId, TabId, Msg}}, ErrorStore) ->
     case maps:find(TabId, ErrorStore) of
         {ok, Val} ->
-            Val2 = [ {NodeId,Msg} | Val],
-            {noreply, maps:put(TabId,Val2,ErrorStore) };
+            Val2 = [{NodeId, Msg} | Val],
+            {noreply, maps:put(TabId, Val2, ErrorStore)};
         _ ->
-            {noreply, maps:put(TabId,[{NodeId,Msg}],ErrorStore) }
+            {noreply, maps:put(TabId, [{NodeId, Msg}], ErrorStore)}
     end;
-
 handle_info(stop, ErrorStore) ->
     gen_server:cast(?MODULE, stop),
-    {noreply, ErrorStore }.
+    {noreply, ErrorStore}.
 
 code_change(_OldVersion, ErrorStore, _Extra) ->
     {ok, ErrorStore}.

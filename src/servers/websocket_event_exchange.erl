@@ -27,7 +27,6 @@
 -export([handle_info/2, terminate/2, code_change/3]).
 -export([stop/0, start/0]).
 
-
 %% subscribe to specific events
 -export([subscribe/4]).
 -export([subscribe/5]).
@@ -44,42 +43,40 @@
 %% for testing
 -export([getstore/0]).
 
-
 %%
 %%%%%
 %%%
 start() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
-debug_msg({ok,WsName},Type,Data) ->
+debug_msg({ok, WsName}, Type, Data) ->
     {ok, NodeId} = maps:find(id, Data),
     gen_server:call(?MODULE, {debug_event, WsName, NodeId, Type, Data});
-debug_msg(_,_,_) ->
+debug_msg(_, _, _) ->
     ignore.
 
-node_status({ok,WsName},NodeId,Txt,Clr,Shp) ->
+node_status({ok, WsName}, NodeId, Txt, Clr, Shp) ->
     gen_server:call(?MODULE, {status_event, WsName, NodeId, Txt, Clr, Shp});
-node_status(_,_,_,_,_) ->
+node_status(_, _, _, _, _) ->
     ignore.
 
 %%
 %%
-subscribe(WsName,NodeId,debug,Type,Cb) when is_atom(Type) ->
+subscribe(WsName, NodeId, debug, Type, Cb) when is_atom(Type) ->
     gen_server:call(?MODULE, {subscribe_to_debug, WsName, NodeId, Type, Cb});
-
-subscribe(WsName,NodeId,debug,Type,Cb) when is_binary(Type) ->
-    gen_server:call(?MODULE, {subscribe_to_debug, WsName, NodeId, binary_to_atom(Type), Cb});
-
-subscribe(_,_,_,_,_) ->
+subscribe(WsName, NodeId, debug, Type, Cb) when is_binary(Type) ->
+    gen_server:call(
+        ?MODULE, {subscribe_to_debug, WsName, NodeId, binary_to_atom(Type), Cb}
+    );
+subscribe(_, _, _, _, _) ->
     ignore.
 
-subscribe(WsName,NodeId,status,Cb) ->
+subscribe(WsName, NodeId, status, Cb) ->
     gen_server:call(?MODULE, {subscribe_to_status, WsName, NodeId, Cb});
-
-subscribe(_,_,_,_) ->
+subscribe(_, _, _, _) ->
     ignore.
 
-unsubscribe(WsName,Cb) ->
+unsubscribe(WsName, Cb) ->
     gen_server:call(?MODULE, {unsubscribe, WsName, Cb}).
 
 remove_ws(WsName) ->
@@ -88,25 +85,27 @@ remove_ws(WsName) ->
 clear() ->
     gen_server:call(?MODULE, {clear}).
 
-
 getstore() ->
     gen_server:call(?MODULE, {get}).
 
 %%
 %%
 init([]) ->
-    {ok, #{ status => #{}, debug => #{}}}.
+    {ok, #{status => #{}, debug => #{}}}.
 
 %%
 %%
 handle_call({debug_event, WsName, NodeId, Type, Data}, _From, SubscriberStore) ->
-    {ok, DebugStore} = maps:find(debug,SubscriberStore),
-    case maps:find(WsName,DebugStore) of
+    {ok, DebugStore} = maps:find(debug, SubscriberStore),
+    case maps:find(WsName, DebugStore) of
         {ok, Map} ->
-            case maps:find(NodeId,Map) of
+            case maps:find(NodeId, Map) of
                 {ok, CbAry} ->
-                    List = lists:filter( fun ({A,_}) -> A =:= Type end, CbAry ),
-                    [Cb ! {ws_event,{debug,WsName,NodeId,Type,Data}} || {_,Cb} <- List];
+                    List = lists:filter(fun({A, _}) -> A =:= Type end, CbAry),
+                    [
+                        Cb ! {ws_event, {debug, WsName, NodeId, Type, Data}}
+                     || {_, Cb} <- List
+                    ];
                 _ ->
                     ignore
             end;
@@ -115,15 +114,18 @@ handle_call({debug_event, WsName, NodeId, Type, Data}, _From, SubscriberStore) -
     end,
 
     {reply, ok, SubscriberStore};
-
-
-handle_call({status_event, WsName, NodeId, Txt, Clr, Shp}, _From, SubscriberStore) ->
-    {ok, StatusStore} = maps:find(status,SubscriberStore),
-    case maps:find(WsName,StatusStore) of
+handle_call(
+    {status_event, WsName, NodeId, Txt, Clr, Shp}, _From, SubscriberStore
+) ->
+    {ok, StatusStore} = maps:find(status, SubscriberStore),
+    case maps:find(WsName, StatusStore) of
         {ok, Map} ->
-            case maps:find(NodeId,Map) of
+            case maps:find(NodeId, Map) of
                 {ok, CbAry} ->
-                    [Cb ! {ws_event,{status,WsName,NodeId,Txt,Clr,Shp}} || Cb <- CbAry];
+                    [
+                        Cb ! {ws_event, {status, WsName, NodeId, Txt, Clr, Shp}}
+                     || Cb <- CbAry
+                    ];
                 _ ->
                     ignore
             end;
@@ -132,111 +134,137 @@ handle_call({status_event, WsName, NodeId, Txt, Clr, Shp}, _From, SubscriberStor
     end,
 
     {reply, ok, SubscriberStore};
-
 handle_call({subscribe_to_status, WsName, NodeId, Cb}, _From, SubscriberStore) ->
-    {ok, StatusStore} = maps:find(status,SubscriberStore),
+    {ok, StatusStore} = maps:find(status, SubscriberStore),
 
-    case maps:find(WsName,StatusStore) of
+    case maps:find(WsName, StatusStore) of
         {ok, Map} ->
-            case maps:find(NodeId,Map) of
+            case maps:find(NodeId, Map) of
                 {ok, Ary} ->
                     %%
                     %% Avoid duplication in the callbacks
-                    case lists:member(Cb,Ary) of
+                    case lists:member(Cb, Ary) of
                         false ->
-                            SStore2 = maps:put(WsName, maps:put(NodeId,
-                                                                [Cb|Ary],Map),
-                                               StatusStore);
+                            SStore2 = maps:put(
+                                WsName,
+                                maps:put(
+                                    NodeId,
+                                    [Cb | Ary],
+                                    Map
+                                ),
+                                StatusStore
+                            );
                         _ ->
-                            SStore2 = maps:put(WsName, maps:put(NodeId,Ary,Map),
-                                               StatusStore)
+                            SStore2 = maps:put(
+                                WsName,
+                                maps:put(NodeId, Ary, Map),
+                                StatusStore
+                            )
                     end;
                 _ ->
-                    SStore2 = maps:put(WsName, maps:put(NodeId,[Cb],Map),
-                                       StatusStore)
+                    SStore2 = maps:put(
+                        WsName,
+                        maps:put(NodeId, [Cb], Map),
+                        StatusStore
+                    )
             end;
         _ ->
-            SStore2 = maps:put(WsName,maps:put(NodeId,[Cb],#{}),StatusStore)
+            SStore2 = maps:put(WsName, maps:put(NodeId, [Cb], #{}), StatusStore)
     end,
 
     {reply, ok, maps:put(status, SStore2, SubscriberStore)};
+handle_call(
+    {subscribe_to_debug, WsName, NodeId, Type, Cb}, _From, SubscriberStore
+) ->
+    {ok, DebugStore} = maps:find(debug, SubscriberStore),
 
-
-handle_call({subscribe_to_debug, WsName, NodeId, Type, Cb}, _From, SubscriberStore) ->
-    {ok, DebugStore} = maps:find(debug,SubscriberStore),
-
-    case maps:find(WsName,DebugStore) of
+    case maps:find(WsName, DebugStore) of
         {ok, Map} ->
-            case maps:find(NodeId,Map) of
+            case maps:find(NodeId, Map) of
                 {ok, Ary} ->
                     %%
                     %% Avoid duplication
-                    case lists:keyfind(Cb,2,Ary) of
+                    case lists:keyfind(Cb, 2, Ary) of
                         false ->
-                            DStore2 = maps:put(WsName, maps:put(NodeId,[{Type,Cb}|Ary],
-                                                                Map),
-                                               DebugStore);
+                            DStore2 = maps:put(
+                                WsName,
+                                maps:put(
+                                    NodeId,
+                                    [{Type, Cb} | Ary],
+                                    Map
+                                ),
+                                DebugStore
+                            );
                         _ ->
-                            DStore2 = maps:put(WsName, maps:put(NodeId,Ary,Map),
-                                               DebugStore)
+                            DStore2 = maps:put(
+                                WsName,
+                                maps:put(NodeId, Ary, Map),
+                                DebugStore
+                            )
                     end;
                 _ ->
-                    DStore2 = maps:put(WsName, maps:put(NodeId,[{Type,Cb}],Map),
-                                       DebugStore)
+                    DStore2 = maps:put(
+                        WsName,
+                        maps:put(NodeId, [{Type, Cb}], Map),
+                        DebugStore
+                    )
             end;
         _ ->
-            DStore2 = maps:put(WsName,maps:put(NodeId, [{Type,Cb}], #{}),
-                               DebugStore)
+            DStore2 = maps:put(
+                WsName,
+                maps:put(NodeId, [{Type, Cb}], #{}),
+                DebugStore
+            )
     end,
 
     {reply, ok, maps:put(debug, DStore2, SubscriberStore)};
-
 handle_call({unsubscribe, WsName, Cb}, _From, SubscriberStore) ->
-    {ok, DebugStore} = maps:find(debug,SubscriberStore),
-    case maps:find(WsName,DebugStore) of
+    {ok, DebugStore} = maps:find(debug, SubscriberStore),
+    case maps:find(WsName, DebugStore) of
         {ok, Map} ->
-            RemoveCb = fun (Ary) ->
-                               lists:filter( fun ({_,V}) -> V /= Cb end, Ary)
-                       end,
-            Map4 = maps:from_list([{Key, RemoveCb(Ary)} ||
-                                      {Key,Ary} <- maps:to_list(Map)]),
+            RemoveCb = fun(Ary) ->
+                lists:filter(fun({_, V}) -> V /= Cb end, Ary)
+            end,
+            Map4 = maps:from_list([
+                {Key, RemoveCb(Ary)}
+             || {Key, Ary} <- maps:to_list(Map)
+            ]),
             DebugStore2 = maps:put(WsName, Map4, DebugStore);
         _ ->
             DebugStore2 = DebugStore
     end,
-    SubStore2 = maps:put(debug,DebugStore2,SubscriberStore),
+    SubStore2 = maps:put(debug, DebugStore2, SubscriberStore),
 
-    {ok, StatusStore} = maps:find(status,SubscriberStore),
-    case maps:find(WsName,StatusStore) of
+    {ok, StatusStore} = maps:find(status, SubscriberStore),
+    case maps:find(WsName, StatusStore) of
         {ok, Map2} ->
-            RemoveCb2 = fun (Ary) ->
-                                lists:filter( fun (V) -> V /= Cb end, Ary)
-                        end,
-            Map3 = maps:from_list([{Key, RemoveCb2(Ary)} ||
-                                      {Key,Ary} <- maps:to_list(Map2)]),
+            RemoveCb2 = fun(Ary) ->
+                lists:filter(fun(V) -> V /= Cb end, Ary)
+            end,
+            Map3 = maps:from_list([
+                {Key, RemoveCb2(Ary)}
+             || {Key, Ary} <- maps:to_list(Map2)
+            ]),
 
             StatusStore2 = maps:put(WsName, Map3, StatusStore);
         _ ->
             StatusStore2 = StatusStore
     end,
-    SubStore3 = maps:put(status,StatusStore2, SubStore2),
+    SubStore3 = maps:put(status, StatusStore2, SubStore2),
 
-    {reply, ok, SubStore3 };
-
+    {reply, ok, SubStore3};
 handle_call({remove_ws, WsName}, _From, SubscriberStore) ->
-    {ok, StatusStore} = maps:find(status,SubscriberStore),
-    {ok, DebugStore} = maps:find(debug,SubscriberStore),
+    {ok, StatusStore} = maps:find(status, SubscriberStore),
+    {ok, DebugStore} = maps:find(debug, SubscriberStore),
 
-    {reply, ok, #{ status => maps:remove(WsName,StatusStore),
-                   debug  => maps:remove(WsName,DebugStore) }};
-
+    {reply, ok, #{
+        status => maps:remove(WsName, StatusStore),
+        debug => maps:remove(WsName, DebugStore)
+    }};
 handle_call({clear}, _From, _SubscriberStore) ->
-    {reply, ok, #{ status => #{}, debug => #{}}};
-
+    {reply, ok, #{status => #{}, debug => #{}}};
 handle_call({get}, _From, SubscriberStore) ->
     {reply, SubscriberStore, SubscriberStore};
-
-
 handle_call(_Msg, _From, SubscriberStore) ->
     {reply, ok, SubscriberStore}.
 
@@ -249,10 +277,8 @@ handle_info(stop, SubscriberStore) ->
     gen_server:cast(?MODULE, stop),
     {noreply, SubscriberStore}.
 
-
 code_change(_OldVersion, SubscriberStore, _Extra) ->
     {ok, SubscriberStore}.
-
 
 stop() ->
     gen_server:cast(?MODULE, stop).
