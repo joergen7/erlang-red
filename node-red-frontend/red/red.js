@@ -2299,6 +2299,7 @@ RED.comms = (function() {
                 clearTimeout(clearErrorTimer);
                 clearErrorTimer = null;
             }
+            emit("disconnect");
             reconnectAttempts++;
             if (reconnectAttempts < 10) {
                 setTimeout(connectWS,1000);
@@ -2312,6 +2313,7 @@ RED.comms = (function() {
                 connectCountdownTimer = setInterval(function() {
                     connectCountdown--;
                     if (connectCountdown === 0) {
+
                         errornotification.update(RED._("notification.errors.lostConnection"));
                         clearInterval(connectCountdownTimer);
                         connectWS();
@@ -2415,7 +2417,8 @@ RED.comms = (function() {
         on,
         off,
         send,
-        emit: emitErlangRed
+        emit: emitErlangRed,
+        isConnected: () => { return (ws && ws.readyState == 1) }
     }
 })();
 ;RED.runtime = (function() {
