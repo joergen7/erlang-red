@@ -73,7 +73,7 @@ nodeid_to_pid(WsName,IdStr) ->
     binary_to_atom(
       list_to_binary(
         lists:flatten(
-          io_lib:format("~s~s~s", ["node_pid_", jstr(WsName), IdStr] )))).
+          io_lib:format("~s~s~s~s", ["node_pid_", jstr(WsName), "_", IdStr] )))).
 
 
 tabid_to_error_collector(IdStr) ->
