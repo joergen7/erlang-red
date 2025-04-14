@@ -9,12 +9,19 @@
 %% passes events on to listeners - these listeners check the events and
 %% potentially cause unit tests to fail.
 %%
-%% Data is scoped by websocket name, with each event store in a large
-%% array which contains tuples indexed by NodeId - FlowId is not necessary
-%% since NodeId are unique across all flows in a NodeRED instance, i.e. it
-%% is possible to duplicate NodeIds across flows but once they are installed
-%% (imported) into an NodeRED instance, the duplicated is flagged and node ids
-%% are replaced with new Ids.
+%% Listeners are scoped by websocket name, with each event (debug and status)
+%% store being a map of lists of callbacks. The map is indexed by NodeId, i.e
+%% the target node that is expected to generate an event (or not generate an
+%% websocket event). The two main users of this are assert_debug and
+%% assert_status testing nodes.
+%%
+%% Assert status and debug subscribe to this server with the NodeId of the
+%% node that they are checking. Hence the data structure here.
+%%
+%% Assert nodes subscribe with a Cb - callback but not a callback, In fact
+%% that is the named process id of their process. It is an atom of the form
+%% `node_pid_ws<name>_<nodeid>` - this is used to handle the unsubscribe
+%% call. It removes the Cb from all lists.
 %%
 -export([init/1, handle_call/3, handle_cast/2]).
 -export([handle_info/2, terminate/2, code_change/3]).
@@ -32,6 +39,10 @@
 %% unscribe the listeners
 -export([unsubscribe/2]).
 -export([remove_ws/1]).
+-export([clear/0]).
+
+%% for testing
+-export([getstore/0]).
 
 
 %%
@@ -53,7 +64,10 @@ node_status(_,_,_,_,_) ->
 
 %%
 %%
-subscribe(WsName,NodeId,debug,Type,Cb) ->
+subscribe(WsName,NodeId,debug,Type,Cb) when is_atom(Type) ->
+    gen_server:call(?MODULE, {subscribe_to_debug, WsName, NodeId, Type, Cb});
+
+subscribe(WsName,NodeId,debug,Type,Cb) when is_binary(Type) ->
     gen_server:call(?MODULE, {subscribe_to_debug, WsName, NodeId, binary_to_atom(Type), Cb});
 
 subscribe(_,_,_,_,_) ->
@@ -65,20 +79,25 @@ subscribe(WsName,NodeId,status,Cb) ->
 subscribe(_,_,_,_) ->
     ignore.
 
-unsubscribe(_WsName,_NodePid) ->
-    %%
-    %% TODO implement this - remove the node from all lists
-    %%
-    ok.
+unsubscribe(WsName,Cb) ->
+    gen_server:call(?MODULE, {unsubscribe, WsName, Cb}).
 
 remove_ws(WsName) ->
     gen_server:call(?MODULE, {remove_ws, WsName}).
+
+clear() ->
+    gen_server:call(?MODULE, {clear}).
+
+
+getstore() ->
+    gen_server:call(?MODULE, {get}).
 
 %%
 %%
 init([]) ->
     {ok, #{ status => #{}, debug => #{}}}.
 
+%%
 %%
 handle_call({debug_event, WsName, NodeId, Type, Data}, _From, SubscriberStore) ->
     {ok, DebugStore} = maps:find(debug,SubscriberStore),
@@ -113,13 +132,6 @@ handle_call({status_event, WsName, NodeId, Txt, Clr, Shp}, _From, SubscriberStor
     end,
 
     {reply, ok, SubscriberStore};
-
-handle_call({remove_ws, WsName}, _From, SubscriberStore) ->
-    {ok, StatusStore} = maps:find(status,SubscriberStore),
-    {ok, DebugStore} = maps:find(debug,SubscriberStore),
-
-    {reply, ok, #{ status => maps:remove(WsName,StatusStore),
-                   debug  => maps:remove(WsName,DebugStore) }};
 
 handle_call({subscribe_to_status, WsName, NodeId, Cb}, _From, SubscriberStore) ->
     {ok, StatusStore} = maps:find(status,SubscriberStore),
@@ -179,6 +191,50 @@ handle_call({subscribe_to_debug, WsName, NodeId, Type, Cb}, _From, SubscriberSto
 
     {reply, ok, maps:put(debug, DStore2, SubscriberStore)};
 
+handle_call({unsubscribe, WsName, Cb}, _From, SubscriberStore) ->
+    {ok, DebugStore} = maps:find(debug,SubscriberStore),
+    case maps:find(WsName,DebugStore) of
+        {ok, Map} ->
+            RemoveCb = fun (Ary) ->
+                               lists:filter( fun ({_,V}) -> V /= Cb end, Ary)
+                       end,
+            Map4 = maps:from_list([{Key, RemoveCb(Ary)} ||
+                                      {Key,Ary} <- maps:to_list(Map)]),
+            DebugStore2 = maps:put(WsName, Map4, DebugStore);
+        _ ->
+            DebugStore2 = DebugStore
+    end,
+    SubStore2 = maps:put(debug,DebugStore2,SubscriberStore),
+
+    {ok, StatusStore} = maps:find(status,SubscriberStore),
+    case maps:find(WsName,StatusStore) of
+        {ok, Map2} ->
+            RemoveCb2 = fun (Ary) ->
+                                lists:filter( fun (V) -> V /= Cb end, Ary)
+                        end,
+            Map3 = maps:from_list([{Key, RemoveCb2(Ary)} ||
+                                      {Key,Ary} <- maps:to_list(Map2)]),
+
+            StatusStore2 = maps:put(WsName, Map3, StatusStore);
+        _ ->
+            StatusStore2 = StatusStore
+    end,
+    SubStore3 = maps:put(status,StatusStore2, SubStore2),
+
+    {reply, ok, SubStore3 };
+
+handle_call({remove_ws, WsName}, _From, SubscriberStore) ->
+    {ok, StatusStore} = maps:find(status,SubscriberStore),
+    {ok, DebugStore} = maps:find(debug,SubscriberStore),
+
+    {reply, ok, #{ status => maps:remove(WsName,StatusStore),
+                   debug  => maps:remove(WsName,DebugStore) }};
+
+handle_call({clear}, _From, _SubscriberStore) ->
+    {reply, ok, #{ status => #{}, debug => #{}}};
+
+handle_call({get}, _From, SubscriberStore) ->
+    {reply, SubscriberStore, SubscriberStore};
 
 
 handle_call(_Msg, _From, SubscriberStore) ->
