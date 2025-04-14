@@ -188,7 +188,21 @@ function removeAllTestResults(dirList) {
 function highlightTestResult(dirList, flowid, status) {
   dirList.treeList('select', `flowid-treelist-${flowid}`);
 
-  $($($(dirList.treeList('selected').treeList.container).find('.red-ui-treeList-icon')).find('i')).prop('class', status == "failed" ? 'fa fa-remove' : 'fa fa-check').css('color', status == "failed" ? 'red' : 'green')
+  let clr = "green"
+  let shp = "fa-check"
+
+  switch (status) {
+    case "pending":
+      clr = "orange";
+      shp = "fa-circle-o";
+      break;
+    case "failed":
+      clr = "red";
+      shp = "fa-remove";
+      break;
+  }
+
+  $($($(dirList.treeList('selected').treeList.container).find('.red-ui-treeList-icon')).find('i')).prop('class', "fa " + shp).css('color', clr)
 }
 
 function clearAllNodeStatus() {
@@ -218,6 +232,69 @@ function clearNodeStatusForFlow(flowid) {
 function clearDebugPanel() {
   // from [debug node](https://github.com/node-red/node-red/blob/2854351909dee9f92597faba3f37239134294eec/packages/node_modules/%40node-red/nodes/core/common/21-debug.html#L437)
   RED.actions.invoke("core:clear-debug-messages")
+}
+
+function runTestForFlowId(flowid,dirList=undefined) {
+  if (flowid) {
+    if (dirList) {
+      resetTestResultsForFlowId(dirList,flowid)
+    }
+    clearNodeStatusForFlow(flowid)
+    
+    if ( $('#node-input-unittestingpull-clear-debug-on-testrun').is(':checked')) {
+      clearDebugPanel()
+    }
+    
+    $.get({
+      url: `/UnitTesting/${flowid}/runtest?cb=${new Date().getTime()}`
+    }).done((resp) => {
+      RED.notify(`Triggered test run for ${flowid}`, "success")
+    }).fail((e) => {
+      RED.notify("Failed to trigger test", "error")
+    });
+  }
+}
+
+function testCurrentWorkspace() {
+  if (RED.comms.isConnected && !RED.comms.isConnected()) {
+    return RED.notify("Not connected to server, websocket down", "error")
+  }
+  runTestForFlowId(RED.workspaces.active())
+}
+
+function sendUnittestngHalt() {
+  $.get({
+    url: `/UnitTesting/halt?cb=${new Date().getTime()}`
+  }).done((resp) => {
+    RED.notify(`Halt send successfully`, "success")
+  }).fail((e) => {
+    RED.notify("Failed to send halt command", "error")
+  });
+}
+
+function runAllTests(dirList) {
+  if (RED.comms.isConnected && !RED.comms.isConnected()) {
+    return RED.notify("Not connected to server, websocket down", "error")
+  }
+
+  expandAllTests(dirList)
+  clearAllNodeStatus()
+
+  setTimeout(() => {
+    removeAllTestResults(dirList);
+
+    if ( $('#node-input-unittestingpull-clear-debug-on-testrun').is(':checked')) {
+      clearDebugPanel()
+    }
+
+    $.get({
+      url: `/UnitTesting/all/runtest?cb=${new Date().getTime()}`
+    }).done((resp) => {
+      RED.notify(`Tests have been triggered`, "success")
+    }).fail((e) => {
+      RED.notify("Failed to trigger tests", "error")
+    });
+  }, 200)  
 }
 
    // Add your plugin as a new tabsheet in the right sidebar AFTER the flow editor is completely started
@@ -310,53 +387,36 @@ var search = $("#node-input-unittestingpull-sb-target-filter").searchBox({
 $('#node-input-unittestingpull-sb-test-flow-but').on('click', function (e) {
   e.preventDefault();
 
-
-  let flowid = $('#node-input-unittestingpull-flowid').val();
-
-  if (flowid) {
-    resetTestResultsForFlowId(dirList,flowid)
-    clearNodeStatusForFlow(flowid)
-    
-    if ( $('#node-input-unittestingpull-clear-debug-on-testrun').is(':checked')) {
-      clearDebugPanel()
-    }
-    
-    $.get({
-      url: `/UnitTesting/${flowid}/runtest?cb=${new Date().getTime()}`
-    }).done((resp) => {
-      RED.notify(`Triggered test run for ${flowid}`, "success")
-    }).fail((e) => {
-      RED.notify("Failed to trigger test", "error")
-    });
+  if (RED.comms.isConnected && !RED.comms.isConnected()) {
+    return RED.notify("Not connected to server, websocket down", "error")
+  }
+  
+  let sltd = dirList.treeList('selected')
+  if ( sltd.flowid) {
+    runTestForFlowId(sltd.flowid,dirList)
+  } else if (sltd.children) {
+    sltd.children.map( d => d.flowid ).map( d => runTestForFlowId(d,dirList))
   }
 })
 
 $('#node-input-unittestingpull-sb-testall-but').on('click', function (e) {
   e.preventDefault();
-
-  expandAllTests(dirList)
-  clearAllNodeStatus()
-
-  setTimeout(() => {
-    removeAllTestResults(dirList);
-    if ( $('#node-input-unittestingpull-clear-debug-on-testrun').is(':checked')) {
-      clearDebugPanel()
-    }
-    $.get({
-      url: `/UnitTesting/all/runtest?cb=${new Date().getTime()}`
-    }).done((resp) => {
-      RED.notify(`Triggered complete test run`, "success")
-    }).fail((e) => {
-      RED.notify("Failed to trigger tests", "error")
-    });
-  }, 200)
+  runAllTests(dirList)
 })
 
 let handleTestResult = (event, data) => {
   if (data.flowid) {
+    if ( data.status == "unknown_testcase") {
+      RED.notify("Test with flowid " + data.flowid + ": is unknown to us", {
+        type: "warning",
+        timeout: 3000
+      });
+      return
+    }
+
     RED.notify("Test result for flowid " + data.flowid + ": " + data.status, {
-      type: data.status == "failed" ? "error" : "success",
-      timeout: data.status == "failed" ? 3000 : 2000
+      type: data.status == "failed" ? "error" : (data.status == "pending" ? "warning" : "success"),
+      timeout: (data.status == "failed" || data.status == "pending") ? 3000 : 2000
     });
 
     highlightTestResult(dirList, data.flowid, data.status);
@@ -396,6 +456,26 @@ $('#node-input-unittestingpull-sb-refresh-list-but').on('click', function (e) {
 // debugging
 window.unitTestDirList = dirList;
 window.fakeTestResult = handleTestResult;
+
+RED.comms.on("connect", () => {
+  $('#node-input-unittestingpull-sb-testall-but').prop('disabled', false)
+  $('#node-input-unittestingpull-sb-test-flow-but').prop('disabled', false)
+});
+
+RED.comms.on("disconnect", () => {
+  $('#node-input-unittestingpull-sb-testall-but').prop('disabled', true)
+  $('#node-input-unittestingpull-sb-test-flow-but').prop('disabled', true)
+});
+
+if ( !RED.comms.isConnected || RED.comms.isConnected() ) {
+  $('#node-input-unittestingpull-sb-testall-but').prop('disabled', false)
+  $('#node-input-unittestingpull-sb-test-flow-but').prop('disabled', false)
+}
+
+RED.actions.add("unittesting:send-halt-to-test-server", sendUnittestngHalt)
+RED.actions.add("unittesting:test-current-workspace", testCurrentWorkspace)
+RED.actions.add("unittesting:run-all-tests", () => { runAllTests(dirList) } )
+
    };
    
    RED.events.on('runtime-state', initialiseConfigNodeOnce);
@@ -431,7 +511,7 @@ window.fakeTestResult = handleTestResult;
             </div>
          </div>
       </div>
-
+<!--
       <div class="form-row" style="margin-left: 10px; margin-top: 30px;">
          <label><span>Flow id to test:</span></label>
          <input type="text"
@@ -440,10 +520,11 @@ window.fakeTestResult = handleTestResult;
                      style="display:inline-block; width:40%; vertical-align:baseline;"
                      placeholder="Flow ID to Import">
       </div>
+ -->
       <div class="form-row" style="margin-left: 10px; margin-top: 30px;">
-         <button id="node-input-unittestingpull-sb-testall-but"
+         <button id="node-input-unittestingpull-sb-testall-but" disabled=disabled
                   class="red-ui-button">Test all</button>
-         <button id="node-input-unittestingpull-sb-test-flow-but"
+         <button id="node-input-unittestingpull-sb-test-flow-but" disabled=disabled
                   class="red-ui-button">Test one</button>
       </div>
 

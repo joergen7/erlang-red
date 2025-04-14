@@ -22,7 +22,11 @@
         "ctrl-alt-o": "core:open-project",
         "ctrl-shift-l": "core:show-event-log",
         "ctrl-shift-p":"core:show-action-list",
-        "alt-enter": "core:click-selected-nodes-button"
+        "alt-enter": "core:click-selected-nodes-button",
+        "alt-t a": "unittesting:run-all-tests",
+        "alt-t h": "unittesting:send-halt-to-test-server",
+        "ctrl-shift-a": "unittesting:run-all-tests",
+        "ctrl-shift-h": "unittesting:send-halt-to-test-server"
     },
     "red-ui-sidebar-node-config": {
         "backspace": "core:delete-config-selection",
@@ -32,6 +36,8 @@
         "ctrl-y": "core:redo"
     },
     "red-ui-workspace": {
+        "alt-t c": "unittesting:test-current-workspace",
+        "ctrl-shift-w": "unittesting:test-current-workspace",
         "backspace": "core:delete-selection",
         "ctrl-backspace": "core:delete-selection-and-reconnect",
         "delete": "core:delete-selection",
