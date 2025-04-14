@@ -60,6 +60,22 @@ do_change_str({ok, Prop}, {ok, FromStr}, {ok, ToStr}, Msg) ->
 
 %%
 %%
+do_set_value(Prop, Value, <<"str">>, Msg) ->
+    maps:put(binary_to_atom(Prop), Value, Msg);
+do_set_value(Prop, Value, <<"msg">>, Msg) ->
+    %% set a propery on the message to the value of another
+    %% property on the message
+    case maps:find(binary_to_atom(Value), Msg) of
+        {ok, Val} ->
+            maps:put(binary_to_atom(Prop), Val, Msg);
+        _ ->
+            maps:put(binary_to_atom(Prop), <<>>, Msg)
+    end;
+do_set_value(_, _, _, Msg) ->
+    Msg.
+
+%%
+%%
 handle_rules([], Msg) ->
     Msg;
 handle_rules([Rule | MoreRules], Msg) ->
@@ -75,11 +91,8 @@ handle_rule(<<"set">>, Rule, Msg) ->
         {ok, <<"msg">>} ->
             {ok, Prop} = maps:find(p, Rule),
             {ok, Value} = maps:find(to, Rule),
-            io:format("Setting ~p to ~p\n", [Prop, Value]),
-            %%
-            %% TODO there is also a tot which is the type - ignore
-            %%
-            maps:put(binary_to_atom(Prop), Value, Msg);
+            {ok, ToType} = maps:find(tot, Rule),
+            do_set_value(Prop, Value, ToType, Msg);
         _ ->
             Msg
     end;

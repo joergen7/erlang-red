@@ -84,10 +84,22 @@ handle_stop(NodeDef, WsName) ->
                     ErrMsg = nodes:jstr("Expected status from ~p\n", [NodeId]),
                     post_failure(NodeDef, WsName, ErrMsg);
                 _ ->
-                    success
+                    nodered:node_status(
+                        WsName,
+                        NodeDef,
+                        "assert succeed",
+                        "green",
+                        "ring"
+                    )
             end;
         _ ->
-            success
+            nodered:node_status(
+                WsName,
+                NodeDef,
+                "assert succeed",
+                "green",
+                "ring"
+            )
     end,
     NodeDef.
 

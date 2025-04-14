@@ -68,24 +68,54 @@ check_rule_against_msg(<<"noteql">>, <<"msg">>, Rule, Msg) ->
 %% supported at the time of writing this comment.
 check_rule_against_msg(<<"eql">>, <<"msg">>, Rule, Msg) ->
     {ok, Prop} = maps:find(p, Rule),
+    {ok, ToType} = maps:find(tot, Rule),
+    {ok, ReqVal} = maps:find(to, Rule),
 
     case maps:find(binary_to_atom(Prop), Msg) of
         {ok, Val} ->
-            {ok, ReqVal} = maps:find(to, Rule),
-            case is_same(ReqVal, Val) of
+            eql_msg_op(Prop, Val, ToType, ReqVal, Msg);
+        _ ->
+            {failed, nodes:jstr("Prop not set on msg: '~p'", [Prop])}
+    end;
+check_rule_against_msg(_Operator, _ObjectType, _, _) ->
+    unsupported.
+
+eql_msg_op(Prop, SrcVal, <<"str">>, ReqVal, _Msg) ->
+    case is_same(ReqVal, SrcVal) of
+        true ->
+            true;
+        _ ->
+            {failed,
+                nodes:jstr(
+                    "Prop '~p': Exp: '~p' Was: '~p'",
+                    [Prop, ReqVal, SrcVal]
+                )}
+    end;
+%% {
+%%     "t": "eql",
+%%     "p": "_msgid",
+%%     "pt": "msg",
+%%     "to": "originalmsgid",
+%%     "tot": "msg"
+%% }
+
+eql_msg_op(Prop, SrcVal, <<"msg">>, ReqProp, Msg) ->
+    case maps:find(binary_to_atom(ReqProp), Msg) of
+        {ok, ReqVal} ->
+            case is_same(ReqVal, SrcVal) of
                 true ->
                     true;
                 _ ->
                     {failed,
                         nodes:jstr(
                             "Prop '~p': Exp: '~p' Was: '~p'",
-                            [Prop, ReqVal, Val]
+                            [Prop, ReqVal, SrcVal]
                         )}
             end;
         _ ->
-            {failed, nodes:jstr("Prop not set on msg: '~p'", [Prop])}
+            {failed, nodes:jstr("Prop not set on msg: '~p'", [ReqProp])}
     end;
-check_rule_against_msg(_Operator, _ObjectType, _, _) ->
+eql_msg_op(_, _, _, _, _) ->
     unsupported.
 
 %%
