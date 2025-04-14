@@ -105,8 +105,8 @@ not_happen_loop(TestName, ErrorStorePid) ->
 create_test_for_flow_file([], Acc) ->
     Acc;
 create_test_for_flow_file([FileName | MoreFileNames], Acc) ->
-    Ary = flows:parse_flow_file(FileName),
-    {TabId, TestName} = flows:append_tab_name_to_filename(Ary, FileName),
+    Ary = ered_flows:parse_flow_file(FileName),
+    {TabId, TestName} = ered_flows:append_tab_name_to_filename(Ary, FileName),
 
     TestFunc = fun() ->
         ErCo = start_this_should_not_happen_service(
@@ -134,7 +134,7 @@ create_test_for_flow_file([FileName | MoreFileNames], Acc) ->
 
         %% give the messages time to propagate through the
         %% test flow
-        timer:sleep(flows:compute_timeout(Ary)),
+        timer:sleep(ered_flows:compute_timeout(Ary)),
 
         %% stop all nodes. Probably better would be to check
         %% the message queues of the nodes and if all are empty
@@ -153,14 +153,30 @@ create_test_for_flow_file([FileName | MoreFileNames], Acc) ->
     %% that eunit will wait, if the test exits early, then eunit does not
     %% wait for thirty seconds in total. So this could also be a day and
     %% half, it makes no difference.
-    create_test_for_flow_file(
-        MoreFileNames,
-        [
-            {
+
+    %% TODO should really move away from Eunit, it does not support
+    %% TODO pending or skipping test cases, so this hack solution.
+    case ered_flows:is_test_case_pending(Ary) of
+        true ->
+            TestCase = {
+                list_to_binary(color:yellow(TestName)),
+                {timeout, 5, fun() ->
+                    ?debugMsg(
+                        color:yellow(io_lib:format("PENDING ~s", [TestName]))
+                    )
+                end}
+            };
+        false ->
+            TestCase = {
                 list_to_binary(color:yellow(TestName)),
                 {timeout, 30, fun() -> TestFunc() end}
             }
-            | Acc
+    end,
+
+    create_test_for_flow_file(
+        MoreFileNames,
+        [
+            TestCase | Acc
         ]
     ).
 

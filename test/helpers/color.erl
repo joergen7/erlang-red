@@ -2,6 +2,7 @@
 %% MIT License
 %% Taken from https://github.com/julianduque/erlang-color/blob/master/src/color.erl
 %%
+%%% % @noformat
 -module(color).
 -export([black/1, blackb/1, red/1, redb/1, green/1, greenb/1, blue/1, blueb/1]).
 -export([yellow/1, yellowb/1, magenta/1, magentab/1, cyan/1, cyanb/1, white/1, whiteb/1]).

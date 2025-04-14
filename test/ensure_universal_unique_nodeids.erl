@@ -25,7 +25,7 @@ push_nodeid_onto_stack([NodeDef | T], Stack, FileName) ->
 map_of_nodeids([], Map) ->
     Map;
 map_of_nodeids([FileName | FileNames], Stack) ->
-    Ary = flows:parse_flow_file(FileName),
+    Ary = ered_flows:parse_flow_file(FileName),
     Stack2 = push_nodeid_onto_stack(Ary, Stack, FileName),
     map_of_nodeids(FileNames, Stack2).
 
