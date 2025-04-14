@@ -22,18 +22,32 @@ content_types_provided(Req, State) ->
 
 handle_response(Req, State) ->
     WsName = nodered:websocket_name_from_request(Req),
+    Query = cowboy_req:parse_qs(Req),
+
+    TestPendingTests =
+        case lists:keyfind(<<"testpend">>, 1, Query) of
+            false ->
+                false;
+            {<<"testpend">>, <<"true">>} ->
+                true;
+            {<<"testpend">>, <<"false">>} ->
+                false;
+            _ ->
+                false
+        end,
+
     case cowboy_req:binding(flowid, Req) of
         undefined ->
             {<<"{}">>, Req, State};
         <<"all">> ->
             AllFlowIds = flow_store_server:all_flow_ids(),
             [
-                unittest_engine ! {start_test, FlowId, WsName}
+                unittest_engine ! {start_test, FlowId, WsName, TestPendingTests}
              || FlowId <- AllFlowIds
             ],
             {jiffy:encode(#{status => ok}), Req, State};
         FlowId ->
-            unittest_engine ! {start_test, FlowId, WsName},
+            unittest_engine ! {start_test, FlowId, WsName, TestPendingTests},
             {jiffy:encode(#{status => ok}), Req, State}
     end.
 
