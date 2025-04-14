@@ -21,3 +21,6 @@ eunit-test:
 
 dialyzer:
 	rebar3 dialyzer
+
+format-code:
+	rebar3 fmt -w
