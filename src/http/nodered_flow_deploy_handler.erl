@@ -2,12 +2,14 @@
 
 -behaviour(cowboy_rest).
 
--export([init/2,
-         allowed_methods/2,
-         content_types_accepted/2,
-         handle_flow_restart/2,
-         handle_json_body/2,
-         format_error/2]).
+-export([
+    init/2,
+    allowed_methods/2,
+    content_types_accepted/2,
+    handle_flow_restart/2,
+    handle_json_body/2,
+    format_error/2
+]).
 
 -export([read_body/2]).
 
@@ -19,20 +21,25 @@ init(Req, State) ->
 
 read_body(Req0, Acc) ->
     case cowboy_req:read_body(Req0) of
-        {ok, Data, Req} -> {ok, << Acc/binary, Data/binary >>, Req};
-        {more, Data, Req} -> read_body(Req, << Acc/binary, Data/binary >>)
+        {ok, Data, Req} -> {ok, <<Acc/binary, Data/binary>>, Req};
+        {more, Data, Req} -> read_body(Req, <<Acc/binary, Data/binary>>)
     end.
 
 allowed_methods(Req, State) ->
     {[<<"POST">>], Req, State}.
 
 content_types_accepted(Req, State) ->
-    {[{<<"application/json">>, handle_json_body},
-      {<<"application/json; charset=utf-8">>, handle_json_body},
-      {<<"application/x-json-restart">>, handle_flow_restart }
-     ], Req, State}.
+    {
+        [
+            {<<"application/json">>, handle_json_body},
+            {<<"application/json; charset=utf-8">>, handle_json_body},
+            {<<"application/x-json-restart">>, handle_flow_restart}
+        ],
+        Req,
+        State
+    }.
 
-handle_flow_restart(Req,State) ->
+handle_flow_restart(Req, State) ->
     Resp = cowboy_req:set_resp_body(<<"{\"rev\":\"dead73d0\"}">>, Req),
     {true, Resp, State}.
 
@@ -59,7 +66,10 @@ handle_json_body(Req, State) ->
     {true, Resp, State}.
 
 format_error(Reason, Req) ->
-    {[
-        {<<"error">>, <<"bad_request">>},
-        {<<"reason">>, Reason}
-    ], Req}.
+    {
+        [
+            {<<"error">>, <<"bad_request">>},
+            {<<"reason">>, Reason}
+        ],
+        Req
+    }.

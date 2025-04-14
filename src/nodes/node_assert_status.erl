@@ -1,6 +1,5 @@
 -module(node_assert_status).
 
-
 %%
 %% Assert node for checking whether another node generated a status
 %% update for itself. Or not.
@@ -13,35 +12,44 @@
 
 -export([post_failure/3]).
 
-is_same({A,A}) -> true;
-is_same({_,_}) -> false.
+is_same({A, A}) -> true;
+is_same({_, _}) -> false.
 
-check_attributes({ExpTxt,Txt}) ->
-    case is_same({ExpTxt,Txt}) of
+check_attributes({ExpTxt, Txt}) ->
+    case is_same({ExpTxt, Txt}) of
         false ->
             case ExpTxt of
                 %% ignore this check if expected text is empty.
                 <<>> -> [];
-                _ ->    nodes:jstr("Content mismatch ~p\n",[{ExpTxt,Txt}])
+                _ -> nodes:jstr("Content mismatch ~p\n", [{ExpTxt, Txt}])
             end;
-        true ->  []
+        true ->
+            []
     end.
 
-check_attributes(Shp,Txt) ->
+check_attributes(Shp, Txt) ->
     case is_same(Shp) of
-        false -> [nodes:jstr("Shape mismatch ~p\n",[Shp]) |
-                  [check_attributes(Txt)]];
-        true ->  [check_attributes(Txt)]
+        false ->
+            [
+                nodes:jstr("Shape mismatch ~p\n", [Shp])
+                | [check_attributes(Txt)]
+            ];
+        true ->
+            [check_attributes(Txt)]
     end.
 
-check_attributes(Clr,Shp,Txt) ->
+check_attributes(Clr, Shp, Txt) ->
     case is_same(Clr) of
-        false -> [nodes:jstr("Colour mismatch ~p\n",[Clr]) |
-                  [check_attributes(Shp,Txt)]];
-        true ->  [check_attributes(Shp,Txt)]
+        false ->
+            [
+                nodes:jstr("Colour mismatch ~p\n", [Clr])
+                | [check_attributes(Shp, Txt)]
+            ];
+        true ->
+            [check_attributes(Shp, Txt)]
     end.
 
-
+%% erlfmt:ignore equals and arrows should line up here.
 post_failure(NodeDef,WsName,ErrMsg) ->
     {ok, IdStr} = maps:find(id,NodeDef),
     {ok, TypeStr} = maps:find(type,NodeDef),
@@ -67,14 +75,14 @@ post_failure(NodeDef,WsName,ErrMsg) ->
 
 %%
 %%
-handle_stop(NodeDef,WsName) ->
-    case maps:find('_mc_websocket',NodeDef) of
-        {ok,0} ->
-            case maps:find(inverse,NodeDef) of
-                {ok,false} ->
-                    {ok, NodeId} = maps:find(nodeid,NodeDef),
-                    ErrMsg = nodes:jstr("Expected status from ~p\n",[NodeId]),
-                    post_failure(NodeDef,WsName,ErrMsg);
+handle_stop(NodeDef, WsName) ->
+    case maps:find('_mc_websocket', NodeDef) of
+        {ok, 0} ->
+            case maps:find(inverse, NodeDef) of
+                {ok, false} ->
+                    {ok, NodeId} = maps:find(nodeid, NodeDef),
+                    ErrMsg = nodes:jstr("Expected status from ~p\n", [NodeId]),
+                    post_failure(NodeDef, WsName, ErrMsg);
                 _ ->
                     success
             end;
@@ -85,9 +93,10 @@ handle_stop(NodeDef,WsName) ->
 
 %%
 %%
-handle_ws_event(NodeDef, {status,WsName,NodeId,Txt,Clr,Shp}) ->
-    case maps:find(inverse,NodeDef) of
-        {ok,true} ->
+%% erlfmt:ignore equals and arrows should line up here.
+handle_ws_event(NodeDef, {status, WsName, NodeId, Txt, Clr, Shp}) ->
+    case maps:find(inverse, NodeDef) of
+        {ok, true} ->
             ErrMsg = nodes:jstr("No status expected from ~p\n",[NodeId]),
             post_failure(NodeDef,WsName,ErrMsg);
 

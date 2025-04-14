@@ -18,114 +18,109 @@
 %% that is specified by the "checkall" attribute.
 %%
 
-is_same(Same,Same) -> true;
-is_same(_,_) -> false.
+is_same(Same, Same) -> true;
+is_same(_, _) -> false.
 
-is_gt(A,B) when A > B -> true;
-is_gt(_,_) -> false.
+is_gt(A, B) when A > B -> true;
+is_gt(_, _) -> false.
 
-is_lt(A,B) when A < B -> true;
-is_lt(_,_) -> false.
+is_lt(A, B) when A < B -> true;
+is_lt(_, _) -> false.
 
 int_to_float(Val) ->
     case string:to_integer(Val) of
-        {error,_} ->
+        {error, _} ->
             case is_integer(Val) of
                 true ->
-                    {Val,ok};
+                    {Val, ok};
                 _ ->
                     io:format("Unabel to convert to num ~p\n", [Val]),
-                    {0,error}
+                    {0, error}
             end;
-        {V,R} ->
-            {V,R}
+        {V, R} ->
+            {V, R}
     end.
 
 to_num(Val) ->
     case string:to_float(Val) of
-        {error,_} ->
+        {error, _} ->
             int_to_float(Val);
-        {V,R} ->
-            {V,R}
+        {V, R} ->
+            {V, R}
     end.
 
-to_num(V1,V2) ->
-    {V1num,_} = to_num(V1),
-    {V2num,_} = to_num(V2),
-    {V1num,V2num}.
+to_num(V1, V2) ->
+    {V1num, _} = to_num(V1),
+    {V2num, _} = to_num(V2),
+    {V1num, V2num}.
 
 %%
 %%
-does_rule_match(<<"eq">>,<<"str">>,OpVal,MsgVal) ->
-    is_same(OpVal,MsgVal);
-
-does_rule_match(<<"eq">>,<<"num">>,OpVal,MsgVal) ->
-    {Vop,Vmsg} = to_num(OpVal, MsgVal),
+does_rule_match(<<"eq">>, <<"str">>, OpVal, MsgVal) ->
+    is_same(OpVal, MsgVal);
+does_rule_match(<<"eq">>, <<"num">>, OpVal, MsgVal) ->
+    {Vop, Vmsg} = to_num(OpVal, MsgVal),
     is_same(Vmsg, Vop);
-
-does_rule_match(<<"gt">>,_,OpVal,MsgVal) ->
-    {Vop,Vmsg} = to_num(OpVal, MsgVal),
+does_rule_match(<<"gt">>, _, OpVal, MsgVal) ->
+    {Vop, Vmsg} = to_num(OpVal, MsgVal),
     is_gt(Vmsg, Vop);
-
-does_rule_match(<<"lt">>,_,OpVal,MsgVal) ->
-    {Vop,Vmsg} = to_num(OpVal, MsgVal),
+does_rule_match(<<"lt">>, _, OpVal, MsgVal) ->
+    {Vop, Vmsg} = to_num(OpVal, MsgVal),
     is_lt(Vmsg, Vop);
-
-does_rule_match(Op,Type,_OpVal,_MsgVal) ->
-    io:format("switch: unsupported operator or type: ~p ~p\n",[Op, Type]),
+does_rule_match(Op, Type, _OpVal, _MsgVal) ->
+    io:format("switch: unsupported operator or type: ~p ~p\n", [Op, Type]),
     false.
 
-
 %%
 %%
-get_value_from_msg({ok,<<"msg">>},{ok,PropName}, Msg) ->
-    case maps:find(binary_to_atom(PropName),Msg) of
+get_value_from_msg({ok, <<"msg">>}, {ok, PropName}, Msg) ->
+    case maps:find(binary_to_atom(PropName), Msg) of
         {ok, Val} ->
             Val;
         _ ->
-            io_lib:format("switch: property not found on msg: [~p] ~p",[PropName,
-                                                                        Msg])
+            io_lib:format("switch: property not found on msg: [~p] ~p", [
+                PropName,
+                Msg
+            ])
     end;
-
-get_value_from_msg({ok,PropType},{ok,PropName}, _Msg) ->
-    io_lib:format("switch: unsupported property: ~p.~p",[PropType, PropName]);
-
-get_value_from_msg(_,_,_) ->
-    io_lib:format("switch: property not found\n",[]).
+get_value_from_msg({ok, PropType}, {ok, PropName}, _Msg) ->
+    io_lib:format("switch: unsupported property: ~p.~p", [PropType, PropName]);
+get_value_from_msg(_, _, _) ->
+    io_lib:format("switch: property not found\n", []).
 
 %%
 %%
-does_rule_match_catchall([],_,_,_) ->
+does_rule_match_catchall([], _, _, _) ->
     ok;
-does_rule_match_catchall([Rule|Rules], Val, [Wires|MoreWires], Msg) ->
-    {ok, Op}    = maps:find(t,Rule),
-    {ok, OpVal} = maps:find(v,Rule),
-    {ok, Type}  = maps:find(vt,Rule),
+does_rule_match_catchall([Rule | Rules], Val, [Wires | MoreWires], Msg) ->
+    {ok, Op} = maps:find(t, Rule),
+    {ok, OpVal} = maps:find(v, Rule),
+    {ok, Type} = maps:find(vt, Rule),
 
-    io:format("switch: in catch all ~p ~p ~p ~p\n",[Op,OpVal,Type,Val]),
+    io:format("switch: in catch all ~p ~p ~p ~p\n", [Op, OpVal, Type, Val]),
 
-    case does_rule_match(Op,Type,OpVal,Val) of
+    case does_rule_match(Op, Type, OpVal, Val) of
         true ->
-            nodes:send_msg_on(Wires,Msg);
+            nodes:send_msg_on(Wires, Msg);
         _ ->
             ok
     end,
-    does_rule_match_catchall(Rules,Val,MoreWires,Msg).
+    does_rule_match_catchall(Rules, Val, MoreWires, Msg).
 
 %%
 %%
-does_rule_match_stopafterone([],_,_,_) ->
+does_rule_match_stopafterone([], _, _, _) ->
     ok;
-does_rule_match_stopafterone([Rule|Rules], Val, [Wires|MoreWires], Msg) ->
-    {ok, Op}    = maps:find(t,Rule),
-    {ok, OpVal} = maps:find(v,Rule),
-    {ok, Type}  = maps:find(vt,Rule),
+does_rule_match_stopafterone([Rule | Rules], Val, [Wires | MoreWires], Msg) ->
+    {ok, Op} = maps:find(t, Rule),
+    {ok, OpVal} = maps:find(v, Rule),
+    {ok, Type} = maps:find(vt, Rule),
 
-    io:format("switch: in first and stop ~p ~p ~p ~p\n",[Op,OpVal,Type,Val]),
+    io:format("switch: in first and stop ~p ~p ~p ~p\n", [Op, OpVal, Type, Val]),
 
-    case does_rule_match(Op,Type,OpVal,Val) of
+    case does_rule_match(Op, Type, OpVal, Val) of
         true ->
-            nodes:send_msg_on(Wires,Msg);
+            nodes:send_msg_on(Wires, Msg);
         _ ->
             does_rule_match_stopafterone(Rules, Val, MoreWires, Msg)
     end.
@@ -133,25 +128,26 @@ does_rule_match_stopafterone([Rule|Rules], Val, [Wires|MoreWires], Msg) ->
 %%
 %% Handler for incoming messages
 %%
-handle_incoming(NodeDef,Msg) ->
-    {ok, Rules} = maps:find(rules,NodeDef),
-    {ok, Wires} = maps:find(wires,NodeDef),
+handle_incoming(NodeDef, Msg) ->
+    {ok, Rules} = maps:find(rules, NodeDef),
+    {ok, Wires} = maps:find(wires, NodeDef),
 
-    Val = get_value_from_msg(maps:find(propertyType,NodeDef),
-                             maps:find(property,NodeDef),
-                             Msg),
+    Val = get_value_from_msg(
+        maps:find(propertyType, NodeDef),
+        maps:find(property, NodeDef),
+        Msg
+    ),
 
-    case maps:find(checkall,NodeDef) of
+    case maps:find(checkall, NodeDef) of
         {ok, <<"true">>} ->
-            does_rule_match_catchall(Rules,Val,Wires,Msg);
+            does_rule_match_catchall(Rules, Val, Wires, Msg);
         {ok, true} ->
-            does_rule_match_catchall(Rules,Val,Wires,Msg);
+            does_rule_match_catchall(Rules, Val, Wires, Msg);
         _ ->
-            does_rule_match_stopafterone(Rules,Val,Wires,Msg)
+            does_rule_match_stopafterone(Rules, Val, Wires, Msg)
     end,
 
     NodeDef.
-
 
 %%
 %%

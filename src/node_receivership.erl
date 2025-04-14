@@ -25,91 +25,77 @@ increment_message_counter(NodeDef, CntName) ->
 %% this is used  by the assert success node, since it does nothing with a
 %% message (i.e. it has no output ports), it only needs the stop notification
 %% so shortcut the callback stuff.
-enter_receivership(Module,NodeDef,only_stop) ->
+enter_receivership(Module, NodeDef, only_stop) ->
     receive
-        {stop,WsName} ->
-            erlang:apply(Module, handle_stop, [NodeDef,WsName]);
-
-        {incoming,_Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
+        {stop, WsName} ->
+            erlang:apply(Module, handle_stop, [NodeDef, WsName]);
+        {incoming, _Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
             enter_receivership(Module, NodeDef2, only_stop);
-
-        {outgoing,_Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
+        {outgoing, _Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
             enter_receivership(Module, NodeDef2, only_stop)
     end;
-
 enter_receivership(Module, NodeDef, websocket_events_and_stop) ->
     receive
-        {stop,WsName} ->
-            NodeDef2 = erlang:apply(Module, handle_stop, [NodeDef,WsName]),
+        {stop, WsName} ->
+            NodeDef2 = erlang:apply(Module, handle_stop, [NodeDef, WsName]),
             {ok, NodePid} = maps:find('_node_pid_', NodeDef2),
             websocket_event_exchange:unsubscribe(WsName, NodePid);
-
-        {ws_event,Details} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_websocket'),
-            NodeDef3 = erlang:apply(Module, handle_ws_event, [NodeDef2,Details]),
+        {ws_event, Details} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_websocket'),
+            NodeDef3 = erlang:apply(Module, handle_ws_event, [NodeDef2, Details]),
             enter_receivership(Module, NodeDef3, websocket_events_and_stop)
     end;
-
-
-enter_receivership(Module,NodeDef,incoming_and_outgoing) ->
+enter_receivership(Module, NodeDef, incoming_and_outgoing) ->
     receive
-        {stop,_WsName} ->
+        {stop, _WsName} ->
             ok;
-
-        {incoming,Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
-            NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
+        {incoming, Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
+            NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2, Msg]),
             enter_receivership(Module, NodeDef3, incoming_and_outgoing);
-
-        {outgoing,Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
-            NodeDef3 = erlang:apply(Module, handle_outgoing, [NodeDef2,Msg]),
+        {outgoing, Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
+            NodeDef3 = erlang:apply(Module, handle_outgoing, [NodeDef2, Msg]),
             enter_receivership(Module, NodeDef3, incoming_and_outgoing)
     end;
-
 %%
 %% link call nodes need a third type of message and that is the response
 %% from a link out node that is in return mode. But a link call node does
 %% not require an outgoing message type so ignore that.
-enter_receivership(Module,NodeDef,link_call_node) ->
+enter_receivership(Module, NodeDef, link_call_node) ->
     receive
-        {stop,_WsName} ->
+        {stop, _WsName} ->
             ok;
-
-        {incoming,Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
-            NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
+        {incoming, Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
+            NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2, Msg]),
             enter_receivership(Module, NodeDef3, link_call_node);
-
-        {outgoing,_Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
+        {outgoing, _Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
             enter_receivership(Module, NodeDef2, link_call_node);
-
-        {link_return,Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_link_return'),
-            NodeDef3 = erlang:apply(Module, handle_link_return, [NodeDef2,Msg]),
+        {link_return, Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_link_return'),
+            NodeDef3 = erlang:apply(Module, handle_link_return, [NodeDef2, Msg]),
             enter_receivership(Module, NodeDef3, link_call_node)
     end;
-
-
-
-enter_receivership(Module,NodeDef,only_incoming) ->
+enter_receivership(Module, NodeDef, only_incoming) ->
     receive
-        {stop,_WsName} ->
+        {stop, _WsName} ->
             ok;
-
-        {incoming,Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_incoming'),
-            NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2,Msg]),
+        {incoming, Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
+            NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2, Msg]),
             enter_receivership(Module, NodeDef3, only_incoming);
-
-        {outgoing,_Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef,'_mc_outgoing'),
+        {outgoing, _Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
             enter_receivership(Module, NodeDef2, only_incoming)
     end;
-
-enter_receivership(Module,NodeDef,Type) ->
-    throw(io_lib:format("Umatched receivership type '~p' for ~p ~p~n",
-                        [Type,Module,NodeDef])).
+enter_receivership(Module, NodeDef, Type) ->
+    throw(
+        io_lib:format(
+            "Umatched receivership type '~p' for ~p ~p~n",
+            [Type, Module, NodeDef]
+        )
+    ).

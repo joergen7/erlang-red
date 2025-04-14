@@ -11,8 +11,8 @@
 %% that are linked to this "link in" node. But messages don't go backward so this attribute
 %% seems to be pointless. Unless there is a deeper meaning that I'm not understanding.
 %%
-handle_incoming(NodeDef,Msg) ->
-    nodes:send_msg_to_connected_nodes(NodeDef,Msg),
+handle_incoming(NodeDef, Msg) ->
+    nodes:send_msg_to_connected_nodes(NodeDef, Msg),
     NodeDef.
 
 node_link_in(NodeDef) ->

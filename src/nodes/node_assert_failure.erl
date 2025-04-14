@@ -12,13 +12,15 @@ to_binary_if_not_binary(Obj) when is_list(Obj) ->
 to_binary_if_not_binary(Obj) ->
     Obj.
 
+%% erlfmt:ignore equals and arrows should line up here.
 handle_incoming(NodeDef,Msg) ->
-    {ok, IdStr} = maps:find(id,NodeDef),
+    {ok, IdStr}   = maps:find(id,NodeDef),
     {ok, TypeStr} = maps:find(type,NodeDef),
 
     nodes:this_should_not_happen(
       NodeDef,
-      io_lib:format("Assert Error: Node should not have been reached [~p](~p) ~p\n",[TypeStr,IdStr,Msg])
+      io_lib:format("Assert Error: Node should not have been reached [~p](~p) ~p\n",
+                    [TypeStr,IdStr,Msg])
     ),
 
     IdStr       = nodes:get_prop_value_from_map(id,NodeDef),
@@ -37,8 +39,8 @@ handle_incoming(NodeDef,Msg) ->
              format   => <<"Object">>
             },
 
-    nodered:debug(nodered:ws(Msg),Data,error),
-    nodered:node_status(nodered:ws(Msg),NodeDef, "assert failed", "red", "dot"),
+    nodered:debug(nodered:ws(Msg), Data, error),
+    nodered:node_status(nodered:ws(Msg), NodeDef, "assert failed", "red", "dot"),
     NodeDef.
 
 node_assert_failure(NodeDef) ->

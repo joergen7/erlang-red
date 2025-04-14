@@ -16,12 +16,12 @@
 
 -import(node_receivership, [enter_receivership/3]).
 
-handle_incoming(NodeDef,_Msg) ->
+handle_incoming(NodeDef, _Msg) ->
     NodeDef.
 
-handle_outgoing(NodeDef,_Msg) ->
+handle_outgoing(NodeDef, _Msg) ->
     NodeDef.
 
 node_disabled(NodeDef) ->
     nodes:node_init(NodeDef),
-    enter_receivership(?MODULE,NodeDef,incoming_and_outgoing).
+    enter_receivership(?MODULE, NodeDef, incoming_and_outgoing).

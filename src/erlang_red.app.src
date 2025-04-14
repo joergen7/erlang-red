@@ -9,8 +9,7 @@
     ]},
     {env, []},
     {mod, {erlang_red, []}},
-    {modules, [
-    ]},
+    {modules, []},
     {licenses, ["Apache-2.0"]},
     {links, []}
- ]}.
+]}.

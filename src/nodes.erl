@@ -27,8 +27,8 @@
 %% Common functionality
 %%
 
-jstr(Fmt,Args) ->
-    list_to_binary(lists:flatten(io_lib:format(Fmt,Args))).
+jstr(Fmt, Args) ->
+    list_to_binary(lists:flatten(io_lib:format(Fmt, Args))).
 
 jstr(Str) when is_binary(Str) ->
     Str;
@@ -37,51 +37,62 @@ jstr(Str) when is_atom(Str) ->
 jstr(Str) ->
     list_to_binary(lists:flatten(Str)).
 
-this_should_not_happen(NodeDef,Arg) ->
-    {ok, TabId} = maps:find(z,NodeDef),
+this_should_not_happen(NodeDef, Arg) ->
+    {ok, TabId} = maps:find(z, NodeDef),
     ErrCollector = tabid_to_error_collector(TabId),
 
     case whereis(ErrCollector) of
         undefined ->
-            io:format("TSNH: ~s\n",[Arg]);
+            io:format("TSNH: ~s\n", [Arg]);
         _ ->
-            {ok, IdStr } = maps:find(id,NodeDef),
-            {ok, ZStr } = maps:find(z,NodeDef),
-            ErrCollector ! {it_happened, {IdStr,ZStr}, Arg}
+            {ok, IdStr} = maps:find(id, NodeDef),
+            {ok, ZStr} = maps:find(z, NodeDef),
+            ErrCollector ! {it_happened, {IdStr, ZStr}, Arg}
     end.
 
 node_init(_NodeDef) ->
     ok.
-    %% {ok, IdStr} = maps:find(id,NodeDef),
-    %% {ok, TypeStr} = maps:find(type,NodeDef),
-    %% io:format("node STARTED id: [~p] type: [~p]\n",[IdStr,TypeStr]).
-
 
 generate_id(Length) ->
-    IntLen = erlang:list_to_integer(erlang:float_to_list(Length/2,[{decimals,0}])),
+    IntLen = erlang:list_to_integer(
+        erlang:float_to_list(Length / 2, [{decimals, 0}])
+    ),
     string:lowercase(
-      list_to_binary(
-        [ io_lib:format("~2.16.0B",
-                        [X]) || <<X>> <= crypto:strong_rand_bytes(IntLen)])).
+        list_to_binary(
+            [
+                io_lib:format(
+                    "~2.16.0B",
+                    [X]
+                )
+             || <<X>> <= crypto:strong_rand_bytes(IntLen)
+            ]
+        )
+    ).
 
 generate_id() ->
     generate_id(16).
 
 %% processes for nodes are scoped by the websocket name so that each
 %% each websocket connection gets its own collection of processes for nodes.
-nodeid_to_pid(WsName,IdStr) ->
+nodeid_to_pid(WsName, IdStr) ->
     binary_to_atom(
-      list_to_binary(
-        lists:flatten(
-          io_lib:format("~s~s~s~s", ["node_pid_", jstr(WsName), "_", IdStr] )))).
-
+        list_to_binary(
+            lists:flatten(
+                io_lib:format("~s~s~s~s", [
+                    "node_pid_", jstr(WsName), "_", IdStr
+                ])
+            )
+        )
+    ).
 
 tabid_to_error_collector(IdStr) ->
     binary_to_atom(
-      list_to_binary(
-        lists:flatten(
-          io_lib:format("~s~s", ["error_collector_",IdStr] )))).
-
+        list_to_binary(
+            lists:flatten(
+                io_lib:format("~s~s", ["error_collector_", IdStr])
+            )
+        )
+    ).
 
 %% TODO: a tab node (i.e. the tab containing a flow) also has a disabled
 %% TODO: flag but this is called 'disabled'. If it is set, then the entire
@@ -91,22 +102,21 @@ tabid_to_error_collector(IdStr) ->
 %% TODO2: don't test with the same set of nodes. Each node is given the
 %% TODO2: websocket name in the Msg object, so its not a problem for them
 %% TODO2: to send their messages to the correct processes.
-create_pid_for_node(Ary,WsName) ->
-    create_pid_for_node(Ary,[],WsName).
+create_pid_for_node(Ary, WsName) ->
+    create_pid_for_node(Ary, [], WsName).
 
-
-create_pid_for_node([],Pids,_WsName) ->
+%% erlfmt:ignore equals and arrows should line up here.
+create_pid_for_node([], Pids, _WsName) ->
     Pids;
-
-create_pid_for_node([NodeDef|MoreNodeDefs],Pids,WsName) ->
-    {ok, IdStr} = maps:find(id,NodeDef),
-    {ok, TypeStr} = maps:find(type,NodeDef),
+create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
+    {ok, IdStr} = maps:find(id, NodeDef),
+    {ok, TypeStr} = maps:find(type, NodeDef),
 
     %% here have to respect the 'd' (disabled) attribute. if true, then
     %% the node does not need to have a Pid created for it.
-    {Module, Fun} = node_type_to_fun(TypeStr, maps:find(d,NodeDef)),
+    {Module, Fun} = node_type_to_fun(TypeStr, maps:find(d, NodeDef)),
 
-    NodePid = nodeid_to_pid(WsName,IdStr),
+    NodePid = nodeid_to_pid(WsName, IdStr),
 
     case whereis(NodePid) of
         undefined ->
@@ -118,32 +128,42 @@ create_pid_for_node([NodeDef|MoreNodeDefs],Pids,WsName) ->
 
     %% internal message counters, get updated automagically in
     %% enter_receivership ==> 'mc' is message counter.
-    NodeDef2 = maps:put('_mc_incoming', 0,
-                        maps:put('_mc_link_return', 0,
-                                 maps:put('_mc_websocket', 0,
-                                          maps:put('_mc_outgoing', 0,NodeDef)))),
+    NodeDef2 = maps:put('_mc_incoming',    0, NodeDef),
+    NodeDef3 = maps:put('_mc_link_return', 0, NodeDef2),
+    NodeDef4 = maps:put('_mc_websocket',   0, NodeDef3),
+    NodeDef5 = maps:put('_mc_outgoing',    0, NodeDef4),
 
-    NodeDef3 = maps:put('_node_pid_', NodePid, NodeDef2),
-    Pid = spawn(Module, Fun, [NodeDef3]),
+    NodeDef6 = maps:put('_node_pid_',      NodePid, NodeDef5),
+
+    FinalNodeDef = NodeDef6,
+
+    Pid = spawn(Module, Fun, [FinalNodeDef]),
     register(NodePid, Pid),
 
     %% subscribe the assert nodes that listen to websocket events to the
     %% the websocket event exchange.
-    case maps:find(type,NodeDef3) of
+    case maps:find(type, FinalNodeDef) of
         {ok, <<"ut-assert-status">>} ->
-            {ok, TgtNodeId} = maps:find(nodeid,NodeDef3),
-            websocket_event_exchange:subscribe(WsName, TgtNodeId, status, NodePid);
+            {ok, TgtNodeId} = maps:find(nodeid, FinalNodeDef),
+            websocket_event_exchange:subscribe(
+                WsName, TgtNodeId, status, NodePid
+            );
         {ok, <<"ut-assert-debug">>} ->
-            {ok, TgtNodeId} = maps:find(nodeid,NodeDef3),
-            {ok, MsgType} = maps:find(msgtype,NodeDef3),
-            websocket_event_exchange:subscribe(WsName, TgtNodeId, debug, MsgType,
-                                               NodePid);
+            {ok, TgtNodeId} = maps:find(nodeid, FinalNodeDef),
+            {ok, MsgType} = maps:find(msgtype, FinalNodeDef),
+            websocket_event_exchange:subscribe(
+                WsName,
+                TgtNodeId,
+                debug,
+                MsgType,
+                NodePid
+            );
         _ ->
             ignore
     end,
 
     %% io:format("~p ~p\n",[Pid,NodePid]),
-    create_pid_for_node(MoreNodeDefs, [NodePid|Pids], WsName).
+    create_pid_for_node(MoreNodeDefs, [NodePid | Pids], WsName).
 
 %%
 %% The wires attribute is an array of arrays. The toplevel
@@ -152,31 +172,31 @@ create_pid_for_node([NodeDef|MoreNodeDefs],Pids,WsName) ->
 %% If a node only has one port, then wires will be an array containing
 %% exactly one array. This is the [Val] case and is the most common case.
 %%
-send_msg_to_connected_nodes(NodeDef,Msg) ->
-    case maps:find(wires,NodeDef) of
-        {ok,[Val]} ->
-            send_msg_on(Val,Msg);
-        {ok,Val} ->
-            send_msg_on(Val,Msg)
+send_msg_to_connected_nodes(NodeDef, Msg) ->
+    case maps:find(wires, NodeDef) of
+        {ok, [Val]} ->
+            send_msg_on(Val, Msg);
+        {ok, Val} ->
+            send_msg_on(Val, Msg)
     end.
 
 %%
 %% Avoid having to create the same case all the time.
 %%
-get_prop_value_from_map(Prop,Map,Default) ->
-    case maps:find(Prop,Map) of
+get_prop_value_from_map(Prop, Map, Default) ->
+    case maps:find(Prop, Map) of
         {ok, Val} ->
             case Val of
-                <<"">> ->   Default;
-                "" ->       Default;
-                _ ->        Val
+                <<"">> -> Default;
+                "" -> Default;
+                _ -> Val
             end;
         _ ->
             Default
     end.
 
-get_prop_value_from_map(Prop,Map) ->
-    get_prop_value_from_map(Prop,Map,"").
+get_prop_value_from_map(Prop, Map) ->
+    get_prop_value_from_map(Prop, Map, "").
 
 %%
 %% Helper for passing on messages once a node has completed with the message
@@ -184,10 +204,9 @@ get_prop_value_from_map(Prop,Map) ->
 
 %% Here 'on' is the same 'pass on' not as in 'on & off'. Standing on the
 %% shoulders of great people is also not the same 'on' as here.
-send_msg_on([],_) ->
+send_msg_on([], _) ->
     ok;
-
-send_msg_on([NodeId|Wires],Msg) ->
+send_msg_on([NodeId | Wires], Msg) ->
     NodePid = nodeid_to_pid(nodered:ws(Msg), NodeId),
 
     case whereis(NodePid) of
@@ -196,7 +215,7 @@ send_msg_on([NodeId|Wires],Msg) ->
         _ ->
             NodePid ! {incoming, Msg}
     end,
-    send_msg_on(Wires,Msg).
+    send_msg_on(Wires, Msg).
 
 %%
 %% Lookup table for mapping node type to function. Also here we respect the
@@ -206,21 +225,27 @@ send_msg_on([NodeId|Wires],Msg) ->
 node_type_to_fun(_Type, {ok, true}) ->
     io:format("node disabled, ignoring\n"),
     {node_disabled, node_disabled};
-
-node_type_to_fun(Type,_) ->
+node_type_to_fun(Type, _) ->
     node_type_to_fun(Type).
 
-
-node_type_to_fun(<<"inject">>)    -> {node_inject,    node_inject};
-node_type_to_fun(<<"switch">>)    -> {node_switch,    node_switch};
-node_type_to_fun(<<"debug">>)     -> {node_debug,     node_debug};
-node_type_to_fun(<<"junction">>)  -> {node_junction,  node_junction};
-node_type_to_fun(<<"change">>)    -> {node_change,    node_change};
-node_type_to_fun(<<"link out">>)  -> {node_link_out,  node_link_out};
-node_type_to_fun(<<"link in">>)   -> {node_link_in,   node_link_in};
-node_type_to_fun(<<"link call">>) -> {node_link_call, node_link_call};
-node_type_to_fun(<<"delay">>)     -> {node_delay,     node_delay};
-
+node_type_to_fun(<<"inject">>) ->
+    {node_inject, node_inject};
+node_type_to_fun(<<"switch">>) ->
+    {node_switch, node_switch};
+node_type_to_fun(<<"debug">>) ->
+    {node_debug, node_debug};
+node_type_to_fun(<<"junction">>) ->
+    {node_junction, node_junction};
+node_type_to_fun(<<"change">>) ->
+    {node_change, node_change};
+node_type_to_fun(<<"link out">>) ->
+    {node_link_out, node_link_out};
+node_type_to_fun(<<"link in">>) ->
+    {node_link_in, node_link_in};
+node_type_to_fun(<<"link call">>) ->
+    {node_link_call, node_link_call};
+node_type_to_fun(<<"delay">>) ->
+    {node_delay, node_delay};
 %%
 %% Assert nodes for testing functionality of the nodes
 %%
@@ -234,20 +259,16 @@ node_type_to_fun(<<"ut-assert-status">>) ->
     {node_assert_status, node_assert_status};
 node_type_to_fun(<<"ut-assert-debug">>) ->
     {node_assert_debug, node_assert_debug};
-
 node_type_to_fun(Unknown) ->
     io:format("noop node initiated for unknown type: ~p\n", [Unknown]),
     {node_noop, node_noop}.
-
 
 %% A list of all nodes that support outgoing messages, this was originally
 %% only the inject node but then I realised that for testing purposes there
 %% are in fact more.
 trigger_outgoing_messages({ok, <<"http in">>}, {ok, IdStr}, WsName) ->
-    nodeid_to_pid(WsName,IdStr) ! nodered:create_outgoing_msg(WsName);
-
+    nodeid_to_pid(WsName, IdStr) ! nodered:create_outgoing_msg(WsName);
 trigger_outgoing_messages({ok, <<"inject">>}, {ok, IdStr}, WsName) ->
-    nodeid_to_pid(WsName,IdStr) ! nodered:create_outgoing_msg(WsName);
-
-trigger_outgoing_messages(_,_,_) ->
+    nodeid_to_pid(WsName, IdStr) ! nodered:create_outgoing_msg(WsName);
+trigger_outgoing_messages(_, _, _) ->
     ok.

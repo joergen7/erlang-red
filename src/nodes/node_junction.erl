@@ -10,10 +10,10 @@
 %% pass through the messages that they receive (having cloned the messages)
 %%
 
-handle_incoming(NodeDef,Msg) ->
-    nodes:send_msg_to_connected_nodes(NodeDef,Msg),
+handle_incoming(NodeDef, Msg) ->
+    nodes:send_msg_to_connected_nodes(NodeDef, Msg),
     NodeDef.
 
 node_junction(NodeDef) ->
     nodes:node_init(NodeDef),
-    enter_receivership(?MODULE,NodeDef,only_incoming).
+    enter_receivership(?MODULE, NodeDef, only_incoming).
