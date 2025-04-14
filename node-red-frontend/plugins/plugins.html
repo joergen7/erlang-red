@@ -83,8 +83,7 @@
 };
 
 
-function doFlowImportForSidebarUnittesting() {
-  let flowid = $('#node-input-unittestingpull-flowid').val().trim();
+function doFlowImportForSidebarUnittesting(flowid) {
 
   if ( RED.nodes.workspace(flowid) ) {
     RED.workspaces.show(flowid, false, false, true);
@@ -95,9 +94,7 @@ function doFlowImportForSidebarUnittesting() {
     });
 
     $.get({
-      url: "/UnitTesting/" +
-        $('#node-input-unittestingpull-flowid').val().trim() +
-        "/retrieve?cb=" + new Date().getTime(),
+      url: "/UnitTesting/" + flowid + "/retrieve?cb=" + new Date().getTime(),
       headers: {
       }
     }).done((e, d) => {
@@ -356,13 +353,9 @@ var dirList = $("#node-input-unittestingpull-sb-target-container-div").css({
     multi: false
   }
 ).on('treelistselect', function (event, item) {
-  if (item.flowid) {
-    $('#node-input-unittestingpull-flowid').val(item.flowid);
-  }
 }).on('treelistconfirm', function (event, item) {
   if (item.flowid) {
-    $('#node-input-unittestingpull-flowid').val(item.flowid);
-    doFlowImportForSidebarUnittesting()
+    doFlowImportForSidebarUnittesting(item.flowid)
   }
 });
 
