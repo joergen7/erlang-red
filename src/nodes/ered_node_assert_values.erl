@@ -85,9 +85,43 @@ check_rule_against_msg(<<"eql">>, <<"msg">>, Rule, Msg) ->
         _ ->
             {failed, ered_nodes:jstr("Prop not set on msg: '~p'", [Prop])}
     end;
+check_rule_against_msg(<<"mth">>, <<"msg">>, Rule, Msg) ->
+    {ok, Prop} = maps:find(p, Rule),
+    {ok, ToType} = maps:find(tot, Rule),
+    {ok, ReqVal} = maps:find(to, Rule),
+
+    case re:compile(ReqVal) of
+        {ok, ReqPattern} ->
+            mth_msg_op(Prop, ToType, ReqPattern, ReqVal, Msg);
+        _ ->
+            {failed, ered_nodes:jstr("Match not RegExp: '~p'", [ReqVal])}
+    end;
 check_rule_against_msg(_Operator, _ObjectType, _, _) ->
     unsupported.
 
+%%
+%%
+mth_msg_op(Prop, <<"str">>, ReqPattern, MatchVal, Msg) ->
+    case maps:find(binary_to_atom(Prop), Msg) of
+        {ok, ReqVal} ->
+            case re:run(ReqVal, ReqPattern) of
+                {match, _} ->
+                    true;
+                _ ->
+                    {failed,
+                        ered_nodes:jstr(
+                            "Prop '~p': Not matched. Mat '~p' Val: '~p'",
+                            [Prop, MatchVal, ReqVal]
+                        )}
+            end;
+        _ ->
+            {failed, ered_nodes:jstr("Propery not set on Msg: '~p'", [Prop])}
+    end;
+mth_msg_op(_, _, _, _, _) ->
+    unsupported.
+
+%%
+%%
 eql_msg_op(Prop, SrcVal, <<"str">>, ReqVal, _Msg) ->
     case is_same(ReqVal, SrcVal) of
         true ->
@@ -99,14 +133,14 @@ eql_msg_op(Prop, SrcVal, <<"str">>, ReqVal, _Msg) ->
                     [Prop, ReqVal, SrcVal]
                 )}
     end;
-%% {
-%%     "t": "eql",
-%%     "p": "_msgid",
-%%     "pt": "msg",
-%%     "to": "originalmsgid",
-%%     "tot": "msg"
-%% }
 eql_msg_op(Prop, SrcVal, <<"msg">>, ReqProp, Msg) ->
+    %% {
+    %%     "t": "eql",
+    %%     "p": "_msgid",
+    %%     "pt": "msg",
+    %%     "to": "originalmsgid",
+    %%     "tot": "msg"
+    %% }
     case maps:find(binary_to_atom(ReqProp), Msg) of
         {ok, ReqVal} ->
             case is_same(ReqVal, SrcVal) of
