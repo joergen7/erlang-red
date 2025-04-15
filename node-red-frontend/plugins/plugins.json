@@ -9,6 +9,18 @@
         "plugins": [],
         "runtime": false,
         "user": false,
-        "version": "0.8.3"
+        "version": "0.8.4"
+    },
+    {
+        "editor": true,
+        "enabled": true,
+        "id": "@gorenje/node-red-contrib-flowcompare/sidebar-plugin",
+        "local": true,
+        "module": "@gorenje/node-red-contrib-flowcompare",
+        "name": "sidebar-plugin",
+        "plugins": [],
+        "runtime": false,
+        "user": false,
+        "version": "0.2.0"
     }
 ]

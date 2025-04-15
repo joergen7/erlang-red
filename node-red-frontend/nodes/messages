@@ -97,5 +97,6 @@
                 "waiting": "Waiting for Godot"
             }
         }
-    }
+    },
+    "@gorenje/node-red-contrib-flowcompare/flowcompare": {}
 }

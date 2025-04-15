@@ -1,5 +1,6 @@
 {
     "@gorenje/erlang-red-unittest": [],
+    "@gorenje/node-red-contrib-flowcompare": [],
     "node-red": [
         "alert.svg",
         "arduino.svg",
