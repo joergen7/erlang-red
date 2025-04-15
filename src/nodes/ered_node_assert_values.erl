@@ -229,7 +229,6 @@ handle_stop(NodeDef,WsName) ->
             ok
     end.
 
-
 handle_incoming(NodeDef, Msg) ->
     case maps:find(rules, NodeDef) of
         {ok, Ary} ->

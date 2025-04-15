@@ -197,9 +197,11 @@ ensure_unsubscribe_is_working_test() ->
                 #{
                     wsname =>
                         #{
-                            nodeid => [{normal, cb4321},
-                                       {warning, cb1234},
-                                       {normal, cb1234}],
+                            nodeid => [
+                                {normal, cb4321},
+                                {warning, cb1234},
+                                {normal, cb1234}
+                            ],
                             anothernodeid => [{warning, cb1234}]
                         },
                     anotherwsname =>
@@ -228,9 +230,11 @@ ensure_unsubscribe_is_working_test() ->
                 #{
                     wsname =>
                         #{
-                            nodeid => [{normal, cb4321},
-                                       {warning, cb1234},
-                                       {normal, cb1234}],
+                            nodeid => [
+                                {normal, cb4321},
+                                {warning, cb1234},
+                                {normal, cb1234}
+                            ],
                             anothernodeid => [{warning, cb1234}]
                         },
                     anotherwsname =>
@@ -256,7 +260,7 @@ ensure_unsubscribe_is_working_test() ->
                 #{
                     wsname =>
                         #{
-                            nodeid => [{warning,cb1234},{normal, cb1234}],
+                            nodeid => [{warning, cb1234}, {normal, cb1234}],
                             anothernodeid => [{warning, cb1234}]
                         },
                     anotherwsname =>
@@ -283,7 +287,7 @@ ensure_unsubscribe_is_working_test() ->
                 #{
                     wsname =>
                         #{
-                            nodeid => [{warning,cb1234},{normal, cb1234}],
+                            nodeid => [{warning, cb1234}, {normal, cb1234}],
                             anothernodeid => [{warning, cb1234}]
                         },
                     anotherwsname =>

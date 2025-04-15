@@ -192,7 +192,7 @@ handle_call(
                     %% Avoid duplication of {Type,Cb} pairs. A callback can
                     %% be registered for the different types but not multiple
                     %% times for the same type.
-                    case lists:search( fun (A) -> A == {Type,Cb} end, Ary) of
+                    case lists:search(fun(A) -> A == {Type, Cb} end, Ary) of
                         false ->
                             DStore2 = maps:put(
                                 WsName,

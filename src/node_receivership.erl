@@ -35,7 +35,6 @@ enter_receivership(Module, NodeDef, stop_and_incoming) ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
             enter_receivership(Module, NodeDef2, stop_and_incoming)
     end;
-
 %% this is used  by the assert success node, since it does nothing with a
 %% message (i.e. it has no output ports), it only needs the stop notification
 %% so shortcut the callback stuff.
