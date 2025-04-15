@@ -1,3 +1,4 @@
+%%% % @noformat
 %%
 %% MIT License
 %% Taken from https://github.com/julianduque/erlang-color/blob/master/include/color.hrl
