@@ -265,6 +265,8 @@ node_type_to_fun(<<"file in">>) ->
     {ered_node_file_in, node_file_in};
 node_type_to_fun(<<"json">>) ->
     {ered_node_json, node_json};
+node_type_to_fun(<<"template">>) ->
+    {ered_node_template, node_template};
 %%
 %% Assert nodes for testing functionality of the nodes
 %%
