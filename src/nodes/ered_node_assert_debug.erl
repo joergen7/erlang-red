@@ -1,4 +1,4 @@
--module(node_assert_debug).
+-module(ered_node_assert_debug).
 
 %%
 %% Assert node for checking whether another node generated a debug
@@ -20,7 +20,9 @@ handle_stop(NodeDef, WsName) ->
             case maps:find(inverse, NodeDef) of
                 {ok, false} ->
                     {ok, NodeId} = maps:find(nodeid, NodeDef),
-                    ErrMsg = nodes:jstr("Expected debug from ~p\n", [NodeId]),
+                    ErrMsg = ered_nodes:jstr("Expected debug from ~p\n", [
+                        NodeId
+                    ]),
                     post_failure(NodeDef, WsName, ErrMsg);
                 _ ->
                     success
@@ -33,7 +35,7 @@ handle_stop(NodeDef, WsName) ->
 handle_ws_event(NodeDef, {debug, WsName, NodeId, Type, _Data}) ->
     case maps:find(inverse, NodeDef) of
         {ok, true} ->
-            ErrMsg = nodes:jstr("No debug expected from ~p\n", [NodeId]),
+            ErrMsg = ered_nodes:jstr("No debug expected from ~p\n", [NodeId]),
             post_failure(NodeDef, WsName, ErrMsg);
         _ ->
             {ok, ExpType} = maps:find(msgtype, NodeDef),
@@ -43,7 +45,7 @@ handle_ws_event(NodeDef, {debug, WsName, NodeId, Type, _Data}) ->
                 true ->
                     success;
                 _ ->
-                    ErrMsg = nodes:jstr(
+                    ErrMsg = ered_nodes:jstr(
                         "debug type mismatch ~s != ~p", [ExpType, Type]
                     ),
                     post_failure(NodeDef, WsName, ErrMsg)
@@ -56,5 +58,5 @@ handle_ws_event(NodeDef, _) ->
 %%
 %%
 node_assert_debug(NodeDef) ->
-    nodes:node_init(NodeDef),
+    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, websocket_events_and_stop).

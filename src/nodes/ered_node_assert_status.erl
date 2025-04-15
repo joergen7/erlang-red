@@ -1,4 +1,4 @@
--module(node_assert_status).
+-module(ered_node_assert_status).
 
 %%
 %% Assert node for checking whether another node generated a status
@@ -21,7 +21,7 @@ check_attributes({ExpTxt, Txt}) ->
             case ExpTxt of
                 %% ignore this check if expected text is empty.
                 <<>> -> [];
-                _ -> nodes:jstr("Content mismatch ~p\n", [{ExpTxt, Txt}])
+                _ -> ered_nodes:jstr("Content mismatch ~p\n", [{ExpTxt, Txt}])
             end;
         true ->
             []
@@ -31,7 +31,7 @@ check_attributes(Shp, Txt) ->
     case is_same(Shp) of
         false ->
             [
-                nodes:jstr("Shape mismatch ~p\n", [Shp])
+                ered_nodes:jstr("Shape mismatch ~p\n", [Shp])
                 | [check_attributes(Txt)]
             ];
         true ->
@@ -42,7 +42,7 @@ check_attributes(Clr, Shp, Txt) ->
     case is_same(Clr) of
         false ->
             [
-                nodes:jstr("Colour mismatch ~p\n", [Clr])
+                ered_nodes:jstr("Colour mismatch ~p\n", [Clr])
                 | [check_attributes(Shp, Txt)]
             ];
         true ->
@@ -54,11 +54,11 @@ post_failure(NodeDef,WsName,ErrMsg) ->
     {ok, IdStr} = maps:find(id,NodeDef),
     {ok, TypeStr} = maps:find(type,NodeDef),
 
-    nodes:this_should_not_happen(NodeDef,ErrMsg),
+    ered_nodes:this_should_not_happen(NodeDef,ErrMsg),
 
-    IdStr       = nodes:get_prop_value_from_map(id,NodeDef),
-    ZStr        = nodes:get_prop_value_from_map(z,NodeDef),
-    NameStr     = nodes:get_prop_value_from_map(name,NodeDef,TypeStr),
+    IdStr       = ered_nodes:get_prop_value_from_map(id,NodeDef),
+    ZStr        = ered_nodes:get_prop_value_from_map(z,NodeDef),
+    NameStr     = ered_nodes:get_prop_value_from_map(name,NodeDef,TypeStr),
 
     Data = #{
              id       => IdStr,
@@ -66,7 +66,7 @@ post_failure(NodeDef,WsName,ErrMsg) ->
              '_alias' => IdStr,
              path     => ZStr,
              name     => NameStr,
-             msg      => nodes:jstr(ErrMsg),
+             msg      => ered_nodes:jstr(ErrMsg),
              format   => <<"string">>
             },
 
@@ -81,7 +81,9 @@ handle_stop(NodeDef, WsName) ->
             case maps:find(inverse, NodeDef) of
                 {ok, false} ->
                     {ok, NodeId} = maps:find(nodeid, NodeDef),
-                    ErrMsg = nodes:jstr("Expected status from ~p\n", [NodeId]),
+                    ErrMsg = ered_nodes:jstr("Expected status from ~p\n", [
+                        NodeId
+                    ]),
                     post_failure(NodeDef, WsName, ErrMsg);
                 _ ->
                     nodered:node_status(
@@ -109,7 +111,7 @@ handle_stop(NodeDef, WsName) ->
 handle_ws_event(NodeDef, {status, WsName, NodeId, Txt, Clr, Shp}) ->
     case maps:find(inverse, NodeDef) of
         {ok, true} ->
-            ErrMsg = nodes:jstr("No status expected from ~p\n",[NodeId]),
+            ErrMsg = ered_nodes:jstr("No status expected from ~p\n",[NodeId]),
             post_failure(NodeDef,WsName,ErrMsg);
 
         _ ->
@@ -134,5 +136,5 @@ handle_ws_event(NodeDef,_) ->
 %%
 %%
 node_assert_status(NodeDef) ->
-    nodes:node_init(NodeDef),
+    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, websocket_events_and_stop).

@@ -1,4 +1,4 @@
--module(node_delay).
+-module(ered_node_delay).
 
 -export([node_delay/1]).
 -export([handle_incoming/2]).
@@ -27,9 +27,9 @@ compute_pause({ok, <<"delay">>}, NodeDef, _Msg) ->
         maps:find(timeout, NodeDef)
     );
 compute_pause(PType, NodeDef, Msg) ->
-    ErrMsg = nodes:jstr("Unknown PauseType: '~p'", [PType]),
+    ErrMsg = ered_nodes:jstr("Unknown PauseType: '~p'", [PType]),
 
-    nodes:this_should_not_happen(
+    ered_nodes:this_should_not_happen(
         NodeDef,
         io_lib:format("~p ~p\n", [ErrMsg, Msg])
     ),
@@ -54,10 +54,10 @@ compute_pause(PType, NodeDef, Msg) ->
 handle_incoming(NodeDef, Msg) ->
     timer:sleep(compute_pause(maps:find(pauseType, NodeDef), NodeDef, Msg)),
 
-    nodes:send_msg_to_connected_nodes(NodeDef, Msg),
+    ered_nodes:send_msg_to_connected_nodes(NodeDef, Msg),
 
     NodeDef.
 
 node_delay(NodeDef) ->
-    nodes:node_init(NodeDef),
+    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

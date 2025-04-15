@@ -1,4 +1,4 @@
--module(node_assert_success).
+-module(ered_node_assert_success).
 
 -export([node_assert_success/1]).
 -export([handle_stop/2]).
@@ -12,15 +12,15 @@ handle_stop(NodeDef,WsName) ->
             {ok, IdStr}   = maps:find(id,NodeDef),
             {ok, TypeStr} = maps:find(type,NodeDef),
 
-            nodes:this_should_not_happen(
+            ered_nodes:this_should_not_happen(
               NodeDef,
               io_lib:format("Assert Error: Node was not reached [~p](~p)\n",
                             [TypeStr,IdStr])
             ),
 
-            IdStr   = nodes:get_prop_value_from_map(id,   NodeDef),
-            ZStr    = nodes:get_prop_value_from_map(z,    NodeDef),
-            NameStr = nodes:get_prop_value_from_map(name, NodeDef, TypeStr),
+            IdStr   = ered_nodes:get_prop_value_from_map(id,   NodeDef),
+            ZStr    = ered_nodes:get_prop_value_from_map(z,    NodeDef),
+            NameStr = ered_nodes:get_prop_value_from_map(name, NodeDef, TypeStr),
             Data = #{
                      id       => IdStr,
                      z        => ZStr,
@@ -39,5 +39,5 @@ handle_stop(NodeDef,WsName) ->
     end.
 
 node_assert_success(NodeDef) ->
-    nodes:node_init(NodeDef),
+    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_stop).

@@ -66,7 +66,7 @@ ensure_error_store_is_started(TabErrColl, TestName) ->
     end.
 
 start_this_should_not_happen_service(TabId, TestName) ->
-    TabErrColl = nodes:tabid_to_error_collector(TabId),
+    TabErrColl = ered_nodes:tabid_to_error_collector(TabId),
 
     case whereis(TabErrColl) of
         undefined ->
@@ -150,10 +150,10 @@ run_the_test(FlowId, WsName, Ary) ->
         <<"UnitTestEngine TestRun">>
     ),
 
-    Pids = nodes:create_pid_for_node(Ary, WsName),
+    Pids = ered_nodes:create_pid_for_node(Ary, WsName),
 
     [
-        nodes:trigger_outgoing_messages(
+        ered_nodes:trigger_outgoing_messages(
             maps:find(type, ND),
             maps:find(id, ND),
             WsName

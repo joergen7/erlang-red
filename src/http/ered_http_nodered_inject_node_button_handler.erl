@@ -34,7 +34,7 @@ handle_json_body(Req, State) ->
         undefined ->
             ok;
         IdStr ->
-            NodePid = nodes:nodeid_to_pid(WsName, IdStr),
+            NodePid = ered_nodes:nodeid_to_pid(WsName, IdStr),
 
             case whereis(NodePid) of
                 undefined ->

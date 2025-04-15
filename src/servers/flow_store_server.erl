@@ -116,22 +116,23 @@ compile_file_list() ->
     ),
     FileNames.
 
+%% erlfmt:ignore lining stuff up
 compile_file_store([], FileStore) ->
     FileStore;
 compile_file_store([FileDetails | MoreFileNames], FileStore) ->
-    FlowId = element(1, FileDetails),
+    FlowId   = element(1, FileDetails),
     FileName = element(2, FileDetails),
 
-    Ary = ered_flows:parse_flow_file(FileName),
+    Ary      = ered_flows:parse_flow_file(FileName),
     TestName = tab_name_or_filename(Ary, FlowId),
 
     compile_file_store(
         MoreFileNames,
         maps:put(
-            nodes:jstr(FlowId),
+            ered_nodes:jstr(FlowId),
             #{
-                path => nodes:jstr(FileName),
-                id => nodes:jstr(FlowId),
+                path => ered_nodes:jstr(FileName),
+                id   => ered_nodes:jstr(FlowId),
                 name => TestName
             },
             FileStore

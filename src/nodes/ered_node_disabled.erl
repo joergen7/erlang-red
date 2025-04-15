@@ -1,4 +1,4 @@
--module(node_disabled).
+-module(ered_node_disabled).
 
 %%
 %% No Operation node that is used for all unknown types. It represents
@@ -23,5 +23,5 @@ handle_outgoing(NodeDef, _Msg) ->
     NodeDef.
 
 node_disabled(NodeDef) ->
-    nodes:node_init(NodeDef),
+    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, incoming_and_outgoing).

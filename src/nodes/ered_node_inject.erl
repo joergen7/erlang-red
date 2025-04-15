@@ -1,4 +1,4 @@
--module(node_inject).
+-module(ered_node_inject).
 
 -export([node_inject/1]).
 -export([handle_outgoing/2]).
@@ -12,9 +12,9 @@
 %%
 
 handle_topic_value(NodeDef, _Prop, {ok, <<"str">>}) ->
-    nodes:get_prop_value_from_map(topic, NodeDef);
+    ered_nodes:get_prop_value_from_map(topic, NodeDef);
 handle_topic_value(_NodeDef, Prop, _) ->
-    nodes:get_prop_value_from_map(v, Prop).
+    ered_nodes:get_prop_value_from_map(v, Prop).
 
 parse_props([], _, Msg) ->
     Msg;
@@ -27,8 +27,8 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
     io:format("Prop: ~p\n", [Prop]),
     case maps:find(p, Prop) of
         {ok, <<"payload">>} ->
-            Val = nodes:get_prop_value_from_map(payload, NodeDef),
-            PType = nodes:get_prop_value_from_map(payloadType, NodeDef),
+            Val = ered_nodes:get_prop_value_from_map(payload, NodeDef),
+            PType = ered_nodes:get_prop_value_from_map(payloadType, NodeDef),
             io:format("Prop: Payload: ~p of type ~p\n", [Val, PType]),
 
             case PType of
@@ -50,7 +50,7 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
             io:format("Prop: Topic: ~p\n", [Val]),
             parse_props(RestProps, NodeDef, maps:put(topic, Val, Msg));
         {ok, PropName} ->
-            Val = nodes:get_prop_value_from_map(v, Prop),
+            Val = ered_nodes:get_prop_value_from_map(v, Prop),
             io:format("Prop: Name: ~p = ~p\n", [PropName, Val]),
             parse_props(
                 RestProps,
@@ -72,7 +72,7 @@ handle_outgoing(NodeDef, Msg) ->
         _ ->
             Props = []
     end,
-    nodes:send_msg_to_connected_nodes(
+    ered_nodes:send_msg_to_connected_nodes(
         NodeDef, parse_props(Props, NodeDef, Msg)
     ),
     NodeDef.
@@ -83,5 +83,5 @@ handle_incoming(NodeDef, _Msg) ->
     NodeDef.
 
 node_inject(NodeDef) ->
-    nodes:node_init(NodeDef),
+    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, incoming_and_outgoing).

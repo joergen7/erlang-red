@@ -1,4 +1,4 @@
--module(node_link_in).
+-module(ered_node_link_in).
 
 -export([node_link_in/1]).
 -export([handle_incoming/2]).
@@ -13,9 +13,9 @@
 %% is a deeper meaning that I'm not understanding.
 %%
 handle_incoming(NodeDef, Msg) ->
-    nodes:send_msg_to_connected_nodes(NodeDef, Msg),
+    ered_nodes:send_msg_to_connected_nodes(NodeDef, Msg),
     NodeDef.
 
 node_link_in(NodeDef) ->
-    nodes:node_init(NodeDef),
+    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

@@ -1,4 +1,4 @@
--module(node_assert_failure).
+-module(ered_node_assert_failure).
 
 -export([node_assert_failure/1]).
 -export([handle_incoming/2]).
@@ -17,16 +17,16 @@ handle_incoming(NodeDef,Msg) ->
     {ok, IdStr}   = maps:find(id,NodeDef),
     {ok, TypeStr} = maps:find(type,NodeDef),
 
-    nodes:this_should_not_happen(
+    ered_nodes:this_should_not_happen(
       NodeDef,
       io_lib:format("Assert Error: Node should not have been reached [~p](~p) ~p\n",
                     [TypeStr,IdStr,Msg])
     ),
 
-    IdStr       = nodes:get_prop_value_from_map(id,NodeDef),
-    ZStr        = nodes:get_prop_value_from_map(z,NodeDef),
-    NameStr     = nodes:get_prop_value_from_map(name,NodeDef,TypeStr),
-    TopicStr    = nodes:get_prop_value_from_map(topic,Msg,""),
+    IdStr       = ered_nodes:get_prop_value_from_map(id,NodeDef),
+    ZStr        = ered_nodes:get_prop_value_from_map(z,NodeDef),
+    NameStr     = ered_nodes:get_prop_value_from_map(name,NodeDef,TypeStr),
+    TopicStr    = ered_nodes:get_prop_value_from_map(topic,Msg,""),
 
     Data = #{
              id       => IdStr,
@@ -44,5 +44,5 @@ handle_incoming(NodeDef,Msg) ->
     NodeDef.
 
 node_assert_failure(NodeDef) ->
-    nodes:node_init(NodeDef),
+    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

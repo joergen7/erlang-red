@@ -92,11 +92,11 @@ websocket_info({error_debug, Data}, State) ->
 websocket_info({status, NodeId, Txt, Clr, Shp}, State) ->
     Msg = jiffy:encode([
         #{
-            topic => nodes:jstr("status/~s", [NodeId]),
+            topic => ered_nodes:jstr("status/~s", [NodeId]),
             data => #{
-                text => nodes:jstr(Txt),
-                fill => nodes:jstr(Clr),
-                shape => nodes:jstr(Shp)
+                text => ered_nodes:jstr(Txt),
+                fill => ered_nodes:jstr(Clr),
+                shape => ered_nodes:jstr(Shp)
             }
         }
     ]),
@@ -119,8 +119,8 @@ websocket_info({unittest_results, FlowId, Status}, State) ->
         #{
             topic => 'unittesting:testresults',
             data => #{
-                flowid => nodes:jstr(FlowId),
-                status => nodes:jstr(Status)
+                flowid => ered_nodes:jstr(FlowId),
+                status => ered_nodes:jstr(Status)
             }
         }
     ]),

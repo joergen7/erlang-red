@@ -1,4 +1,4 @@
--module(nodes).
+-module(ered_nodes).
 
 %%
 %% External exports, should be used by others.
@@ -224,44 +224,46 @@ send_msg_on([NodeId | Wires], Msg) ->
 %%
 node_type_to_fun(_Type, {ok, true}) ->
     io:format("node disabled, ignoring\n"),
-    {node_disabled, node_disabled};
+    {ered_node_disabled, node_disabled};
 node_type_to_fun(Type, _) ->
     node_type_to_fun(Type).
 
 node_type_to_fun(<<"inject">>) ->
-    {node_inject, node_inject};
+    {ered_node_inject, node_inject};
 node_type_to_fun(<<"switch">>) ->
-    {node_switch, node_switch};
+    {ered_node_switch, node_switch};
 node_type_to_fun(<<"debug">>) ->
-    {node_debug, node_debug};
+    {ered_node_debug, node_debug};
 node_type_to_fun(<<"junction">>) ->
-    {node_junction, node_junction};
+    {ered_node_junction, node_junction};
 node_type_to_fun(<<"change">>) ->
-    {node_change, node_change};
+    {ered_node_change, node_change};
 node_type_to_fun(<<"link out">>) ->
-    {node_link_out, node_link_out};
+    {ered_node_link_out, node_link_out};
 node_type_to_fun(<<"link in">>) ->
-    {node_link_in, node_link_in};
+    {ered_node_link_in, node_link_in};
 node_type_to_fun(<<"link call">>) ->
-    {node_link_call, node_link_call};
+    {ered_node_link_call, node_link_call};
 node_type_to_fun(<<"delay">>) ->
-    {node_delay, node_delay};
+    {ered_node_delay, node_delay};
+node_type_to_fun(<<"file in">>) ->
+    {ered_node_file_in, node_file_in};
 %%
 %% Assert nodes for testing functionality of the nodes
 %%
 node_type_to_fun(<<"ut-assert-values">>) ->
-    {node_assert_values, node_assert_values};
+    {ered_node_assert_values, node_assert_values};
 node_type_to_fun(<<"ut-assert-failure">>) ->
-    {node_assert_failure, node_assert_failure};
+    {ered_node_assert_failure, node_assert_failure};
 node_type_to_fun(<<"ut-assert-success">>) ->
-    {node_assert_success, node_assert_success};
+    {ered_node_assert_success, node_assert_success};
 node_type_to_fun(<<"ut-assert-status">>) ->
-    {node_assert_status, node_assert_status};
+    {ered_node_assert_status, node_assert_status};
 node_type_to_fun(<<"ut-assert-debug">>) ->
-    {node_assert_debug, node_assert_debug};
+    {ered_node_assert_debug, node_assert_debug};
 node_type_to_fun(Unknown) ->
     io:format("noop node initiated for unknown type: ~p\n", [Unknown]),
-    {node_noop, node_noop}.
+    {ered_node_noop, node_noop}.
 
 %% A list of all nodes that support outgoing messages, this was originally
 %% only the inject node but then I realised that for testing purposes there

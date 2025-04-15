@@ -71,7 +71,7 @@ unittest_result(WsName, FlowId, success) ->
 %%
 get_websocket_name() ->
     binary_to_atom(
-        list_to_binary(io_lib:format("ws~s", [nodes:generate_id(6)]))
+        list_to_binary(io_lib:format("ws~s", [ered_nodes:generate_id(6)]))
     ).
 
 %%
@@ -95,14 +95,14 @@ ws(Msg) ->
     end.
 
 create_outgoing_msg(WsName) ->
-    {outgoing, #{'_msgid' => nodes:generate_id(), '_ws' => WsName}}.
+    {outgoing, #{'_msgid' => ered_nodes:generate_id(), '_ws' => WsName}}.
 
 %%
 %% helpers
 %% erlfmt:ignore the stars are lined up
 debug_string(NodeDef,Msg) ->
-    IdStr = nodes:get_prop_value_from_map(id,NodeDef),
-    ZStr  = nodes:get_prop_value_from_map(z,NodeDef),
+    IdStr = ered_nodes:get_prop_value_from_map(id,NodeDef),
+    ZStr  = ered_nodes:get_prop_value_from_map(z,NodeDef),
     debug_string(IdStr,ZStr,Msg).
 
 %% erlfmt:ignore the stars are lined up

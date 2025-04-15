@@ -1,4 +1,4 @@
--module(node_switch).
+-module(ered_node_switch).
 
 -export([node_switch/1]).
 -export([handle_incoming/2]).
@@ -101,7 +101,7 @@ does_rule_match_catchall([Rule | Rules], Val, [Wires | MoreWires], Msg) ->
 
     case does_rule_match(Op, Type, OpVal, Val) of
         true ->
-            nodes:send_msg_on(Wires, Msg);
+            ered_nodes:send_msg_on(Wires, Msg);
         _ ->
             ok
     end,
@@ -120,7 +120,7 @@ does_rule_match_stopafterone([Rule | Rules], Val, [Wires | MoreWires], Msg) ->
 
     case does_rule_match(Op, Type, OpVal, Val) of
         true ->
-            nodes:send_msg_on(Wires, Msg);
+            ered_nodes:send_msg_on(Wires, Msg);
         _ ->
             does_rule_match_stopafterone(Rules, Val, MoreWires, Msg)
     end.
@@ -152,5 +152,5 @@ handle_incoming(NodeDef, Msg) ->
 %%
 %%
 node_switch(NodeDef) ->
-    nodes:node_init(NodeDef),
+    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

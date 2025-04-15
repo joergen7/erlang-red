@@ -1,4 +1,4 @@
--module(node_noop).
+-module(ered_node_noop).
 
 %%
 %% No Operation node that is used for all unknown types. It represents
@@ -12,9 +12,9 @@
 
 %% erlfmt:ignore equals and arrows should line up here.
 create_data_for_debug(NodeDef,TypeStr) ->
-    IdStr   = nodes:get_prop_value_from_map(id,   NodeDef),
-    ZStr    = nodes:get_prop_value_from_map(z,    NodeDef),
-    NameStr = nodes:get_prop_value_from_map(name, NodeDef, TypeStr),
+    IdStr   = ered_nodes:get_prop_value_from_map(id,   NodeDef),
+    ZStr    = ered_nodes:get_prop_value_from_map(z,    NodeDef),
+    NameStr = ered_nodes:get_prop_value_from_map(name, NodeDef, TypeStr),
 
     #{
        id       => IdStr,
@@ -23,7 +23,7 @@ create_data_for_debug(NodeDef,TypeStr) ->
        path     => ZStr,
        name     => NameStr,
        topic    => <<"">>,
-       msg      => nodes:jstr("type '~s' is not implemented", [TypeStr]),
+       msg      => ered_nodes:jstr("type '~s' is not implemented", [TypeStr]),
        format   => <<"string">>
     }.
 
@@ -35,7 +35,7 @@ handle_incoming(NodeDef, Msg) ->
     %% This output is for eunit testing. This does in fact does end
     %% up in the Node-RED frontend as a notice, but that's only
     %% because I changed the code after writing the initial comment.
-    nodes:this_should_not_happen(
+    ered_nodes:this_should_not_happen(
         NodeDef,
         io_lib:format(
             "Noop Node (incoming). Nothing Done for [~p](~p) ~p\n",
@@ -72,7 +72,7 @@ handle_outgoing(NodeDef, Msg) ->
     %% This output is for eunit testing. This does in fact does end
     %% up in the Node-RED frontend as a notice, but that's only
     %% because I changed the code after writing the initial comment.
-    nodes:this_should_not_happen(
+    ered_nodes:this_should_not_happen(
         NodeDef,
         io_lib:format(
             "Noop Node (outgoing) Nothing Done for [~p](~p) ~p\n",
@@ -102,5 +102,5 @@ handle_outgoing(NodeDef, Msg) ->
     NodeDef.
 
 node_noop(NodeDef) ->
-    nodes:node_init(NodeDef),
+    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, incoming_and_outgoing).

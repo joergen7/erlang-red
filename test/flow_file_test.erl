@@ -69,7 +69,7 @@ ensure_websocket_listener_is_running(WsName) ->
 %% Define this because the ErrorStorePid cannot be registered under a new
 %% name. The point is that each error node in a flow sends its errors
 %% to a specific error collector called "error_collector_<tabid>" (see
-%% nodes:tabid_to_error_collector/1 for details).
+%% ered_nodes:tabid_to_error_collector/1 for details).
 %%
 %% This allows tests to be run in parallel and errors are separated out
 %% by their flow ids
@@ -78,7 +78,7 @@ ensure_websocket_listener_is_running(WsName) ->
 %% I haven't found a way to get the data back from the error collector
 %% service ...
 start_this_should_not_happen_service(TabId, TestName) ->
-    TabErrColl = nodes:tabid_to_error_collector(TabId),
+    TabErrColl = ered_nodes:tabid_to_error_collector(TabId),
 
     case whereis(TabErrColl) of
         undefined ->
@@ -123,10 +123,10 @@ create_test_for_flow_file([FileName | MoreFileNames], Acc) ->
         WsName = eunit_test,
         ensure_websocket_listener_is_running(WsName),
 
-        Pids = nodes:create_pid_for_node(Ary, WsName),
+        Pids = ered_nodes:create_pid_for_node(Ary, WsName),
 
         [
-            nodes:trigger_outgoing_messages(
+            ered_nodes:trigger_outgoing_messages(
                 maps:find(type, ND), maps:find(id, ND), WsName
             )
          || ND <- Ary

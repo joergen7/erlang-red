@@ -1,4 +1,4 @@
--module(node_link_out).
+-module(ered_node_link_out).
 
 -export([node_link_out/1]).
 -export([handle_incoming/2]).
@@ -6,7 +6,7 @@
 -import(node_receivership, [enter_receivership/3]).
 
 send_to_link_call({ok, NodeId}, Msg) ->
-    NodePid = nodes:nodeid_to_pid(nodered:ws(Msg), NodeId),
+    NodePid = ered_nodes:nodeid_to_pid(nodered:ws(Msg), NodeId),
     case whereis(NodePid) of
         undefined ->
             ok;
@@ -29,7 +29,7 @@ handle_incoming(NodeDef, Msg) ->
                     %% this are all link in nodes and they have no incoming
                     %% wires so we can send them their messages using the
                     %% "incoming" message type this is what send_msg_on does.
-                    nodes:send_msg_on(Links, Msg);
+                    ered_nodes:send_msg_on(Links, Msg);
                 _ ->
                     ignore
             end;
@@ -51,8 +51,8 @@ handle_incoming(NodeDef, Msg) ->
                     ignore
             end;
         {ok, Mode} ->
-            ErrMsg = nodes:jstr("Unknown Mode: '~s'", [Mode]),
-            nodes:this_should_not_happen(
+            ErrMsg = ered_nodes:jstr("Unknown Mode: '~s'", [Mode]),
+            ered_nodes:this_should_not_happen(
                 NodeDef,
                 io_lib:format("~p ~p\n", [ErrMsg, Msg])
             ),
@@ -70,5 +70,5 @@ handle_incoming(NodeDef, Msg) ->
     NodeDef.
 
 node_link_out(NodeDef) ->
-    nodes:node_init(NodeDef),
+    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

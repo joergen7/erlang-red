@@ -1,4 +1,4 @@
--module(node_change).
+-module(ered_node_change).
 
 -export([node_change/1]).
 -export([handle_incoming/2]).
@@ -128,9 +128,9 @@ handle_rule(_, _Rule, Msg) ->
 handle_incoming(NodeDef, Msg) ->
     io:format("change node altering Msg\n"),
     {ok, Rules} = maps:find(rules, NodeDef),
-    nodes:send_msg_to_connected_nodes(NodeDef, handle_rules(Rules, Msg)),
+    ered_nodes:send_msg_to_connected_nodes(NodeDef, handle_rules(Rules, Msg)),
     NodeDef.
 
 node_change(NodeDef) ->
-    nodes:node_init(NodeDef),
+    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).
