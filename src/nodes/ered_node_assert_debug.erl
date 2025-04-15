@@ -9,7 +9,7 @@
 -export([handle_stop/2]).
 
 -import(node_receivership, [enter_receivership/3]).
--import(node_assert_status, [post_failure/3]).
+-import(ered_node_assert_status, [post_failure/3]).
 
 is_same(A, A) -> true;
 is_same(_, _) -> false.
