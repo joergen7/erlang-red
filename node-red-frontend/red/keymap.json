@@ -24,7 +24,9 @@
         "ctrl-shift-p":"core:show-action-list",
         "alt-enter": "core:click-selected-nodes-button",
         "ctrl-shift-a": "unittesting:run-all-tests",
-        "ctrl-shift-s": "unittesting:send-halt-to-test-server"
+        "alt-shift-a": "unittesting:run-all-tests",
+        "ctrl-shift-s": "unittesting:send-halt-to-test-server",
+        "alt-shift-s": "unittesting:send-halt-to-test-server"
     },
     "red-ui-sidebar-node-config": {
         "backspace": "core:delete-config-selection",
@@ -35,6 +37,8 @@
     },
     "red-ui-workspace": {
         "ctrl-shift-e": "unittesting:test-current-workspace",
+        "alt-shift-e": "unittesting:test-current-workspace",
+        "alt-shift-c": "flowcompare:compare-flow-to-remote",
         "backspace": "core:delete-selection",
         "ctrl-backspace": "core:delete-selection-and-reconnect",
         "delete": "core:delete-selection",
