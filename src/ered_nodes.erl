@@ -263,6 +263,8 @@ node_type_to_fun(<<"delay">>) ->
     {ered_node_delay, node_delay};
 node_type_to_fun(<<"file in">>) ->
     {ered_node_file_in, node_file_in};
+node_type_to_fun(<<"json">>) ->
+    {ered_node_json, node_json};
 %%
 %% Assert nodes for testing functionality of the nodes
 %%
