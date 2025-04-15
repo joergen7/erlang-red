@@ -1,4 +1,4 @@
--module(mimetypes_nodered).
+-module(ered_http_nodered_mimetypes).
 
 -export([mt/1]).
 

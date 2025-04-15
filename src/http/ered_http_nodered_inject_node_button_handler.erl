@@ -1,4 +1,4 @@
--module(nodered_inject_node_button_handler).
+-module(ered_http_nodered_inject_node_button_handler).
 
 -behaviour(cowboy_rest).
 

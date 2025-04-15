@@ -1,8 +1,8 @@
--module(erlangred_testcase_post_handler).
+-module(ered_http_testcase_post_handler).
 
 %%
-%% Post blower - anything that is posted here gets an "ok, you're doing good"
-%% response. A feel-good poster person.
+%% This stores testcases to disk. Triggered by "create test case" button
+%% on the export flow dialog.
 %%
 
 -behaviour(cowboy_rest).
@@ -30,7 +30,7 @@ handle_json_body(Req, State) ->
     io:format("Handling testcase creationg\n"),
     WorkspaceId = cowboy_req:binding(workspaceid, Req),
 
-    {ok, Body, Req2} = nodered_flow_deploy_handler:read_body(Req, <<"">>),
+    {ok, Body, Req2} = ered_http_utils:read_body(Req, <<"">>),
 
     Push = fun(Key, Value, Acc) ->
         [{binary_to_atom(Key), Value} | Acc]

@@ -1,4 +1,4 @@
--module(nodered_flow_deploy_handler).
+-module(ered_http_nodered_flow_deploy_handler).
 
 -behaviour(cowboy_rest).
 
@@ -11,19 +11,8 @@
     format_error/2
 ]).
 
--export([read_body/2]).
-
 init(Req, State) ->
     {cowboy_rest, Req, State}.
-
-%% init(_Transport, _Req, _Opts) ->
-%%     {ok, undefined}.
-
-read_body(Req0, Acc) ->
-    case cowboy_req:read_body(Req0) of
-        {ok, Data, Req} -> {ok, <<Acc/binary, Data/binary>>, Req};
-        {more, Data, Req} -> read_body(Req, <<Acc/binary, Data/binary>>)
-    end.
 
 allowed_methods(Req, State) ->
     {[<<"POST">>], Req, State}.
@@ -44,7 +33,7 @@ handle_flow_restart(Req, State) ->
     {true, Resp, State}.
 
 handle_json_body(Req, State) ->
-    {ok, _Body, Req2} = read_body(Req, <<"">>),
+    {ok, _Body, Req2} = ered_http_utils:read_body(Req, <<"">>),
 
     %%
     %% TODO all this stuff needs to be pushed off to another Pids doing

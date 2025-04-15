@@ -1,4 +1,4 @@
--module(ered_http_empty_json).
+-module(ered_http_nodered_empty_json).
 
 %%
 %% This returns an empty hash. This is used for returning the
