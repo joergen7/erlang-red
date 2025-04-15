@@ -19,14 +19,15 @@ handle_incoming(NodeDef,Msg) ->
 
     ered_nodes:this_should_not_happen(
       NodeDef,
-      io_lib:format("Assert Error: Node should not have been reached [~p](~p) ~p\n",
-                    [TypeStr,IdStr,Msg])
+      io_lib:format(
+        "Assert Error: Node should not have been reached [~p](~p) ~p\n",
+        [TypeStr,IdStr,Msg])
     ),
 
-    IdStr       = ered_nodes:get_prop_value_from_map(id,NodeDef),
-    ZStr        = ered_nodes:get_prop_value_from_map(z,NodeDef),
-    NameStr     = ered_nodes:get_prop_value_from_map(name,NodeDef,TypeStr),
-    TopicStr    = ered_nodes:get_prop_value_from_map(topic,Msg,""),
+    IdStr    = ered_nodes:get_prop_value_from_map(id,    NodeDef),
+    ZStr     = ered_nodes:get_prop_value_from_map(z,     NodeDef),
+    NameStr  = ered_nodes:get_prop_value_from_map(name,  NodeDef, TypeStr),
+    TopicStr = ered_nodes:get_prop_value_from_map(topic, Msg, ""),
 
     Data = #{
              id       => IdStr,
@@ -40,7 +41,15 @@ handle_incoming(NodeDef,Msg) ->
             },
 
     nodered:debug(nodered:ws(Msg), Data, error),
-    nodered:node_status(nodered:ws(Msg), NodeDef, "assert failed", "red", "dot"),
+
+    nodered:node_status(
+      nodered:ws(Msg),
+      NodeDef,
+      "assert failed",
+      "red",
+      "dot"
+     ),
+
     NodeDef.
 
 node_assert_failure(NodeDef) ->
