@@ -33,7 +33,6 @@
 handle_incoming(NodeDef, Msg) ->
     case maps:find('_is_manually_collecting', NodeDef) of
         {ok, {ok, 1, Lst}} ->
-            io:format("JOIN ~p~n", [NodeDef]),
             Lst2 = [Msg | Lst],
             Msg2 = maps:put(payload, Lst2, Msg),
             ered_nodes:send_msg_to_connected_nodes(NodeDef, Msg2),
@@ -42,14 +41,12 @@ handle_incoming(NodeDef, Msg) ->
             {ok, Cnt} = convert_to_int(Count),
             maps:put('_is_manually_collecting', {ok, Cnt, []}, NodeDef);
         {ok, {ok, Cnt, Lst}} ->
-            io:format("JOIN ~p~n", [NodeDef]),
             maps:put(
                 '_is_manually_collecting',
                 {ok, Cnt - 1, [Msg | Lst]},
                 NodeDef
             );
-        Bad ->
-            io:format("JOIN DAD ~p~n", [Bad]),
+        _ ->
             NodeDef
     end.
 
@@ -97,8 +94,6 @@ node_join(NodeDef) ->
     {ok, Count} = maps:find(count, NodeDef),
     {ok, PropType} = maps:find(propertyType, NodeDef),
 
-    io:format("Vlues ~p ~p ~p ~p~n", [Mode, Build, Count, PropType]),
     NodeDef2 = set_manual(Mode, Build, PropType, Count, NodeDef),
-    io:format("~p~n", [NodeDef2]),
 
     enter_receivership(?MODULE, NodeDef2, only_incoming).
