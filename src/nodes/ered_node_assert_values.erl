@@ -19,7 +19,6 @@ debug_data(NodeDef,ErrMsg) ->
     #{
        id       => IdStr,
        z        => ZStr,
-       '_alias' => IdStr,
        path     => ZStr,
        name     => NameStr,
        msg      => ErrMsg,
@@ -135,6 +134,10 @@ eql_msg_op(Prop, SrcVal, <<"str">>, ReqVal, _Msg) ->
                 )}
     end;
 eql_msg_op(Prop, SrcVal, <<"msg">>, ReqProp, Msg) ->
+    %% ReqProp not ReqVal because the value is actually a property name
+    %% on the message object. That property then contains the required
+    %% value.
+    %%
     %% {
     %%     "t": "eql",
     %%     "p": "_msgid",
@@ -157,8 +160,63 @@ eql_msg_op(Prop, SrcVal, <<"msg">>, ReqProp, Msg) ->
         _ ->
             {failed, ered_nodes:jstr("Prop not set on msg: '~p'", [ReqProp])}
     end;
+eql_msg_op(Prop, SrcVal, <<"num">>, ReqVal, _Msg) ->
+    %% "t": "eql",
+    %% "p": "payload",
+    %% "pt": "msg",
+    %% "to": "8",
+    %% "tot": "num"
+    case convert_to_num(SrcVal) of
+        {error, _} ->
+            {failed,
+                ered_nodes:jstr(
+                    "Prop val '~p' was not a num: ~p",
+                    [Prop, SrcVal]
+                )};
+        SrcNum ->
+            case convert_to_num(ReqVal) of
+                {error, _} ->
+                    {failed,
+                        ered_nodes:jstr(
+                            "Required val was not a num: ~p",
+                            [ReqVal]
+                        )};
+                ReqNum ->
+                    case ReqNum == SrcNum of
+                        true ->
+                            true;
+                        _ ->
+                            {failed,
+                                ered_nodes:jstr(
+                                    "Values not equal Exp: [~p] != Was: [~p]",
+                                    [ReqNum, SrcNum]
+                                )}
+                    end
+            end
+    end;
 eql_msg_op(_, _, _, _, _) ->
     unsupported.
+
+%%
+%%
+%% TODO This util and those defined in the switch node should be put
+%% TODO into a centralised utility module.
+convert_to_num(Val) when is_integer(Val) ->
+    Val;
+convert_to_num(Val) when is_float(Val) ->
+    Val;
+convert_to_num(Val) ->
+    case string:to_float(Val) of
+        {error, _} ->
+            case string:to_integer(Val) of
+                {error, _} ->
+                    {error, "no conversion possible"};
+                {V, _} ->
+                    V
+            end;
+        {V, _} ->
+            V
+    end.
 
 %%
 %%
@@ -182,8 +240,8 @@ check_rules([H | T], NodeDef, Msg, FCnt) ->
             check_rules(T, NodeDef, Msg, FCnt);
         unsupported ->
             ErrMsg = ered_nodes:jstr(
-                "Assert values: unsupported operator: '~p'",
-                [Op]
+                "Assert values: unsupported Rule: '~p'",
+                [H]
             ),
             nodered:debug(nodered:ws(Msg), debug_data(NodeDef, ErrMsg), notice),
             check_rules(T, NodeDef, Msg, FCnt);
@@ -196,6 +254,8 @@ check_rules([H | T], NodeDef, Msg, FCnt) ->
             check_rules(T, NodeDef, Msg, FCnt + 1)
     end.
 
+%%
+%%
 %% erlfmt:ignore equals and arrows should line up here.
 handle_stop(NodeDef,WsName) ->
     case maps:find('_mc_incoming',NodeDef) of
