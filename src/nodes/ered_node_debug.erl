@@ -51,6 +51,11 @@ handle_incoming(NodeDef,Msg) ->
             NameStr  = ered_nodes:get_prop_value_from_map(name,  NodeDef, Type),
             TopicStr = ered_nodes:get_prop_value_from_map(topic, Msg,     ""),
 
+            %% format is important here.
+            %% Triggery for large files and I don't know what. Using format
+            %% of "object" as opposed to "Object" (capital-o) causes less
+            %% breakage. Definitely something to investigate.
+            %% See info for test id: c4690c0a085d6ef5.
             Data = #{
                      id       => IdStr,
                      z        => ZStr,
@@ -59,7 +64,7 @@ handle_incoming(NodeDef,Msg) ->
                      name     => NameStr,
                      topic    => to_binary_if_not_binary(TopicStr),
                      msg      => Msg,
-                     format   => <<"Object">>
+                     format   => <<"object">>
             },
 
             nodered:debug(nodered:ws(Msg), Data, normal);
