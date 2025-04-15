@@ -91,6 +91,8 @@ ensure_unsubscribe_is_working_test() ->
     ),
 
     websocket_event_exchange:subscribe(wsname, nodeid, debug, normal, cb4321),
+    websocket_event_exchange:subscribe(wsname, nodeid, debug, normal, cb4321),
+    websocket_event_exchange:subscribe(wsname, nodeid, debug, warning, cd4321),
     websocket_event_exchange:subscribe(wsname, nodeid, debug, warning, cd4321),
     websocket_event_exchange:subscribe(
         wsname,
@@ -126,6 +128,7 @@ ensure_unsubscribe_is_working_test() ->
                                 [
                                     {warning, cd4321},
                                     {normal, cb4321},
+                                    {warning, cb1234},
                                     {normal, cb1234}
                                 ],
                             anothernodeid =>
@@ -162,6 +165,7 @@ ensure_unsubscribe_is_working_test() ->
                                 [
                                     {warning, cd4321},
                                     {normal, cb4321},
+                                    {warning, cb1234},
                                     {normal, cb1234}
                                 ],
                             anothernodeid =>
@@ -193,7 +197,9 @@ ensure_unsubscribe_is_working_test() ->
                 #{
                     wsname =>
                         #{
-                            nodeid => [{normal, cb4321}, {normal, cb1234}],
+                            nodeid => [{normal, cb4321},
+                                       {warning, cb1234},
+                                       {normal, cb1234}],
                             anothernodeid => [{warning, cb1234}]
                         },
                     anotherwsname =>
@@ -222,7 +228,9 @@ ensure_unsubscribe_is_working_test() ->
                 #{
                     wsname =>
                         #{
-                            nodeid => [{normal, cb4321}, {normal, cb1234}],
+                            nodeid => [{normal, cb4321},
+                                       {warning, cb1234},
+                                       {normal, cb1234}],
                             anothernodeid => [{warning, cb1234}]
                         },
                     anotherwsname =>
@@ -248,7 +256,7 @@ ensure_unsubscribe_is_working_test() ->
                 #{
                     wsname =>
                         #{
-                            nodeid => [{normal, cb1234}],
+                            nodeid => [{warning,cb1234},{normal, cb1234}],
                             anothernodeid => [{warning, cb1234}]
                         },
                     anotherwsname =>
@@ -275,7 +283,7 @@ ensure_unsubscribe_is_working_test() ->
                 #{
                     wsname =>
                         #{
-                            nodeid => [{normal, cb1234}],
+                            nodeid => [{warning,cb1234},{normal, cb1234}],
                             anothernodeid => [{warning, cb1234}]
                         },
                     anotherwsname =>

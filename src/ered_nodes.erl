@@ -151,13 +151,28 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
         {ok, <<"ut-assert-debug">>} ->
             {ok, TgtNodeId} = maps:find(nodeid, FinalNodeDef),
             {ok, MsgType} = maps:find(msgtype, FinalNodeDef),
-            websocket_event_exchange:subscribe(
-                WsName,
-                TgtNodeId,
-                debug,
-                MsgType,
-                NodePid
-            );
+            %%
+            %% inverse means that there should be **no** debug message, this
+            %% means that this node needs to subscribe too all types of debug
+            %% messages.
+            case maps:find(inverse, NodeDef) of
+                {ok, true} ->
+                    websocket_event_exchange:subscribe(
+                      WsName,
+                      TgtNodeId,
+                      debug,
+                      any,
+                      NodePid
+                     );
+                _ ->
+                    websocket_event_exchange:subscribe(
+                      WsName,
+                      TgtNodeId,
+                      debug,
+                      MsgType,
+                      NodePid
+                     )
+            end;
         _ ->
             ignore
     end,

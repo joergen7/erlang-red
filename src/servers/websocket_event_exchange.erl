@@ -62,6 +62,12 @@ node_status(_, _, _, _, _) ->
 
 %%
 %%
+subscribe(WsName, NodeId, debug, any, Cb) ->
+    %% any type is used by an inverse, i.e. the assert debug expects no
+    %% debug messages, so it has to listen to all debug message types.
+    gen_server:call(?MODULE, {subscribe_to_debug, WsName, NodeId, normal, Cb}),
+    gen_server:call(?MODULE, {subscribe_to_debug, WsName, NodeId, warning, Cb}),
+    gen_server:call(?MODULE, {subscribe_to_debug, WsName, NodeId, error, Cb});
 subscribe(WsName, NodeId, debug, Type, Cb) when is_atom(Type) ->
     gen_server:call(?MODULE, {subscribe_to_debug, WsName, NodeId, Type, Cb});
 subscribe(WsName, NodeId, debug, Type, Cb) when is_binary(Type) ->
@@ -183,8 +189,10 @@ handle_call(
             case maps:find(NodeId, Map) of
                 {ok, Ary} ->
                     %%
-                    %% Avoid duplication
-                    case lists:keyfind(Cb, 2, Ary) of
+                    %% Avoid duplication of {Type,Cb} pairs. A callback can
+                    %% be registered for the different types but not multiple
+                    %% times for the same type.
+                    case lists:search( fun (A) -> A == {Type,Cb} end, Ary) of
                         false ->
                             DStore2 = maps:put(
                                 WsName,
