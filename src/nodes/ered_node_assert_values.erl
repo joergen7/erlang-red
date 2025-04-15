@@ -2,6 +2,7 @@
 
 -export([node_assert_values/1]).
 -export([handle_incoming/2]).
+-export([handle_stop/2]).
 
 -import(node_receivership, [enter_receivership/3]).
 
@@ -195,6 +196,40 @@ check_rules([H | T], NodeDef, Msg, FCnt) ->
             check_rules(T, NodeDef, Msg, FCnt + 1)
     end.
 
+%% erlfmt:ignore equals and arrows should line up here.
+handle_stop(NodeDef,WsName) ->
+    case maps:find('_mc_incoming',NodeDef) of
+        {ok,0} ->
+            {ok, IdStr}   = maps:find(id,NodeDef),
+            {ok, TypeStr} = maps:find(type,NodeDef),
+
+            ered_nodes:this_should_not_happen(
+              NodeDef,
+              io_lib:format(
+                "Assert Values Error: Node was not reached [~p](~p)\n",
+                [TypeStr,IdStr])
+            ),
+
+            IdStr   = ered_nodes:get_prop_value_from_map(id,   NodeDef),
+            ZStr    = ered_nodes:get_prop_value_from_map(z,    NodeDef),
+            NameStr = ered_nodes:get_prop_value_from_map(name, NodeDef,
+                                                         TypeStr),
+            Data = #{
+                     id       => IdStr,
+                     z        => ZStr,
+                     path     => ZStr,
+                     name     => NameStr,
+                     msg      => <<"Assert Values Not Reached">>,
+                     format   => <<"string">>
+            },
+
+            nodered:debug(WsName, Data, error),
+            nodered:node_status(WsName, NodeDef, "assert failed", "red", "dot");
+        _ ->
+            ok
+    end.
+
+
 handle_incoming(NodeDef, Msg) ->
     case maps:find(rules, NodeDef) of
         {ok, Ary} ->
@@ -207,4 +242,4 @@ handle_incoming(NodeDef, Msg) ->
 
 node_assert_values(NodeDef) ->
     ered_nodes:node_init(NodeDef),
-    enter_receivership(?MODULE, NodeDef, only_incoming).
+    enter_receivership(?MODULE, NodeDef, stop_and_incoming).
