@@ -58,7 +58,7 @@ handle_incoming(NodeDef,Msg) ->
                      path     => ZStr,
                      name     => NameStr,
                      topic    => to_binary_if_not_binary(TopicStr),
-                     msg      => jiffy:encode(Msg),
+                     msg      => Msg,
                      format   => <<"Object">>
             },
 
