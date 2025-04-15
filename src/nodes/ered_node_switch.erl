@@ -34,7 +34,7 @@ int_to_float(Val) ->
                 true ->
                     {Val, ok};
                 _ ->
-                    io:format("Unabel to convert to num ~p\n", [Val]),
+                    io:format("Unable to convert to num ~p\n", [Val]),
                     {0, error}
             end;
         {V, R} ->
