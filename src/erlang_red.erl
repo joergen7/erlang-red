@@ -21,7 +21,7 @@ start(_Type, _Args) ->
         {'_',
          [
           %%
-          %% Sock'em in the eye websocket
+          %% Sock'em in the eye websockets
           %%
           {"/node-red/comms",
               ered_http_nodered_websocket, #{stats_interval => 30000}},
@@ -55,6 +55,20 @@ start(_Type, _Args) ->
           %%
           %% GET handlers for delivery of the static content
           %%
+
+          %%
+          %% Flow Compare node allows comparing the flow data in the browser
+          %% with what is stored on the server. Good for knowing the in-browser
+          %% changes made to installed test cases.
+          {"/FlowCompare/jslib/diff.min.js",
+              [{method, <<"GET">>}],
+              cowboy_static,
+              {file, "./priv/vendor/diff.min.js"}},
+
+          {"/FlowCompare/jslib/flowviewer.min.js",
+              [{method, <<"GET">>}],
+              cowboy_static,
+              {file, "./priv/vendor/flowviewer.min.js"}},
 
           %% TODO the constraints here DONT WORK - Cowboy just
           %% TODO ignores them because Bindings is empty.

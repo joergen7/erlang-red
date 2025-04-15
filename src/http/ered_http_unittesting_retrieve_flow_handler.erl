@@ -26,8 +26,19 @@ handle_response(Req, State) ->
             {<<"[]">>, Req, State};
         FlowId ->
             FileName = flow_store_server:get_filename(FlowId),
-            {ok, FileData} = file:read_file(FileName),
-            {jiffy:encode(#{flowdata => jiffy:decode(FileData)}), Req, State}
+            case file:read_file(FileName) of
+                {ok, FileData} ->
+                    {
+                        jiffy:encode(#{flowdata => jiffy:decode(FileData)}),
+                        Req,
+                        State
+                    };
+                %%
+                %% File not found, send empty content. This is good for the
+                %% FlowCompare plugin/node that uses this endpoint.
+                _ ->
+                    {jiffy:encode(#{flowdata => []}), Req, State}
+            end
     end.
 
 format_error(Reason, Req) ->
