@@ -34,7 +34,7 @@
         "ctrl-y": "core:redo"
     },
     "red-ui-workspace": {
-        "ctrl-shift-w": "unittesting:test-current-workspace",
+        "ctrl-shift-e": "unittesting:test-current-workspace",
         "backspace": "core:delete-selection",
         "ctrl-backspace": "core:delete-selection-and-reconnect",
         "delete": "core:delete-selection",
