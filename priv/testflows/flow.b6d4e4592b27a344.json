@@ -4,7 +4,7 @@
         "type": "tab",
         "label": "[link nodes] (F) implement time out on link call node",
         "disabled": false,
-        "info": "",
+        "info": "A link call node has a separate timeout that ensures that a link call does not wait on broken nodes.\n\nThis timeout specification needs implementing but hasn't at the time of writing.\n\n",
         "env": [
             {
                 "name": "TIMEOUT",
