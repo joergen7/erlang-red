@@ -6,10 +6,29 @@
 -import(node_receivership, [enter_receivership/3]).
 
 %%
+%%
+%% erlfmt:ignore lined up and to attention
+unsupported(NodeDef, Msg, ErrMsg) ->
+    IdStr    = ered_nodes:get_prop_value_from_map(id,    NodeDef),
+    ZStr     = ered_nodes:get_prop_value_from_map(z,     NodeDef),
+    NameStr  = ered_nodes:get_prop_value_from_map(name,  NodeDef, <<"change">>),
+
+    Data = #{
+      id       => IdStr,
+      z        => ZStr,
+      path     => ZStr,
+      name     => NameStr,
+      msg      => ErrMsg,
+      format   => <<"string">>
+     },
+
+    nodered:debug(nodered:ws(Msg), Data, notice).
+
+%%
 %% Inject node should have at least one outgoing wire
 %%
 
-do_move({ok, <<"msg">>}, {ok, <<"msg">>}, {ok, FromProp}, {ok, ToProp}, Msg) ->
+do_move({ok, <<"msg">>}, {ok, <<"msg">>}, {ok, FromProp}, {ok, ToProp}, Msg, _) ->
     case maps:find(binary_to_atom(FromProp), Msg) of
         {ok, Val} ->
             maps:put(
@@ -20,19 +39,29 @@ do_move({ok, <<"msg">>}, {ok, <<"msg">>}, {ok, FromProp}, {ok, ToProp}, Msg) ->
         _ ->
             Msg
     end;
-do_move(_, _, _, _, Msg) ->
+do_move(A, B, C, D, Msg, NodeDef) ->
+    unsupported(
+        NodeDef,
+        Msg,
+        ered_nodes:jstr("Unsupported move rule: ~p, ~p, ~p, ~p", [A, B, C, D])
+    ),
     Msg.
 
 %%
 %% first type check ...
-do_change({ok, <<"msg">>}, {ok, <<"str">>}, {ok, <<"str">>}, Rule, Msg) ->
+do_change({ok, <<"msg">>}, {ok, <<"str">>}, {ok, <<"str">>}, Rule, Msg, _) ->
     do_change_str(
         maps:find(p, Rule),
         maps:find(from, Rule),
         maps:find(to, Rule),
         Msg
     );
-do_change(_, _, _, _, Msg) ->
+do_change(A, B, C, _, Msg, NodeDef) ->
+    unsupported(
+        NodeDef,
+        Msg,
+        ered_nodes:jstr("Unsupported change rule: ~p, ~p, ~p", [A, B, C])
+    ),
     Msg.
 
 %%
@@ -60,9 +89,9 @@ do_change_str({ok, Prop}, {ok, FromStr}, {ok, ToStr}, Msg) ->
 
 %%
 %%
-do_set_value(Prop, Value, <<"str">>, Msg) ->
+do_set_value(Prop, Value, <<"str">>, Msg, _NodeDef) ->
     maps:put(binary_to_atom(Prop), Value, Msg);
-do_set_value(Prop, Value, <<"msg">>, Msg) ->
+do_set_value(Prop, Value, <<"msg">>, Msg, _NodeDef) ->
     %% set a propery on the message to the value of another
     %% property on the message
     case maps:find(binary_to_atom(Value), Msg) of
@@ -71,18 +100,74 @@ do_set_value(Prop, Value, <<"msg">>, Msg) ->
         _ ->
             maps:put(binary_to_atom(Prop), <<>>, Msg)
     end;
-do_set_value(_, _, _, Msg) ->
+do_set_value(Prop, Value, <<"jsonata">>, Msg, NodeDef) ->
+    %% "t": "set",
+    %% "p": "payload",
+    %% "pt": "msg",
+    %% "to": "$count($$.payload)",
+    %% "tot": "jsonata"
+    case Value == <<"$count($$.payload)">> of
+        true ->
+            case maps:find(payload, Msg) of
+                {ok, Val} ->
+                    case erlang:is_list(Val) of
+                        true ->
+                            maps:put(
+                                binary_to_atom(Prop),
+                                erlang:length(Val),
+                                Msg
+                            );
+                        _ ->
+                            unsupported(
+                                NodeDef,
+                                Msg,
+                                ered_nodes:jstr(
+                                    "Payload was not a list: ~p",
+                                    [Val]
+                                )
+                            ),
+                            Msg
+                    end;
+                _ ->
+                    unsupported(
+                        NodeDef,
+                        Msg,
+                        ered_nodes:jstr(
+                            "Payload not set on Msg: ~p",
+                            [Msg]
+                        )
+                    ),
+                    Msg
+            end;
+        _ ->
+            unsupported(
+                NodeDef,
+                Msg,
+                ered_nodes:jstr("Unsupport jsonata term: ~p", [Value])
+            ),
+            Msg
+    end;
+do_set_value(_, _, Tot, Msg, NodeDef) ->
+    unsupported(
+        NodeDef,
+        Msg,
+        ered_nodes:jstr("Unsupport set ToT: ~p", [Tot])
+    ),
     Msg.
 
 %%
 %%
-handle_rules([], Msg) ->
+handle_rules([], Msg, _NodeDef) ->
     Msg;
-handle_rules([Rule | MoreRules], Msg) ->
+handle_rules([Rule | MoreRules], Msg, NodeDef) ->
     {ok, RuleType} = maps:find(t, Rule),
-    handle_rules(MoreRules, handle_rule(RuleType, Rule, Msg)).
+    handle_rules(
+        MoreRules,
+        handle_rule(RuleType, Rule, Msg, NodeDef),
+        NodeDef
+    ).
 
-handle_rule(<<"set">>, Rule, Msg) ->
+handle_rule(<<"set">>, Rule, Msg, NodeDef) ->
     %%
     %% pt can be many things (flow,global,...) we only support
     %% msg - at least until this comment gets removed.
@@ -92,11 +177,11 @@ handle_rule(<<"set">>, Rule, Msg) ->
             {ok, Prop} = maps:find(p, Rule),
             {ok, Value} = maps:find(to, Rule),
             {ok, ToType} = maps:find(tot, Rule),
-            do_set_value(Prop, Value, ToType, Msg);
+            do_set_value(Prop, Value, ToType, Msg, NodeDef);
         _ ->
             Msg
     end;
-handle_rule(<<"delete">>, Rule, Msg) ->
+handle_rule(<<"delete">>, Rule, Msg, _NodeDef) ->
     case maps:find(pt, Rule) of
         {ok, <<"msg">>} ->
             {ok, Prop} = maps:find(p, Rule),
@@ -105,30 +190,38 @@ handle_rule(<<"delete">>, Rule, Msg) ->
         _ ->
             Msg
     end;
-handle_rule(<<"move">>, Rule, Msg) ->
+handle_rule(<<"move">>, Rule, Msg, NodeDef) ->
     io:format("Rule ~p~n", [Rule]),
     do_move(
         maps:find(pt, Rule),
         maps:find(tot, Rule),
         maps:find(p, Rule),
         maps:find(to, Rule),
-        Msg
+        Msg,
+        NodeDef
     );
-handle_rule(<<"change">>, Rule, Msg) ->
+handle_rule(<<"change">>, Rule, Msg, NodeDef) ->
     do_change(
         maps:find(pt, Rule),
         maps:find(fromt, Rule),
         maps:find(tot, Rule),
         Rule,
-        Msg
+        Msg,
+        NodeDef
     );
-handle_rule(_, _Rule, Msg) ->
+handle_rule(_, Rule, Msg, NodeDef) ->
+    unsupported(
+        NodeDef,
+        Msg,
+        ered_nodes:jstr("Unsupport Rule: ~p", [Rule])
+    ),
     Msg.
 
 handle_incoming(NodeDef, Msg) ->
     io:format("change node altering Msg\n"),
     {ok, Rules} = maps:find(rules, NodeDef),
-    ered_nodes:send_msg_to_connected_nodes(NodeDef, handle_rules(Rules, Msg)),
+    Msg2 = handle_rules(Rules, Msg, NodeDef),
+    ered_nodes:send_msg_to_connected_nodes(NodeDef, Msg2),
     NodeDef.
 
 node_change(NodeDef) ->
