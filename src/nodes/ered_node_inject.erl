@@ -2,7 +2,6 @@
 
 -export([node_inject/1]).
 -export([handle_outgoing/2]).
--export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
 
@@ -77,11 +76,6 @@ handle_outgoing(NodeDef, Msg) ->
     ),
     NodeDef.
 
-handle_incoming(NodeDef, _Msg) ->
-    {ok, IdStr} = maps:find(id, NodeDef),
-    io:format("ERROR: Inject node received msg: Id: ~p\n", [IdStr]),
-    NodeDef.
-
 node_inject(NodeDef) ->
     ered_nodes:node_init(NodeDef),
-    enter_receivership(?MODULE, NodeDef, incoming_and_outgoing).
+    enter_receivership(?MODULE, NodeDef, only_outgoing).

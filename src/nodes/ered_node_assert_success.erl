@@ -2,6 +2,7 @@
 
 -export([node_assert_success/1]).
 -export([handle_stop/2]).
+-export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
 
@@ -38,6 +39,12 @@ handle_stop(NodeDef,WsName) ->
             ok
     end.
 
+%%
+%% even though it does nothing with these messages, it still needs to
+%% recieve them, after all it counts them.
+handle_incoming(NodeDef, _Msg) ->
+    NodeDef.
+
 node_assert_success(NodeDef) ->
     ered_nodes:node_init(NodeDef),
-    enter_receivership(?MODULE, NodeDef, only_stop).
+    enter_receivership(?MODULE, NodeDef, stop_and_incoming).

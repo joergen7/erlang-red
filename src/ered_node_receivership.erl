@@ -7,6 +7,18 @@ increment_message_counter(NodeDef, CntName) ->
     maps:put(CntName, V + 1, NodeDef).
 
 %%
+%% this is called if a message type was received by a node that did not
+%% claim to receive such messages
+bad_routing(NodeDef, Type, Msg) ->
+    ered_nodes:this_should_not_happen(
+        NodeDef,
+        io_lib:format(
+            "Node received unhandled type ~p Node: ~p Msg: ~p\n",
+            [Type, NodeDef, Msg]
+        )
+    ).
+
+%%
 %% TODO Not to self: once I get the hang of MACROS replace this receivership
 %% TODO stuff with MACROS - this stuff needs to be fast since its called
 %% TODO whenever messages are bounced around a flow.
@@ -37,8 +49,9 @@ enter_receivership(Module, NodeDef, only_incoming_with_active) ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
             NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2, Msg]),
             enter_receivership(Module, NodeDef3, only_incoming_with_active);
-        {outgoing, _Msg} ->
+        {outgoing, Msg} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
+            bad_routing(NodeDef2, outgoing, Msg),
             enter_receivership(Module, NodeDef2, only_incoming_with_active)
     end;
 %% assert values fails if it never recevied a message
@@ -51,8 +64,9 @@ enter_receivership(Module, NodeDef, stop_and_incoming) ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
             NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2, Msg]),
             enter_receivership(Module, NodeDef3, stop_and_incoming);
-        {outgoing, _Msg} ->
+        {outgoing, Msg} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
+            bad_routing(NodeDef2, outgoing, Msg),
             enter_receivership(Module, NodeDef2, stop_and_incoming)
     end;
 %% this is used  by the assert success node, since it does nothing with a
@@ -63,11 +77,13 @@ enter_receivership(Module, NodeDef, only_stop) ->
         {stop, WsName} ->
             erlang:apply(Module, handle_stop, [NodeDef, WsName]),
             ok;
-        {incoming, _Msg} ->
+        {incoming, Msg} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
+            bad_routing(NodeDef2, incoming, Msg),
             enter_receivership(Module, NodeDef2, only_stop);
-        {outgoing, _Msg} ->
+        {outgoing, Msg} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
+            bad_routing(NodeDef2, outgoing, Msg),
             enter_receivership(Module, NodeDef2, only_stop)
     end;
 enter_receivership(Module, NodeDef, websocket_events_and_stop) ->
@@ -111,14 +127,19 @@ enter_receivership(Module, NodeDef, link_call_node) ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
             NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2, Msg]),
             enter_receivership(Module, NodeDef3, link_call_node);
-        {outgoing, _Msg} ->
+        {outgoing, Msg} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
+            bad_routing(NodeDef2, outgoing, Msg),
             enter_receivership(Module, NodeDef2, link_call_node);
         {link_return, Msg} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_link_return'),
             NodeDef3 = erlang:apply(Module, handle_link_return, [NodeDef2, Msg]),
             enter_receivership(Module, NodeDef3, link_call_node)
     end;
+%%
+%% incoming only nodes are things such debug or data stores node that receives
+%% messages and store them. These nodes don't perform any computation on the
+%% messages.
 enter_receivership(Module, NodeDef, only_incoming) ->
     receive
         {stop, _WsName} ->
@@ -127,9 +148,28 @@ enter_receivership(Module, NodeDef, only_incoming) ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
             NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2, Msg]),
             enter_receivership(Module, NodeDef3, only_incoming);
-        {outgoing, _Msg} ->
+        {outgoing, Msg} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
+            bad_routing(NodeDef2, outgoing, Msg),
             enter_receivership(Module, NodeDef2, only_incoming)
+    end;
+%%
+%% outgoing only nodes are things like inject, http in and mqtt in - these
+%% nodes are sources of messages but never receive these within the flow
+%% rather they receive data from a third-party source and pass that data
+%% into the flow.
+enter_receivership(Module, NodeDef, only_outgoing) ->
+    receive
+        {stop, _WsName} ->
+            ok;
+        {incoming, Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
+            bad_routing(NodeDef2, incoming, Msg),
+            enter_receivership(Module, NodeDef2, only_outgoing);
+        {outgoing, Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
+            NodeDef3 = erlang:apply(Module, handle_outgoing, [NodeDef2, Msg]),
+            enter_receivership(Module, NodeDef3, only_outgoing)
     end;
 enter_receivership(Module, NodeDef, Type) ->
     throw(
