@@ -7,7 +7,7 @@
         "info": "",
         "env": [
             {
-                "name": "TIMEOUT",
+                "name": "ERED_TIMEOUT",
                 "value": "7",
                 "type": "num"
             }

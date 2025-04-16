@@ -5,7 +5,13 @@
         "label": "[json] parse example json content",
         "disabled": false,
         "info": "parse a json string into an object.\n\nread a file containing JSON, pass that off to a JSON node to convert that to list of maps (in this case).\n\nthen count the number of elements in the list and compare that number with 8!\n\na more complicated flow that is supported - yeah! :+1:\n\n## Sometime bug here\n\nDebug node can generate decode errors when deal with the content here and it has to do with format.\n\n--> [decodeObject](https://github.com/node-red/node-red/blob/1eb9aa0eedcbcb6fab78ec950523ea71aeaa2760/packages/node_modules/%40node-red/editor-client/src/js/ui/utils.js#L1277-L1300) causes errors if the format on the debug message isn't correct.",
-        "env": []
+        "env": [
+            {
+                "name": "ERED_KEEPRUNNING",
+                "value": "false",
+                "type": "str"
+            }
+        ]
     },
     {
         "id": "453848d471cdd83d",
@@ -103,22 +109,6 @@
         "statusType": "auto",
         "x": 714,
         "y": 335,
-        "wires": []
-    },
-    {
-        "id": "57f58d3e81d73921",
-        "type": "debug",
-        "z": "c4690c0a085d6ef5",
-        "name": "debug 8",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 593,
-        "y": 232,
         "wires": []
     },
     {
@@ -222,6 +212,22 @@
         "statusType": "auto",
         "x": 1148,
         "y": 195,
+        "wires": []
+    },
+    {
+        "id": "57f58d3e81d73921",
+        "type": "debug",
+        "z": "c4690c0a085d6ef5",
+        "name": "debug 8",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 608,
+        "y": 231,
         "wires": []
     }
 ]

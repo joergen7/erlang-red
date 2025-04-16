@@ -7,7 +7,7 @@
         "info": "Need a test for doing this but that will required two flow tabs.",
         "env": [
             {
-                "name": "PENDING",
+                "name": "ERED_PENDING",
                 "value": "true",
                 "type": "str"
             }

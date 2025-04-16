@@ -7,12 +7,12 @@
         "info": "A link call node has a separate timeout that ensures that a link call does not wait on broken nodes.\n\nThis timeout specification needs implementing but hasn't at the time of writing.\n\n",
         "env": [
             {
-                "name": "TIMEOUT",
+                "name": "ERED_TIMEOUT",
                 "value": "10",
                 "type": "str"
             },
             {
-                "name": "PENDING",
+                "name": "ERED_PENDING",
                 "value": "true",
                 "type": "str"
             }
