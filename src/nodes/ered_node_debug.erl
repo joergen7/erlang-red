@@ -95,4 +95,4 @@ handle_incoming(NodeDef, Msg) ->
 
 node_debug(NodeDef) ->
     ered_nodes:node_init(NodeDef),
-    enter_receivership(?MODULE, NodeDef, only_incoming).
+    enter_receivership(?MODULE, NodeDef, only_incoming_with_active).

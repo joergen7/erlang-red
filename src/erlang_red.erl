@@ -52,6 +52,16 @@ start(_Type, _Args) ->
           {"/flows",          ered_http_nodered_flow_deploy_handler, []},
           {"/inject/:nodeid", ered_http_nodered_inject_node_button_handler, []},
 
+          {"/debug/view/debug-utils.js",
+              [{method, <<"GET">>}],
+              cowboy_static,
+              {file, "./node-red-frontend/debug/view/debug-utils.js"}},
+
+          {"/debug/:nodeid/:action",
+              [{method, <<"POST">>}],
+              ered_http_nodered_debug_node_active,
+              []},
+
           %%
           %% GET handlers for delivery of the static content
           %%

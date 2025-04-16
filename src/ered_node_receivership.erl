@@ -22,11 +22,31 @@ increment_message_counter(NodeDef, CntName) ->
 %% TODO2 but is that the best alternative?
 %%
 
+%% the disabled and enabled messages are specifically for the debug node.
+enter_receivership(Module, NodeDef, only_incoming_with_active) ->
+    receive
+        {stop, _WsName} ->
+            ok;
+        {disable, _WsName} ->
+            NodeDef2 = maps:put(active, false, NodeDef),
+            enter_receivership(Module, NodeDef2, only_incoming_with_active);
+        {enable, _WsName} ->
+            NodeDef2 = maps:put(active, true, NodeDef),
+            enter_receivership(Module, NodeDef2, only_incoming_with_active);
+        {incoming, Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
+            NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2, Msg]),
+            enter_receivership(Module, NodeDef3, only_incoming_with_active);
+        {outgoing, _Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
+            enter_receivership(Module, NodeDef2, only_incoming_with_active)
+    end;
 %% assert values fails if it never recevied a message
 enter_receivership(Module, NodeDef, stop_and_incoming) ->
     receive
         {stop, WsName} ->
-            erlang:apply(Module, handle_stop, [NodeDef, WsName]);
+            erlang:apply(Module, handle_stop, [NodeDef, WsName]),
+            ok;
         {incoming, Msg} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
             NodeDef3 = erlang:apply(Module, handle_incoming, [NodeDef2, Msg]),
@@ -41,7 +61,8 @@ enter_receivership(Module, NodeDef, stop_and_incoming) ->
 enter_receivership(Module, NodeDef, only_stop) ->
     receive
         {stop, WsName} ->
-            erlang:apply(Module, handle_stop, [NodeDef, WsName]);
+            erlang:apply(Module, handle_stop, [NodeDef, WsName]),
+            ok;
         {incoming, _Msg} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
             enter_receivership(Module, NodeDef2, only_stop);
@@ -54,10 +75,15 @@ enter_receivership(Module, NodeDef, websocket_events_and_stop) ->
         {stop, WsName} ->
             NodeDef2 = erlang:apply(Module, handle_stop, [NodeDef, WsName]),
             {ok, NodePid} = maps:find('_node_pid_', NodeDef2),
-            websocket_event_exchange:unsubscribe(WsName, NodePid);
+            websocket_event_exchange:unsubscribe(WsName, NodePid),
+            ok;
         {ws_event, Details} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_websocket'),
-            NodeDef3 = erlang:apply(Module, handle_ws_event, [NodeDef2, Details]),
+            NodeDef3 = erlang:apply(
+                Module,
+                handle_ws_event,
+                [NodeDef2, Details]
+            ),
             enter_receivership(Module, NodeDef3, websocket_events_and_stop)
     end;
 enter_receivership(Module, NodeDef, incoming_and_outgoing) ->
