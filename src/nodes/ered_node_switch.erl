@@ -3,7 +3,7 @@
 -export([node_switch/1]).
 -export([handle_incoming/2]).
 
--import(node_receivership, [enter_receivership/3]).
+-import(ered_node_receivership, [enter_receivership/3]).
 
 %%
 %% representation of a switch node.

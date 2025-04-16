@@ -3,7 +3,7 @@
 -export([node_debug/1]).
 -export([handle_incoming/2]).
 
--import(node_receivership, [enter_receivership/3]).
+-import(ered_node_receivership, [enter_receivership/3]).
 
 %%
 %% Debug nodes have no outgoing wires.

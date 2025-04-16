@@ -3,7 +3,7 @@
 -export([node_assert_success/1]).
 -export([handle_stop/2]).
 
--import(node_receivership, [enter_receivership/3]).
+-import(ered_node_receivership, [enter_receivership/3]).
 
 %% erlfmt:ignore equals and arrows should line up here.
 handle_stop(NodeDef,WsName) ->

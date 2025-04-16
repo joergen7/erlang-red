@@ -8,7 +8,7 @@
 -export([handle_ws_event/2]).
 -export([handle_stop/2]).
 
--import(node_receivership, [enter_receivership/3]).
+-import(ered_node_receivership, [enter_receivership/3]).
 
 -export([post_failure/3]).
 

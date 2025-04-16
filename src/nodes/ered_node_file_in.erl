@@ -7,7 +7,7 @@
 -export([node_file_in/1]).
 -export([handle_incoming/2]).
 
--import(node_receivership, [enter_receivership/3]).
+-import(ered_node_receivership, [enter_receivership/3]).
 
 %% erlfmt:ignore lined up and to attention
 send_out_debug_msg(NodeDef, Msg, ErrMsg, DebugType) ->

@@ -3,7 +3,7 @@
 -export([node_link_out/1]).
 -export([handle_incoming/2]).
 
--import(node_receivership, [enter_receivership/3]).
+-import(ered_node_receivership, [enter_receivership/3]).
 
 send_to_link_call({ok, NodeId}, Msg) ->
     NodePid = ered_nodes:nodeid_to_pid(nodered:ws(Msg), NodeId),

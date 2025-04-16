@@ -1,4 +1,4 @@
--module(node_receivership).
+-module(ered_node_receivership).
 
 -export([enter_receivership/3]).
 

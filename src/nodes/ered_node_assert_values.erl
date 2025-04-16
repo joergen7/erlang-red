@@ -4,7 +4,7 @@
 -export([handle_incoming/2]).
 -export([handle_stop/2]).
 
--import(node_receivership, [enter_receivership/3]).
+-import(ered_node_receivership, [enter_receivership/3]).
 
 is_same(Same, Same) -> true;
 is_same(_, _) -> false.

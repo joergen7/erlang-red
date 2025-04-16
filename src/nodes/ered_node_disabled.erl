@@ -14,7 +14,7 @@
 -export([handle_incoming/2]).
 -export([handle_outgoing/2]).
 
--import(node_receivership, [enter_receivership/3]).
+-import(ered_node_receivership, [enter_receivership/3]).
 
 handle_incoming(NodeDef, _Msg) ->
     NodeDef.

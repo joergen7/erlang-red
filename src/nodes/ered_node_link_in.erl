@@ -3,7 +3,7 @@
 -export([node_link_in/1]).
 -export([handle_incoming/2]).
 
--import(node_receivership, [enter_receivership/3]).
+-import(ered_node_receivership, [enter_receivership/3]).
 
 %%
 %% Strangely a "link in" node also has a "links" attribute (as does the link

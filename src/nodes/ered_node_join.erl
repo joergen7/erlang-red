@@ -3,7 +3,7 @@
 -export([node_join/1]).
 -export([handle_incoming/2]).
 
--import(node_receivership, [enter_receivership/3]).
+-import(ered_node_receivership, [enter_receivership/3]).
 
 %%
 %% join node is the companion of the split node that generates many messages

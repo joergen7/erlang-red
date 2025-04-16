@@ -3,7 +3,7 @@
 -export([node_json/1]).
 -export([handle_incoming/2]).
 
--import(node_receivership, [enter_receivership/3]).
+-import(ered_node_receivership, [enter_receivership/3]).
 
 string_like(Val) when is_binary(Val) ->
     true;

@@ -3,7 +3,7 @@
 -export([node_template/1]).
 -export([handle_incoming/2]).
 
--import(node_receivership, [enter_receivership/3]).
+-import(ered_node_receivership, [enter_receivership/3]).
 
 %%
 %% junctions are decorative elements that are "transparent" - they just

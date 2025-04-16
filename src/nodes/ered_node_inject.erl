@@ -4,7 +4,7 @@
 -export([handle_outgoing/2]).
 -export([handle_incoming/2]).
 
--import(node_receivership, [enter_receivership/3]).
+-import(ered_node_receivership, [enter_receivership/3]).
 
 %%
 %% Inject node should have at least one outgoing wire, if not then the

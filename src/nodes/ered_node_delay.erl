@@ -3,7 +3,7 @@
 -export([node_delay/1]).
 -export([handle_incoming/2]).
 
--import(node_receivership, [enter_receivership/3]).
+-import(ered_node_receivership, [enter_receivership/3]).
 
 convert_units_to_milliseconds({ok, <<"days">>}, {ok, Val}) ->
     element(1, string:to_integer(Val)) * 1000 * 60 * 60 * 24;
