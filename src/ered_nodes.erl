@@ -269,6 +269,8 @@ node_type_to_fun(<<"template">>) ->
     {ered_node_template, node_template};
 node_type_to_fun(<<"join">>) ->
     {ered_node_join, node_join};
+node_type_to_fun(<<"split">>) ->
+    {ered_node_split, node_split};
 %%
 %% Assert nodes for testing functionality of the nodes
 %%
