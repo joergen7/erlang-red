@@ -4,28 +4,12 @@
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
+-import(nodered, [unsupported/3]).
 
 %%
-%%
-%% erlfmt:ignore lined up and to attention
-unsupported(NodeDef, Msg, ErrMsg) ->
-    IdStr    = ered_nodes:get_prop_value_from_map(id,    NodeDef),
-    ZStr     = ered_nodes:get_prop_value_from_map(z,     NodeDef),
-    NameStr  = ered_nodes:get_prop_value_from_map(name,  NodeDef, <<"change">>),
-
-    Data = #{
-      id       => IdStr,
-      z        => ZStr,
-      path     => ZStr,
-      name     => NameStr,
-      msg      => ErrMsg,
-      format   => <<"string">>
-     },
-
-    nodered:debug(nodered:ws(Msg), Data, notice).
-
-%%
-%% Inject node should have at least one outgoing wire
+%% Change node modifies the contents of messages but also sets values in
+%% the flow and global contexts. It has many possible features and this
+%% implementation only implements a small subset
 %%
 
 do_move({ok, <<"msg">>}, {ok, <<"msg">>}, {ok, FromProp}, {ok, ToProp}, Msg, _) ->
