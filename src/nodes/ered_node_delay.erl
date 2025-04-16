@@ -4,58 +4,50 @@
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
+-import(nodered, [
+    unsupported/3
+]).
+-import(ered_nodes, [
+    jstr/2,
+    send_msg_to_connected_nodes/2
+]).
 
 convert_units_to_milliseconds({ok, <<"days">>}, {ok, Val}) ->
-    element(1, string:to_integer(Val)) * 1000 * 60 * 60 * 24;
+    {ok, element(1, string:to_integer(Val)) * 1000 * 60 * 60 * 24};
 convert_units_to_milliseconds({ok, <<"hours">>}, {ok, Val}) ->
-    element(1, string:to_integer(Val)) * 1000 * 60 * 60;
+    {ok, element(1, string:to_integer(Val)) * 1000 * 60 * 60};
 convert_units_to_milliseconds({ok, <<"minutes">>}, {ok, Val}) ->
-    element(1, string:to_integer(Val)) * 1000 * 60;
+    {ok, element(1, string:to_integer(Val)) * 1000 * 60};
 convert_units_to_milliseconds({ok, <<"seconds">>}, {ok, Val}) ->
-    element(1, string:to_integer(Val)) * 1000;
+    {ok, element(1, string:to_integer(Val)) * 1000};
 convert_units_to_milliseconds({ok, <<"milliseconds">>}, {ok, Val}) ->
-    element(1, string:to_integer(Val));
+    {ok, element(1, string:to_integer(Val))};
 convert_units_to_milliseconds(A, B) ->
-    io:format("WARNING: Delay nomatch for ~p & ~p~n", [A, B]),
-    0.
+    {error, jstr("WARNING: Delay nomatch for ~p & ~p~n", [A, B])}.
 
 %%
 %% this must return a millisecond value.
-compute_pause({ok, <<"delay">>}, NodeDef, _Msg) ->
-    convert_units_to_milliseconds(
+compute_pause({ok, <<"delay">>}, NodeDef, Msg) ->
+    ConversionResult = convert_units_to_milliseconds(
         maps:find(timeoutUnits, NodeDef),
         maps:find(timeout, NodeDef)
-    );
+    ),
+    case ConversionResult of
+        {ok, V} ->
+            V;
+        {error, ErrMsg} ->
+            unsupported(NodeDef, Msg, ErrMsg),
+            0
+    end;
 compute_pause(PType, NodeDef, Msg) ->
-    ErrMsg = ered_nodes:jstr("Unknown PauseType: '~p'", [PType]),
-
-    ered_nodes:this_should_not_happen(
-        NodeDef,
-        io_lib:format("~p ~p\n", [ErrMsg, Msg])
-    ),
-
-    nodered:debug(
-        nodered:ws(Msg),
-        nodered:debug_string(NodeDef, ErrMsg),
-        notice
-    ),
-
-    nodered:node_status(
-        nodered:ws(Msg),
-        NodeDef,
-        "unknown pauseType",
-        "red",
-        "dot"
-    ),
+    unsupported(NodeDef, Msg, jstr("PauseType: '~p'", [PType])),
     0.
 
 %%
 %%
 handle_incoming(NodeDef, Msg) ->
     timer:sleep(compute_pause(maps:find(pauseType, NodeDef), NodeDef, Msg)),
-
-    ered_nodes:send_msg_to_connected_nodes(NodeDef, Msg),
-
+    send_msg_to_connected_nodes(NodeDef, Msg),
     NodeDef.
 
 node_delay(NodeDef) ->

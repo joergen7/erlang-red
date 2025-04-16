@@ -2,6 +2,10 @@
 
 -export([enter_receivership/3]).
 
+-import(ered_nodes, [
+    this_should_not_happen/2
+]).
+
 increment_message_counter(NodeDef, CntName) ->
     {ok, V} = maps:find(CntName, NodeDef),
     maps:put(CntName, V + 1, NodeDef).
@@ -10,7 +14,7 @@ increment_message_counter(NodeDef, CntName) ->
 %% this is called if a message type was received by a node that did not
 %% claim to receive such messages
 bad_routing(NodeDef, Type, Msg) ->
-    ered_nodes:this_should_not_happen(
+    this_should_not_happen(
         NodeDef,
         io_lib:format(
             "Node received unhandled type ~p Node: ~p Msg: ~p\n",

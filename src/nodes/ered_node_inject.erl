@@ -5,15 +5,26 @@
 
 -import(ered_node_receivership, [enter_receivership/3]).
 
+-import(ered_nodes, [
+    get_prop_value_from_map/2,
+    get_prop_value_from_map/3,
+    jstr/2,
+    send_msg_to_connected_nodes/2
+]).
+
+-import(nodered, [
+    unsupported/3
+]).
+
 %%
 %% Inject node should have at least one outgoing wire, if not then the
 %% needle won't hit the vein, i.e. the message won't flow through any nodes.
 %%
 
 handle_topic_value(NodeDef, _Prop, {ok, <<"str">>}) ->
-    ered_nodes:get_prop_value_from_map(topic, NodeDef);
+    get_prop_value_from_map(topic, NodeDef);
 handle_topic_value(_NodeDef, Prop, _) ->
-    ered_nodes:get_prop_value_from_map(v, Prop).
+    get_prop_value_from_map(v, Prop).
 
 parse_props([], _, Msg) ->
     Msg;
@@ -23,11 +34,10 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
     %% TODO 'vt' attribute of the Prop map except in the case of payload.
     %% TODO payload has payloadType on the NodeDef.
     %%
-    io:format("Prop: ~p\n", [Prop]),
     case maps:find(p, Prop) of
         {ok, <<"payload">>} ->
-            Val = ered_nodes:get_prop_value_from_map(payload, NodeDef),
-            PType = ered_nodes:get_prop_value_from_map(payloadType, NodeDef),
+            Val = get_prop_value_from_map(payload, NodeDef),
+            PType = get_prop_value_from_map(payloadType, NodeDef),
             io:format("Prop: Payload: ~p of type ~p\n", [Val, PType]),
 
             case PType of
@@ -49,15 +59,14 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
             io:format("Prop: Topic: ~p\n", [Val]),
             parse_props(RestProps, NodeDef, maps:put(topic, Val, Msg));
         {ok, PropName} ->
-            Val = ered_nodes:get_prop_value_from_map(v, Prop),
-            io:format("Prop: Name: ~p = ~p\n", [PropName, Val]),
+            Val = get_prop_value_from_map(v, Prop),
             parse_props(
                 RestProps,
                 NodeDef,
                 maps:put(binary_to_atom(PropName), Val, Msg)
             );
         _ ->
-            io:format("Prop: NoMATCH: ~p\n", [Prop]),
+            unsupported(NodeDef, Msg, jstr("Prop: NoMATCH: ~p\n", [Prop])),
             parse_props(RestProps, NodeDef, Msg)
     end.
 
@@ -71,9 +80,7 @@ handle_outgoing(NodeDef, Msg) ->
         _ ->
             Props = []
     end,
-    ered_nodes:send_msg_to_connected_nodes(
-        NodeDef, parse_props(Props, NodeDef, Msg)
-    ),
+    send_msg_to_connected_nodes(NodeDef, parse_props(Props, NodeDef, Msg)),
     NodeDef.
 
 node_inject(NodeDef) ->

@@ -11,6 +11,13 @@
     format_error/2
 ]).
 
+-import(ered_nodes, [
+    create_pid_for_node/2
+]).
+-import(nodered, [
+    websocket_name_from_request/1
+]).
+
 init(Req, State) ->
     {cowboy_rest, Req, State}.
 
@@ -45,9 +52,9 @@ handle_json_body(Req, State) ->
 
     %% {FlowMap,_,_} = json:decode(Body, ok, #{object_push => Push}),
     %% {ok, NodeAry} = maps:find(flows,FlowMap),
-    %% WsName = nodered:websocket_name_from_request(Req),
+    %% WsName = websocket_name_from_request(Req),
 
-    %% Pids = ered_nodes:create_pid_for_node(NodeAry, WsName),
+    %% Pids = create_pid_for_node(NodeAry, WsName),
 
     %% io:format("Pids for flow: ~p\n",[Pids]),
 

@@ -4,7 +4,13 @@
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
--import(nodered, [unsupported/3]).
+-import(nodered, [
+    unsupported/3
+]).
+-import(ered_nodes, [
+    jstr/2,
+    send_msg_to_connected_nodes/2
+]).
 
 %%
 %% Change node modifies the contents of messages but also sets values in
@@ -27,7 +33,7 @@ do_move(A, B, C, D, Msg, NodeDef) ->
     unsupported(
         NodeDef,
         Msg,
-        ered_nodes:jstr("Unsupported move rule: ~p, ~p, ~p, ~p", [A, B, C, D])
+        jstr("move rule: ~p, ~p, ~p, ~p", [A, B, C, D])
     ),
     Msg.
 
@@ -44,7 +50,7 @@ do_change(A, B, C, _, Msg, NodeDef) ->
     unsupported(
         NodeDef,
         Msg,
-        ered_nodes:jstr("Unsupported change rule: ~p, ~p, ~p", [A, B, C])
+        jstr("change rule: ~p, ~p, ~p", [A, B, C])
     ),
     Msg.
 
@@ -105,10 +111,7 @@ do_set_value(Prop, Value, <<"jsonata">>, Msg, NodeDef) ->
                             unsupported(
                                 NodeDef,
                                 Msg,
-                                ered_nodes:jstr(
-                                    "Payload was not a list: ~p",
-                                    [Val]
-                                )
+                                jstr("Payload was not a list: ~p", [Val])
                             ),
                             Msg
                     end;
@@ -116,10 +119,7 @@ do_set_value(Prop, Value, <<"jsonata">>, Msg, NodeDef) ->
                     unsupported(
                         NodeDef,
                         Msg,
-                        ered_nodes:jstr(
-                            "Payload not set on Msg: ~p",
-                            [Msg]
-                        )
+                        jstr("Payload not set on Msg: ~p", [Msg])
                     ),
                     Msg
             end;
@@ -127,7 +127,7 @@ do_set_value(Prop, Value, <<"jsonata">>, Msg, NodeDef) ->
             unsupported(
                 NodeDef,
                 Msg,
-                ered_nodes:jstr("Unsupport jsonata term: ~p", [Value])
+                jstr("jsonata term: ~p", [Value])
             ),
             Msg
     end;
@@ -135,7 +135,7 @@ do_set_value(_, _, Tot, Msg, NodeDef) ->
     unsupported(
         NodeDef,
         Msg,
-        ered_nodes:jstr("Unsupport set ToT: ~p", [Tot])
+        jstr("set ToT: ~p", [Tot])
     ),
     Msg.
 
@@ -194,18 +194,13 @@ handle_rule(<<"change">>, Rule, Msg, NodeDef) ->
         NodeDef
     );
 handle_rule(_, Rule, Msg, NodeDef) ->
-    unsupported(
-        NodeDef,
-        Msg,
-        ered_nodes:jstr("Unsupport Rule: ~p", [Rule])
-    ),
+    unsupported(NodeDef, Msg, jstr("Rule: ~p", [Rule])),
     Msg.
 
 handle_incoming(NodeDef, Msg) ->
-    io:format("change node altering Msg\n"),
     {ok, Rules} = maps:find(rules, NodeDef),
     Msg2 = handle_rules(Rules, Msg, NodeDef),
-    ered_nodes:send_msg_to_connected_nodes(NodeDef, Msg2),
+    send_msg_to_connected_nodes(NodeDef, Msg2),
     NodeDef.
 
 node_change(NodeDef) ->

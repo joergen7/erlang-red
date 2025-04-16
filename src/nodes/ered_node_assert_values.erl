@@ -5,16 +5,27 @@
 -export([handle_stop/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
+-import(nodered, [
+    debug/3,
+    node_status/5,
+    ws_from/1
+]).
+-import(ered_nodes, [
+    get_prop_value_from_map/2,
+    get_prop_value_from_map/3,
+    jstr/2,
+    send_msg_to_connected_nodes/2,
+    this_should_not_happen/2
+]).
 
 is_same(Same, Same) -> true;
 is_same(_, _) -> false.
 
 %% erlfmt:ignore equals and arrows should line up here.
-debug_data(NodeDef,ErrMsg) ->
-    IdStr   = ered_nodes:get_prop_value_from_map(id,   NodeDef),
-    ZStr    = ered_nodes:get_prop_value_from_map(z,    NodeDef),
-    NameStr = ered_nodes:get_prop_value_from_map(name, NodeDef,
-                                                 <<"Assert Values">>),
+debug_data(NodeDef, ErrMsg) ->
+    IdStr   = get_prop_value_from_map(id,   NodeDef),
+    ZStr    = get_prop_value_from_map(z,    NodeDef),
+    NameStr = get_prop_value_from_map(name, NodeDef, <<"Assert Values">>),
 
     #{
        id       => IdStr,
@@ -33,7 +44,7 @@ check_rule_against_msg(<<"notset">>, <<"msg">>, Rule, Msg) ->
     case maps:find(binary_to_atom(Prop), Msg) of
         {ok, _} ->
             {failed,
-                ered_nodes:jstr(
+                jstr(
                     "Prop '~p' should not be set on Msg: ~p",
                     [Prop, Msg]
                 )};
@@ -48,7 +59,7 @@ check_rule_against_msg(<<"set">>, <<"msg">>, Rule, Msg) ->
             true;
         _ ->
             {failed,
-                ered_nodes:jstr(
+                jstr(
                     "Prop '~p' not set on Msg: ~p",
                     [Prop, Msg]
                 )}
@@ -62,7 +73,7 @@ check_rule_against_msg(<<"noteql">>, <<"msg">>, Rule, Msg) ->
             case is_same(ReqVal, Val) of
                 true ->
                     {failed,
-                        ered_nodes:jstr(
+                        jstr(
                             "Prop '~p': Unequal but same. Exp: '~p' Was: '~p'",
                             [Prop, ReqVal, Val]
                         )};
@@ -70,7 +81,7 @@ check_rule_against_msg(<<"noteql">>, <<"msg">>, Rule, Msg) ->
                     true
             end;
         _ ->
-            {failed, ered_nodes:jstr("Prop not set on msg: '~p'", [Prop])}
+            {failed, jstr("Prop not set on msg: '~p'", [Prop])}
     end;
 %% eql operator on the msg - about the only thing that is
 %% supported at the time of writing this comment.
@@ -83,7 +94,7 @@ check_rule_against_msg(<<"eql">>, <<"msg">>, Rule, Msg) ->
         {ok, Val} ->
             eql_msg_op(Prop, Val, ToType, ReqVal, Msg);
         _ ->
-            {failed, ered_nodes:jstr("Prop not set on msg: '~p'", [Prop])}
+            {failed, jstr("Prop not set on msg: '~p'", [Prop])}
     end;
 check_rule_against_msg(<<"mth">>, <<"msg">>, Rule, Msg) ->
     {ok, Prop} = maps:find(p, Rule),
@@ -94,7 +105,7 @@ check_rule_against_msg(<<"mth">>, <<"msg">>, Rule, Msg) ->
         {ok, ReqPattern} ->
             mth_msg_op(Prop, ToType, ReqPattern, ReqVal, Msg);
         _ ->
-            {failed, ered_nodes:jstr("Match not RegExp: '~p'", [ReqVal])}
+            {failed, jstr("Match not RegExp: '~p'", [ReqVal])}
     end;
 check_rule_against_msg(_Operator, _ObjectType, _, _) ->
     unsupported.
@@ -109,13 +120,13 @@ mth_msg_op(Prop, <<"str">>, ReqPattern, MatchVal, Msg) ->
                     true;
                 _ ->
                     {failed,
-                        ered_nodes:jstr(
+                        jstr(
                             "Prop '~p': Not matched. Mat '~p' Val: '~p'",
                             [Prop, MatchVal, ReqVal]
                         )}
             end;
         _ ->
-            {failed, ered_nodes:jstr("Propery not set on Msg: '~p'", [Prop])}
+            {failed, jstr("Propery not set on Msg: '~p'", [Prop])}
     end;
 mth_msg_op(_, _, _, _, _) ->
     unsupported.
@@ -128,7 +139,7 @@ eql_msg_op(Prop, SrcVal, <<"str">>, ReqVal, _Msg) ->
             true;
         _ ->
             {failed,
-                ered_nodes:jstr(
+                jstr(
                     "Prop '~p': Exp: '~p' Was: '~p'",
                     [Prop, ReqVal, SrcVal]
                 )}
@@ -152,13 +163,13 @@ eql_msg_op(Prop, SrcVal, <<"msg">>, ReqProp, Msg) ->
                     true;
                 _ ->
                     {failed,
-                        ered_nodes:jstr(
+                        jstr(
                             "Prop '~p': Exp: '~p' Was: '~p'",
                             [Prop, ReqVal, SrcVal]
                         )}
             end;
         _ ->
-            {failed, ered_nodes:jstr("Prop not set on msg: '~p'", [ReqProp])}
+            {failed, jstr("Prop not set on msg: '~p'", [ReqProp])}
     end;
 eql_msg_op(Prop, SrcVal, <<"num">>, ReqVal, _Msg) ->
     %% "t": "eql",
@@ -169,7 +180,7 @@ eql_msg_op(Prop, SrcVal, <<"num">>, ReqVal, _Msg) ->
     case convert_to_num(SrcVal) of
         {error, _} ->
             {failed,
-                ered_nodes:jstr(
+                jstr(
                     "Prop val '~p' was not a num: ~p",
                     [Prop, SrcVal]
                 )};
@@ -177,7 +188,7 @@ eql_msg_op(Prop, SrcVal, <<"num">>, ReqVal, _Msg) ->
             case convert_to_num(ReqVal) of
                 {error, _} ->
                     {failed,
-                        ered_nodes:jstr(
+                        jstr(
                             "Required val was not a num: ~p",
                             [ReqVal]
                         )};
@@ -187,7 +198,7 @@ eql_msg_op(Prop, SrcVal, <<"num">>, ReqVal, _Msg) ->
                             true;
                         _ ->
                             {failed,
-                                ered_nodes:jstr(
+                                jstr(
                                     "Values not equal Exp: [~p] != Was: [~p]",
                                     [ReqNum, SrcNum]
                                 )}
@@ -221,16 +232,16 @@ convert_to_num(Val) ->
 %%
 %%
 check_rules([], NodeDef, Msg, 0) ->
-    nodered:node_status(
-        nodered:ws(Msg),
+    node_status(
+        ws_from(Msg),
         NodeDef,
         <<"All checks succeed">>,
         "green",
         "dot"
     );
 check_rules([], NodeDef, Msg, FCnt) ->
-    ErrMsg = ered_nodes:jstr("~p check(s) failed", [FCnt]),
-    nodered:node_status(nodered:ws(Msg), NodeDef, ErrMsg, "red", "dot");
+    ErrMsg = jstr("~p check(s) failed", [FCnt]),
+    node_status(ws_from(Msg), NodeDef, ErrMsg, "red", "dot");
 check_rules([H | T], NodeDef, Msg, FCnt) ->
     {ok, Op} = maps:find(t, H),
     {ok, Pt} = maps:find(pt, H),
@@ -239,18 +250,18 @@ check_rules([H | T], NodeDef, Msg, FCnt) ->
         true ->
             check_rules(T, NodeDef, Msg, FCnt);
         unsupported ->
-            ErrMsg = ered_nodes:jstr(
+            ErrMsg = jstr(
                 "Assert values: unsupported Rule: '~p'",
                 [H]
             ),
-            nodered:debug(nodered:ws(Msg), debug_data(NodeDef, ErrMsg), notice),
+            debug(ws_from(Msg), debug_data(NodeDef, ErrMsg), notice),
             check_rules(T, NodeDef, Msg, FCnt);
         {failed, ErrMsg} ->
-            ered_nodes:this_should_not_happen(
+            this_should_not_happen(
                 NodeDef,
                 io_lib:format("~p ~p\n", [ErrMsg, Msg])
             ),
-            nodered:debug(nodered:ws(Msg), debug_data(NodeDef, ErrMsg), error),
+            debug(ws_from(Msg), debug_data(NodeDef, ErrMsg), error),
             check_rules(T, NodeDef, Msg, FCnt + 1)
     end.
 
@@ -263,16 +274,16 @@ handle_stop(NodeDef,WsName) ->
             {ok, IdStr}   = maps:find(id,NodeDef),
             {ok, TypeStr} = maps:find(type,NodeDef),
 
-            ered_nodes:this_should_not_happen(
+            this_should_not_happen(
               NodeDef,
               io_lib:format(
                 "Assert Values Error: Node was not reached [~p](~p)\n",
                 [TypeStr,IdStr])
             ),
 
-            IdStr   = ered_nodes:get_prop_value_from_map(id,   NodeDef),
-            ZStr    = ered_nodes:get_prop_value_from_map(z,    NodeDef),
-            NameStr = ered_nodes:get_prop_value_from_map(name, NodeDef,
+            IdStr   = get_prop_value_from_map(id,   NodeDef),
+            ZStr    = get_prop_value_from_map(z,    NodeDef),
+            NameStr = get_prop_value_from_map(name, NodeDef,
                                                          TypeStr),
             Data = #{
                      id       => IdStr,
@@ -283,8 +294,8 @@ handle_stop(NodeDef,WsName) ->
                      format   => <<"string">>
             },
 
-            nodered:debug(WsName, Data, error),
-            nodered:node_status(WsName, NodeDef, "assert failed", "red", "dot");
+            debug(WsName, Data, error),
+            node_status(WsName, NodeDef, "assert failed", "red", "dot");
         _ ->
             ok
     end.
@@ -296,7 +307,7 @@ handle_incoming(NodeDef, Msg) ->
         _ ->
             ignore
     end,
-    ered_nodes:send_msg_to_connected_nodes(NodeDef, Msg),
+    send_msg_to_connected_nodes(NodeDef, Msg),
     NodeDef.
 
 node_assert_values(NodeDef) ->

@@ -10,6 +10,10 @@
     format_error/2
 ]).
 
+-import(nodered, [
+    websocket_name_from_request/1
+]).
+
 init(Req, State) ->
     {cowboy_rest, Req, State}.
 
@@ -21,7 +25,7 @@ content_types_provided(Req, State) ->
     {[{{<<"application">>, <<"json">>, '*'}, handle_response}], Req, State}.
 
 handle_response(Req, State) ->
-    WsName = nodered:websocket_name_from_request(Req),
+    WsName = websocket_name_from_request(Req),
     Query = cowboy_req:parse_qs(Req),
 
     TestPendingTests =

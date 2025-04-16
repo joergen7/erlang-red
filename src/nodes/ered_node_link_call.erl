@@ -5,10 +5,24 @@
 -export([handle_link_return/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
+-import(ered_nodes, [
+    generate_id/1,
+    jstr/2,
+    send_msg_on/2,
+    send_msg_to_connected_nodes/2,
+    this_should_not_happen/2
+]).
+-import(nodered, [
+    debug/3,
+    debug_string/2,
+    node_status/5,
+    unsupported/3,
+    ws_from/1
+]).
 
 update_linksource(NodeDef, Msg) ->
     {ok, IdStr} = maps:find(id, NodeDef),
-    LinkBack = #{id => ered_nodes:generate_id(32), node => IdStr},
+    LinkBack = #{id => generate_id(32), node => IdStr},
 
     case maps:find('_linkSource', Msg) of
         {ok, Ary} ->
@@ -24,36 +38,26 @@ handle_incoming(NodeDef, Msg) ->
     case maps:find(linkType, NodeDef) of
         {ok, <<"dynamic">>} ->
             %%
-            %% TODO implement this somehow.
+            %% TODO implement this somehow. Two types, by name and by id.
+            %% TODO by id is simple, name is harder.
             %%
-            ignore;
+            unsupported(NodeDef, Msg, jstr("dynamic link calls", []));
         {ok, <<"static">>} ->
             case maps:find(links, NodeDef) of
                 {ok, Links} ->
-                    ered_nodes:send_msg_on(
-                        Links,
-                        update_linksource(NodeDef, Msg)
-                    );
+                    send_msg_on(Links, update_linksource(NodeDef, Msg));
                 _ ->
                     ignore
             end;
         {ok, LinkType} ->
-            ErrMsg = ered_nodes:jstr("Unknown LinkType: '~s'", [LinkType]),
-            ered_nodes:this_should_not_happen(
+            ErrMsg = jstr("Unknown LinkType: '~s'", [LinkType]),
+            this_should_not_happen(
                 NodeDef,
                 io_lib:format("~p ~p\n", [ErrMsg, Msg])
             ),
-            nodered:debug(
-                nodered:ws(Msg),
-                nodered:debug_string(NodeDef, ErrMsg),
-                notice
-            ),
-            nodered:node_status(
-                nodered:ws(Msg),
-                NodeDef,
-                "unknown linkType",
-                "red",
-                "dot"
+            debug(ws_from(Msg), debug_string(NodeDef, ErrMsg), notice),
+            node_status(
+                ws_from(Msg), NodeDef, "unknown linkType", "red", "dot"
             );
         _ ->
             ignore
@@ -64,7 +68,7 @@ handle_incoming(NodeDef, Msg) ->
 %% This comes from a link out node in return mode, this means we pass
 %% the message on to all the nodes connected to us, i.e. the 'wires' attribute.
 handle_link_return(NodeDef, Msg) ->
-    ered_nodes:send_msg_to_connected_nodes(NodeDef, Msg),
+    send_msg_to_connected_nodes(NodeDef, Msg),
     NodeDef.
 
 node_link_call(NodeDef) ->

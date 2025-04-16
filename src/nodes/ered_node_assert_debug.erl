@@ -9,7 +9,13 @@
 -export([handle_stop/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
--import(ered_node_assert_status, [post_failure/3]).
+
+-import(nodered, [
+    assert_failure/3
+]).
+-import(ered_nodes, [
+    jstr/2
+]).
 
 is_same(A, A) -> true;
 is_same(_, _) -> false.
@@ -20,10 +26,8 @@ handle_stop(NodeDef, WsName) ->
             case maps:find(inverse, NodeDef) of
                 {ok, false} ->
                     {ok, NodeId} = maps:find(nodeid, NodeDef),
-                    ErrMsg = ered_nodes:jstr("Expected debug from ~p\n", [
-                        NodeId
-                    ]),
-                    post_failure(NodeDef, WsName, ErrMsg);
+                    ErrMsg = jstr("Expected debug from ~p\n", [NodeId]),
+                    assert_failure(NodeDef, WsName, ErrMsg);
                 _ ->
                     success
             end;
@@ -35,8 +39,8 @@ handle_stop(NodeDef, WsName) ->
 handle_ws_event(NodeDef, {debug, WsName, NodeId, Type, _Data}) ->
     case maps:find(inverse, NodeDef) of
         {ok, true} ->
-            ErrMsg = ered_nodes:jstr("No debug expected from ~p\n", [NodeId]),
-            post_failure(NodeDef, WsName, ErrMsg);
+            ErrMsg = jstr("No debug expected from ~p\n", [NodeId]),
+            assert_failure(NodeDef, WsName, ErrMsg);
         _ ->
             {ok, ExpType} = maps:find(msgtype, NodeDef),
             io:format("Exp ~p v. ~p~n", [ExpType, Type]),
@@ -45,10 +49,10 @@ handle_ws_event(NodeDef, {debug, WsName, NodeId, Type, _Data}) ->
                 true ->
                     success;
                 _ ->
-                    ErrMsg = ered_nodes:jstr(
+                    ErrMsg = jstr(
                         "debug type mismatch ~s != ~p", [ExpType, Type]
                     ),
-                    post_failure(NodeDef, WsName, ErrMsg)
+                    assert_failure(NodeDef, WsName, ErrMsg)
             end
     end,
     NodeDef;

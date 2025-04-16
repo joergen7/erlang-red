@@ -10,7 +10,13 @@
 
 -import(ered_node_receivership, [enter_receivership/3]).
 
--export([post_failure/3]).
+-import(ered_nodes, [
+    jstr/2
+]).
+-import(nodered, [
+    assert_failure/3,
+    node_status/5
+]).
 
 is_same({A, A}) -> true;
 is_same({_, _}) -> false.
@@ -21,7 +27,7 @@ check_attributes({ExpTxt, Txt}) ->
             case ExpTxt of
                 %% ignore this check if expected text is empty.
                 <<>> -> [];
-                _ -> ered_nodes:jstr("Content mismatch ~p\n", [{ExpTxt, Txt}])
+                _ -> jstr("Content mismatch ~p\n", [{ExpTxt, Txt}])
             end;
         true ->
             []
@@ -31,8 +37,7 @@ check_attributes(Shp, Txt) ->
     case is_same(Shp) of
         false ->
             [
-                ered_nodes:jstr("Shape mismatch ~p\n", [Shp])
-                | [check_attributes(Txt)]
+                jstr("Shape mismatch ~p\n", [Shp]) | [check_attributes(Txt)]
             ];
         true ->
             [check_attributes(Txt)]
@@ -42,36 +47,12 @@ check_attributes(Clr, Shp, Txt) ->
     case is_same(Clr) of
         false ->
             [
-                ered_nodes:jstr("Colour mismatch ~p\n", [Clr])
+                jstr("Colour mismatch ~p\n", [Clr])
                 | [check_attributes(Shp, Txt)]
             ];
         true ->
             [check_attributes(Shp, Txt)]
     end.
-
-%% erlfmt:ignore equals and arrows should line up here.
-post_failure(NodeDef,WsName,ErrMsg) ->
-    {ok, IdStr} = maps:find(id,NodeDef),
-    {ok, TypeStr} = maps:find(type,NodeDef),
-
-    ered_nodes:this_should_not_happen(NodeDef,ErrMsg),
-
-    IdStr       = ered_nodes:get_prop_value_from_map(id,NodeDef),
-    ZStr        = ered_nodes:get_prop_value_from_map(z,NodeDef),
-    NameStr     = ered_nodes:get_prop_value_from_map(name,NodeDef,TypeStr),
-
-    Data = #{
-             id       => IdStr,
-             z        => ZStr,
-             '_alias' => IdStr,
-             path     => ZStr,
-             name     => NameStr,
-             msg      => ered_nodes:jstr(ErrMsg),
-             format   => <<"string">>
-            },
-
-    nodered:debug(WsName,Data,error),
-    nodered:node_status(WsName,NodeDef, "assert failed", "red", "dot").
 
 %%
 %%
@@ -81,12 +62,10 @@ handle_stop(NodeDef, WsName) ->
             case maps:find(inverse, NodeDef) of
                 {ok, false} ->
                     {ok, NodeId} = maps:find(nodeid, NodeDef),
-                    ErrMsg = ered_nodes:jstr("Expected status from ~p\n", [
-                        NodeId
-                    ]),
-                    post_failure(NodeDef, WsName, ErrMsg);
+                    ErrMsg = jstr("Expected status from ~p\n", [NodeId]),
+                    assert_failure(NodeDef, WsName, ErrMsg);
                 _ ->
-                    nodered:node_status(
+                    node_status(
                         WsName,
                         NodeDef,
                         "assert succeed",
@@ -95,7 +74,7 @@ handle_stop(NodeDef, WsName) ->
                     )
             end;
         _ ->
-            nodered:node_status(
+            node_status(
                 WsName,
                 NodeDef,
                 "assert succeed",
@@ -111,8 +90,8 @@ handle_stop(NodeDef, WsName) ->
 handle_ws_event(NodeDef, {status, WsName, NodeId, Txt, Clr, Shp}) ->
     case maps:find(inverse, NodeDef) of
         {ok, true} ->
-            ErrMsg = ered_nodes:jstr("No status expected from ~p\n",[NodeId]),
-            post_failure(NodeDef,WsName,ErrMsg);
+            ErrMsg = jstr("No status expected from ~p\n",[NodeId]),
+            assert_failure(NodeDef,WsName,ErrMsg);
 
         _ ->
             {ok, ExpClr} = maps:find(colour,  NodeDef),
@@ -125,7 +104,7 @@ handle_ws_event(NodeDef, {status, WsName, NodeId, Txt, Clr, Shp}) ->
                 [] ->  success;
                 _ ->
                     ErrMsg = list_to_binary(Errors),
-                    post_failure(NodeDef,WsName,ErrMsg)
+                    assert_failure(NodeDef,WsName,ErrMsg)
             end
     end,
     NodeDef;

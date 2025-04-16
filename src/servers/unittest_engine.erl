@@ -19,6 +19,23 @@
 -export([not_happen_loop/2]).
 -export([run_test_on_another_planet/3]).
 
+-import(ered_flows, [
+    compute_timeout/1,
+    is_test_case_pending/1,
+    parse_flow_file/1,
+    should_keep_flow_running/1
+]).
+-import(ered_nodes, [
+    create_pid_for_node/2,
+    tabid_to_error_collector/1,
+    trigger_outgoing_messages/3
+]).
+-import(nodered, [
+    debug/3,
+    debug_string/3,
+    unittest_result/3
+]).
+
 start() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
@@ -66,7 +83,7 @@ ensure_error_store_is_started(TabErrColl, TestName) ->
     end.
 
 start_this_should_not_happen_service(TabId, TestName) ->
-    TabErrColl = ered_nodes:tabid_to_error_collector(TabId),
+    TabErrColl = tabid_to_error_collector(TabId),
 
     case whereis(TabErrColl) of
         undefined ->
@@ -78,15 +95,15 @@ start_this_should_not_happen_service(TabId, TestName) ->
     ensure_error_store_is_started(TabErrColl, TestName).
 
 send_off_test_result(WsName, FlowId, []) ->
-    nodered:unittest_result(WsName, FlowId, success);
+    unittest_result(WsName, FlowId, success);
 send_off_test_result(WsName, FlowId, Ary) ->
-    nodered:unittest_result(WsName, FlowId, failed),
+    unittest_result(WsName, FlowId, failed),
     dump_errors_onto_nodered(Ary, FlowId, WsName).
 
 dump_errors_onto_nodered([], _FlowId, _WsName) ->
     ok;
 dump_errors_onto_nodered([{NodeId, Msg} | T], FlowId, WsName) ->
-    nodered:debug(WsName, nodered:debug_string(NodeId, FlowId, Msg), notice),
+    debug(WsName, debug_string(NodeId, FlowId, Msg), notice),
     dump_errors_onto_nodered(T, FlowId, WsName).
 
 handle_info({start_test, FlowId, WsName}, State) ->
@@ -117,13 +134,13 @@ run_test_on_another_planet(FlowId, WsName, false) ->
 
     case flow_store_server:get_filename(FlowId) of
         error ->
-            nodered:unittest_result(WsName, FlowId, unknown_testcase);
+            unittest_result(WsName, FlowId, unknown_testcase);
         FileName ->
-            Ary = ered_flows:parse_flow_file(FileName),
+            Ary = parse_flow_file(FileName),
 
-            case ered_flows:is_test_case_pending(Ary) of
+            case is_test_case_pending(Ary) of
                 true ->
-                    nodered:unittest_result(WsName, FlowId, pending);
+                    unittest_result(WsName, FlowId, pending);
                 false ->
                     run_the_test(FlowId, WsName, Ary)
             end
@@ -135,9 +152,9 @@ run_test_on_another_planet(FlowId, WsName, true) ->
 
     case flow_store_server:get_filename(FlowId) of
         error ->
-            nodered:unittest_result(WsName, FlowId, unknown_testcase);
+            unittest_result(WsName, FlowId, unknown_testcase);
         FileName ->
-            Ary = ered_flows:parse_flow_file(FileName),
+            Ary = parse_flow_file(FileName),
 
             run_the_test(FlowId, WsName, Ary)
     end.
@@ -145,19 +162,19 @@ run_test_on_another_planet(FlowId, WsName, true) ->
 %%
 %% Run the test disregarding the pending flag of the test flow.
 run_the_test(FlowId, WsName, Ary) ->
-    case ered_flows:should_keep_flow_running(Ary) of
+    case should_keep_flow_running(Ary) of
         true ->
-            ered_nodes:create_pid_for_node(Ary, WsName);
+            create_pid_for_node(Ary, WsName);
         false ->
             ErrColl = start_this_should_not_happen_service(
                 FlowId,
                 <<"UnitTestEngine TestRun">>
             ),
 
-            Pids = ered_nodes:create_pid_for_node(Ary, WsName),
+            Pids = create_pid_for_node(Ary, WsName),
 
             [
-                ered_nodes:trigger_outgoing_messages(
+                trigger_outgoing_messages(
                     maps:find(type, ND),
                     maps:find(id, ND),
                     WsName
@@ -167,7 +184,7 @@ run_the_test(FlowId, WsName, Ary) ->
 
             %% give the messages time to propagate through the
             %% test flow
-            timer:sleep(ered_flows:compute_timeout(Ary)),
+            timer:sleep(compute_timeout(Ary)),
 
             %% stop all nodes. Probably better would be to checking
             %% the message queues of the nodes and if all are empty

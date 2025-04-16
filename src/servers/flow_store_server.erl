@@ -13,6 +13,13 @@
 -export([get_filename/1]).
 -export([all_flow_ids/0]).
 
+-import(ered_flows, [
+    parse_flow_file/1
+]).
+-import(ered_nodes, [
+    jstr/1
+]).
+
 start() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []),
     update_all_flows().
@@ -123,16 +130,16 @@ compile_file_store([FileDetails | MoreFileNames], FileStore) ->
     FlowId   = element(1, FileDetails),
     FileName = element(2, FileDetails),
 
-    Ary      = ered_flows:parse_flow_file(FileName),
+    Ary      = parse_flow_file(FileName),
     TestName = tab_name_or_filename(Ary, FlowId),
 
     compile_file_store(
         MoreFileNames,
         maps:put(
-            ered_nodes:jstr(FlowId),
+            jstr(FlowId),
             #{
-                path => ered_nodes:jstr(FileName),
-                id   => ered_nodes:jstr(FlowId),
+                path => jstr(FileName),
+                id   => jstr(FlowId),
                 name => TestName
             },
             FileStore

@@ -4,6 +4,9 @@
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
+-import(ered_nodes, [
+    send_msg_to_connected_nodes/2
+]).
 
 %%
 %% join node is the companion of the split node that generates many messages
@@ -35,7 +38,7 @@ handle_incoming(NodeDef, Msg) ->
         {ok, {ok, 1, Lst}} ->
             Lst2 = [Msg | Lst],
             Msg2 = maps:put(payload, Lst2, Msg),
-            ered_nodes:send_msg_to_connected_nodes(NodeDef, Msg2),
+            send_msg_to_connected_nodes(NodeDef, Msg2),
 
             {ok, Count} = maps:find(count, NodeDef),
             {ok, Cnt} = convert_to_int(Count),
@@ -94,6 +97,9 @@ node_join(NodeDef) ->
     {ok, Count} = maps:find(count, NodeDef),
     {ok, PropType} = maps:find(propertyType, NodeDef),
 
+    %%
+    %% TODO generate a unsupported(..) errorr here if mode is not supported
+    %%
     NodeDef2 = set_manual(Mode, Build, PropType, Count, NodeDef),
 
     enter_receivership(?MODULE, NodeDef2, only_incoming).

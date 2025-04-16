@@ -5,6 +5,15 @@
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
+-import(ered_nodes, [
+    get_prop_value_from_map/2,
+    get_prop_value_from_map/3,
+    this_should_not_happen/2
+]).
+-import(nodered, [
+    debug/3,
+    node_status/5
+]).
 
 %% erlfmt:ignore equals and arrows should line up here.
 handle_stop(NodeDef,WsName) ->
@@ -13,15 +22,15 @@ handle_stop(NodeDef,WsName) ->
             {ok, IdStr}   = maps:find(id,NodeDef),
             {ok, TypeStr} = maps:find(type,NodeDef),
 
-            ered_nodes:this_should_not_happen(
+            this_should_not_happen(
               NodeDef,
               io_lib:format("Assert Error: Node was not reached [~p](~p)\n",
                             [TypeStr,IdStr])
             ),
 
-            IdStr   = ered_nodes:get_prop_value_from_map(id,   NodeDef),
-            ZStr    = ered_nodes:get_prop_value_from_map(z,    NodeDef),
-            NameStr = ered_nodes:get_prop_value_from_map(name, NodeDef, TypeStr),
+            IdStr   = get_prop_value_from_map(id,   NodeDef),
+            ZStr    = get_prop_value_from_map(z,    NodeDef),
+            NameStr = get_prop_value_from_map(name, NodeDef, TypeStr),
             Data = #{
                      id       => IdStr,
                      z        => ZStr,
@@ -33,8 +42,8 @@ handle_stop(NodeDef,WsName) ->
                      format   => <<"string">>
             },
 
-            nodered:debug(WsName, Data, error),
-            nodered:node_status(WsName, NodeDef, "assert failed", "red", "dot");
+            debug(WsName, Data, error),
+            node_status(WsName, NodeDef, "assert failed", "red", "dot");
         _ ->
             ok
     end.

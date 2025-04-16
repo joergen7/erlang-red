@@ -10,11 +10,24 @@
 
 -import(ered_node_receivership, [enter_receivership/3]).
 
+-import(ered_nodes, [
+    get_prop_value_from_map/2,
+    get_prop_value_from_map/3,
+    jstr/2,
+    this_should_not_happen/2
+]).
+-import(nodered, [
+    debug/3,
+    node_status/5,
+    unsupported/3,
+    ws_from/1
+]).
+
 %% erlfmt:ignore equals and arrows should line up here.
 create_data_for_debug(NodeDef,TypeStr) ->
-    IdStr   = ered_nodes:get_prop_value_from_map(id,   NodeDef),
-    ZStr    = ered_nodes:get_prop_value_from_map(z,    NodeDef),
-    NameStr = ered_nodes:get_prop_value_from_map(name, NodeDef, TypeStr),
+    IdStr   = get_prop_value_from_map(id,   NodeDef),
+    ZStr    = get_prop_value_from_map(z,    NodeDef),
+    NameStr = get_prop_value_from_map(name, NodeDef, TypeStr),
 
     #{
        id       => IdStr,
@@ -23,7 +36,7 @@ create_data_for_debug(NodeDef,TypeStr) ->
        path     => ZStr,
        name     => NameStr,
        topic    => <<"">>,
-       msg      => ered_nodes:jstr("type '~s' is not implemented", [TypeStr]),
+       msg      => jstr("type '~s' is not implemented", [TypeStr]),
        format   => <<"string">>
     }.
 
@@ -35,7 +48,7 @@ handle_incoming(NodeDef, Msg) ->
     %% This output is for eunit testing. This does in fact does end
     %% up in the Node-RED frontend as a notice, but that's only
     %% because I changed the code after writing the initial comment.
-    ered_nodes:this_should_not_happen(
+    this_should_not_happen(
         NodeDef,
         io_lib:format(
             "Noop Node (incoming). Nothing Done for [~p](~p) ~p\n",
@@ -46,21 +59,11 @@ handle_incoming(NodeDef, Msg) ->
     %%
     %% this output is for Node-RED frontend when doing unit testing
     %% inside node red.
-    nodered:debug(
-        nodered:ws(Msg),
-        create_data_for_debug(NodeDef, TypeStr),
-        warning
-    ),
+    debug(ws_from(Msg), create_data_for_debug(NodeDef, TypeStr), warning),
 
     %%
     %% again for node red, show a status value for the corresponding node.
-    nodered:node_status(
-        nodered:ws(Msg),
-        NodeDef,
-        "type not implemented",
-        "grey",
-        "dot"
-    ),
+    node_status(ws_from(Msg), NodeDef, "type not implemented", "grey", "dot"),
 
     NodeDef.
 
@@ -72,7 +75,7 @@ handle_outgoing(NodeDef, Msg) ->
     %% This output is for eunit testing. This does in fact does end
     %% up in the Node-RED frontend as a notice, but that's only
     %% because I changed the code after writing the initial comment.
-    ered_nodes:this_should_not_happen(
+    this_should_not_happen(
         NodeDef,
         io_lib:format(
             "Noop Node (outgoing) Nothing Done for [~p](~p) ~p\n",
@@ -83,21 +86,11 @@ handle_outgoing(NodeDef, Msg) ->
     %%
     %% this output is for Node-RED frontend when doing unit testing
     %% inside node red.
-    nodered:debug(
-        nodered:ws(Msg),
-        create_data_for_debug(NodeDef, TypeStr),
-        warning
-    ),
+    debug(ws_from(Msg), create_data_for_debug(NodeDef, TypeStr), warning),
 
     %%
     %% again for node red, show a status value for the corresponding node.
-    nodered:node_status(
-        nodered:ws(Msg),
-        NodeDef,
-        "type not implemented",
-        "grey",
-        "dot"
-    ),
+    node_status(ws_from(Msg), NodeDef, "type not implemented", "grey", "dot"),
 
     NodeDef.
 

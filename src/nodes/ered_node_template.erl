@@ -3,11 +3,7 @@
 -export([node_template/1]).
 -export([handle_incoming/2]).
 
--import(ered_node_receivership, [enter_receivership/3]).
-
 %%
-%% junctions are decorative elements that are "transparent" - they just
-%% pass through the messages that they receive (having cloned the messages)
 %%
 %% Attributes of importance:
 %%
@@ -18,6 +14,21 @@
 %%    "output": "str",   <<---- (can be "parse the content as json")
 %%    "template": "This is the payload: {{payload}} !",
 %%
+
+-import(ered_node_receivership, [enter_receivership/3]).
+
+-import(nodered, [
+    debug/3,
+    debug_string/2,
+    ws_from/1,
+    unsupported/3
+]).
+
+-import(ered_nodes, [
+    jstr/2,
+    send_msg_to_connected_nodes/2,
+    this_should_not_happen/2
+]).
 
 doit(Prop, <<"msg">>, Template, <<"plain">>, <<"str">>, Msg) ->
     Msg2 = maps:put(binary_to_atom(Prop), Template, Msg),
@@ -34,35 +45,21 @@ handle_incoming(NodeDef, Msg) ->
 
     case doit(Prop, PropType, Template, Syntax, Output, Msg) of
         {ok, Msg2} ->
-            ered_nodes:send_msg_to_connected_nodes(NodeDef, Msg2);
+            send_msg_to_connected_nodes(NodeDef, Msg2);
         unsupported ->
-            ErrMsg = ered_nodes:jstr(
-                "Unsupported configuration: ~p",
-                [NodeDef]
-            ),
-            nodered:debug(
-                nodered:ws(Msg),
-                nodered:debug_string(NodeDef, ErrMsg),
-                notice
-            ),
-            ered_nodes:send_msg_to_connected_nodes(NodeDef, Msg);
+            ErrMsg = jstr("Unsupported configuration: ~p", [NodeDef]),
+            unsupported(NodeDef, Msg, ErrMsg),
+            send_msg_to_connected_nodes(NodeDef, Msg);
         Bad ->
-            ered_nodes:this_should_not_happen(
+            this_should_not_happen(
                 NodeDef,
                 io_lib:format(
                     "Bad happened ~p with [~p] and [~p]\n",
                     [Bad, NodeDef, Msg]
                 )
             ),
-            ErrMsg = ered_nodes:jstr(
-                "Bad happened: ~p ~p ~p",
-                [Bad, NodeDef, Msg]
-            ),
-            nodered:debug(
-                nodered:ws(Msg),
-                nodered:debug_string(NodeDef, ErrMsg),
-                error
-            )
+            ErrMsg = jstr("Bad happened: ~p ~p ~p", [Bad, NodeDef, Msg]),
+            debug(ws_from(Msg), debug_string(NodeDef, ErrMsg), error)
     end,
     NodeDef.
 

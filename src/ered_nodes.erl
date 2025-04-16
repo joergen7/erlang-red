@@ -23,6 +23,10 @@
 -export([send_msg_to_connected_nodes/2]).
 -export([send_msg_on/2]).
 
+-import(nodered, [
+    ws_from/1,
+    create_outgoing_msg/1
+]).
 %%
 %% Common functionality
 %%
@@ -222,7 +226,7 @@ get_prop_value_from_map(Prop, Map) ->
 send_msg_on([], _) ->
     ok;
 send_msg_on([NodeId | Wires], Msg) ->
-    NodePid = nodeid_to_pid(nodered:ws(Msg), NodeId),
+    NodePid = nodeid_to_pid(ws_from(Msg), NodeId),
 
     case whereis(NodePid) of
         undefined ->
@@ -292,8 +296,8 @@ node_type_to_fun(Unknown) ->
 %% only the inject node but then I realised that for testing purposes there
 %% are in fact more.
 trigger_outgoing_messages({ok, <<"http in">>}, {ok, IdStr}, WsName) ->
-    nodeid_to_pid(WsName, IdStr) ! nodered:create_outgoing_msg(WsName);
+    nodeid_to_pid(WsName, IdStr) ! create_outgoing_msg(WsName);
 trigger_outgoing_messages({ok, <<"inject">>}, {ok, IdStr}, WsName) ->
-    nodeid_to_pid(WsName, IdStr) ! nodered:create_outgoing_msg(WsName);
+    nodeid_to_pid(WsName, IdStr) ! create_outgoing_msg(WsName);
 trigger_outgoing_messages(_, _, _) ->
     ok.

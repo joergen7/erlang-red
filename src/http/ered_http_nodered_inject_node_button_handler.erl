@@ -10,6 +10,12 @@
     format_error/2
 ]).
 
+-import(ered_nodes, [nodeid_to_pid/2]).
+-import(nodered, [
+    create_outgoing_msg/1,
+    websocket_name_from_request/1
+]).
+
 init(Req, State) ->
     {cowboy_rest, Req, State}.
 
@@ -28,19 +34,19 @@ content_types_accepted(Req, State) ->
 
 handle_json_body(Req, State) ->
     Resp = cowboy_req:set_resp_body(<<"OK">>, Req),
-    WsName = nodered:websocket_name_from_request(Req),
+    WsName = websocket_name_from_request(Req),
 
     case cowboy_req:binding(nodeid, Req) of
         undefined ->
             ok;
         IdStr ->
-            NodePid = ered_nodes:nodeid_to_pid(WsName, IdStr),
+            NodePid = nodeid_to_pid(WsName, IdStr),
 
             case whereis(NodePid) of
                 undefined ->
                     ok;
                 _ ->
-                    NodePid ! nodered:create_outgoing_msg(WsName)
+                    NodePid ! create_outgoing_msg(WsName)
             end
     end,
 

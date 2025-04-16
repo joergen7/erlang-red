@@ -4,6 +4,16 @@
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
+-import(nodered, [
+    debug/3,
+    node_status/5,
+    ws_from/1
+]).
+-import(ered_nodes, [
+    get_prop_value_from_map/2,
+    get_prop_value_from_map/3,
+    this_should_not_happen/2
+]).
 
 to_binary_if_not_binary(Obj) when is_binary(Obj) ->
     Obj;
@@ -17,17 +27,17 @@ handle_incoming(NodeDef,Msg) ->
     {ok, IdStr}   = maps:find(id,NodeDef),
     {ok, TypeStr} = maps:find(type,NodeDef),
 
-    ered_nodes:this_should_not_happen(
+    this_should_not_happen(
       NodeDef,
       io_lib:format(
         "Assert Error: Node should not have been reached [~p](~p) ~p\n",
         [TypeStr,IdStr,Msg])
     ),
 
-    IdStr    = ered_nodes:get_prop_value_from_map(id,    NodeDef),
-    ZStr     = ered_nodes:get_prop_value_from_map(z,     NodeDef),
-    NameStr  = ered_nodes:get_prop_value_from_map(name,  NodeDef, TypeStr),
-    TopicStr = ered_nodes:get_prop_value_from_map(topic, Msg, ""),
+    IdStr    = get_prop_value_from_map(id,    NodeDef),
+    ZStr     = get_prop_value_from_map(z,     NodeDef),
+    NameStr  = get_prop_value_from_map(name,  NodeDef, TypeStr),
+    TopicStr = get_prop_value_from_map(topic, Msg, ""),
 
     Data = #{
              id       => IdStr,
@@ -40,15 +50,9 @@ handle_incoming(NodeDef,Msg) ->
              format   => <<"Object">>
             },
 
-    nodered:debug(nodered:ws(Msg), Data, error),
+    debug(ws_from(Msg), Data, error),
 
-    nodered:node_status(
-      nodered:ws(Msg),
-      NodeDef,
-      "assert failed",
-      "red",
-      "dot"
-     ),
+    node_status(ws_from(Msg),NodeDef,"assert failed","red","dot"),
 
     NodeDef.
 

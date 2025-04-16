@@ -7,6 +7,14 @@
 -export([terminate/3]).
 -export([ws_send_heartbeat/2]).
 
+-import(ered_nodes, [
+    jstr/1,
+    jstr/2
+]).
+-import(nodered, [
+    get_websocket_name/0
+]).
+
 init(Req, State) ->
     %% runs in a different process so can't send out cookie to sent ws name
     {cowboy_websocket, Req, State, #{idle_timeout => 120000}}.
@@ -19,7 +27,7 @@ websocket_init(State) ->
     %% TODO the cookie is attached to the host, not the tab. Same server
     %% TODO host, same cookie, same value.
 
-    WsName = nodered:get_websocket_name(),
+    WsName = get_websocket_name(),
     register(WsName, self()),
     State2 = maps:merge(State, #{wsname => WsName}),
 
@@ -92,11 +100,11 @@ websocket_info({error_debug, Data}, State) ->
 websocket_info({status, NodeId, Txt, Clr, Shp}, State) ->
     Msg = jiffy:encode([
         #{
-            topic => ered_nodes:jstr("status/~s", [NodeId]),
+            topic => jstr("status/~s", [NodeId]),
             data => #{
-                text => ered_nodes:jstr(Txt),
-                fill => ered_nodes:jstr(Clr),
-                shape => ered_nodes:jstr(Shp)
+                text => jstr(Txt),
+                fill => jstr(Clr),
+                shape => jstr(Shp)
             }
         }
     ]),
@@ -119,8 +127,8 @@ websocket_info({unittest_results, FlowId, Status}, State) ->
         #{
             topic => 'unittesting:testresults',
             data => #{
-                flowid => ered_nodes:jstr(FlowId),
-                status => ered_nodes:jstr(Status)
+                flowid => jstr(FlowId),
+                status => jstr(Status)
             }
         }
     ]),

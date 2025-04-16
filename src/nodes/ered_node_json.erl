@@ -3,7 +3,26 @@
 -export([node_json/1]).
 -export([handle_incoming/2]).
 
+%%
+%% Json node only deals with data coming in on the msg object:
+%%
+%% Attributes of interest:
+%%
+%%    "property": "payload",
+%%    "action": "",
+%%    "pretty": false,
+
 -import(ered_node_receivership, [enter_receivership/3]).
+-import(ered_nodes, [
+    jstr/2,
+    send_msg_to_connected_nodes/2
+]).
+-import(nodered, [
+    debug/3,
+    debug_string/2,
+    ws_from/1,
+    unsupported/3
+]).
 
 string_like(Val) when is_binary(Val) ->
     true;
@@ -32,10 +51,6 @@ action_to_content(Val, <<"str">>, _Pretty) ->
 action_to_content(_, _, _) ->
     unsupported.
 
-%% json does not deal with other sources than msg.
-%%    "property": "payload",
-%%    "action": "",
-%%    "pretty": false,
 handle_incoming(NodeDef, Msg) ->
     {ok, Prop} = maps:find(property, NodeDef),
     case maps:find(binary_to_atom(Prop), Msg) of
@@ -46,36 +61,19 @@ handle_incoming(NodeDef, Msg) ->
             case action_to_content(Val, Action, Pretty) of
                 {ok, Response} ->
                     Msg2 = maps:put(payload, Response, Msg),
-                    ered_nodes:send_msg_to_connected_nodes(NodeDef, Msg2);
+                    send_msg_to_connected_nodes(NodeDef, Msg2);
                 unsupported ->
-                    ErrMsg = ered_nodes:jstr(
-                        "Unsupported Action: ~p",
-                        [Action]
-                    ),
-                    nodered:debug(
-                        nodered:ws(Msg),
-                        nodered:debug_string(NodeDef, ErrMsg),
-                        warning
-                    );
+                    ErrMsg = jstr("Unsupported Action: ~p", [Action]),
+                    unsupported(NodeDef, Msg, ErrMsg);
                 _ ->
-                    ErrMsg = ered_nodes:jstr(
-                        "Unknown error occured: ~p",
-                        [Msg]
-                    ),
-                    nodered:debug(
-                        nodered:ws(Msg),
-                        nodered:debug_string(NodeDef, ErrMsg),
-                        error
-                    )
+                    ErrMsg = jstr("Unknown error occured: ~p", [Msg]),
+                    debug(ws_from(Msg), debug_string(NodeDef, ErrMsg), error)
             end;
         _ ->
-            ErrMsg = ered_nodes:jstr(
-                "Property not defined on Msg: ~p --> ~p",
-                [Prop, Msg]
-            ),
-            nodered:debug(
-                nodered:ws(Msg),
-                nodered:debug_string(NodeDef, ErrMsg),
+            ErrMsg = jstr("Property not defined on Msg: ~p --> ~p", [Prop, Msg]),
+            debug(
+                ws_from(Msg),
+                debug_string(NodeDef, ErrMsg),
                 error
             )
     end,

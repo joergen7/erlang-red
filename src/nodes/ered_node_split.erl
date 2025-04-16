@@ -5,6 +5,11 @@
 
 -import(ered_node_receivership, [enter_receivership/3]).
 
+-import(ered_nodes, [
+    jstr/2,
+    send_msg_to_connected_nodes/2
+]).
+
 %%
 %% Split node takes an array, string or buffer and for each item, it generates
 %% a new message with a new msg. It also adds a parts attribute to the
@@ -23,9 +28,16 @@
 %%
 %% (Note: the misspelling 'splt' is desired)
 %%
+%% This node decides on the type of payload what to do. I.e. if the payload
+%% is an array, then the array configuraiton is taken and everything else
+%% is ignored. Similar for string & buffer.
+%%
+%% Also this acts only on properties defined on the msg object, flow, global
+%% are not accessible.
+%%
 
 handle_incoming(NodeDef, Msg) ->
-    ered_nodes:send_msg_to_connected_nodes(NodeDef, Msg),
+    send_msg_to_connected_nodes(NodeDef, Msg),
     NodeDef.
 
 node_split(NodeDef) ->

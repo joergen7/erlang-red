@@ -3,7 +3,11 @@
 -export([node_switch/1]).
 -export([handle_incoming/2]).
 
--import(ered_node_receivership, [enter_receivership/3]).
+%%
+%% TODO needs refactoring to use the unsupported/3 function to send off
+%% TODO a notification of something missing - currently it just fails
+%% TODO silently - not really helping anyone.
+%%
 
 %%
 %% representation of a switch node.
@@ -17,6 +21,11 @@
 %% rule. A switch can either test all rules or stop after the first true rule,
 %% that is specified by the "checkall" attribute.
 %%
+
+-import(ered_node_receivership, [enter_receivership/3]).
+-import(ered_nodes, [
+    send_msg_on/2
+]).
 
 is_same(Same, Same) -> true;
 is_same(_, _) -> false.
@@ -101,7 +110,7 @@ does_rule_match_catchall([Rule | Rules], Val, [Wires | MoreWires], Msg) ->
 
     case does_rule_match(Op, Type, OpVal, Val) of
         true ->
-            ered_nodes:send_msg_on(Wires, Msg);
+            send_msg_on(Wires, Msg);
         _ ->
             ok
     end,
@@ -120,7 +129,7 @@ does_rule_match_stopafterone([Rule | Rules], Val, [Wires | MoreWires], Msg) ->
 
     case does_rule_match(Op, Type, OpVal, Val) of
         true ->
-            ered_nodes:send_msg_on(Wires, Msg);
+            send_msg_on(Wires, Msg);
         _ ->
             does_rule_match_stopafterone(Rules, Val, MoreWires, Msg)
     end.

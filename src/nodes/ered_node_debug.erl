@@ -5,6 +5,18 @@
 
 -import(ered_node_receivership, [enter_receivership/3]).
 
+-import(nodered, [
+    debug/3,
+    node_status/5,
+    unsupported/3,
+    ws_from/1
+]).
+-import(ered_nodes, [
+    get_prop_value_from_map/2,
+    get_prop_value_from_map/3,
+    jstr/2
+]).
+
 %%
 %% Debug nodes have no outgoing wires.
 %%
@@ -20,17 +32,17 @@ to_binary_if_not_binary(Obj) ->
 %%
 %% erlfmt:ignore equals and arrows should line up here.
 send_to_sidebar(NodeDef,Msg) ->
-    Type     = ered_nodes:get_prop_value_from_map(type,  NodeDef),
-    IdStr    = ered_nodes:get_prop_value_from_map(id,    NodeDef),
-    ZStr     = ered_nodes:get_prop_value_from_map(z,     NodeDef),
-    NameStr  = ered_nodes:get_prop_value_from_map(name,  NodeDef, Type),
-    TopicStr = ered_nodes:get_prop_value_from_map(topic, Msg,     ""),
+    Type     = get_prop_value_from_map(type,  NodeDef),
+    IdStr    = get_prop_value_from_map(id,    NodeDef),
+    ZStr     = get_prop_value_from_map(z,     NodeDef),
+    NameStr  = get_prop_value_from_map(name,  NodeDef, Type),
+    TopicStr = get_prop_value_from_map(topic, Msg,     ""),
 
     %% format is important here.
     %% Triggery for large files and I don't know what. Using format
     %% of "object" as opposed to "Object" (capital-o) causes less
     %% breakage. Definitely something to investigate.
-    %% See info for test id: c4690c0a085d6ef5.
+    %% See info for test id: c4690c0a085d6ef5 for more details.
     Data = #{
              id       => IdStr,
              z        => ZStr,
@@ -42,27 +54,22 @@ send_to_sidebar(NodeDef,Msg) ->
              format   => <<"object">>
             },
 
-    nodered:debug(nodered:ws(Msg), Data, normal).
+    debug(ws_from(Msg), Data, normal).
 
 %%
 %%
 handle_status_setting({ok, true}, {ok, <<"counter">>}, NodeDef, Msg) ->
-    Cnt = ered_nodes:get_prop_value_from_map('_mc_incoming', NodeDef),
-
-    nodered:node_status(
-        nodered:ws(Msg),
-        NodeDef,
-        io_lib:format("~p", [Cnt]),
-        "blue",
-        "ring"
-    );
-handle_status_setting(_, _, _, _) ->
-    ok.
+    Cnt = get_prop_value_from_map('_mc_incoming', NodeDef),
+    node_status(ws_from(Msg), NodeDef, Cnt, "blue", "ring");
+handle_status_setting({ok, false}, _, _, _) ->
+    ok;
+handle_status_setting({ok, true}, {ok, StatusType}, NodeDef, Msg) ->
+    unsupported(NodeDef, Msg, jstr("StatusType: ~p", [StatusType])).
 
 handle_incoming(NodeDef, Msg) ->
     case maps:find(console, NodeDef) of
         {ok, true} ->
-            NodeName = ered_nodes:get_prop_value_from_map(
+            NodeName = get_prop_value_from_map(
                 name,
                 NodeDef,
                 "undefined"

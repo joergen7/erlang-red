@@ -10,6 +10,13 @@
     format_error/2
 ]).
 
+-import(ered_nodes, [
+    nodeid_to_pid/2
+]).
+-import(nodered, [
+    websocket_name_from_request/1
+]).
+
 init(Req, State) ->
     {cowboy_rest, Req, State}.
 
@@ -27,8 +34,8 @@ handle_json_body(Req, State) ->
         {_, undefined} ->
             ok;
         {IdStr, ActStr} ->
-            WsName = nodered:websocket_name_from_request(Req),
-            NodePid = ered_nodes:nodeid_to_pid(WsName, IdStr),
+            WsName = websocket_name_from_request(Req),
+            NodePid = nodeid_to_pid(WsName, IdStr),
 
             case whereis(NodePid) of
                 undefined ->

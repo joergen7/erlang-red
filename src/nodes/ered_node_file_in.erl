@@ -8,12 +8,23 @@
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
+-import(ered_nodes, [
+    get_prop_value_from_map/2,
+    get_prop_value_from_map/3,
+    jstr/2,
+    send_msg_to_connected_nodes/2,
+    this_should_not_happen/2
+]).
+-import(nodered, [
+    debug/3,
+    ws_from/1
+]).
 
 %% erlfmt:ignore lined up and to attention
 send_out_debug_msg(NodeDef, Msg, ErrMsg, DebugType) ->
-    IdStr    = ered_nodes:get_prop_value_from_map(id,    NodeDef),
-    ZStr     = ered_nodes:get_prop_value_from_map(z,     NodeDef),
-    NameStr  = ered_nodes:get_prop_value_from_map(name,  NodeDef, <<"file in">>),
+    IdStr    = get_prop_value_from_map(id,    NodeDef),
+    ZStr     = get_prop_value_from_map(z,     NodeDef),
+    NameStr  = get_prop_value_from_map(name,  NodeDef, <<"file in">>),
 
     Data = #{
       id       => IdStr,
@@ -24,25 +35,24 @@ send_out_debug_msg(NodeDef, Msg, ErrMsg, DebugType) ->
       format   => <<"string">>
      },
 
-    nodered:debug(nodered:ws(Msg), Data, DebugType).
+    debug(ws_from(Msg), Data, DebugType).
 
 %% erlfmt:ignore lined up
 debug_msg(NodeDef, Msg, {filename_type_not_supported, FileNameType}) ->
-    ErrMsg = ered_nodes:jstr(
+    ErrMsg = jstr(
                  "File name type not supported: ~p",
                  [FileNameType]
                 ),
     send_out_debug_msg(NodeDef, Msg, ErrMsg, error);
 
 debug_msg(NodeDef, Msg, {file_not_found, FileName}) ->
-    ErrMsg = ered_nodes:jstr("File Not Found: ~p", [FileName]),
+    ErrMsg = jstr("File Not Found: ~p", [FileName]),
     send_out_debug_msg(NodeDef, Msg, ErrMsg, error);
 
 debug_msg(NodeDef, _Msg, Opts) ->
-    ered_nodes:this_should_not_happen(
+    this_should_not_happen(
       NodeDef,
-      io_lib:format("Internal call went wrong ~p",
-                    [Opts])
+      io_lib:format("Internal call went wrong ~p", [Opts])
     ).
 
 %% Attributes of interest:
@@ -71,7 +81,7 @@ handle_incoming(NodeDef, Msg) ->
             case file:read_file(FileName) of
                 {ok, FileData} ->
                     Msg2 = maps:put(payload, FileData, Msg),
-                    ered_nodes:send_msg_to_connected_nodes(NodeDef, Msg2);
+                    send_msg_to_connected_nodes(NodeDef, Msg2);
                 _ ->
                     %%
                     %% TODO this should trigger an exception handler if one
@@ -83,7 +93,7 @@ handle_incoming(NodeDef, Msg) ->
         failed ->
             ignore;
         _ ->
-            ered_nodes:this_should_not_happen(
+            this_should_not_happen(
                 NodeDef,
                 io_lib:format(
                     "file in error in obtaining filename [~p] (~p)\n",

@@ -3,8 +3,6 @@
 -export([node_link_in/1]).
 -export([handle_incoming/2]).
 
--import(ered_node_receivership, [enter_receivership/3]).
-
 %%
 %% Strangely a "link in" node also has a "links" attribute (as does the link
 %% out node). Strange because the links in this case are the backward links
@@ -12,8 +10,14 @@
 %% don't go backward so this attribute seems to be pointless. Unless there
 %% is a deeper meaning that I'm not understanding.
 %%
+
+-import(ered_node_receivership, [enter_receivership/3]).
+-import(ered_nodes, [
+    send_msg_to_connected_nodes/2
+]).
+
 handle_incoming(NodeDef, Msg) ->
-    ered_nodes:send_msg_to_connected_nodes(NodeDef, Msg),
+    send_msg_to_connected_nodes(NodeDef, Msg),
     NodeDef.
 
 node_link_in(NodeDef) ->
