@@ -9,7 +9,7 @@
             {
                 "name": "ERED_KEEPRUNNING",
                 "value": "false",
-                "type": "str"
+                "type": "bool"
             }
         ]
     },

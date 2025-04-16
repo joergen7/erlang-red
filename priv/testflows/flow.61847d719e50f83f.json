@@ -9,7 +9,7 @@
             {
                 "name": "ERED_PENDING",
                 "value": "true",
-                "type": "str"
+                "type": "bool"
             }
         ]
     },
