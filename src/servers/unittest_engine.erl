@@ -145,34 +145,43 @@ run_test_on_another_planet(FlowId, WsName, true) ->
 %%
 %% Run the test disregarding the pending flag of the test flow.
 run_the_test(FlowId, WsName, Ary) ->
-    ErrColl = start_this_should_not_happen_service(
-        FlowId,
-        <<"UnitTestEngine TestRun">>
-    ),
+    case ered_flows:should_keep_flow_running(Ary) of
+        true ->
+            ered_nodes:create_pid_for_node(Ary, WsName);
+        false ->
+            ErrColl = start_this_should_not_happen_service(
+                FlowId,
+                <<"UnitTestEngine TestRun">>
+            ),
 
-    Pids = ered_nodes:create_pid_for_node(Ary, WsName),
+            Pids = ered_nodes:create_pid_for_node(Ary, WsName),
 
-    [
-        ered_nodes:trigger_outgoing_messages(
-            maps:find(type, ND),
-            maps:find(id, ND),
-            WsName
-        )
-     || ND <- Ary
-    ],
+            [
+                ered_nodes:trigger_outgoing_messages(
+                    maps:find(type, ND),
+                    maps:find(id, ND),
+                    WsName
+                )
+             || ND <- Ary
+            ],
 
-    %% give the messages time to propagate through the
-    %% test flow
-    timer:sleep(ered_flows:compute_timeout(Ary)),
+            %% give the messages time to propagate through the
+            %% test flow
+            timer:sleep(ered_flows:compute_timeout(Ary)),
 
-    %% stop all nodes. Probably better would be to checking
-    %% the message queues of the nodes and if all are empty
-    %% it's probably safe to end the test case.
-    stop_all_pids(Pids, WsName),
+            %% stop all nodes. Probably better would be to checking
+            %% the message queues of the nodes and if all are empty
+            %% it's probably safe to end the test case.
+            stop_all_pids(Pids, WsName),
 
-    %% some asserts work on the stop notification, give'em
-    %% time to generate their results.
-    timer:sleep(543),
-    ErrColl ! stop,
+            %% some asserts work on the stop notification, give'em
+            %% time to generate their results.
+            timer:sleep(543),
+            ErrColl ! stop,
 
-    send_off_test_result(WsName, FlowId, error_store:get_errors(FlowId)).
+            send_off_test_result(
+                WsName,
+                FlowId,
+                error_store:get_errors(FlowId)
+            )
+    end.
