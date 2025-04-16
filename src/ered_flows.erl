@@ -4,6 +4,7 @@
 -export([compute_timeout/1]).
 -export([append_tab_name_to_filename/2]).
 -export([is_test_case_pending/1]).
+-export([should_keep_flow_running/1]).
 
 %%
 %% Compute a timeout for the flow test, can be set in the flows.json file.
@@ -20,7 +21,7 @@ compute_timeout([], get_time_in_ms) ->
     1234;
 compute_timeout([H | T], get_time_in_ms) ->
     case maps:find(name, H) of
-        {ok, <<"TIMEOUT">>} ->
+        {ok, <<"ERED_TIMEOUT">>} ->
             case maps:find(value, H) of
                 {ok, Val} ->
                     element(1, string:to_integer(Val)) * 1000;
@@ -91,7 +92,7 @@ get_pending_envvar([]) ->
     false;
 get_pending_envvar([H | T]) ->
     case maps:find(name, H) of
-        {ok, <<"PENDING">>} ->
+        {ok, <<"ERED_PENDING">>} ->
             case maps:find(value, H) of
                 {ok, Val} ->
                     (Val == <<"true">>) or (Val == <<"TRUE">>);
@@ -115,4 +116,36 @@ is_test_case_pending([NodeDef | MoreNodeDefs]) ->
             end;
         _ ->
             is_test_case_pending(MoreNodeDefs)
+    end.
+
+%%
+%%
+keep_running([]) ->
+    false;
+keep_running([H | T]) ->
+    case maps:find(name, H) of
+        {ok, <<"ERED_KEEPRUNNING">>} ->
+            case maps:find(value, H) of
+                {ok, Val} ->
+                    (Val == <<"true">>) or (Val == <<"TRUE">>);
+                _ ->
+                    false
+            end;
+        _ ->
+            keep_running(T)
+    end.
+
+should_keep_flow_running([]) ->
+    false;
+should_keep_flow_running([NodeDef | MoreNodeDefs]) ->
+    case maps:find(type, NodeDef) of
+        {ok, <<"tab">>} ->
+            case maps:find(env, NodeDef) of
+                {ok, EnvAry} ->
+                    keep_running(EnvAry);
+                _ ->
+                    false
+            end;
+        _ ->
+            should_keep_flow_running(MoreNodeDefs)
     end.
