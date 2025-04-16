@@ -3,9 +3,9 @@
 %%
 %% Module for sending various websocket messages to Node-RED frontend
 %%
-%% Does nothing if the websocket_pid isn't defined.
+%% Its the module that represents the encapsulates the communication beteen
+%% nodes in Erlang and their representation in the flow editor.
 %%
--export([node_status/4]).
 -export([node_status/5]).
 -export([debug/3]).
 -export([unittest_result/3]).
@@ -18,14 +18,7 @@
 -export([debug_string/2]).
 -export([ws/1]).
 
-send_on_if_ws(Msg) ->
-    case whereis(websocket_pid) of
-        undefined ->
-            io:format("WARNING[nodered](wspd): not sending ~p~n", [Msg]),
-            ok;
-        _ ->
-            websocket_pid ! Msg
-    end.
+-export([unsupported/3]).
 
 send_on_if_ws(none, Msg) ->
     io:format("WARNING[nodered](none): not sending ~p~n", [Msg]),
@@ -40,10 +33,6 @@ send_on_if_ws(WsName, Msg) ->
         _ ->
             WsName ! Msg
     end.
-
-node_status(NodeDef, Txt, Clr, Shp) ->
-    {ok, NodeId} = maps:find(id, NodeDef),
-    send_on_if_ws({status, NodeId, Txt, Clr, Shp}).
 
 node_status(WsName, NodeDef, Txt, Clr, Shp) ->
     {ok, NodeId} = maps:find(id, NodeDef),
@@ -66,6 +55,28 @@ unittest_result(WsName, FlowId, unknown_testcase) ->
     send_on_if_ws(WsName, {unittest_results, FlowId, <<"unknown_testcase">>});
 unittest_result(WsName, FlowId, success) ->
     send_on_if_ws(WsName, {unittest_results, FlowId, <<"success">>}).
+
+%%
+%% Unsupported features are highlighted in the flow editor frontend. It makes
+%% no sense to fail a unit test if this is hit. It's a gentle reminder that
+%% Erlang-RED isn't feature complete.
+%%
+%% erlfmt:ignore lined up and to attention
+unsupported(NodeDef, Msg, ErrMsg) ->
+    IdStr    = ered_nodes:get_prop_value_from_map(id,    NodeDef),
+    ZStr     = ered_nodes:get_prop_value_from_map(z,     NodeDef),
+    NameStr  = ered_nodes:get_prop_value_from_map(name,  NodeDef, <<"change">>),
+
+    Data = #{
+      id     => IdStr,
+      z      => ZStr,
+      path   => ZStr,
+      name   => NameStr,
+      msg    => ErrMsg,
+      format => <<"string">>
+     },
+
+    debug(nodered:ws(Msg), Data, notice).
 
 %%
 %%
