@@ -1,6 +1,6 @@
 -module(ered_node_debug).
 
--export([node_debug/1]).
+-export([node_debug/2]).
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
@@ -100,6 +100,6 @@ handle_incoming(NodeDef, Msg) ->
 
     NodeDef.
 
-node_debug(NodeDef) ->
+node_debug(NodeDef,_WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming_with_active).

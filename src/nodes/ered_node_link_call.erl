@@ -1,6 +1,6 @@
 -module(ered_node_link_call).
 
--export([node_link_call/1]).
+-export([node_link_call/2]).
 -export([handle_incoming/2]).
 -export([handle_link_return/2]).
 
@@ -71,6 +71,6 @@ handle_link_return(NodeDef, Msg) ->
     send_msg_to_connected_nodes(NodeDef, Msg),
     NodeDef.
 
-node_link_call(NodeDef) ->
+node_link_call(NodeDef,_WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, link_call_node).

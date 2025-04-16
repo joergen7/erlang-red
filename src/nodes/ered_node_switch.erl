@@ -1,6 +1,6 @@
 -module(ered_node_switch).
 
--export([node_switch/1]).
+-export([node_switch/2]).
 -export([handle_incoming/2]).
 
 %%
@@ -160,6 +160,6 @@ handle_incoming(NodeDef, Msg) ->
 
 %%
 %%
-node_switch(NodeDef) ->
+node_switch(NodeDef,_WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

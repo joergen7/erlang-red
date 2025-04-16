@@ -141,7 +141,7 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
 
     FinalNodeDef = NodeDef6,
 
-    Pid = spawn(Module, Fun, [FinalNodeDef]),
+    Pid = spawn(Module, Fun, [FinalNodeDef, WsName]),
     register(NodePid, Pid),
 
     %% subscribe the assert nodes that listen to websocket events to the

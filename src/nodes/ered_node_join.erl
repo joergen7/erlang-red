@@ -1,6 +1,6 @@
 -module(ered_node_join).
 
--export([node_join/1]).
+-export([node_join/2]).
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
@@ -89,7 +89,7 @@ set_manual(_, _, _, _, NodeDef) ->
 
 %%
 %%
-node_join(NodeDef) ->
+node_join(NodeDef,_WsName) ->
     ered_nodes:node_init(NodeDef),
 
     {ok, Mode} = maps:find(mode, NodeDef),

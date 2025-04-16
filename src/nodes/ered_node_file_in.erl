@@ -4,7 +4,7 @@
 %% No Operation node that is used for all unknown types. It represents
 %% a deadend for a message, it stops here.
 
--export([node_file_in/1]).
+-export([node_file_in/2]).
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
@@ -104,6 +104,6 @@ handle_incoming(NodeDef, Msg) ->
 
     NodeDef.
 
-node_file_in(NodeDef) ->
+node_file_in(NodeDef,_WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

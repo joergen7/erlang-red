@@ -1,6 +1,6 @@
 -module(ered_node_assert_values).
 
--export([node_assert_values/1]).
+-export([node_assert_values/2]).
 -export([handle_incoming/2]).
 -export([handle_stop/2]).
 
@@ -310,6 +310,6 @@ handle_incoming(NodeDef, Msg) ->
     send_msg_to_connected_nodes(NodeDef, Msg),
     NodeDef.
 
-node_assert_values(NodeDef) ->
+node_assert_values(NodeDef,_WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, stop_and_incoming).

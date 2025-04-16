@@ -1,6 +1,6 @@
 -module(ered_node_link_out).
 
--export([node_link_out/1]).
+-export([node_link_out/2]).
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
@@ -78,6 +78,6 @@ handle_incoming(NodeDef, Msg) ->
     end,
     NodeDef.
 
-node_link_out(NodeDef) ->
+node_link_out(NodeDef,_WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

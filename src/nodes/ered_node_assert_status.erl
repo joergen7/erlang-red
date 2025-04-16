@@ -4,7 +4,7 @@
 %% Assert node for checking whether another node generated a status
 %% update for itself. Or not.
 %%
--export([node_assert_status/1]).
+-export([node_assert_status/2]).
 -export([handle_ws_event/2]).
 -export([handle_stop/2]).
 
@@ -114,6 +114,6 @@ handle_ws_event(NodeDef,_) ->
 
 %%
 %%
-node_assert_status(NodeDef) ->
+node_assert_status(NodeDef,_WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, websocket_events_and_stop).

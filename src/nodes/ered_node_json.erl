@@ -1,6 +1,6 @@
 -module(ered_node_json).
 
--export([node_json/1]).
+-export([node_json/2]).
 -export([handle_incoming/2]).
 
 %%
@@ -79,6 +79,6 @@ handle_incoming(NodeDef, Msg) ->
     end,
     NodeDef.
 
-node_json(NodeDef) ->
+node_json(NodeDef,_WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

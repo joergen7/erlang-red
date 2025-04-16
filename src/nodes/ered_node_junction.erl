@@ -1,6 +1,6 @@
 -module(ered_node_junction).
 
--export([node_junction/1]).
+-export([node_junction/2]).
 -export([handle_incoming/2]).
 
 %%
@@ -17,6 +17,6 @@ handle_incoming(NodeDef, Msg) ->
     send_msg_to_connected_nodes(NodeDef, Msg),
     NodeDef.
 
-node_junction(NodeDef) ->
+node_junction(NodeDef,_WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

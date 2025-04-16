@@ -1,6 +1,6 @@
 -module(ered_node_template).
 
--export([node_template/1]).
+-export([node_template/2]).
 -export([handle_incoming/2]).
 
 %%
@@ -63,6 +63,6 @@ handle_incoming(NodeDef, Msg) ->
     end,
     NodeDef.
 
-node_template(NodeDef) ->
+node_template(NodeDef,_WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

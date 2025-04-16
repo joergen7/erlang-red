@@ -4,7 +4,7 @@
 %% Assert node for checking whether another node generated a debug
 %% message for the debug panel.
 %%
--export([node_assert_debug/1]).
+-export([node_assert_debug/2]).
 -export([handle_ws_event/2]).
 -export([handle_stop/2]).
 
@@ -61,6 +61,6 @@ handle_ws_event(NodeDef, _) ->
 
 %%
 %%
-node_assert_debug(NodeDef) ->
+node_assert_debug(NodeDef,_WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, websocket_events_and_stop).

@@ -1,6 +1,6 @@
 -module(ered_node_assert_success).
 
--export([node_assert_success/1]).
+-export([node_assert_success/2]).
 -export([handle_stop/2]).
 -export([handle_incoming/2]).
 
@@ -54,6 +54,6 @@ handle_stop(NodeDef,WsName) ->
 handle_incoming(NodeDef, _Msg) ->
     NodeDef.
 
-node_assert_success(NodeDef) ->
+node_assert_success(NodeDef,_WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, stop_and_incoming).

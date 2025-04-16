@@ -1,6 +1,6 @@
 -module(ered_node_inject).
 
--export([node_inject/1]).
+-export([node_inject/2]).
 -export([handle_outgoing/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
@@ -83,6 +83,6 @@ handle_outgoing(NodeDef, Msg) ->
     send_msg_to_connected_nodes(NodeDef, parse_props(Props, NodeDef, Msg)),
     NodeDef.
 
-node_inject(NodeDef) ->
+node_inject(NodeDef,_WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_outgoing).
