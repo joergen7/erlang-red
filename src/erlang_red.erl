@@ -51,6 +51,10 @@ start(_Type, _Args) ->
           {"/nodes",          ered_http_nodered_empty_json, []},
           {"/flows",          ered_http_nodered_flow_deploy_handler, []},
           {"/inject/:nodeid", ered_http_nodered_inject_node_button_handler, []},
+          {"/settings.json",
+              [{method, <<"GET">>}],
+              cowboy_static,
+              {priv_file, erlang_red, "node-red-frontend/settings.json", [{mimetypes, {<<"application">>, <<"json">>, []}}]}},
 
           {"/debug/view/debug-utils.js",
               [{method, <<"GET">>}],
