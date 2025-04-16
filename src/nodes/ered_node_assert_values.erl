@@ -310,6 +310,6 @@ handle_incoming(NodeDef, Msg) ->
     send_msg_to_connected_nodes(NodeDef, Msg),
     NodeDef.
 
-node_assert_values(NodeDef,_WsName) ->
+node_assert_values(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, stop_and_incoming).

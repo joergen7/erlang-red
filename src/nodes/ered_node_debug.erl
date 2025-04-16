@@ -100,6 +100,6 @@ handle_incoming(NodeDef, Msg) ->
 
     NodeDef.
 
-node_debug(NodeDef,_WsName) ->
+node_debug(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming_with_active).

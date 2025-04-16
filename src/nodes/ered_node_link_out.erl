@@ -78,6 +78,6 @@ handle_incoming(NodeDef, Msg) ->
     end,
     NodeDef.
 
-node_link_out(NodeDef,_WsName) ->
+node_link_out(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

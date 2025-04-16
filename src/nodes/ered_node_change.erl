@@ -203,6 +203,6 @@ handle_incoming(NodeDef, Msg) ->
     send_msg_to_connected_nodes(NodeDef, Msg2),
     NodeDef.
 
-node_change(NodeDef,_WsName) ->
+node_change(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

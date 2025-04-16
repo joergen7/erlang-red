@@ -71,6 +71,6 @@ handle_link_return(NodeDef, Msg) ->
     send_msg_to_connected_nodes(NodeDef, Msg),
     NodeDef.
 
-node_link_call(NodeDef,_WsName) ->
+node_link_call(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, link_call_node).

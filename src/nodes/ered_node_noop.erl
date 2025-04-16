@@ -94,6 +94,6 @@ handle_outgoing(NodeDef, Msg) ->
 
     NodeDef.
 
-node_noop(NodeDef,_WsName) ->
+node_noop(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, incoming_and_outgoing).

@@ -56,6 +56,6 @@ handle_incoming(NodeDef,Msg) ->
 
     NodeDef.
 
-node_assert_failure(NodeDef,_WsName) ->
+node_assert_failure(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

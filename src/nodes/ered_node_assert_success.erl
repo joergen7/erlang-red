@@ -54,6 +54,6 @@ handle_stop(NodeDef,WsName) ->
 handle_incoming(NodeDef, _Msg) ->
     NodeDef.
 
-node_assert_success(NodeDef,_WsName) ->
+node_assert_success(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, stop_and_incoming).

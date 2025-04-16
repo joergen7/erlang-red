@@ -63,6 +63,6 @@ handle_incoming(NodeDef, Msg) ->
     end,
     NodeDef.
 
-node_template(NodeDef,_WsName) ->
+node_template(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

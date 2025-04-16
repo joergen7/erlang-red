@@ -79,6 +79,6 @@ handle_incoming(NodeDef, Msg) ->
     end,
     NodeDef.
 
-node_json(NodeDef,_WsName) ->
+node_json(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

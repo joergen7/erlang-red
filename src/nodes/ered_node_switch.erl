@@ -160,6 +160,6 @@ handle_incoming(NodeDef, Msg) ->
 
 %%
 %%
-node_switch(NodeDef,_WsName) ->
+node_switch(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).
