@@ -3,11 +3,6 @@
 -export([node_join/2]).
 -export([handle_incoming/2]).
 
--import(ered_node_receivership, [enter_receivership/3]).
--import(ered_nodes, [
-    send_msg_to_connected_nodes/2
-]).
-
 %%
 %% join node is the companion of the split node that generates many messages
 %% from a single message. The join node collects these together again and
@@ -32,6 +27,15 @@
 %%       "reduceInitType": "",
 %%       "reduceFixup": "",
 %%
+
+-import(ered_node_receivership, [enter_receivership/3]).
+-import(ered_nodes, [
+    jstr/2,
+    send_msg_to_connected_nodes/2
+]).
+-import(nodered, [
+    unsupported/3
+]).
 
 handle_incoming(NodeDef, Msg) ->
     case maps:find('_is_manually_collecting', NodeDef) of
@@ -75,21 +79,21 @@ convert_to_int(Val) ->
 
 %%
 %%
-set_manual(<<"custom">>, <<"array">>, <<"full">>, Count, NodeDef) ->
+use_manual(<<"custom">>, <<"array">>, <<"full">>, Count, NodeDef) ->
     case convert_to_int(Count) of
         {ok, 0} ->
-            NodeDef;
+            {false, NodeDef};
         {ok, Cnt} ->
-            maps:put('_is_manually_collecting', {ok, Cnt, []}, NodeDef);
+            {ok, maps:put('_is_manually_collecting', {ok, Cnt, []}, NodeDef)};
         _ ->
-            NodeDef
+            {false, NodeDef}
     end;
-set_manual(_, _, _, _, NodeDef) ->
-    NodeDef.
+use_manual(_, _, _, _, NodeDef) ->
+    {false, NodeDef}.
 
 %%
 %%
-node_join(NodeDef,_WsName) ->
+node_join(NodeDef, WsName) ->
     ered_nodes:node_init(NodeDef),
 
     {ok, Mode} = maps:find(mode, NodeDef),
@@ -97,9 +101,17 @@ node_join(NodeDef,_WsName) ->
     {ok, Count} = maps:find(count, NodeDef),
     {ok, PropType} = maps:find(propertyType, NodeDef),
 
-    %%
-    %% TODO generate a unsupported(..) errorr here if mode is not supported
-    %%
-    NodeDef2 = set_manual(Mode, Build, PropType, Count, NodeDef),
+    NodeDef2 =
+        case use_manual(Mode, Build, PropType, Count, NodeDef) of
+            {ok, V} ->
+                V;
+            {false, V} ->
+                ErrMsg = jstr("Node Config ~p", [NodeDef]),
+                unsupported(NodeDef, {websocket, WsName}, ErrMsg),
+                V
+        end,
 
+    %% TODO here would be nice to select a different function that should
+    %% TODO be used for incoming messages - since the configuration is
+    %% TODO is static for the node.
     enter_receivership(?MODULE, NodeDef2, only_incoming).

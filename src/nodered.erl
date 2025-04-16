@@ -75,6 +75,8 @@ unittest_result(WsName, FlowId, success) ->
 %% Erlang-RED isn't feature complete.
 %%
 %% erlfmt:ignore lined up and to attention
+unsupported(NodeDef, {websocket, WsName}, ErrMsg) ->
+    unsupported(NodeDef, #{ '_ws' => WsName}, ErrMsg);
 unsupported(NodeDef, Msg, ErrMsg) ->
     Type     = get_prop_value_from_map(type, NodeDef),
     IdStr    = get_prop_value_from_map(id,   NodeDef),
