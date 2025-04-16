@@ -890,6 +890,52 @@ var RED = (function() {
     }
 
     function loadEditor() {
+        // cheeky little function for exporting test flows whenever a deploy
+        // is done.
+        function onDeployCreateTestFlowFromCurrentWorkspace() {
+            let activeWorkspace = RED.workspaces.active();
+
+            let nodes = RED.nodes.groups(activeWorkspace);
+            nodes = nodes.concat(RED.nodes.junctions(activeWorkspace));
+            nodes = nodes.concat(RED.nodes.filterNodes({z:activeWorkspace}));
+
+            RED.nodes.eachConfig(function(n) {
+                if (n.z === RED.workspaces.active() && n._def.hasUsers === false) {
+                    // Grab any config nodes scoped to this flow that don't
+                    // require any flow-nodes to use them
+                    nodes.push(n);
+                }
+            });
+
+            var parentNode = ( RED.nodes.workspace(activeWorkspace) ||
+                                RED.nodes.subflow(activeWorkspace));
+            nodes.unshift(parentNode);
+
+            nodes = RED.nodes.createExportableNodeSet(nodes);
+
+            // replication of code found in the clipboard module:
+            //     function sendOffToServerAsTestCase(data)
+            $.ajax({
+                headers: {
+                },
+                cache: false,
+                url: `testcase/${RED.workspaces.active()}/create`,
+                method: 'POST',
+                data: JSON.stringify({ "flow": JSON.stringify(nodes,null,4) }),
+                contentType: "application/json",
+                success: function(data) {
+                    data = JSON.parse(data)
+                    RED.notify(`Created testcase ${data.name}`, "success" )
+                },
+                error: function() {
+                    RED.notify(`something went wrong creating testcase`, "error" )
+                }
+            });
+        }
+
+        RED.events.on("deploy",
+            onDeployCreateTestFlowFromCurrentWorkspace);
+
         // trigger the plugins to render their sidebar content
         let initPlugins = () => {
             // workspace dirty is the last event of the initialisation phase
@@ -44463,6 +44509,7 @@ RED.clipboard = (function() {
         });
 
     }
+
 
     function setupDialogs() {
         dialog = $('<div id="red-ui-clipboard-dialog" class="hide"><form class="dialog-form form-horizontal"></form></div>')
