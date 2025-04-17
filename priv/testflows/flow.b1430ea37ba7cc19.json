@@ -91,7 +91,11 @@
         "x": 779,
         "y": 671.5,
         "wires": [
-            []
+            [
+                "cf9cec07f9e55ee5",
+                "76f7ebd0ea18f879",
+                "3412312ba43c16d6"
+            ]
         ]
     },
     {
@@ -112,6 +116,78 @@
             [
                 "cf681ad132ea44c5"
             ]
+        ]
+    },
+    {
+        "id": "cf9cec07f9e55ee5",
+        "type": "debug",
+        "z": "b1430ea37ba7cc19",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 927,
+        "y": 672,
+        "wires": []
+    },
+    {
+        "id": "76f7ebd0ea18f879",
+        "type": "ut-assert-success",
+        "z": "b1430ea37ba7cc19",
+        "name": "",
+        "x": 950,
+        "y": 762.5,
+        "wires": []
+    },
+    {
+        "id": "3412312ba43c16d6",
+        "type": "change",
+        "z": "b1430ea37ba7cc19",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "$count($$.payload)",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 957,
+        "y": 563,
+        "wires": [
+            [
+                "b71cba83e2e7a1fc"
+            ]
+        ]
+    },
+    {
+        "id": "b71cba83e2e7a1fc",
+        "type": "ut-assert-values",
+        "z": "b1430ea37ba7cc19",
+        "name": "",
+        "rules": [
+            {
+                "t": "eql",
+                "p": "payload",
+                "pt": "msg",
+                "to": "8",
+                "tot": "num"
+            }
+        ],
+        "x": 1232.7143096923828,
+        "y": 563,
+        "wires": [
+            []
         ]
     }
 ]
