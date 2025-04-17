@@ -890,6 +890,8 @@ var RED = (function() {
     }
 
     function loadEditor() {
+
+
         // cheeky little function for exporting test flows whenever a deploy
         // is done.
         function onDeployCreateTestFlowFromCurrentWorkspace() {
@@ -912,6 +914,13 @@ var RED = (function() {
             nodes.unshift(parentNode);
 
             nodes = RED.nodes.createExportableNodeSet(nodes);
+
+            // if the flow is empty, i.c. containing only a tab node, then
+            // ignore it. Since you need to keep one tab open in NodeRED, I
+            // don't want to be generate a new flow test each time.
+            if ( nodes.filter( d => d.type != "tab" ).length == 0 ) {
+                return
+            }
 
             // replication of code found in the clipboard module:
             //     function sendOffToServerAsTestCase(data)
