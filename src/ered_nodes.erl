@@ -3,26 +3,29 @@
 %%
 %% External exports, should be used by others.
 %%
--export([create_pid_for_node/2]).
-
--export([get_prop_value_from_map/2]).
--export([get_prop_value_from_map/3]).
--export([generate_id/0]).
--export([generate_id/1]).
--export([nodeid_to_pid/2]).
--export([node_init/1]).
--export([this_should_not_happen/2]).
--export([jstr/2]).
--export([jstr/1]).
--export([tabid_to_error_collector/1]).
--export([trigger_outgoing_messages/3]).
--export([create_outgoing_msg/1]).
+-export([
+    create_outgoing_msg/1,
+    create_pid_for_node/2,
+    get_prop_value_from_map/2,
+    get_prop_value_from_map/3,
+    generate_id/0,
+    generate_id/1,
+    jstr/2,
+    jstr/1,
+    nodeid_to_pid/2,
+    node_init/1,
+    tabid_to_error_collector/1,
+    this_should_not_happen/2,
+    trigger_outgoing_messages/3
+]).
 
 %% send_msg_to_connnected_nodes assues an attribute 'wires' while
 %% send send_msg_on is given an array of node ids and triggers the
 %% 'incoming' message to be sent
--export([send_msg_to_connected_nodes/2]).
--export([send_msg_on/2]).
+-export([
+    send_msg_on/2,
+    send_msg_to_connected_nodes/2
+]).
 
 -import(ered_nodered_comm, [
     ws_from/1
@@ -55,7 +58,6 @@ this_should_not_happen(NodeDef, Arg) ->
             {ok, ZStr} = maps:find(z, NodeDef),
             ErrCollector ! {it_happened, {IdStr, ZStr}, Arg}
     end.
-
 
 %%
 %%
@@ -300,7 +302,6 @@ node_type_to_fun(<<"ut-assert-debug">>) ->
 node_type_to_fun(Unknown) ->
     io:format("noop node initiated for unknown type: ~p\n", [Unknown]),
     {ered_node_noop, node_noop}.
-
 
 %%
 %%
