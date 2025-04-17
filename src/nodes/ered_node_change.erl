@@ -119,7 +119,7 @@ do_set_value(Prop, Value, <<"jsonata">>, Msg, NodeDef) ->
                     unsupported(
                         NodeDef,
                         Msg,
-                        jstr("Payload not set on Msg: ~p", [Msg])
+                        "Payload not set on Msg"
                     ),
                     Msg
             end;
