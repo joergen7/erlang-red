@@ -17,25 +17,9 @@
 ]).
 -import(ered_nodered_comm, [
     debug/3,
+    send_out_debug_msg/4,
     ws_from/1
 ]).
-
-%% erlfmt:ignore lined up and to attention
-send_out_debug_msg(NodeDef, Msg, ErrMsg, DebugType) ->
-    IdStr    = get_prop_value_from_map(id,    NodeDef),
-    ZStr     = get_prop_value_from_map(z,     NodeDef),
-    NameStr  = get_prop_value_from_map(name,  NodeDef, <<"file in">>),
-
-    Data = #{
-      id       => IdStr,
-      z        => ZStr,
-      path     => ZStr,
-      name     => NameStr,
-      msg      => ErrMsg,
-      format   => <<"string">>
-     },
-
-    debug(ws_from(Msg), Data, DebugType).
 
 %% erlfmt:ignore lined up
 debug_msg(NodeDef, Msg, {filename_type_not_supported, FileNameType}) ->

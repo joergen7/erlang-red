@@ -6,18 +6,19 @@
 %% Its the module that represents the encapsulates the communication beteen
 %% nodes in Erlang and their representation in the flow editor.
 %%
--export([node_status/5]).
--export([debug/3]).
--export([unittest_result/3]).
--export([get_websocket_name/0]).
--export([websocket_name_from_request/1]).
-
--export([debug_string/3]).
--export([debug_string/2]).
--export([ws_from/1]).
-
--export([unsupported/3]).
--export([assert_failure/3]).
+-export([
+    assert_failure/3,
+    debug/3,
+    debug_string/2,
+    debug_string/3,
+    get_websocket_name/0,
+    node_status/5,
+    send_out_debug_msg/4,
+    unittest_result/3,
+    unsupported/3,
+    websocket_name_from_request/1,
+    ws_from/1
+]).
 
 -import(ered_nodes, [
     generate_id/0,
@@ -87,13 +88,32 @@ unsupported(NodeDef, Msg, ErrMsg) ->
       path   => ZStr,
       name   => NameStr,
       msg    => list_to_binary(
-                  io_lib:format("Unsupported Feature: ~s",
-                                [ErrMsg])
+                  io_lib:format(
+                    "Unsupported Feature: ~s NodeDef: ~p Msg: ~p",
+                    [ErrMsg, NodeDef, Msg])
                  ),
       format => <<"string">>
      },
 
     debug(ws_from(Msg), Data, notice).
+
+%% erlfmt:ignore lined up and to attention
+send_out_debug_msg(NodeDef, Msg, ErrMsg, DebugType) ->
+    TypeStr  = get_prop_value_from_map(type,  NodeDef),
+    IdStr    = get_prop_value_from_map(id,    NodeDef),
+    ZStr     = get_prop_value_from_map(z,     NodeDef),
+    NameStr  = get_prop_value_from_map(name,  NodeDef, TypeStr),
+
+    Data = #{
+      id       => IdStr,
+      z        => ZStr,
+      path     => ZStr,
+      name     => NameStr,
+      msg      => ErrMsg,
+      format   => <<"string">>
+     },
+
+    debug(ws_from(Msg), Data, DebugType).
 
 %%
 %%
@@ -123,7 +143,6 @@ ws_from(Msg) ->
         _ ->
             none
     end.
-
 
 %%
 %% helpers
