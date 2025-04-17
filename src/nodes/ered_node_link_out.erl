@@ -5,7 +5,7 @@
 
 -import(ered_node_receivership, [enter_receivership/3]).
 
--import(nodered, [
+-import(ered_nodered_comm, [
     debug/3,
     debug_string/2,
     node_status/5,

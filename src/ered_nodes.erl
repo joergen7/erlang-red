@@ -16,6 +16,7 @@
 -export([jstr/1]).
 -export([tabid_to_error_collector/1]).
 -export([trigger_outgoing_messages/3]).
+-export([create_outgoing_msg/1]).
 
 %% send_msg_to_connnected_nodes assues an attribute 'wires' while
 %% send send_msg_on is given an array of node ids and triggers the
@@ -23,14 +24,13 @@
 -export([send_msg_to_connected_nodes/2]).
 -export([send_msg_on/2]).
 
--import(nodered, [
-    ws_from/1,
-    create_outgoing_msg/1
+-import(ered_nodered_comm, [
+    ws_from/1
 ]).
+
 %%
 %% Common functionality
 %%
-
 jstr(Fmt, Args) ->
     list_to_binary(lists:flatten(io_lib:format(Fmt, Args))).
 
@@ -41,6 +41,8 @@ jstr(Str) when is_atom(Str) ->
 jstr(Str) ->
     list_to_binary(lists:flatten(Str)).
 
+%%
+%%
 this_should_not_happen(NodeDef, Arg) ->
     {ok, TabId} = maps:find(z, NodeDef),
     ErrCollector = tabid_to_error_collector(TabId),
@@ -54,9 +56,9 @@ this_should_not_happen(NodeDef, Arg) ->
             ErrCollector ! {it_happened, {IdStr, ZStr}, Arg}
     end.
 
-node_init(_NodeDef) ->
-    ok.
 
+%%
+%%
 generate_id(Length) ->
     IntLen = erlang:list_to_integer(
         erlang:float_to_list(Length / 2, [{decimals, 0}])
@@ -73,6 +75,7 @@ generate_id(Length) ->
         )
     ).
 
+%% generate an id in a form that is conform with NodeRED ids: 16 hexadecimal.
 generate_id() ->
     generate_id(16).
 
@@ -97,6 +100,12 @@ tabid_to_error_collector(IdStr) ->
             )
         )
     ).
+
+%%
+%% Called by a node before it enters receivership. Does not much but
+%% might later on, original it dumped some debug to the console.
+node_init(_NodeDef) ->
+    ok.
 
 %% TODO: a tab node (i.e. the tab containing a flow) also has a disabled
 %% TODO: flag but this is called 'disabled'. If it is set, then the entire
@@ -291,6 +300,12 @@ node_type_to_fun(<<"ut-assert-debug">>) ->
 node_type_to_fun(Unknown) ->
     io:format("noop node initiated for unknown type: ~p\n", [Unknown]),
     {ered_node_noop, node_noop}.
+
+
+%%
+%%
+create_outgoing_msg(WsName) ->
+    {outgoing, #{'_msgid' => generate_id(), '_ws' => WsName}}.
 
 %% A list of all nodes that support outgoing messages, this was originally
 %% only the inject node but then I realised that for testing purposes there

@@ -17,7 +17,7 @@
     jstr/2,
     send_msg_to_connected_nodes/2
 ]).
--import(nodered, [
+-import(ered_nodered_comm, [
     debug/3,
     debug_string/2,
     ws_from/1,

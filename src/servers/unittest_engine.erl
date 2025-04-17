@@ -30,7 +30,7 @@
     tabid_to_error_collector/1,
     trigger_outgoing_messages/3
 ]).
--import(nodered, [
+-import(ered_nodered_comm, [
     debug/3,
     debug_string/3,
     unittest_result/3

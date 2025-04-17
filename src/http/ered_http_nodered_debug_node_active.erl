@@ -13,7 +13,7 @@
 -import(ered_nodes, [
     nodeid_to_pid/2
 ]).
--import(nodered, [
+-import(ered_nodered_comm, [
     websocket_name_from_request/1
 ]).
 

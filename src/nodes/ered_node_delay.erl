@@ -4,7 +4,7 @@
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
--import(nodered, [
+-import(ered_nodered_comm, [
     unsupported/3
 ]).
 -import(ered_nodes, [

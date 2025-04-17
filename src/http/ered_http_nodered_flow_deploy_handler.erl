@@ -14,7 +14,7 @@
 -import(ered_nodes, [
     create_pid_for_node/2
 ]).
--import(nodered, [
+-import(ered_nodered_comm, [
     websocket_name_from_request/1
 ]).
 

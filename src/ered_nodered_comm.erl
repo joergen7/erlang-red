@@ -1,4 +1,4 @@
--module(nodered).
+-module(ered_nodered_comm).
 
 %%
 %% Module for sending various websocket messages to Node-RED frontend
@@ -11,8 +11,6 @@
 -export([unittest_result/3]).
 -export([get_websocket_name/0]).
 -export([websocket_name_from_request/1]).
-
--export([create_outgoing_msg/1]).
 
 -export([debug_string/3]).
 -export([debug_string/2]).
@@ -126,8 +124,6 @@ ws_from(Msg) ->
             none
     end.
 
-create_outgoing_msg(WsName) ->
-    {outgoing, #{'_msgid' => generate_id(), '_ws' => WsName}}.
 
 %%
 %% helpers

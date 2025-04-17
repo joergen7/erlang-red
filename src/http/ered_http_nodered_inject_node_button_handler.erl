@@ -10,9 +10,11 @@
     format_error/2
 ]).
 
--import(ered_nodes, [nodeid_to_pid/2]).
--import(nodered, [
+-import(ered_nodes, [
     create_outgoing_msg/1,
+    nodeid_to_pid/2
+]).
+-import(ered_nodered_comm, [
     websocket_name_from_request/1
 ]).
 

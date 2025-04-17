@@ -10,7 +10,7 @@
 
 -import(ered_node_receivership, [enter_receivership/3]).
 
--import(nodered, [
+-import(ered_nodered_comm, [
     assert_failure/3
 ]).
 -import(ered_nodes, [

@@ -16,7 +16,7 @@
     jstr/2,
     this_should_not_happen/2
 ]).
--import(nodered, [
+-import(ered_nodered_comm, [
     debug/3,
     node_status/5,
     unsupported/3,

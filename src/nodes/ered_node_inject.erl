@@ -12,7 +12,7 @@
     send_msg_to_connected_nodes/2
 ]).
 
--import(nodered, [
+-import(ered_nodered_comm, [
     unsupported/3
 ]).
 

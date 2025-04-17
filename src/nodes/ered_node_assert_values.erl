@@ -5,7 +5,7 @@
 -export([handle_stop/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
--import(nodered, [
+-import(ered_nodered_comm, [
     debug/3,
     node_status/5,
     ws_from/1

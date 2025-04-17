@@ -13,7 +13,7 @@
 -import(ered_nodes, [
     jstr/2
 ]).
--import(nodered, [
+-import(ered_nodered_comm, [
     assert_failure/3,
     node_status/5
 ]).

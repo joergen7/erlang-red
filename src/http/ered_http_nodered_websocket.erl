@@ -11,7 +11,7 @@
     jstr/1,
     jstr/2
 ]).
--import(nodered, [
+-import(ered_nodered_comm, [
     get_websocket_name/0
 ]).
 
