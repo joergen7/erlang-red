@@ -106,7 +106,7 @@ start(_Type, _Args) ->
     error_store:start(),
 
     {ok, _} = cowboy:start_clear(
-        my_http_listener,
+        erlang_red_listener,
         [{port, 8080}],
         #{env => #{dispatch => Dispatch}}
     ).
