@@ -30,14 +30,14 @@
 ]).
 
 send_on_if_ws(none, Msg) ->
-    %% io:format("WARNING[nodered](none): not sending ~p~n", [Msg]),
+    io:format("WARNING[nodered](none): not sending ~p~n", [Msg]),
     ok;
 send_on_if_ws(WsName, Msg) ->
     case whereis(WsName) of
         undefined ->
-            %% io:format("WARNING[nodered](Wsname): not sending ~p ~p~n", [
-            %%     WsName, Msg
-            %% ]),
+            io:format("WARNING[nodered](Wsname): not sending ~p ~p~n", [
+                WsName, Msg
+            ]),
             ok;
         _ ->
             WsName ! Msg
