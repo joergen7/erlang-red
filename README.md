@@ -66,7 +66,7 @@ Test
 
     $ rebar3 eunit
 
-Run
+Development
 ---
 
     $ rebar3 shell --apps erlang_red
@@ -89,6 +89,17 @@ Then from the docker host machine, open a browser:
     prompt$ open -a Firefox http://localhost:9090/node-red
 
 That should display the Node-RED visual editor.
+
+Release
+---
+
+A [release](https://github.com/gorenje/erlang-red/blob/8072c15ffbcb9444f3939f49039cf1b93f486820/rebar.config#L11-L21) can be bundled together:
+
+    $ rebar3 release
+
+All static frontend code (for the Node-RED flow editor) and the test flow files in `priv/testflows` are bundled into the release.
+
+Cowboy server will listen on port 8080.
 
 Example
 ---

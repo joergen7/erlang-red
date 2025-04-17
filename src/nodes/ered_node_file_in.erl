@@ -23,15 +23,13 @@
 
 debug_msg(NodeDef, Msg, {filename_type_not_supported, FileNameType}) ->
     ErrMsg = jstr(
-                 "File name type not supported: ~p",
-                 [FileNameType]
-                ),
+        "File name type not supported: ~p",
+        [FileNameType]
+    ),
     send_out_debug_msg(NodeDef, Msg, ErrMsg, error);
-
 debug_msg(NodeDef, Msg, {file_not_found, FileName}) ->
     ErrMsg = jstr("File Not Found: ~p", [FileName]),
     send_out_debug_msg(NodeDef, Msg, ErrMsg, error).
-
 
 %% Attributes of interest:
 %%   "filename": "priv/testdata/helloworld.txt",
