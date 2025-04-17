@@ -832,7 +832,7 @@ function compareFlows(msg) {
         newObj: newObj
       })
     } else {
-      if (JSON.stringify(oldObj) != JSON.stringify(newObj)) {
+      if (JSON.stringify(oldObj, Object.keys(oldObj).sort()) != JSON.stringify(newObj, Object.keys(newObj).sort())) {
         changes.push({
           type: "changed",
           id: newObj.id,
