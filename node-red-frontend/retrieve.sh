@@ -45,6 +45,7 @@ for fle in vendor/jquery/css/base/jquery-ui.min.css \
            vendor/font-awesome/css/font-awesome.min.css \
            vendor/monaco/style.css \
            vendor/monaco/dist/editor.js \
+           vendor/monaco/dist/8f3abbcbc983396e1f13.ttf \
            vendor/monaco/dist/editor.worker.js \
            vendor/monaco/monaco-bootstrap.js \
            vendor/vendor.js \
