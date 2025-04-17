@@ -37,17 +37,17 @@ action_to_content(Val, <<"">>, _Pretty) ->
     case string_like(Val) of
         true ->
             io:format("object is string~n", []),
-            {ok, jiffy:decode(Val)};
+            {ok, json:decode(Val)};
         false ->
             io:format("object is object~n", []),
-            {ok, jiffy:encode(Val)}
+            {ok, json:encode(Val)}
     end;
 action_to_content(Val, <<"obj">>, _Pretty) ->
     %% convert to Javascript object
-    {ok, jiffy:decode(Val)};
+    {ok, json:decode(Val)};
 action_to_content(Val, <<"str">>, _Pretty) ->
     %% convert to object to Javascript string
-    {ok, jiffy:encode(Val)};
+    {ok, json:encode(Val)};
 action_to_content(_, _, _) ->
     unsupported.
 

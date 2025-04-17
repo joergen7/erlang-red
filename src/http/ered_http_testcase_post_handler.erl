@@ -49,7 +49,7 @@ handle_json_body(Req, State) ->
     ),
 
     Resp = cowboy_req:set_resp_body(
-        jiffy:encode(#{name => list_to_binary(lists:flatten(FileName))}),
+        json:encode(#{name => list_to_binary(lists:flatten(FileName))}),
         Req2
     ),
 

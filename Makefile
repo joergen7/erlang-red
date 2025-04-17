@@ -24,3 +24,6 @@ dialyzer:
 
 format-code:
 	rebar3 fmt -w
+
+release:
+	rebar3 release

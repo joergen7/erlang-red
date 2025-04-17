@@ -36,7 +36,7 @@ websocket_init(State) ->
     erlang:start_timer(
         500,
         WsName,
-        jiffy:encode([
+        json:encode([
             #{topic => hb, data => Millis},
             #{
                 topic => <<"notification/runtime-state">>,
@@ -66,13 +66,13 @@ websocket_info({data, Msg}, State) ->
 websocket_info({debug, Data}, State) ->
     Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
     websocket_event_exchange:debug_msg(maps:find(wsname, State), normal, Data2),
-    Msg = jiffy:encode([#{topic => debug, data => Data2}]),
+    Msg = json:encode([#{topic => debug, data => Data2}]),
     {reply, {text, Msg}, State};
 websocket_info({notice_debug, Data}, State) ->
     Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
     Data3 = maps:put(level, 40, Data2),
     websocket_event_exchange:debug_msg(maps:find(wsname, State), notice, Data3),
-    Msg = jiffy:encode([#{topic => debug, data => Data3}]),
+    Msg = json:encode([#{topic => debug, data => Data3}]),
     {reply, {text, Msg}, State};
 websocket_info({warning_debug, Data}, State) ->
     Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
@@ -80,13 +80,13 @@ websocket_info({warning_debug, Data}, State) ->
     websocket_event_exchange:debug_msg(
         maps:find(wsname, State), warning, Data3
     ),
-    Msg = jiffy:encode([#{topic => debug, data => Data3}]),
+    Msg = json:encode([#{topic => debug, data => Data3}]),
     {reply, {text, Msg}, State};
 websocket_info({error_debug, Data}, State) ->
     Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
     Data3 = maps:put(level, 20, Data2),
     websocket_event_exchange:debug_msg(maps:find(wsname, State), error, Data3),
-    Msg = jiffy:encode([#{topic => debug, data => Data3}]),
+    Msg = json:encode([#{topic => debug, data => Data3}]),
     {reply, {text, Msg}, State};
 %%
 %% Here are the details to the possible values of the status
@@ -98,7 +98,7 @@ websocket_info({error_debug, Data}, State) ->
 %% Shp: 'ring' or 'dot'.
 %%
 websocket_info({status, NodeId, Txt, Clr, Shp}, State) ->
-    Msg = jiffy:encode([
+    Msg = json:encode([
         #{
             topic => jstr("status/~s", [NodeId]),
             data => #{
@@ -123,7 +123,7 @@ websocket_info({status, NodeId, Txt, Clr, Shp}, State) ->
 %% there were errors.
 %%
 websocket_info({unittest_results, FlowId, Status}, State) ->
-    Msg = jiffy:encode([
+    Msg = json:encode([
         #{
             topic => 'unittesting:testresults',
             data => #{
@@ -141,7 +141,7 @@ ws_send_heartbeat(Pid, State) ->
     {ok, WsName} = maps:find(wsname, State),
 
     Millis = erlang:system_time(millisecond),
-    Data_jsonb = jiffy:encode([
+    Data_jsonb = json:encode([
         #{topic => hb, data => Millis},
         #{
             topic => <<"cookie/set-wsname">>,

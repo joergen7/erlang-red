@@ -29,7 +29,7 @@ handle_response(Req, State) ->
             case file:read_file(FileName) of
                 {ok, FileData} ->
                     {
-                        jiffy:encode(#{flowdata => jiffy:decode(FileData)}),
+                        json:encode(#{flowdata => json:decode(FileData)}),
                         Req,
                         State
                     };
@@ -37,7 +37,7 @@ handle_response(Req, State) ->
                 %% File not found, send empty content. This is good for the
                 %% FlowCompare plugin/node that uses this endpoint.
                 _ ->
-                    {jiffy:encode(#{flowdata => []}), Req, State}
+                    {json:encode(#{flowdata => []}), Req, State}
             end
     end.
 

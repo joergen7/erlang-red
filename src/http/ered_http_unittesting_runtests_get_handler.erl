@@ -49,10 +49,10 @@ handle_response(Req, State) ->
                 unittest_engine ! {start_test, FlowId, WsName, TestPendingTests}
              || FlowId <- AllFlowIds
             ],
-            {jiffy:encode(#{status => ok}), Req, State};
+            {json:encode(#{status => ok}), Req, State};
         FlowId ->
             unittest_engine ! {start_test, FlowId, WsName, TestPendingTests},
-            {jiffy:encode(#{status => ok}), Req, State}
+            {json:encode(#{status => ok}), Req, State}
     end.
 
 format_error(Reason, Req) ->

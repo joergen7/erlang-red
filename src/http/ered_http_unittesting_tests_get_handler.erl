@@ -27,7 +27,7 @@ handle_response(Req, State) ->
         last_updated_at => "",
         data => flow_store_server:get_flow_data()
     },
-    {jiffy:encode(Response), Req, State}.
+    {json:encode(Response), Req, State}.
 
 format_error(Reason, Req) ->
     {
