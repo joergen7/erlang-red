@@ -49,17 +49,7 @@ handle_incoming(NodeDef, Msg) ->
         unsupported ->
             ErrMsg = jstr("Unsupported configuration: ~p", [NodeDef]),
             unsupported(NodeDef, Msg, ErrMsg),
-            send_msg_to_connected_nodes(NodeDef, Msg);
-        Bad ->
-            this_should_not_happen(
-                NodeDef,
-                io_lib:format(
-                    "Bad happened ~p with [~p] and [~p]\n",
-                    [Bad, NodeDef, Msg]
-                )
-            ),
-            ErrMsg = jstr("Bad happened: ~p ~p ~p", [Bad, NodeDef, Msg]),
-            debug(ws_from(Msg), debug_string(NodeDef, ErrMsg), error)
+            send_msg_to_connected_nodes(NodeDef, Msg)
     end,
     NodeDef.
 

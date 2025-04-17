@@ -21,7 +21,6 @@
     ws_from/1
 ]).
 
-%% erlfmt:ignore lined up
 debug_msg(NodeDef, Msg, {filename_type_not_supported, FileNameType}) ->
     ErrMsg = jstr(
                  "File name type not supported: ~p",
@@ -31,13 +30,8 @@ debug_msg(NodeDef, Msg, {filename_type_not_supported, FileNameType}) ->
 
 debug_msg(NodeDef, Msg, {file_not_found, FileName}) ->
     ErrMsg = jstr("File Not Found: ~p", [FileName]),
-    send_out_debug_msg(NodeDef, Msg, ErrMsg, error);
+    send_out_debug_msg(NodeDef, Msg, ErrMsg, error).
 
-debug_msg(NodeDef, _Msg, Opts) ->
-    this_should_not_happen(
-      NodeDef,
-      io_lib:format("Internal call went wrong ~p", [Opts])
-    ).
 
 %% Attributes of interest:
 %%   "filename": "priv/testdata/helloworld.txt",

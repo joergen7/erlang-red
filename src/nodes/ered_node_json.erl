@@ -64,10 +64,7 @@ handle_incoming(NodeDef, Msg) ->
                     send_msg_to_connected_nodes(NodeDef, Msg2);
                 unsupported ->
                     ErrMsg = jstr("Unsupported Action: ~p", [Action]),
-                    unsupported(NodeDef, Msg, ErrMsg);
-                _ ->
-                    ErrMsg = jstr("Unknown error occured: ~p", [Msg]),
-                    debug(ws_from(Msg), debug_string(NodeDef, ErrMsg), error)
+                    unsupported(NodeDef, Msg, ErrMsg)
             end;
         _ ->
             ErrMsg = jstr("Property not defined on Msg: ~p --> ~p", [Prop, Msg]),
