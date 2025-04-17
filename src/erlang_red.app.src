@@ -5,7 +5,8 @@
     {applications, [
         kernel,
         stdlib,
-        cowboy
+        cowboy,
+        jiffy
     ]},
     {env, []},
     {mod, {erlang_red, []}},
