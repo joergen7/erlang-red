@@ -44,6 +44,8 @@ get_filename(FlowId) ->
 all_flow_ids() ->
     gen_server:call(?MODULE, {all_flow_ids}).
 
+%%
+%%
 init([]) ->
     {ok, #{}}.
 
@@ -83,21 +85,42 @@ handle_call({filename, FlowId}, _From, FlowStore) ->
         _ ->
             {reply, error, FlowStore}
     end;
-%%
-%%
-
 handle_call(_Msg, _From, FlowStore) ->
     {reply, FlowStore, FlowStore}.
 
+%%
+%%
 handle_cast(stop, State) ->
     {stop, normal, State};
 handle_cast(_Msg, Store) ->
     {noreply, Store}.
 
-handle_info(stop, ErrorStore) ->
-    gen_server:cast(?MODULE, stop),
-    {noreply, ErrorStore}.
+%%
+%%
+handle_info({store_flow, FlowId, JsonText}, FlowStore) ->
+    Push = fun(Key, Value, Acc) ->
+        [{binary_to_atom(Key), Value} | Acc]
+    end,
+    {FlowMap, _, _} = json:decode(JsonText, ok, #{object_push => Push}),
+    {ok, NodeAry} = maps:find(flow, FlowMap),
 
+    FileName = io_lib:format("flow.~s.json", [FlowId]),
+    DestFileName = io_lib:format(
+        "~s/testflows/~s",
+        [code:priv_dir(erlang_red), FileName]
+    ),
+
+    file:write_file(DestFileName, NodeAry),
+
+    FlowDetails = compile_file_store([{FlowId, DestFileName}], #{}),
+
+    {noreply, maps:merge(FlowStore, FlowDetails)};
+handle_info(stop, FlowStore) ->
+    gen_server:cast(?MODULE, stop),
+    {noreply, FlowStore}.
+
+%%
+%%
 code_change(_OldVersion, ErrorStore, _Extra) ->
     {ok, ErrorStore}.
 

@@ -31,24 +31,18 @@ handle_json_body(Req, State) ->
 
     {ok, Body, Req2} = ered_http_utils:read_body(Req, <<"">>),
 
-    Push = fun(Key, Value, Acc) ->
-        [{binary_to_atom(Key), Value} | Acc]
-    end,
-    {FlowMap, _, _} = json:decode(Body, ok, #{object_push => Push}),
-    {ok, NodeAry} = maps:find(flow, FlowMap),
+    %%
+    %% The relationship to workspace id and flow id is one-to-one, they
+    %% are one and the same.
+    %%
+    %% Also do this off-process since I want the store to fail and be
+    %% recovered and not this handler. Of course, the file might not be
+    %% created but the user things differently - but that's not important
+    %% just yet (because this codebase will be hosted on a read-only server
+    %% and should just be able to execute the tests - for the time being).
+    ered_flow_store_server ! {store_flow, WorkspaceId, Body},
 
     FileName = io_lib:format("flow.~s.json", [WorkspaceId]),
-    DestFileName = io_lib:format(
-        "~s/testflows/~s",
-        [code:priv_dir(erlang_red), FileName]
-    ),
-
-    file:write_file(DestFileName, NodeAry),
-
-    ered_flow_store_server:update_flow(
-        WorkspaceId,
-        list_to_binary(lists:flatten(DestFileName))
-    ),
 
     Resp = cowboy_req:set_resp_body(
         json:encode(#{name => list_to_binary(lists:flatten(FileName))}),
