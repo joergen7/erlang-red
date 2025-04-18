@@ -51,7 +51,22 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
                             Msg
                         )
                     );
-                _ ->
+                <<"json">> ->
+                    parse_props(
+                        RestProps,
+                        NodeDef,
+                        maps:put(
+                            payload,
+                            json:decode(Val),
+                            Msg
+                        )
+                    );
+                PropType ->
+                    unsupported(
+                        NodeDef,
+                        Msg,
+                        jstr("proptype ~p for ~p", [PropType, Prop])
+                    ),
                     parse_props(RestProps, NodeDef, maps:put(payload, Val, Msg))
             end;
         {ok, <<"topic">>} ->
