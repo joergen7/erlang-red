@@ -13,6 +13,7 @@
     get_prop_value_from_map/3,
     jstr/1,
     jstr/2,
+    post_exception/3,
     send_msg_to_connected_nodes/2,
     this_should_not_happen/2,
     unpriv/1
@@ -66,15 +67,13 @@ handle_incoming(NodeDef, Msg) ->
                     Msg2 = maps:put(payload, FileData, Msg),
                     send_msg_to_connected_nodes(NodeDef, Msg2);
                 _ ->
-                    %%
-                    %% TODO this should trigger an exception handler if one
-                    %% TODO is defined within this flow (i.e. the 'z' value
-                    %% TODO defines the flow, if there is an catch node for
-                    %% TODO with the same 'z' value, then sent it this
-                    %% TODO exception). And that is is as simple as
-                    %% TODO whereis(node_pid_catch_node_for_<Z>)
-                    %% TODO Damn, I thought catch nodes would be difficult.
-                    debug_msg(NodeDef, Msg, {file_not_found, FileName})
+                    ErrMsg = jstr("File Not Found: ~p", [FileName]),
+                    case post_exception(NodeDef, Msg, ErrMsg) of
+                        dealt_with ->
+                            ok;
+                        _ ->
+                            debug_msg(NodeDef, Msg, {file_not_found, FileName})
+                    end
             end;
         failed ->
             ignore;

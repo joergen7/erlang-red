@@ -14,6 +14,7 @@
     jstr/1,
     nodeid_to_pid/2,
     node_init/1,
+    post_exception/3,
     tabid_to_error_collector/1,
     this_should_not_happen/2,
     trigger_outgoing_messages/3,
@@ -115,6 +116,13 @@ tabid_to_error_collector(IdStr) ->
     ).
 
 %%
+%% Generate a group name for the pg module to group together all catch
+%% nodes on one flow.
+pg_catch_group_name(NodeDef) ->
+    {ok, FlowId} = maps:find(z, NodeDef),
+    jstr("catch_nodes_~s", [FlowId]).
+
+%%
 %% Called by a node before it enters receivership. Does not much but
 %% might later on, original it dumped some debug to the console.
 node_init(_NodeDef) ->
@@ -158,10 +166,11 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
     NodeDef3 = maps:put('_mc_link_return', 0, NodeDef2),
     NodeDef4 = maps:put('_mc_websocket',   0, NodeDef3),
     NodeDef5 = maps:put('_mc_outgoing',    0, NodeDef4),
+    NodeDef6 = maps:put('_mc_exception',   0, NodeDef5),
 
-    NodeDef6 = maps:put('_node_pid_',      NodePid, NodeDef5),
+    NodeDef7 = maps:put('_node_pid_', NodePid, NodeDef6),
 
-    FinalNodeDef = NodeDef6,
+    FinalNodeDef = NodeDef7,
 
     Pid = spawn(Module, Fun, [FinalNodeDef, WsName]),
     register(NodePid, Pid),
@@ -169,6 +178,11 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
     %% subscribe the assert nodes that listen to websocket events to the
     %% the websocket event exchange.
     case maps:find(type, FinalNodeDef) of
+        {ok, <<"catch">>} ->
+            %% register the catch node as being responsible for z value
+            %% beware multiple catch nodes can be included in a flow so the
+            %% z value won't be unique
+            pg:join(pg_catch_group_name(FinalNodeDef), Pid);
         {ok, <<"ut-assert-status">>} ->
             {ok, TgtNodeId} = maps:find(nodeid, FinalNodeDef),
             websocket_event_exchange:subscribe(
@@ -205,6 +219,20 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
 
     %% io:format("~p ~p\n",[Pid,NodePid]),
     create_pid_for_node(MoreNodeDefs, [NodePid | Pids], WsName).
+
+%%
+%% Post exception passes errors to the catch nodes, if any are defined.
+%% It also provides feed back to the caller as to whether there was a
+%% catch node or not, if not, deal with it yourself is the message.
+%%
+post_exception(SrcNode, SrcMsg, ErrMsg) ->
+    case pg:get_members(pg_catch_group_name(SrcNode)) of
+        [] ->
+            deal_with_it_yourself;
+        Members ->
+            [M ! {exception, SrcNode, SrcMsg, ErrMsg} || M <- Members],
+            dealt_with
+    end.
 
 %%
 %% The wires attribute is an array of arrays. The toplevel
@@ -297,6 +325,8 @@ node_type_to_fun(<<"join">>) ->
     {ered_node_join, node_join};
 node_type_to_fun(<<"split">>) ->
     {ered_node_split, node_split};
+node_type_to_fun(<<"catch">>) ->
+    {ered_node_catch, node_catch};
 %%
 %% Assert nodes for testing functionality of the nodes
 %%

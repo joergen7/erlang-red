@@ -38,7 +38,35 @@ bad_routing(NodeDef, Type, Msg) ->
 %% TODO2 but is that the best alternative?
 %%
 
+%% used by catch nodes to receive exceptions from other nodes.
+enter_receivership(Module, NodeDef, only_exception) ->
+    receive
+        {stop, _WsName} ->
+            ok;
+        {exception, From, Msg, ErrMsg} ->
+            %% From is the NodeDef of the source node and Msg is the
+            %% Msg object it received. ErrMsg is a string explaining the
+            %% situation.
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_exception'),
+            NodeDef3 = erlang:apply(
+                Module,
+                handle_exception,
+                [NodeDef2, From, Msg, ErrMsg]
+            ),
+            enter_receivership(Module, NodeDef3, only_exception);
+        {incoming, Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
+            bad_routing(NodeDef2, incoming, Msg),
+            enter_receivership(Module, NodeDef2, only_exception);
+        {outgoing, Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
+            bad_routing(NodeDef2, outgoing, Msg),
+            enter_receivership(Module, NodeDef2, only_exception)
+    end;
 %% the disabled and enabled messages are specifically for the debug node.
+%% Active here is an attribute on the NodeDef that is used to turn the
+%% debug node on and off. But it can also be used for other nodes if
+%% necessary.
 enter_receivership(Module, NodeDef, only_incoming_with_active) ->
     receive
         {stop, _WsName} ->

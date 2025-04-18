@@ -40,7 +40,14 @@ init([]) ->
                     module => [ered_flow_store_server]
                 },
                 #{
-                    id => ered_ch5_red_web,
+                    id => ered_ch5_pg_kernel,
+                    start => {pg, start_link, []},
+                    restart => permanent,
+                    type => supervisor,
+                    module => [pg]
+                },
+                #{
+                    id => ered_ch6_red_web,
                     start => {ered_webserver, start, []},
                     restart => permanent,
                     type => worker,

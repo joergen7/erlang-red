@@ -10,6 +10,7 @@
     {env, []},
     {mod, {erlang_red, []}},
     {modules, [
+        pg,
         ered_webserver,
         websocket_event_exchange,
         unittest_engine,
