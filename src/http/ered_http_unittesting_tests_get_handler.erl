@@ -21,11 +21,11 @@ content_types_provided(Req, State) ->
     {[{{<<"application">>, <<"json">>, '*'}, handle_response}], Req, State}.
 
 handle_response(Req, State) ->
-    flow_store_server:update_all_flows(),
+    ered_flow_store_server:update_all_flows(),
     Response = #{
         status => ok,
         last_updated_at => "",
-        data => flow_store_server:get_flow_data()
+        data => ered_flow_store_server:get_flow_data()
     },
     {json:encode(Response), Req, State}.
 

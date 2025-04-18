@@ -44,7 +44,7 @@ handle_response(Req, State) ->
         undefined ->
             {<<"{}">>, Req, State};
         <<"all">> ->
-            AllFlowIds = flow_store_server:all_flow_ids(),
+            AllFlowIds = ered_flow_store_server:all_flow_ids(),
             [
                 unittest_engine ! {start_test, FlowId, WsName, TestPendingTests}
              || FlowId <- AllFlowIds

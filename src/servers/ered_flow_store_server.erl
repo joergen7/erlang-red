@@ -1,4 +1,4 @@
--module(flow_store_server).
+-module(ered_flow_store_server).
 
 -behaviour(gen_server).
 

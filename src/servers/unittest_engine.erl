@@ -132,7 +132,7 @@ terminate(normal, _State) ->
 run_test_on_another_planet(FlowId, WsName, false) ->
     error_store:reset_errors(FlowId),
 
-    case flow_store_server:get_filename(FlowId) of
+    case ered_flow_store_server:get_filename(FlowId) of
         error ->
             unittest_result(WsName, FlowId, unknown_testcase);
         FileName ->
@@ -150,7 +150,7 @@ run_test_on_another_planet(FlowId, WsName, false) ->
 run_test_on_another_planet(FlowId, WsName, true) ->
     error_store:reset_errors(FlowId),
 
-    case flow_store_server:get_filename(FlowId) of
+    case ered_flow_store_server:get_filename(FlowId) of
         error ->
             unittest_result(WsName, FlowId, unknown_testcase);
         FileName ->

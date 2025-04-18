@@ -25,7 +25,7 @@ handle_response(Req, State) ->
         undefined ->
             {<<"[]">>, Req, State};
         FlowId ->
-            FileName = flow_store_server:get_filename(FlowId),
+            FileName = ered_flow_store_server:get_filename(FlowId),
             case file:read_file(FileName) of
                 {ok, FileData} ->
                     {

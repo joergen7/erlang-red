@@ -45,7 +45,7 @@ handle_json_body(Req, State) ->
 
     file:write_file(DestFileName, NodeAry),
 
-    flow_store_server:update_flow(
+    ered_flow_store_server:update_flow(
         WorkspaceId,
         list_to_binary(lists:flatten(DestFileName))
     ),
