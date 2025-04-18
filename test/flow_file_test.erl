@@ -18,7 +18,7 @@ stop_all_pids([Pid | Pids]) ->
 %%
 
 ensure_error_store_is_started(TabErrColl, TestName) ->
-    case error_store:start() of
+    case ered_error_store:start() of
         {error, {already_started, ErrorStorePid}} ->
             Pid = spawn(?MODULE, not_happen_loop, [TestName, ErrorStorePid]),
             register(TabErrColl, Pid),
@@ -113,7 +113,7 @@ create_test_for_flow_file([FileName | MoreFileNames], Acc) ->
             TabId,
             TestName
         ),
-        error_store:reset_errors(TabId),
+        ered_error_store:reset_errors(TabId),
 
         %% Websocket name becomes 'eunit_test'. This is picked
         %% up by the nodered module and directs it to send
@@ -146,7 +146,7 @@ create_test_for_flow_file([FileName | MoreFileNames], Acc) ->
         timer:sleep(543),
         ErCo ! stop,
 
-        ?assertEqual([], error_store:get_errors(TabId))
+        ?assertEqual([], ered_error_store:get_errors(TabId))
     end,
 
     %% So the timeout value here is 30 seconds. This is the upper limit

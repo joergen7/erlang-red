@@ -26,8 +26,11 @@
 ]).
 
 start() ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []),
-    update_all_flows().
+    {ok, Pid} = gen_server:start_link({local, ?MODULE}, ?MODULE, [], []),
+    %% do an initial load of all flows, after that it should be maintained
+    %% by itself.
+    erlang:start_timer(500, Pid, update_flows),
+    {ok, Pid}.
 
 get_flow_data() ->
     gen_server:call(?MODULE, {get_store}).
@@ -115,6 +118,8 @@ handle_info({store_flow, FlowId, JsonText}, FlowStore) ->
     FlowDetails = compile_file_store([{FlowId, DestFileName}], #{}),
 
     {noreply, maps:merge(FlowStore, FlowDetails)};
+handle_info({timeout, _From, update_flows}, _FlowStore) ->
+    {noreply, compile_file_store(compile_file_list(), #{})};
 handle_info(stop, FlowStore) ->
     gen_server:cast(?MODULE, stop),
     {noreply, FlowStore}.

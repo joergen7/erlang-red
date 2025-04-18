@@ -69,7 +69,7 @@ not_happen_loop(TestName, ErrorStorePid) ->
     end.
 
 ensure_error_store_is_started(TabErrColl, TestName) ->
-    case error_store:start() of
+    case ered_error_store:start() of
         {error, {already_started, ErrorStorePid}} ->
             Pid = spawn(?MODULE, not_happen_loop, [TestName, ErrorStorePid]),
             register(TabErrColl, Pid),
@@ -130,7 +130,7 @@ terminate(normal, _State) ->
 %%
 %% respect the pending flag on a flow test
 run_test_on_another_planet(FlowId, WsName, false) ->
-    error_store:reset_errors(FlowId),
+    ered_error_store:reset_errors(FlowId),
 
     case ered_flow_store_server:get_filename(FlowId) of
         error ->
@@ -148,7 +148,7 @@ run_test_on_another_planet(FlowId, WsName, false) ->
 %%
 %% ignore the pending flag of a flow tests
 run_test_on_another_planet(FlowId, WsName, true) ->
-    error_store:reset_errors(FlowId),
+    ered_error_store:reset_errors(FlowId),
 
     case ered_flow_store_server:get_filename(FlowId) of
         error ->
@@ -199,6 +199,6 @@ run_the_test(FlowId, WsName, Ary) ->
             send_off_test_result(
                 WsName,
                 FlowId,
-                error_store:get_errors(FlowId)
+                ered_error_store:get_errors(FlowId)
             )
     end.

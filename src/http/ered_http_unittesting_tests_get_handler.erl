@@ -21,7 +21,7 @@ content_types_provided(Req, State) ->
     {[{{<<"application">>, <<"json">>, '*'}, handle_response}], Req, State}.
 
 handle_response(Req, State) ->
-    ered_flow_store_server:update_all_flows(),
+    %% ered_flow_store_server:update_all_flows(),
     Response = #{
         status => ok,
         last_updated_at => "",

@@ -9,7 +9,13 @@
     ]},
     {env, []},
     {mod, {erlang_red, []}},
-    {modules, []},
+    {modules, [
+        ered_webserver,
+        websocket_event_exchange,
+        unittest_engine,
+        ered_error_store,
+        ered_flow_store_server
+    ]},
     {licenses, ["Apache-2.0"]},
     {links, []}
 ]}.

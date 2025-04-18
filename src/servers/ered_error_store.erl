@@ -1,4 +1,4 @@
--module(error_store).
+-module(ered_error_store).
 -behaviour(gen_server).
 
 %%
