@@ -27,7 +27,6 @@ content_types_accepted(Req, State) ->
     {[{ContentType, handle_json_body}], Req, State}.
 
 handle_json_body(Req, State) ->
-    io:format("Handling testcase creationg\n"),
     WorkspaceId = cowboy_req:binding(workspaceid, Req),
 
     {ok, Body, Req2} = ered_http_utils:read_body(Req, <<"">>),
@@ -39,7 +38,10 @@ handle_json_body(Req, State) ->
     {ok, NodeAry} = maps:find(flow, FlowMap),
 
     FileName = io_lib:format("flow.~s.json", [WorkspaceId]),
-    DestFileName = io_lib:format("priv/testflows/~s", [FileName]),
+    DestFileName = io_lib:format(
+        "~s/testflows/~s",
+        [code:priv_dir(erlang_red), FileName]
+    ),
 
     file:write_file(DestFileName, NodeAry),
 

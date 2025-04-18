@@ -55,7 +55,8 @@ start(_Type, _Args) ->
           {"/debug/view/debug-utils.js",
               [{method, <<"GET">>}],
               cowboy_static,
-              {file, "./node-red-frontend/debug/view/debug-utils.js"}},
+              {priv_file, erlang_red,
+               "node-red-frontend/debug/view/debug-utils.js"}},
 
           {"/debug/:nodeid/:action",
               [{method, <<"POST">>}],
@@ -73,12 +74,12 @@ start(_Type, _Args) ->
           {"/FlowCompare/jslib/diff.min.js",
               [{method, <<"GET">>}],
               cowboy_static,
-              {file, "./priv/vendor/diff.min.js"}},
+              {priv_file, erlang_red, "vendor/diff.min.js"}},
 
           {"/FlowCompare/jslib/flowviewer.min.js",
               [{method, <<"GET">>}],
               cowboy_static,
-              {file, "./priv/vendor/flowviewer.min.js"}},
+              {priv_file, erlang_red, "vendor/flowviewer.min.js"}},
 
           %% TODO the constraints here DONT WORK - Cowboy just
           %% TODO ignores them because Bindings is empty.
@@ -91,10 +92,11 @@ start(_Type, _Args) ->
               [{method, <<"GET">>}], ered_http_nodered_empty_json, []},
 
           {"/node-red", [{method, <<"GET">>}], cowboy_static,
-              {file, "./node-red-frontend/index.html"}},
+              {priv_file, erlang_red, "node-red-frontend/index.html"}},
 
-          {"/[...]", [{method, <<"GET">>}], cowboy_static,
-              {dir, "./node-red-frontend", [
+          {"/[...]", [{method, <<"GET">>}],
+              cowboy_static,
+              {priv_dir, erlang_red, "node-red-frontend", [
                   {mimetypes, ered_http_nodered_mimetypes, mt}
               ]}}
          ]}

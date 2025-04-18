@@ -13,6 +13,11 @@
 -export([get_filename/1]).
 -export([all_flow_ids/0]).
 
+%%
+%% Manage the collection of test flows in the priv/testflows directory.
+%% This manages the retrieval but not storage - which is an inconsistency.
+%% Storage is handled directlty in the http request.
+%%
 -import(ered_flows, [
     parse_flow_file/1
 ]).
@@ -48,13 +53,24 @@ init([]) ->
 handle_call({all_flow_ids}, _From, FlowStore) ->
     AllFlowIds = maps:keys(FlowStore),
     {reply, AllFlowIds, FlowStore};
-handle_call({get_store}, _From, FlowStore) ->
-    {reply, FlowStore, FlowStore};
 handle_call({update_all}, _From, _FlowStore) ->
     {reply, true, compile_file_store(compile_file_list(), #{})};
 handle_call({update_one, FlowId, Filename}, _From, FlowStore) ->
     FlowDetails = compile_file_store([{FlowId, Filename}], #{}),
     {reply, true, maps:merge(FlowStore, FlowDetails)};
+handle_call({get_store}, _From, FlowStore) ->
+    %% beacuse the path attribute exposes internal pathways, strip it
+    %% off before responding - this call is used for the frontend, i.e.
+    %% it's going beyond the bounds of the four walls of the application.
+    List = maps:to_list(FlowStore),
+    RemoveDir = fun({ok, Path}) ->
+        filename:basename(Path)
+    end,
+    ListStriped = [
+        {Key, maps:put(path, RemoveDir(maps:find(path, M)), M)}
+     || {Key, M} <- List
+    ],
+    {reply, maps:from_list(ListStriped), FlowStore};
 handle_call({filename, FlowId}, _From, FlowStore) ->
     case maps:find(FlowId, FlowStore) of
         {ok, Val} ->
@@ -107,8 +123,9 @@ tab_name_or_filename([NodeDef | MoreNodeDefs], FileName) ->
 compile_file_list() ->
     {ok, MP} = re:compile("flow.([A-Z0-9]{16}).json", [caseless]),
 
+    TestFlowDir = io_lib:format("~s/testflows", [code:priv_dir(erlang_red)]),
     FileNames = filelib:fold_files(
-        "priv/testflows",
+        TestFlowDir,
         "",
         false,
         fun(Fname, Acc) ->
