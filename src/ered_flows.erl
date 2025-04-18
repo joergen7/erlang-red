@@ -112,7 +112,7 @@ is_test_case_pending([NodeDef | MoreNodeDefs]) ->
                 {ok, EnvAry} ->
                     get_pending_envvar(EnvAry);
                 _ ->
-                    1234
+                    false
             end;
         _ ->
             is_test_case_pending(MoreNodeDefs)
