@@ -1,0 +1,37 @@
+# Try to maintain user-servicable parts up front
+ARG OTP_VERSION=27.3.3
+ARG DEBIAN_VERSION=bookworm-20250407-slim
+
+ARG BUILDER_IMAGE="hexpm/erlang:${OTP_VERSION}-debian-${DEBIAN_VERSION}"
+ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
+
+FROM ${BUILDER_IMAGE} AS builder
+
+RUN apt-get update -y && apt-get install -y build-essential git rebar3 \
+    && apt-get clean && rm -f /var/lib/apt/lists/*_*
+
+WORKDIR /builder
+
+COPY src src/
+COPY include include/
+COPY rebar.config .
+RUN rebar3 compile
+RUN rebar3 as fly_er release
+
+FROM ${RUNNER_IMAGE}
+
+WORKDIR "/erlang-red"
+RUN apt-get update -y && apt-get install -y openssl \
+    && apt-get clean && rm -f /var/lib/apt/lists/*_*
+RUN chown nobody /
+
+# Only copy the final release from the build stage
+COPY --from=builder --chown=nobody:root /builder/_build/fly_er/rel/fly_er ./
+# The below should happen automatically
+# This is way too specific and fragile.
+COPY priv ./lib/erlang_red-0.1.0/priv/
+
+USER nobody
+EXPOSE 8080
+CMD ["/erlang-red/bin/fly_er", "foreground"]
+

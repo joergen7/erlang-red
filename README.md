@@ -101,6 +101,13 @@ All static frontend code (for the Node-RED flow editor) and the test flow files 
 
 Cowboy server will listen on port 8080.
 
+Fly.io
+---
+
+A sample Dockerfile `Dockerfile.fly` is provided to allow for easy launching of an instance as a fly application.
+The provided shell script (`fly_er.sh`) sets some common expected parameters for the launch.
+Advanced users may wish to examine the `fly launch` line therein and adjust for their requirements.
+
 Example
 ---
 
