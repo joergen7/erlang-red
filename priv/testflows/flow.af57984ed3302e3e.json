@@ -15,7 +15,7 @@
         "props": [
             {
                 "p": "filename",
-                "v": "priv/testdata/test.json",
+                "v": "${priv}/testdata/test.json",
                 "vt": "str"
             }
         ],
@@ -24,8 +24,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 238,
-        "y": 312,
+        "x": 203,
+        "y": 311,
         "wires": [
             [
                 "f07ab922c0b0d713",
@@ -46,7 +46,7 @@
         "encoding": "none",
         "allProps": false,
         "x": 392,
-        "y": 417,
+        "y": 420.5,
         "wires": [
             [
                 "a0f648ebec37e562",
@@ -67,8 +67,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 689,
-        "y": 416,
+        "x": 670,
+        "y": 520,
         "wires": []
     },
     {
@@ -83,8 +83,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 558,
-        "y": 313,
+        "x": 660,
+        "y": 311,
         "wires": []
     },
     {
@@ -92,8 +92,8 @@
         "type": "ut-assert-success",
         "z": "af57984ed3302e3e",
         "name": "",
-        "x": 683,
-        "y": 370,
+        "x": 670,
+        "y": 420.5,
         "wires": []
     }
 ]

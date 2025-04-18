@@ -16,7 +16,8 @@
     node_init/1,
     tabid_to_error_collector/1,
     this_should_not_happen/2,
-    trigger_outgoing_messages/3
+    trigger_outgoing_messages/3,
+    unpriv/1
 ]).
 
 %% send_msg_to_connnected_nodes assues an attribute 'wires' while
@@ -30,6 +31,16 @@
 -import(ered_nodered_comm, [
     ws_from/1
 ]).
+
+%%
+%% Map priv directory in file names
+unpriv(FileName) when is_binary(FileName) ->
+    unpriv(binary_to_list(FileName));
+unpriv(FileName) when is_list(FileName) ->
+    string:replace(FileName, "${priv}", code:priv_dir(erlang_red), all);
+unpriv(FileName) ->
+    %% Let it fail.
+    FileName.
 
 %%
 %% Common functionality

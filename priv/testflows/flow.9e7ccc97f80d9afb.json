@@ -15,7 +15,7 @@
         "props": [
             {
                 "p": "filename",
-                "v": "priv/testdata/helloworld.txt",
+                "v": "${priv}/testdata/helloworld.txt",
                 "vt": "str"
             }
         ],
@@ -61,9 +61,9 @@
         "name": "",
         "rules": [
             {
-                "t": "mth",
                 "p": "payload",
                 "pt": "msg",
+                "t": "mth",
                 "to": "hello world",
                 "tot": "str"
             }
@@ -98,8 +98,8 @@
         "nodeid": "e89d0c894d08b485",
         "msgtype": "normal",
         "inverse": true,
-        "x": 232,
-        "y": 544.5,
+        "x": 257,
+        "y": 552.5,
         "wires": []
     },
     {
@@ -119,8 +119,8 @@
         "nodeid": "e36810e4203e8306",
         "msgtype": "normal",
         "inverse": false,
-        "x": 661,
-        "y": 653,
+        "x": 649,
+        "y": 660,
         "wires": []
     }
 ]
