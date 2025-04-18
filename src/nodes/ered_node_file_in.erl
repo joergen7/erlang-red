@@ -11,6 +11,7 @@
 -import(ered_nodes, [
     get_prop_value_from_map/2,
     get_prop_value_from_map/3,
+    jstr/1,
     jstr/2,
     send_msg_to_connected_nodes/2,
     this_should_not_happen/2,
@@ -30,7 +31,10 @@ debug_msg(NodeDef, Msg, {filename_type_not_supported, FileNameType}) ->
     send_out_debug_msg(NodeDef, Msg, ErrMsg, error);
 debug_msg(NodeDef, Msg, {file_not_found, FileName}) ->
     ErrMsg = jstr("File Not Found: ~p", [FileName]),
-    send_out_debug_msg(NodeDef, Msg, ErrMsg, error).
+    send_out_debug_msg(NodeDef, Msg, ErrMsg, error);
+debug_msg(NodeDef, Msg, {no_file_specified}) ->
+    ErrMsg = jstr("No file specified"),
+    send_out_debug_msg(NodeDef, Msg, ErrMsg, warning).
 
 %% Attributes of interest:
 %%   "filename": "priv/testdata/helloworld.txt",
@@ -54,6 +58,8 @@ handle_incoming(NodeDef, Msg) ->
     {ok, FileNameType} = maps:find(filenameType, NodeDef),
 
     case get_filename(FileNameType, NodeDef, Msg) of
+        {ok, <<>>} ->
+            debug_msg(NodeDef, Msg, {no_file_specified});
         {ok, FileName} ->
             case file:read_file(unpriv(FileName)) of
                 {ok, FileData} ->
