@@ -148,7 +148,7 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
 
     %% here have to respect the 'd' (disabled) attribute. if true, then
     %% the node does not need to have a Pid created for it.
-    {Module, Fun} = node_type_to_fun(TypeStr, maps:find(d, NodeDef)),
+    {Module, Fun} = node_type_to_fun(TypeStr, disabled(NodeDef)),
 
     NodePid = nodeid_to_pid(WsName, IdStr),
 
@@ -175,20 +175,24 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
     Pid = spawn(Module, Fun, [FinalNodeDef, WsName]),
     register(NodePid, Pid),
 
-    %% subscribe the assert nodes that listen to websocket events to the
-    %% the websocket event exchange.
-    case maps:find(type, FinalNodeDef) of
-        {ok, <<"catch">>} ->
+    %% Post spawn activities. Important one is the catch node to the pg group
+    %% because any exceptions caused by nodes needs dealing with.
+    %% Also need to reprsent the disabled flags extra here - the catch node
+    %% here is actually a disabled node but it's configuration is still
+    %% that of a catch node for example.
+    {ok, NodeType} = maps:find(type, FinalNodeDef),
+    case {disabled(FinalNodeDef), NodeType} of
+        {false, <<"catch">>} ->
             %% register the catch node as being responsible for z value
             %% beware multiple catch nodes can be included in a flow so the
             %% z value won't be unique
             pg:join(pg_catch_group_name(FinalNodeDef), Pid);
-        {ok, <<"ut-assert-status">>} ->
+        {false, <<"ut-assert-status">>} ->
             {ok, TgtNodeId} = maps:find(nodeid, FinalNodeDef),
             websocket_event_exchange:subscribe(
                 WsName, TgtNodeId, status, NodePid
             );
-        {ok, <<"ut-assert-debug">>} ->
+        {false, <<"ut-assert-debug">>} ->
             {ok, TgtNodeId} = maps:find(nodeid, FinalNodeDef),
             {ok, MsgType} = maps:find(msgtype, FinalNodeDef),
             %%
@@ -219,6 +223,21 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
 
     %% io:format("~p ~p\n",[Pid,NodePid]),
     create_pid_for_node(MoreNodeDefs, [NodePid | Pids], WsName).
+
+%%
+%% tab node usses 'disabled', everything else 'd'.
+disabled(NodeDef) ->
+    case maps:find(d, NodeDef) of
+        {ok, V} ->
+            V;
+        _ ->
+            case maps:find(disabled, NodeDef) of
+                {ok, V} ->
+                    V;
+                _ ->
+                    false
+            end
+    end.
 
 %%
 %% Post exception passes errors to the catch nodes, if any are defined.
@@ -291,7 +310,7 @@ send_msg_on([NodeId | Wires], Msg) ->
 %% disabled flag: if node is disabled, give it a noop node else continue
 %% on checking by type.
 %%
-node_type_to_fun(_Type, {ok, true}) ->
+node_type_to_fun(_Type, true) ->
     io:format("node disabled, ignoring\n"),
     {ered_node_disabled, node_disabled};
 node_type_to_fun(Type, _) ->
