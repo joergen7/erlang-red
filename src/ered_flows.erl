@@ -6,6 +6,10 @@
 -export([is_test_case_pending/1]).
 -export([should_keep_flow_running/1]).
 
+-import(ered_msg_handling, [
+   decode_json/1
+]).
+
 %%
 %% Compute a timeout for the flow test, can be set in the flows.json file.
 %% Since flows have delays or even test the delay node, it must be possible
@@ -51,14 +55,7 @@ compute_timeout([NodeDef | Ary]) ->
 %%
 parse_flow_file(FileName) ->
     {ok, Json} = file:read_file(FileName),
-
-    Push = fun(Key, Value, Acc) ->
-        [{binary_to_atom(Key), Value} | Acc]
-    end,
-
-    {Ary, _, _} = json:decode(Json, ok, #{object_push => Push}),
-
-    Ary.
+    decode_json(Json).
 
 %%
 %%
