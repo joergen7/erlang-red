@@ -4,7 +4,7 @@
         "type": "tab",
         "label": "[catch] don't catch if the node isn't selected",
         "disabled": false,
-        "info": "",
+        "info": "This presents an annoying edgecase.\n\nA catch node can have a list of nodes from which it accepts exceptions. If a node (in this case the file in node) generates an exception, in Erlang-RED that exception is dealt with if there is a active catch node in the flow.\n\nSo the file in believes the exception has been handled and its done.\n\nBut the catch node does handle exceptions from the file in node, so it ignores the exception.\n\nThe result is that the exception disappears.\n\nWhat Node-RED does is have the file in node then produce an debug message because the exception wasn't handled.\n\nCurrently this does not happen in Erlang-RED because of the way Erlang-RED deals with exceptions.\n\n# Possible solution\n\nHave debug nodes send exceptions back to the source node if they didn't handle them?\n\nBut this doesn't work if there are two catch nodes and one does handle the exception and the other doesn't.",
         "env": [
             {
                 "name": "ERED_PENDING",

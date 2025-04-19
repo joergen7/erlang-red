@@ -8,7 +8,7 @@
         "env": [
             {
                 "name": "ERED_PENDING",
-                "value": "true",
+                "value": "false",
                 "type": "bool"
             }
         ]
