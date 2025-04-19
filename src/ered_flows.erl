@@ -7,7 +7,7 @@
 -export([should_keep_flow_running/1]).
 
 -import(ered_msg_handling, [
-   decode_json/1
+    decode_json/1
 ]).
 
 %%

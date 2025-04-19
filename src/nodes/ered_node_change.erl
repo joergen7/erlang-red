@@ -93,7 +93,7 @@ do_set_value(Prop, Value, <<"json">>, Msg, _NodeDef) ->
 do_set_value(Prop, Value, <<"msg">>, Msg, _NodeDef) ->
     %% set a propery on the message to the value of another
     %% property on the message
-    case get_prop({ok, Value},Msg) of
+    case get_prop({ok, Value}, Msg) of
         {ok, Val, _} ->
             maps:put(binary_to_atom(Prop), Val, Msg);
         _ ->

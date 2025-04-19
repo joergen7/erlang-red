@@ -2,9 +2,9 @@
     {
         "id": "61847d719e50f83f",
         "type": "tab",
-        "label": "[inject] (F) jsonata and json support",
+        "label": "[inject] jsonata support for both payload and other properties",
         "disabled": false,
-        "info": "",
+        "info": "[JSONata](https://jsonata.org/) is a templating language for JSON content.\n\nSeems very niche but beloved by Node-RED users.\n\nIt is very useful in the context of Node-RED (i.e. low code) since it does save using a function node for many small operations.",
         "env": [
             {
                 "name": "ERED_PENDING",
@@ -23,16 +23,6 @@
                 "p": "payload"
             },
             {
-                "p": "string",
-                "v": "one",
-                "vt": "str"
-            },
-            {
-                "p": "json_array",
-                "v": "[ 1,2,3,4 ]",
-                "vt": "json"
-            },
-            {
                 "p": "jsonata",
                 "v": "\"hello \" & \"world: \" & $$.string",
                 "vt": "jsonata"
@@ -43,9 +33,9 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 311,
+        "payload": "\"hello \" & \"world: \" & $$.string",
+        "payloadType": "jsonata",
+        "x": 301,
         "y": 342,
         "wires": [
             [
@@ -78,13 +68,6 @@
         "rules": [
             {
                 "t": "eql",
-                "p": "string",
-                "pt": "msg",
-                "to": "one",
-                "tot": "str"
-            },
-            {
-                "t": "eql",
                 "p": "jsonata",
                 "pt": "msg",
                 "to": "hello world one",
@@ -92,14 +75,14 @@
             },
             {
                 "t": "eql",
-                "p": "json",
+                "p": "payload",
                 "pt": "msg",
-                "to": "[1,2,3,4]",
+                "to": "hello world one",
                 "tot": "str"
             }
         ],
-        "x": 658,
-        "y": 209,
+        "x": 561,
+        "y": 203,
         "wires": [
             []
         ]

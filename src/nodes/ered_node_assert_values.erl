@@ -6,6 +6,7 @@
 
 -import(ered_node_receivership, [enter_receivership/3]).
 -import(ered_nodered_comm, [
+    assert_failure/3,
     debug/3,
     node_status/5,
     ws_from/1
@@ -18,6 +19,7 @@
     this_should_not_happen/2
 ]).
 -import(ered_msg_handling, [
+    decode_json/1,
     get_prop/2
 ]).
 
@@ -120,14 +122,17 @@ check_rule_against_msg(_Operator, _ObjectType, _, _) ->
 
 %%
 %%
-match_value_on_msg(Prop, MsgVal, <<"str">>, ReqPattern, MatchVal, Msg) when is_integer(MsgVal) ->
-    match_value_on_msg(Prop,
-                       integer_to_list(MsgVal),
-                       <<"str">>,
-                       ReqPattern,
-                       MatchVal,
-                       Msg);
-
+match_value_on_msg(Prop, MsgVal, <<"str">>, ReqPattern, MatchVal, Msg) when
+    is_integer(MsgVal)
+->
+    match_value_on_msg(
+        Prop,
+        integer_to_list(MsgVal),
+        <<"str">>,
+        ReqPattern,
+        MatchVal,
+        Msg
+    );
 match_value_on_msg(Prop, MsgVal, <<"str">>, ReqPattern, MatchVal, _Msg) ->
     case re:run(MsgVal, ReqPattern) of
         {match, _} ->
@@ -144,6 +149,17 @@ match_value_on_msg(_, _, _, _, _, _) ->
 
 %%
 %%
+eql_msg_op(Prop, SrcVal, <<"json">>, ReqVal, _Msg) ->
+    case is_same(decode_json(ReqVal), SrcVal) of
+        true ->
+            true;
+        _ ->
+            {failed,
+                jstr(
+                    "Prop '~p': Exp: '~p' Was: '~p'",
+                    [Prop, ReqVal, SrcVal]
+                )}
+    end;
 eql_msg_op(Prop, SrcVal, <<"str">>, ReqVal, _Msg) ->
     case is_same(ReqVal, SrcVal) of
         true ->
@@ -265,8 +281,11 @@ check_rules([H | T], NodeDef, Msg, FCnt) ->
                 "Assert values: unsupported Rule: '~p'",
                 [H]
             ),
-            debug(ws_from(Msg), debug_data(NodeDef, ErrMsg), notice),
-            check_rules(T, NodeDef, Msg, FCnt);
+            %%
+            %% Unlike other nodes, this is an assertion failure. Can't
+            %% be silently ignoring tests.
+            assert_failure(NodeDef, ws_from(Msg), ErrMsg),
+            check_rules(T, NodeDef, Msg, FCnt + 1);
         {failed, ErrMsg} ->
             this_should_not_happen(
                 NodeDef,

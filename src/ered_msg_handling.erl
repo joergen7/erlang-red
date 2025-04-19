@@ -6,7 +6,6 @@
     timestamp/0
 ]).
 
-
 %%
 %% When something is a date type, it gets this value.
 timestamp() ->
@@ -16,9 +15,9 @@ timestamp() ->
 %% Decode a json string just like we like it, with atoms as keys
 decode_json(Val) ->
     AtomizeKeys = fun(Key, Value, Acc) ->
-                          [{binary_to_atom(Key), Value} | Acc]
-                  end,
-    {Obj, _, _} = json:decode( Val, ok, #{object_push => AtomizeKeys} ),
+        [{binary_to_atom(Key), Value} | Acc]
+    end,
+    {Obj, _, _} = json:decode(Val, ok, #{object_push => AtomizeKeys}),
     Obj.
 
 %%
@@ -27,14 +26,11 @@ decode_json(Val) ->
 get_nested_value(V, []) ->
     {ok, V};
 get_nested_value(Map, [H | T]) when is_map(Map) and is_binary(H) ->
-    case maps:find(binary_to_atom(H), Map) of
-        {ok, Val} ->
-            get_nested_value(Val, T);
-        _ ->
-            undefined
-    end;
+    get_nested_value(Map, [binary_to_atom(H) | T]);
 get_nested_value(Map, [H | T]) when is_map(Map) and is_list(H) ->
-    case maps:find(list_to_atom(H), Map) of
+    get_nested_value(Map, [list_to_atom(H) | T]);
+get_nested_value(Map, [H | T]) when is_map(Map) and is_atom(H) ->
+    case maps:find(H, Map) of
         {ok, Val} ->
             get_nested_value(Val, T);
         _ ->

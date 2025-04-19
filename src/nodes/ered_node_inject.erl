@@ -21,7 +21,6 @@
     decode_json/1
 ]).
 
-
 %%
 %% Inject node should have at least one outgoing wire, if not then the
 %% needle won't hit the vein, i.e. the message won't flow through any nodes.
@@ -73,11 +72,34 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
             parse_props(RestProps, NodeDef, maps:put(topic, Val, Msg));
         {ok, PropName} ->
             Val = get_prop_value_from_map(v, Prop),
-            parse_props(
-                RestProps,
-                NodeDef,
-                maps:put(binary_to_atom(PropName), Val, Msg)
-            );
+            PropType = get_prop_value_from_map(vt, Prop),
+            case PropType of
+                <<"date">> ->
+                    parse_props(
+                        RestProps,
+                        NodeDef,
+                        maps:put(binary_to_atom(PropName), timestamp(), Msg)
+                    );
+                <<"json">> ->
+                    parse_props(
+                        RestProps,
+                        NodeDef,
+                        maps:put(
+                            binary_to_atom(PropName), decode_json(Val), Msg
+                        )
+                    );
+                PropType ->
+                    unsupported(
+                        NodeDef,
+                        Msg,
+                        jstr("proptype ~p for ~p", [PropType, Prop])
+                    ),
+                    parse_props(
+                        RestProps,
+                        NodeDef,
+                        maps:put(binary_to_atom(PropName), Val, Msg)
+                    )
+            end;
         _ ->
             unsupported(NodeDef, Msg, jstr("Prop: NoMATCH: ~p\n", [Prop])),
             parse_props(RestProps, NodeDef, Msg)
