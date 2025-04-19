@@ -36,19 +36,19 @@ websocket_faker(WsName) ->
         stop ->
             ok;
         {debug, Data} ->
-            websocket_event_exchange:debug_msg({ok, WsName}, normal, Data),
+            ered_ws_event_exchange:debug_msg({ok, WsName}, normal, Data),
             websocket_faker(WsName);
         {notice_debug, Data} ->
-            websocket_event_exchange:debug_msg({ok, WsName}, notice, Data),
+            ered_ws_event_exchange:debug_msg({ok, WsName}, notice, Data),
             websocket_faker(WsName);
         {warning_debug, Data} ->
-            websocket_event_exchange:debug_msg({ok, WsName}, warning, Data),
+            ered_ws_event_exchange:debug_msg({ok, WsName}, warning, Data),
             websocket_faker(WsName);
         {error_debug, Data} ->
-            websocket_event_exchange:debug_msg({ok, WsName}, error, Data),
+            ered_ws_event_exchange:debug_msg({ok, WsName}, error, Data),
             websocket_faker(WsName);
         {status, NodeId, T, C, S} ->
-            websocket_event_exchange:node_status({ok, WsName}, NodeId, T, C, S),
+            ered_ws_event_exchange:node_status({ok, WsName}, NodeId, T, C, S),
             websocket_faker(WsName);
         Unknown ->
             io:format("WS faker got unknown msg: ~p~n", [Unknown]),
@@ -56,7 +56,7 @@ websocket_faker(WsName) ->
     end.
 
 ensure_websocket_listener_is_running(WsName) ->
-    websocket_event_exchange:start(),
+    ered_ws_event_exchange:start(),
 
     case whereis(WsName) of
         undefined ->

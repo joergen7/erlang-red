@@ -65,19 +65,19 @@ websocket_info({data, Msg}, State) ->
 %% colour in the debug panel.
 websocket_info({debug, Data}, State) ->
     Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
-    websocket_event_exchange:debug_msg(maps:find(wsname, State), normal, Data2),
+    ered_ws_event_exchange:debug_msg(maps:find(wsname, State), normal, Data2),
     Msg = json:encode([#{topic => debug, data => Data2}]),
     {reply, {text, Msg}, State};
 websocket_info({notice_debug, Data}, State) ->
     Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
     Data3 = maps:put(level, 40, Data2),
-    websocket_event_exchange:debug_msg(maps:find(wsname, State), notice, Data3),
+    ered_ws_event_exchange:debug_msg(maps:find(wsname, State), notice, Data3),
     Msg = json:encode([#{topic => debug, data => Data3}]),
     {reply, {text, Msg}, State};
 websocket_info({warning_debug, Data}, State) ->
     Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
     Data3 = maps:put(level, 30, Data2),
-    websocket_event_exchange:debug_msg(
+    ered_ws_event_exchange:debug_msg(
         maps:find(wsname, State), warning, Data3
     ),
     Msg = json:encode([#{topic => debug, data => Data3}]),
@@ -85,7 +85,7 @@ websocket_info({warning_debug, Data}, State) ->
 websocket_info({error_debug, Data}, State) ->
     Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
     Data3 = maps:put(level, 20, Data2),
-    websocket_event_exchange:debug_msg(maps:find(wsname, State), error, Data3),
+    ered_ws_event_exchange:debug_msg(maps:find(wsname, State), error, Data3),
     Msg = json:encode([#{topic => debug, data => Data3}]),
     {reply, {text, Msg}, State};
 %%
@@ -109,7 +109,7 @@ websocket_info({status, NodeId, Txt, Clr, Shp}, State) ->
         }
     ]),
 
-    websocket_event_exchange:node_status(
+    ered_ws_event_exchange:node_status(
         maps:find(wsname, State),
         NodeId,
         Txt,
@@ -153,7 +153,7 @@ ws_send_heartbeat(Pid, State) ->
 terminate(_Reason, _Req, State) ->
     case maps:find(wsname, State) of
         {ok, WsName} ->
-            websocket_event_exchange:remove_ws(WsName),
+            ered_ws_event_exchange:remove_ws(WsName),
             unregister(WsName);
         _ ->
             ok

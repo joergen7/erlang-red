@@ -13,10 +13,10 @@ init([]) ->
             [
                 #{
                     id => ered_ch1_ws_event_exchange,
-                    start => {websocket_event_exchange, start, []},
+                    start => {ered_ws_event_exchange, start, []},
                     restart => permanent,
                     type => worker,
-                    module => [websocket_event_exchange]
+                    module => [ered_ws_event_exchange]
                 },
                 #{
                     id => ered_ch2_unittest_engine,

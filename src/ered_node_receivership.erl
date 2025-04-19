@@ -123,7 +123,7 @@ enter_receivership(Module, NodeDef, websocket_events_and_stop) ->
         {stop, WsName} ->
             NodeDef2 = erlang:apply(Module, handle_stop, [NodeDef, WsName]),
             {ok, NodePid} = maps:find('_node_pid_', NodeDef2),
-            websocket_event_exchange:unsubscribe(WsName, NodePid),
+            ered_ws_event_exchange:unsubscribe(WsName, NodePid),
             ok;
         {ws_event, Details} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_websocket'),

@@ -1,4 +1,4 @@
--module(websocket_event_exchange).
+-module(ered_ws_event_exchange).
 
 -behaviour(gen_server).
 

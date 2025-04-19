@@ -189,7 +189,7 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
             pg:join(pg_catch_group_name(FinalNodeDef), Pid);
         {false, <<"ut-assert-status">>} ->
             {ok, TgtNodeId} = maps:find(nodeid, FinalNodeDef),
-            websocket_event_exchange:subscribe(
+            ered_ws_event_exchange:subscribe(
                 WsName, TgtNodeId, status, NodePid
             );
         {false, <<"ut-assert-debug">>} ->
@@ -201,15 +201,16 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
             %% messages.
             case maps:find(inverse, NodeDef) of
                 {ok, true} ->
-                    websocket_event_exchange:subscribe(
+                    ered_ws_event_exchange:subscribe(
                       WsName,
                       TgtNodeId,
                       debug,
                       any,
+
                       NodePid
                      );
                 _ ->
-                    websocket_event_exchange:subscribe(
+                    ered_ws_event_exchange:subscribe(
                       WsName,
                       TgtNodeId,
                       debug,
