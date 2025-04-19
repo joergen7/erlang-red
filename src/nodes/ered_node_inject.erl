@@ -52,14 +52,16 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
                         )
                     );
                 <<"json">> ->
+                    AtomizeKeys = fun(Key, Value, Acc) ->
+                        [{binary_to_atom(Key), Value} | Acc]
+                    end,
+                    {Obj, _, _} = json:decode(
+                        Val, ok, #{object_push => AtomizeKeys}
+                    ),
                     parse_props(
                         RestProps,
                         NodeDef,
-                        maps:put(
-                            payload,
-                            json:decode(Val),
-                            Msg
-                        )
+                        maps:put(payload, Obj, Msg)
                     );
                 PropType ->
                     unsupported(
