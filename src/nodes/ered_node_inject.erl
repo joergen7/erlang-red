@@ -16,6 +16,12 @@
     unsupported/3
 ]).
 
+-import(ered_msg_handling, [
+    timestamp/0,
+    decode_json/1
+]).
+
+
 %%
 %% Inject node should have at least one outgoing wire, if not then the
 %% needle won't hit the vein, i.e. the message won't flow through any nodes.
@@ -45,23 +51,13 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
                     parse_props(
                         RestProps,
                         NodeDef,
-                        maps:put(
-                            payload,
-                            erlang:system_time(millisecond),
-                            Msg
-                        )
+                        maps:put(payload, timestamp(), Msg)
                     );
                 <<"json">> ->
-                    AtomizeKeys = fun(Key, Value, Acc) ->
-                        [{binary_to_atom(Key), Value} | Acc]
-                    end,
-                    {Obj, _, _} = json:decode(
-                        Val, ok, #{object_push => AtomizeKeys}
-                    ),
                     parse_props(
                         RestProps,
                         NodeDef,
-                        maps:put(payload, Obj, Msg)
+                        maps:put(payload, decode_json(Val), Msg)
                     );
                 PropType ->
                     unsupported(

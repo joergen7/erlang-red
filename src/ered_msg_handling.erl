@@ -1,8 +1,25 @@
 -module(ered_msg_handling).
 
 -export([
-    get_prop/2
+    get_prop/2,
+    decode_json/1,
+    timestamp/0
 ]).
+
+
+%%
+%% When something is a date type, it gets this value.
+timestamp() ->
+    erlang:system_time(millisecond).
+
+%%
+%% Decode a json string just like we like it, with atoms as keys
+decode_json(Val) ->
+    AtomizeKeys = fun(Key, Value, Acc) ->
+                          [{binary_to_atom(Key), Value} | Acc]
+                  end,
+    {Obj, _, _} = json:decode( Val, ok, #{object_push => AtomizeKeys} ),
+    Obj.
 
 %%
 %% Helper for dealing with properties of the form:
