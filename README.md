@@ -168,7 +168,7 @@ All contributions should be printed out on sheets of A4 paper (not US-Letter), c
 
 Alternatively just create a pull request, whichever is simpler ;)
 
-Questions and Answers at either the [Erlang Forum](https://erlangforums.com/t/erlang-red-visual-flow-based-programming-for-erlang/4656) or the [Node-RED Forum](https://discourse.nodered.org/t/erlang-red-erlang-backed-node-red/96458).
+Questions and Answers at either the [Erlang Forum](https://erlangforums.com/t/erlang-red-erlang-interpreter-for-node-red-flow-code-visual-flow-based-programming/4678) or the [Node-RED Forum](https://discourse.nodered.org/t/erlang-red-erlang-backed-node-red/96458).
 
 Acknowledgement
 ---
