@@ -11,6 +11,11 @@
     jstr/2,
     send_msg_to_connected_nodes/2
 ]).
+-import(ered_msg_handling, [
+    decode_json/1,
+    get_prop/2,
+    timestamp/0
+]).
 
 %%
 %% Change node modifies the contents of messages but also sets values in
@@ -79,13 +84,17 @@ do_change_str({ok, Prop}, {ok, FromStr}, {ok, ToStr}, Msg) ->
 
 %%
 %%
+do_set_value(Prop, _Value, <<"date">>, Msg, _NodeDef) ->
+    maps:put(binary_to_atom(Prop), timestamp(), Msg);
 do_set_value(Prop, Value, <<"str">>, Msg, _NodeDef) ->
     maps:put(binary_to_atom(Prop), Value, Msg);
+do_set_value(Prop, Value, <<"json">>, Msg, _NodeDef) ->
+    maps:put(binary_to_atom(Prop), decode_json(Value), Msg);
 do_set_value(Prop, Value, <<"msg">>, Msg, _NodeDef) ->
     %% set a propery on the message to the value of another
     %% property on the message
-    case maps:find(binary_to_atom(Value), Msg) of
-        {ok, Val} ->
+    case get_prop({ok, Value},Msg) of
+        {ok, Val, _} ->
             maps:put(binary_to_atom(Prop), Val, Msg);
         _ ->
             maps:put(binary_to_atom(Prop), <<>>, Msg)
