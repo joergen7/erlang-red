@@ -17,6 +17,9 @@
     send_msg_to_connected_nodes/2,
     this_should_not_happen/2
 ]).
+-import(ered_msg_handling, [
+    get_prop/2
+]).
 
 is_same(Same, Same) -> true;
 is_same(_, _) -> false.
@@ -39,10 +42,8 @@ debug_data(NodeDef, ErrMsg) ->
 %%
 %%
 check_rule_against_msg(<<"notset">>, <<"msg">>, Rule, Msg) ->
-    {ok, Prop} = maps:find(p, Rule),
-
-    case maps:find(binary_to_atom(Prop), Msg) of
-        {ok, _} ->
+    case get_prop(maps:find(p, Rule), Msg) of
+        {ok, _, Prop} ->
             {failed,
                 jstr(
                     "Prop '~p' should not be set on Msg: ~p",
@@ -52,12 +53,10 @@ check_rule_against_msg(<<"notset">>, <<"msg">>, Rule, Msg) ->
             true
     end;
 check_rule_against_msg(<<"set">>, <<"msg">>, Rule, Msg) ->
-    {ok, Prop} = maps:find(p, Rule),
-
-    case maps:find(binary_to_atom(Prop), Msg) of
-        {ok, _} ->
+    case get_prop(maps:find(p, Rule), Msg) of
+        {ok, _, _} ->
             true;
-        _ ->
+        {undefined, Prop} ->
             {failed,
                 jstr(
                     "Prop '~p' not set on Msg: ~p",
@@ -65,10 +64,8 @@ check_rule_against_msg(<<"set">>, <<"msg">>, Rule, Msg) ->
                 )}
     end;
 check_rule_against_msg(<<"noteql">>, <<"msg">>, Rule, Msg) ->
-    {ok, Prop} = maps:find(p, Rule),
-
-    case maps:find(binary_to_atom(Prop), Msg) of
-        {ok, Val} ->
+    case get_prop(maps:find(p, Rule), Msg) of
+        {ok, Val, Prop} ->
             {ok, ReqVal} = maps:find(to, Rule),
             case is_same(ReqVal, Val) of
                 true ->
@@ -80,7 +77,7 @@ check_rule_against_msg(<<"noteql">>, <<"msg">>, Rule, Msg) ->
                 _ ->
                     true
             end;
-        _ ->
+        {undefined, Prop} ->
             {failed, jstr("Prop not set on msg: '~p'", [Prop])}
     end;
 %% eql operator on the msg - about the only thing that is
@@ -90,45 +87,51 @@ check_rule_against_msg(<<"eql">>, <<"msg">>, Rule, Msg) ->
     {ok, ToType} = maps:find(tot, Rule),
     {ok, ReqVal} = maps:find(to, Rule),
 
-    case maps:find(binary_to_atom(Prop), Msg) of
-        {ok, Val} ->
+    case get_prop(maps:find(p, Rule), Msg) of
+        {ok, Val, Prop} ->
             eql_msg_op(Prop, Val, ToType, ReqVal, Msg);
-        _ ->
+        {undefined, Prop} ->
             {failed, jstr("Prop not set on msg: '~p'", [Prop])}
     end;
 check_rule_against_msg(<<"mth">>, <<"msg">>, Rule, Msg) ->
-    {ok, Prop} = maps:find(p, Rule),
     {ok, ToType} = maps:find(tot, Rule),
     {ok, ReqVal} = maps:find(to, Rule),
 
-    case re:compile(ReqVal) of
-        {ok, ReqPattern} ->
-            mth_msg_op(Prop, ToType, ReqPattern, ReqVal, Msg);
-        _ ->
-            {failed, jstr("Match not RegExp: '~p'", [ReqVal])}
+    case get_prop(maps:find(p, Rule), Msg) of
+        {ok, PropVal, Prop} ->
+            case re:compile(ReqVal) of
+                {ok, ReqPattern} ->
+                    match_value_on_msg(
+                        Prop,
+                        PropVal,
+                        ToType,
+                        ReqPattern,
+                        ReqVal,
+                        Msg
+                    );
+                _ ->
+                    {failed, jstr("Match not RegExp: '~p'", [ReqVal])}
+            end;
+        {undefined, Prop} ->
+            {failed, jstr("Propery not set on Msg: '~p'", [Prop])}
     end;
 check_rule_against_msg(_Operator, _ObjectType, _, _) ->
     unsupported.
 
 %%
 %%
-mth_msg_op(Prop, <<"str">>, ReqPattern, MatchVal, Msg) ->
-    case maps:find(binary_to_atom(Prop), Msg) of
-        {ok, ReqVal} ->
-            case re:run(ReqVal, ReqPattern) of
-                {match, _} ->
-                    true;
-                _ ->
-                    {failed,
-                        jstr(
-                            "Prop '~p': Not matched. Mat '~p' Val: '~p'",
-                            [Prop, MatchVal, ReqVal]
-                        )}
-            end;
+match_value_on_msg(Prop, MsgVal, <<"str">>, ReqPattern, MatchVal, _Msg) ->
+    case re:run(MsgVal, ReqPattern) of
+        {match, _} ->
+            true;
         _ ->
-            {failed, jstr("Propery not set on Msg: '~p'", [Prop])}
+            {failed,
+                jstr(
+                    "Prop '~p': Not matched. Mat '~p' Val: '~p'",
+                    [Prop, MatchVal, MsgVal]
+                )}
     end;
-mth_msg_op(_, _, _, _, _) ->
+match_value_on_msg(_, _, _, _, _, _) ->
     unsupported.
 
 %%
