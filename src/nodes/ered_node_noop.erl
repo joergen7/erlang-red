@@ -32,11 +32,10 @@ create_data_for_debug(NodeDef,TypeStr) ->
     #{
        id       => IdStr,
        z        => ZStr,
-       '_alias' => IdStr,
        path     => ZStr,
        name     => NameStr,
        topic    => <<"">>,
-       msg      => jstr("type '~s' is not implemented", [TypeStr]),
+       msg      => jstr("node type '~s' is not implemented", [TypeStr]),
        format   => <<"string">>
     }.
 
@@ -94,6 +93,8 @@ handle_outgoing(NodeDef, Msg) ->
 
     NodeDef.
 
-node_noop(NodeDef, _WsName) ->
+node_noop(NodeDef, WsName) ->
     ered_nodes:node_init(NodeDef),
+    {ok, TypeStr} = maps:find(type,NodeDef),
+    debug(WsName, create_data_for_debug(NodeDef, TypeStr), warning),
     enter_receivership(?MODULE, NodeDef, incoming_and_outgoing).
