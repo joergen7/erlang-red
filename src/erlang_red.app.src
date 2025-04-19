@@ -13,7 +13,7 @@
         pg,
         ered_webserver,
         ered_ws_event_exchange,
-        unittest_engine,
+        ered_unittest_engine,
         ered_error_store,
         ered_flow_store_server
     ]},

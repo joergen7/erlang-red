@@ -46,12 +46,14 @@ handle_response(Req, State) ->
         <<"all">> ->
             AllFlowIds = ered_flow_store_server:all_flow_ids(),
             [
-                unittest_engine ! {start_test, FlowId, WsName, TestPendingTests}
+                ered_unittest_engine !
+                    {start_test, FlowId, WsName, TestPendingTests}
              || FlowId <- AllFlowIds
             ],
             {json:encode(#{status => ok}), Req, State};
         FlowId ->
-            unittest_engine ! {start_test, FlowId, WsName, TestPendingTests},
+            ered_unittest_engine !
+                {start_test, FlowId, WsName, TestPendingTests},
             {json:encode(#{status => ok}), Req, State}
     end.
 

@@ -12,39 +12,39 @@ init([]) ->
             {one_for_one, 1000, 3600},
             [
                 #{
-                    id => ered_ch1_ws_event_exchange,
-                    start => {ered_ws_event_exchange, start, []},
+                    id => ered_ch1_pg_kernel,
+                    start => {pg, start_link, []},
                     restart => permanent,
-                    type => worker,
-                    module => [ered_ws_event_exchange]
+                    type => supervisor,
+                    module => [pg]
                 },
                 #{
-                    id => ered_ch2_unittest_engine,
-                    start => {unittest_engine, start, []},
-                    restart => permanent,
-                    type => worker,
-                    module => [unittest_engine]
-                },
-                #{
-                    id => ered_ch3_error_store,
-                    start => {ered_error_store, start, []},
-                    restart => permanent,
-                    type => worker,
-                    module => [ered_error_store]
-                },
-                #{
-                    id => ered_ch4_flow_store,
+                    id => ered_ch2_flow_store,
                     start => {ered_flow_store_server, start, []},
                     restart => permanent,
                     type => worker,
                     module => [ered_flow_store_server]
                 },
                 #{
-                    id => ered_ch5_pg_kernel,
-                    start => {pg, start_link, []},
+                    id => ered_ch3_ws_event_exchange,
+                    start => {ered_ws_event_exchange, start, []},
                     restart => permanent,
-                    type => supervisor,
-                    module => [pg]
+                    type => worker,
+                    module => [ered_ws_event_exchange]
+                },
+                #{
+                    id => ered_ch4_error_store,
+                    start => {ered_error_store, start, []},
+                    restart => permanent,
+                    type => worker,
+                    module => [ered_error_store]
+                },
+                #{
+                    id => ered_ch5_unittest_engine,
+                    start => {ered_unittest_engine, start, []},
+                    restart => permanent,
+                    type => worker,
+                    module => [ered_unittest_engine]
                 },
                 #{
                     id => ered_ch6_red_web,

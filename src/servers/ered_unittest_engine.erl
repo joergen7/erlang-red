@@ -1,4 +1,4 @@
--module(unittest_engine).
+-module(ered_unittest_engine).
 
 -behaviour(gen_server).
 
