@@ -120,6 +120,14 @@ check_rule_against_msg(_Operator, _ObjectType, _, _) ->
 
 %%
 %%
+match_value_on_msg(Prop, MsgVal, <<"str">>, ReqPattern, MatchVal, Msg) when is_integer(MsgVal) ->
+    match_value_on_msg(Prop,
+                       integer_to_list(MsgVal),
+                       <<"str">>,
+                       ReqPattern,
+                       MatchVal,
+                       Msg);
+
 match_value_on_msg(Prop, MsgVal, <<"str">>, ReqPattern, MatchVal, _Msg) ->
     case re:run(MsgVal, ReqPattern) of
         {match, _} ->
