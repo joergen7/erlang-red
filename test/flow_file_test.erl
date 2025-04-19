@@ -181,6 +181,9 @@ create_test_for_flow_file([FileName | MoreFileNames], Acc) ->
     ).
 
 foreach_testflow_test_() ->
+    %% pg is required for the catch nodes
+    pg:start_link(),
+
     {_Cnt, FileNames} = filelib:fold_files(
         "priv/testflows",
         "",
