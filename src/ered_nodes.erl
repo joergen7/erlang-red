@@ -347,6 +347,10 @@ node_type_to_fun(<<"split">>) ->
     {ered_node_split, node_split};
 node_type_to_fun(<<"catch">>) ->
     {ered_node_catch, node_catch};
+node_type_to_fun(<<"comment">>) ->
+    {ered_node_ignore, node_ignore};
+node_type_to_fun(<<"tab">>) ->
+    {ered_node_ignore, node_ignore};
 %%
 %% Assert nodes for testing functionality of the nodes
 %%

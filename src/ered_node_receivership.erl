@@ -38,6 +38,21 @@ bad_routing(NodeDef, Type, Msg) ->
 %% TODO2 but is that the best alternative?
 %%
 
+%% used by the ignore node, this is really a zombie node.
+enter_receivership(Module, NodeDef, nothing) ->
+    receive
+        {stop, _WsName} ->
+            ok;
+        {incoming, Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
+            bad_routing(NodeDef2, incoming, Msg),
+            enter_receivership(Module, NodeDef2, nothing);
+        {outgoing, Msg} ->
+            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
+            bad_routing(NodeDef2, outgoing, Msg),
+            enter_receivership(Module, NodeDef2, nothing)
+    end;
+
 %% used by catch nodes to receive exceptions from other nodes.
 enter_receivership(Module, NodeDef, only_exception) ->
     receive

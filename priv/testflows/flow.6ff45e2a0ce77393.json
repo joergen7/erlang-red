@@ -39,8 +39,8 @@
         "topic": "should not appear in the debug panel",
         "payload": "this is the payload",
         "payloadType": "str",
-        "x": 224,
-        "y": 182,
+        "x": 183,
+        "y": 555,
         "wires": [
             [
                 "933284b9d26c8f41"
@@ -60,8 +60,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 595,
-        "y": 545,
+        "x": 517,
+        "y": 498,
         "wires": []
     },
     {
