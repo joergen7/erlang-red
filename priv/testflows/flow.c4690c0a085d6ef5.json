@@ -8,8 +8,8 @@
         "env": [
             {
                 "name": "ERED_KEEPRUNNING",
-                "value": "false",
-                "type": "bool"
+                "type": "bool",
+                "value": "false"
             }
         ]
     },
@@ -21,7 +21,7 @@
         "props": [
             {
                 "p": "filename",
-                "v": "priv/testdata/test.json",
+                "v": "${priv}/testdata/test.json",
                 "vt": "str"
             }
         ],
@@ -139,9 +139,9 @@
         "name": "",
         "rules": [
             {
-                "t": "set",
                 "p": "payload",
-                "pt": "msg"
+                "pt": "msg",
+                "t": "set"
             }
         ],
         "x": 889,
@@ -157,9 +157,9 @@
         "name": "",
         "rules": [
             {
-                "t": "set",
                 "p": "payload",
                 "pt": "msg",
+                "t": "set",
                 "to": "$count($$.payload)",
                 "tot": "jsonata"
             }
@@ -185,9 +185,9 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
+                "t": "eql",
                 "to": "8",
                 "tot": "num"
             }
