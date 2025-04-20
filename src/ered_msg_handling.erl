@@ -13,6 +13,8 @@ timestamp() ->
 
 %%
 %% Decode a json string just like we like it, with atoms as keys
+decode_json(Val) when is_list(Val) ->
+    decode_json(list_to_binary(Val));
 decode_json(Val) ->
     AtomizeKeys = fun(Key, Value, Acc) ->
         [{binary_to_atom(Key), Value} | Acc]
@@ -21,8 +23,15 @@ decode_json(Val) ->
     Obj.
 
 %%
-%% Helper for dealing with properties of the form:
-%%    payload.value1.value2.value3
+%% Helper for getting values for properties of the form:
+%%    payload.key1.key2.key3
+%% from maps of the form
+%%    #{ payload => #{ key1 => #{ key2 => #{ key3 => "final value" }}}}
+%% So a call to get nested value would return
+%%    final value
+%% The array argument is ["payload", "key1", "key2", "key3"], i.e. a split
+%% by dot on the original string.
+%%
 get_nested_value(V, []) ->
     {ok, V};
 get_nested_value(Map, [H | T]) when is_map(Map) and is_binary(H) ->
