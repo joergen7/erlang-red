@@ -15,7 +15,7 @@
 
 handle_incoming(NodeDef, Msg) ->
     send_msg_to_connected_nodes(NodeDef, Msg),
-    {NodeDef, Msg}.
+    {NodeDef, dont_send_complete_msg}.
 
 node_junction(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),

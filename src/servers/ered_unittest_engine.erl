@@ -27,6 +27,8 @@
 ]).
 -import(ered_nodes, [
     create_pid_for_node/2,
+    pg_catch_group_name/2,
+    pg_complete_group_name/2,
     tabid_to_error_collector/1,
     trigger_outgoing_messages/3
 ]).
@@ -160,6 +162,14 @@ run_test_on_another_planet(FlowId, WsName, true) ->
     end.
 
 %%
+%% Clear pg group
+clear_pg_group(GrpName) ->
+    case pg:get_members(GrpName) of
+        Members ->
+            [pg:leave(GrpName, M) || M <- Members]
+    end.
+
+%%
 %% Run the test disregarding the pending flag of the test flow.
 run_the_test(FlowId, WsName, Ary) ->
     case should_keep_flow_running(Ary) of
@@ -170,6 +180,10 @@ run_the_test(FlowId, WsName, Ary) ->
                 FlowId,
                 <<"UnitTestEngine TestRun">>
             ),
+
+            %% clear out the pg group for the complete nodes.
+            clear_pg_group(pg_complete_group_name(#{z => FlowId}, WsName)),
+            clear_pg_group(pg_catch_group_name(#{z => FlowId}, WsName)),
 
             Pids = create_pid_for_node(Ary, WsName),
 
