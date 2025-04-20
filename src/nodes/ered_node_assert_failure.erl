@@ -2,6 +2,7 @@
 
 -export([node_assert_failure/2]).
 -export([handle_incoming/2]).
+-export([handle_stop/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
 -import(ered_nodered_comm, [
@@ -21,6 +22,16 @@ to_binary_if_not_binary(Obj) when is_list(Obj) ->
     list_to_binary(Obj);
 to_binary_if_not_binary(Obj) ->
     Obj.
+
+%%
+%% post status to indicate success - ah! the sweet success of non-failure.
+handle_stop(NodeDef, WsName) ->
+    case maps:find('_mc_incoming', NodeDef) of
+        {ok, 0} ->
+            node_status(WsName, NodeDef, "assert succeed", "green", "ring");
+        _ ->
+            ignore
+    end.
 
 %% erlfmt:ignore equals and arrows should line up here.
 handle_incoming(NodeDef,Msg) ->
@@ -54,8 +65,8 @@ handle_incoming(NodeDef,Msg) ->
 
     node_status(ws_from(Msg),NodeDef,"assert failed","red","dot"),
 
-    NodeDef.
+    {NodeDef, Msg}.
 
 node_assert_failure(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),
-    enter_receivership(?MODULE, NodeDef, only_incoming).
+    enter_receivership(?MODULE, NodeDef, stop_and_incoming).
