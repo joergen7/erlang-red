@@ -129,6 +129,17 @@ router() ->
           {"/node-red", [{method, <<"GET">>}], cowboy_static,
               {priv_file, erlang_red, "node-red-frontend/index.html"}},
 
+        %%% Wrapper site nonsense starts
+          {"/", [{method, <<"GET">>}], ered_http_release_status, []},
+
+          {"/media/[...]", [{method, <<"GET">>}], cowboy_static,
+              {priv_dir, erlang_red, "wrapper_site/media", []}},
+
+          {"/styles/[...]", [{method, <<"GET">>}], cowboy_static,
+              {priv_dir, erlang_red, "wrapper_site/styles", []}},
+        %%% Wrapper site nonsense ends
+
+
           {"/[...]", [{method, <<"GET">>}],
               cowboy_static,
               {priv_dir, erlang_red, "node-red-frontend", [
