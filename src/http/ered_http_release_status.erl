@@ -16,7 +16,9 @@
 
 init(Req, State) ->
     erlydtl:compile(
-        code:priv_dir(erlang_red) ++ "/wrapper_site/templates/status.dtl", status_tmpl, [
+        code:priv_dir(erlang_red) ++ "/wrapper_site/templates/status.dtl",
+        status_tmpl,
+        [
             {out_dir, false}
         ]
     ),
