@@ -45,14 +45,14 @@ handle_stop(NodeDef,WsName) ->
             debug(WsName, Data, error),
             node_status(WsName, NodeDef, "assert failed", "red", "dot");
         _ ->
-            ok
+            node_status(WsName, NodeDef, "assert succeed", "green", "ring")
     end.
 
 %%
 %% even though it does nothing with these messages, it still needs to
 %% recieve them, after all it counts them.
-handle_incoming(NodeDef, _Msg) ->
-    NodeDef.
+handle_incoming(NodeDef, Msg) ->
+    {NodeDef, Msg}.
 
 node_assert_success(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),

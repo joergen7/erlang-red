@@ -1,11 +1,11 @@
 -module(ered_node_file_in).
 
+-export([node_file_in/2]).
+-export([handle_incoming/2]).
+
 %%
 %% No Operation node that is used for all unknown types. It represents
 %% a deadend for a message, it stops here.
-
--export([node_file_in/2]).
--export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
 -import(ered_nodes, [
@@ -60,12 +60,14 @@ handle_incoming(NodeDef, Msg) ->
 
     case get_filename(FileNameType, NodeDef, Msg) of
         {ok, <<>>} ->
-            debug_msg(NodeDef, Msg, {no_file_specified});
+            debug_msg(NodeDef, Msg, {no_file_specified}),
+            {NodeDef, Msg};
         {ok, FileName} ->
             case file:read_file(unpriv(FileName)) of
                 {ok, FileData} ->
                     Msg2 = maps:put(payload, FileData, Msg),
-                    send_msg_to_connected_nodes(NodeDef, Msg2);
+                    send_msg_to_connected_nodes(NodeDef, Msg2),
+                    {NodeDef, Msg2};
                 _ ->
                     ErrMsg = jstr("File Not Found: ~p", [FileName]),
                     case post_exception(NodeDef, Msg, ErrMsg) of
@@ -73,10 +75,11 @@ handle_incoming(NodeDef, Msg) ->
                             ok;
                         _ ->
                             debug_msg(NodeDef, Msg, {file_not_found, FileName})
-                    end
+                    end,
+                    {NodeDef, Msg}
             end;
         failed ->
-            ignore;
+            {NodeDef, Msg};
         _ ->
             this_should_not_happen(
                 NodeDef,
@@ -84,10 +87,9 @@ handle_incoming(NodeDef, Msg) ->
                     "file in error in obtaining filename [~p] (~p)\n",
                     [NodeDef, Msg]
                 )
-            )
-    end,
-
-    NodeDef.
+            ),
+            {NodeDef, Msg}
+    end.
 
 node_file_in(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),

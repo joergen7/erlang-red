@@ -16,11 +16,11 @@
 
 -import(ered_node_receivership, [enter_receivership/3]).
 
-handle_incoming(NodeDef, _Msg) ->
-    NodeDef.
+handle_incoming(NodeDef, Msg) ->
+    {NodeDef, Msg}.
 
-handle_outgoing(NodeDef, _Msg) ->
-    NodeDef.
+handle_outgoing(NodeDef, Msg) ->
+    {NodeDef, Msg}.
 
 node_disabled(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),

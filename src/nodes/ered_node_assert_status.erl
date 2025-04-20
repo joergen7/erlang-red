@@ -1,12 +1,13 @@
 -module(ered_node_assert_status).
 
+-export([node_assert_status/2]).
+-export([handle_ws_event/2]).
+-export([handle_stop/2]).
+
 %%
 %% Assert node for checking whether another node generated a status
 %% update for itself. Or not.
 %%
--export([node_assert_status/2]).
--export([handle_ws_event/2]).
--export([handle_stop/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
 

@@ -61,10 +61,12 @@ handle_incoming(NodeDef, Msg) ->
             case action_to_content(Val, Action, Pretty) of
                 {ok, Response} ->
                     Msg2 = maps:put(payload, Response, Msg),
-                    send_msg_to_connected_nodes(NodeDef, Msg2);
+                    send_msg_to_connected_nodes(NodeDef, Msg2),
+                    {NodeDef, Msg2};
                 unsupported ->
                     ErrMsg = jstr("Unsupported Action: ~p", [Action]),
-                    unsupported(NodeDef, Msg, ErrMsg)
+                    unsupported(NodeDef, Msg, ErrMsg),
+                    {NodeDef, Msg}
             end;
         _ ->
             ErrMsg = jstr("Property not defined on Msg: ~p --> ~p", [Prop, Msg]),
@@ -72,9 +74,9 @@ handle_incoming(NodeDef, Msg) ->
                 ws_from(Msg),
                 debug_string(NodeDef, ErrMsg),
                 error
-            )
-    end,
-    NodeDef.
+            ),
+            {NodeDef, Msg}
+    end.
 
 node_json(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),

@@ -64,7 +64,7 @@ handle_incoming(NodeDef, Msg) ->
     %% again for node red, show a status value for the corresponding node.
     node_status(ws_from(Msg), NodeDef, "type not implemented", "grey", "dot"),
 
-    NodeDef.
+    {NodeDef, Msg}.
 
 handle_outgoing(NodeDef, Msg) ->
     {ok, IdStr} = maps:find(id, NodeDef),
@@ -91,10 +91,10 @@ handle_outgoing(NodeDef, Msg) ->
     %% again for node red, show a status value for the corresponding node.
     node_status(ws_from(Msg), NodeDef, "type not implemented", "grey", "dot"),
 
-    NodeDef.
+    {NodeDef, Msg}.
 
 node_noop(NodeDef, WsName) ->
     ered_nodes:node_init(NodeDef),
-    {ok, TypeStr} = maps:find(type,NodeDef),
+    {ok, TypeStr} = maps:find(type, NodeDef),
     debug(WsName, create_data_for_debug(NodeDef, TypeStr), warning),
     enter_receivership(?MODULE, NodeDef, incoming_and_outgoing).

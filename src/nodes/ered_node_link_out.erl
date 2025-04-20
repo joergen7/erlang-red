@@ -47,7 +47,8 @@ handle_incoming(NodeDef, Msg) ->
                     send_msg_on(Links, Msg);
                 _ ->
                     ignore
-            end;
+            end,
+            {NodeDef, dont_send_complete_msg};
         {ok, <<"return">>} ->
             %% careful, what this does is take the last entry and respond
             %% to that. link calls can be nested hence this logic
@@ -64,7 +65,8 @@ handle_incoming(NodeDef, Msg) ->
                     end;
                 _ ->
                     ignore
-            end;
+            end,
+            {NodeDef, Msg};
         {ok, Mode} ->
             ErrMsg = jstr("Unknown Mode: '~s'", [Mode]),
             this_should_not_happen(
@@ -72,11 +74,11 @@ handle_incoming(NodeDef, Msg) ->
                 io_lib:format("~p ~p\n", [ErrMsg, Msg])
             ),
             debug(ws_from(Msg), debug_string(NodeDef, ErrMsg), notice),
-            node_status(ws_from(Msg), NodeDef, ErrMsg, "red", "dot");
+            node_status(ws_from(Msg), NodeDef, ErrMsg, "red", "dot"),
+            {NodeDef, Msg};
         _ ->
-            ignore
-    end,
-    NodeDef.
+            {NodeDef, Msg}
+    end.
 
 node_link_out(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),

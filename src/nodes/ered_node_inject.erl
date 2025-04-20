@@ -58,11 +58,19 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
                         NodeDef,
                         maps:put(payload, decode_json(Val), Msg)
                     );
+                <<"str">> ->
+                    parse_props(
+                        RestProps,
+                        NodeDef,
+                        maps:put(payload, Val, Msg)
+                    );
                 PropType ->
                     unsupported(
                         NodeDef,
                         Msg,
-                        jstr("proptype ~p for ~p", [PropType, Prop])
+                        jstr("proptype ~p for ~p, handling as string type", [
+                            PropType, Prop
+                        ])
                     ),
                     parse_props(RestProps, NodeDef, maps:put(payload, Val, Msg))
             end;
@@ -88,11 +96,21 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
                             binary_to_atom(PropName), decode_json(Val), Msg
                         )
                     );
+                <<"str">> ->
+                    parse_props(
+                        RestProps,
+                        NodeDef,
+                        maps:put(
+                            binary_to_atom(PropName), Val, Msg
+                        )
+                    );
                 PropType ->
                     unsupported(
                         NodeDef,
                         Msg,
-                        jstr("proptype ~p for ~p", [PropType, Prop])
+                        jstr("proptype ~p for ~p, handling as string type", [
+                            PropType, Prop
+                        ])
                     ),
                     parse_props(
                         RestProps,
@@ -115,8 +133,10 @@ handle_outgoing(NodeDef, Msg) ->
         _ ->
             Props = []
     end,
-    send_msg_to_connected_nodes(NodeDef, parse_props(Props, NodeDef, Msg)),
-    NodeDef.
+
+    Msg2 = parse_props(Props, NodeDef, Msg),
+    send_msg_to_connected_nodes(NodeDef, Msg2),
+    {NodeDef, Msg2}.
 
 node_inject(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),

@@ -262,9 +262,9 @@ check_rules([], NodeDef, Msg, 0) ->
     node_status(
         ws_from(Msg),
         NodeDef,
-        <<"All checks succeed">>,
+        <<"assert succeed">>,
         "green",
-        "dot"
+        "ring"
     );
 check_rules([], NodeDef, Msg, FCnt) ->
     ErrMsg = jstr("~p check(s) failed", [FCnt]),
@@ -338,7 +338,7 @@ handle_incoming(NodeDef, Msg) ->
             ignore
     end,
     send_msg_to_connected_nodes(NodeDef, Msg),
-    NodeDef.
+    {NodeDef, Msg}.
 
 node_assert_values(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),

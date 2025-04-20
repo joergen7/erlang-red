@@ -48,7 +48,7 @@ compute_pause(PType, NodeDef, Msg) ->
 handle_incoming(NodeDef, Msg) ->
     timer:sleep(compute_pause(maps:find(pauseType, NodeDef), NodeDef, Msg)),
     send_msg_to_connected_nodes(NodeDef, Msg),
-    NodeDef.
+    {NodeDef, Msg}.
 
 node_delay(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),

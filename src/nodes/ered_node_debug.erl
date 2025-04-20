@@ -98,7 +98,7 @@ handle_incoming(NodeDef, Msg) ->
         Msg
     ),
 
-    NodeDef.
+    {NodeDef, Msg}.
 
 node_debug(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),

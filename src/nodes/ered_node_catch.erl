@@ -39,7 +39,7 @@ handle_exception(NodeDef, FromDef, Msg, ErrMsg) ->
     },
     Msg2 = maps:put(error, ErrObj, Msg),
     send_msg_to_connected_nodes(NodeDef, Msg2),
-    NodeDef.
+    {NodeDef, Msg2}.
 
 node_catch(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),

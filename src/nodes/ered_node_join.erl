@@ -31,6 +31,7 @@
 -import(ered_node_receivership, [enter_receivership/3]).
 -import(ered_nodes, [
     jstr/2,
+    post_completed_msg/2,
     send_msg_to_connected_nodes/2
 ]).
 -import(ered_nodered_comm, [
@@ -42,19 +43,36 @@ handle_incoming(NodeDef, Msg) ->
         {ok, {ok, 1, Lst}} ->
             Lst2 = [Msg | Lst],
             Msg2 = maps:put(payload, Lst2, Msg),
+
+            %% now that we are ready to send out our message, we are completed
+            %% with the message that make up that message (!!) so those
+            %% messages should be sent to a complete node - if there is one
+            %% See this post for details:
+            %%   https://discourse.nodered.org/t/complete-node-msg-before-or-after-computation/96648/5
+            [post_completed_msg(NodeDef, M) || M <- Lst2],
+
             send_msg_to_connected_nodes(NodeDef, Msg2),
 
             {ok, Count} = maps:find(count, NodeDef),
             {ok, Cnt} = convert_to_int(Count),
-            maps:put('_is_manually_collecting', {ok, Cnt, []}, NodeDef);
+            NodeDef2 = maps:put(
+                '_is_manually_collecting',
+                {ok, Cnt, []},
+                NodeDef
+            ),
+            {NodeDef2, dont_send_complete_msg};
         {ok, {ok, Cnt, Lst}} ->
-            maps:put(
+            NodeDef2 = maps:put(
                 '_is_manually_collecting',
                 {ok, Cnt - 1, [Msg | Lst]},
                 NodeDef
-            );
+            ),
+            %% dont_send is an message to the post_completed_msg callback
+            %% to ignore this msg. This is becuase the join node didn't
+            %% send anything - yet.
+            {NodeDef2, dont_send_complete_msg};
         _ ->
-            NodeDef
+            {NodeDef, dont_send_complete_msg}
     end.
 
 %%

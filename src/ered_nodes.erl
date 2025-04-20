@@ -14,6 +14,7 @@
     jstr/1,
     nodeid_to_pid/2,
     node_init/1,
+    post_completed_msg/2,
     post_exception/3,
     tabid_to_error_collector/1,
     this_should_not_happen/2,
@@ -182,6 +183,11 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
     %% that of a catch node for example.
     {ok, NodeType} = maps:find(type, FinalNodeDef),
     case {disabled(FinalNodeDef), NodeType} of
+        {false, <<"complete">>} ->
+            %% register the catch node as being responsible for z value
+            %% beware multiple catch nodes can be included in a flow so the
+            %% z value won't be unique
+            pg:join(completed_messages, Pid);
         {false, <<"catch">>} ->
             %% register the catch node as being responsible for z value
             %% beware multiple catch nodes can be included in a flow so the
@@ -206,7 +212,6 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
                       TgtNodeId,
                       debug,
                       any,
-
                       NodePid
                      );
                 _ ->
@@ -252,6 +257,16 @@ post_exception(SrcNode, SrcMsg, ErrMsg) ->
         Members ->
             [M ! {exception, SrcNode, SrcMsg, ErrMsg} || M <- Members],
             dealt_with
+    end.
+
+%%
+%% Called after a node has completed handling a msg
+post_completed_msg(_NodeDef, dont_send_complete_msg) ->
+    ok;
+post_completed_msg(NodeDef, Msg) ->
+    case pg:get_members(completed_messages) of
+        Members ->
+            [M ! {completed_msg, NodeDef, Msg} || M <- Members]
     end.
 
 %%
@@ -351,6 +366,8 @@ node_type_to_fun(<<"comment">>) ->
     {ered_node_ignore, node_ignore};
 node_type_to_fun(<<"tab">>) ->
     {ered_node_ignore, node_ignore};
+node_type_to_fun(<<"complete">>) ->
+    {ered_node_complete, node_complete};
 %%
 %% Assert nodes for testing functionality of the nodes
 %%

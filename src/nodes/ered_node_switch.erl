@@ -24,6 +24,7 @@
 
 -import(ered_node_receivership, [enter_receivership/3]).
 -import(ered_nodes, [
+    post_completed_msg/2,
     send_msg_on/2
 ]).
 
@@ -99,39 +100,45 @@ get_value_from_msg(_, _, _) ->
 
 %%
 %%
-does_rule_match_catchall([], _, _, _) ->
+handle_check_all_rules([], _, _, _, _) ->
     ok;
-does_rule_match_catchall([Rule | Rules], Val, [Wires | MoreWires], Msg) ->
+handle_check_all_rules([Rule | Rules], Val, [Wires | MoreWires], NodeDef, Msg) ->
     {ok, Op} = maps:find(t, Rule),
-    {ok, OpVal} = maps:find(v, Rule),
     {ok, Type} = maps:find(vt, Rule),
-
-    io:format("switch: in catch all ~p ~p ~p ~p\n", [Op, OpVal, Type, Val]),
+    {ok, OpVal} = maps:find(v, Rule),
 
     case does_rule_match(Op, Type, OpVal, Val) of
         true ->
+            %% ?? switch node does not generate complete message for the
+            %% ?? complete node - make sense since the switch node is only
+            %% ?? control not computation, i.e. it's direct the flow of data
+            %% ?? but not directly altering data.
+            %% post_completed_msg(NodeDef, Msg),
             send_msg_on(Wires, Msg);
         _ ->
             ok
     end,
-    does_rule_match_catchall(Rules, Val, MoreWires, Msg).
+    handle_check_all_rules(Rules, Val, MoreWires, NodeDef, Msg).
 
 %%
 %%
-does_rule_match_stopafterone([], _, _, _) ->
+handle_stop_after_one([], _, _, _, _) ->
     ok;
-does_rule_match_stopafterone([Rule | Rules], Val, [Wires | MoreWires], Msg) ->
+handle_stop_after_one([Rule | Rules], Val, [Wires | MoreWires], NodeDef, Msg) ->
     {ok, Op} = maps:find(t, Rule),
-    {ok, OpVal} = maps:find(v, Rule),
     {ok, Type} = maps:find(vt, Rule),
-
-    io:format("switch: in first and stop ~p ~p ~p ~p\n", [Op, OpVal, Type, Val]),
+    {ok, OpVal} = maps:find(v, Rule),
 
     case does_rule_match(Op, Type, OpVal, Val) of
         true ->
+            %% ?? switch node does not generate complete message for the
+            %% ?? complete node - make sense since the switch node is only
+            %% ?? control not computation, i.e. it's direct the flow of data
+            %% ?? but not directly altering data.
+            %% post_completed_msg(NodeDef, Msg),
             send_msg_on(Wires, Msg);
         _ ->
-            does_rule_match_stopafterone(Rules, Val, MoreWires, Msg)
+            handle_stop_after_one(Rules, Val, MoreWires, NodeDef, Msg)
     end.
 
 %%
@@ -149,14 +156,12 @@ handle_incoming(NodeDef, Msg) ->
 
     case maps:find(checkall, NodeDef) of
         {ok, <<"true">>} ->
-            does_rule_match_catchall(Rules, Val, Wires, Msg);
-        {ok, true} ->
-            does_rule_match_catchall(Rules, Val, Wires, Msg);
+            handle_check_all_rules(Rules, Val, Wires, NodeDef, Msg);
         _ ->
-            does_rule_match_stopafterone(Rules, Val, Wires, Msg)
+            handle_stop_after_one(Rules, Val, Wires, NodeDef, Msg)
     end,
 
-    NodeDef.
+    {NodeDef, dont_send_complete_msg}.
 
 %%
 %%

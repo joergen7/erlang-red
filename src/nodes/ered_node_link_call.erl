@@ -62,14 +62,14 @@ handle_incoming(NodeDef, Msg) ->
         _ ->
             ignore
     end,
-    NodeDef.
+    {NodeDef, dont_send_complete_msg}.
 
 %%
 %% This comes from a link out node in return mode, this means we pass
 %% the message on to all the nodes connected to us, i.e. the 'wires' attribute.
 handle_link_return(NodeDef, Msg) ->
     send_msg_to_connected_nodes(NodeDef, Msg),
-    NodeDef.
+    {NodeDef, Msg}.
 
 node_link_call(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),

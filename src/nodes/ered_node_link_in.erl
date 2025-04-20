@@ -18,7 +18,7 @@
 
 handle_incoming(NodeDef, Msg) ->
     send_msg_to_connected_nodes(NodeDef, Msg),
-    NodeDef.
+    {NodeDef, Msg}.
 
 node_link_in(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),

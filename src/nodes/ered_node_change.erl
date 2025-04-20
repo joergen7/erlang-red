@@ -210,7 +210,7 @@ handle_incoming(NodeDef, Msg) ->
     {ok, Rules} = maps:find(rules, NodeDef),
     Msg2 = handle_rules(Rules, Msg, NodeDef),
     send_msg_to_connected_nodes(NodeDef, Msg2),
-    NodeDef.
+    {NodeDef, Msg2}.
 
 node_change(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),

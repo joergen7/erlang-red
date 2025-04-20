@@ -44,6 +44,7 @@
     generate_id/0,
     jstr/1,
     jstr/2,
+    post_completed_msg/2,
     send_msg_to_connected_nodes/2
 ]).
 
@@ -81,14 +82,24 @@ generate_array_part(Cnt,TotalCnt) ->
 
 %%
 %%
-split_array([], _Cnt, _TotalLength, _NodeDef, _Msg) ->
+split_array([], _Cnt, _TotalLength, NodeDef, Msg) ->
     %% last value was already sent - could send an extra "complete msg"
     %% here but I don't think the split node does that.
+    %%
+    %% The post complete msg takes the original msg containing the original
+    %% value not the last value and posts that.
+    %%
+    %% In Node-RED there might be a bug since it sends the last msg
+    %% not the original --> https://discourse.nodered.org/t/complete-split-is-the-value-wrong/96650/2
+    %% logically speaking, the split node *completed* with the original
+    %% message and has *initiated* the last message.
+    post_completed_msg(NodeDef, Msg),
     ok;
 split_array([Val | MoreVals], Cnt, TotalCnt, NodeDef, Msg) ->
     Msg2 = maps:put('_msgid', generate_id(), Msg),
     Msg3 = maps:put(payload, Val, Msg2),
     Msg4 = maps:put(parts, generate_array_part(Cnt, TotalCnt), Msg3),
+
     send_msg_to_connected_nodes(NodeDef, Msg4),
 
     split_array(MoreVals, Cnt + 1, TotalCnt, NodeDef, Msg).
@@ -115,7 +126,7 @@ handle_incoming(NodeDef, Msg) ->
             send_out_debug_msg(NodeDef, Msg, ErrMsg, error)
     end,
 
-    NodeDef.
+    {NodeDef, dont_send_complete_msg}.
 
 node_split(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),

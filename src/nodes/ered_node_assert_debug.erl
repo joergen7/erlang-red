@@ -1,12 +1,13 @@
 -module(ered_node_assert_debug).
 
+-export([node_assert_debug/2]).
+-export([handle_ws_event/2]).
+-export([handle_stop/2]).
+
 %%
 %% Assert node for checking whether another node generated a debug
 %% message for the debug panel.
 %%
--export([node_assert_debug/2]).
--export([handle_ws_event/2]).
--export([handle_stop/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
 

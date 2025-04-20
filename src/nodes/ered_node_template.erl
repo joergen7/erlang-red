@@ -45,13 +45,14 @@ handle_incoming(NodeDef, Msg) ->
 
     case doit(Prop, PropType, Template, Syntax, Output, Msg) of
         {ok, Msg2} ->
-            send_msg_to_connected_nodes(NodeDef, Msg2);
+            send_msg_to_connected_nodes(NodeDef, Msg2),
+            {NodeDef, Msg2};
         unsupported ->
             ErrMsg = jstr("Unsupported configuration: ~p", [NodeDef]),
             unsupported(NodeDef, Msg, ErrMsg),
-            send_msg_to_connected_nodes(NodeDef, Msg)
-    end,
-    NodeDef.
+            send_msg_to_connected_nodes(NodeDef, Msg),
+            {NodeDef, Msg}
+    end.
 
 node_template(NodeDef, _WsName) ->
     ered_nodes:node_init(NodeDef),
