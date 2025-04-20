@@ -4,7 +4,7 @@
         "type": "tab",
         "label": "[catch] uncaught catch - part 2 - work",
         "disabled": false,
-        "info": "",
+        "info": "Catch only  specific nodes - this isn't yet implemented.",
         "env": [
             {
                 "name": "ERED_PENDING",
@@ -66,12 +66,12 @@
         "z": "ed621e03921c13de",
         "name": "",
         "scope": [
+            "d3d5a3f6073d9090",
             "081d7d36a710c31c",
             "0919ae9a13ea970d",
             "777ac7431215d3a2",
-            "fda2e737f37d5c87",
             "a33109731cd76165",
-            "d3d5a3f6073d9090"
+            "fda2e737f37d5c87"
         ],
         "uncaught": false,
         "x": 528,
