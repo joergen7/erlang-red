@@ -4,6 +4,9 @@ build-docker-container:
 start-docker-shell: build-docker-container
 	docker run -it -v /mnt/github/erlang-red:/code -p 9090:8080 -w /code --rm erlang-shell bash
 
+enter-docker-shell:
+	docker exec -it $$(docker ps -f ancestor=erlang-shell -q) bash
+
 ##
 ## The following are done inside the docker container
 ##
