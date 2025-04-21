@@ -12,7 +12,8 @@
 -import(ered_node_receivership, [enter_receivership/3]).
 
 -import(ered_nodered_comm, [
-    assert_failure/3
+    assert_failure/3,
+    node_status/5
 ]).
 -import(ered_nodes, [
     jstr/2
@@ -30,10 +31,12 @@ handle_stop(NodeDef, WsName) ->
                     ErrMsg = jstr("Expected debug from ~p\n", [NodeId]),
                     assert_failure(NodeDef, WsName, ErrMsg);
                 _ ->
-                    success
+                    node_status(
+                        WsName, NodeDef, "assert succeed", "green", "ring"
+                    )
             end;
         _ ->
-            success
+            node_status(WsName, NodeDef, "assert succeed", "green", "ring")
     end,
     NodeDef.
 
