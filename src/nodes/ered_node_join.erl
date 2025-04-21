@@ -31,6 +31,7 @@
 -import(ered_node_receivership, [enter_receivership/3]).
 -import(ered_nodes, [
     jstr/2,
+    get_prop_value_from_map/2,
     send_msg_to_connected_nodes/2
 ]).
 -import(ered_nodered_comm, [
@@ -42,7 +43,49 @@
 
 handle_incoming(NodeDef, Msg) ->
     case maps:find('_is_manually_collecting', NodeDef) of
-        {ok, {ok, 1, Lst}} ->
+        %%
+        %% Handle a specific property
+        %%
+        {ok, {ok, 1, {ok, PropName}, Lst}} ->
+            %% because these values are sent off to the complete node,
+            %% need to keep a copy of the original message.
+            Lst2 = [{get_prop_value_from_map(PropName, Msg), Msg} | Lst],
+            Msg2 = maps:put(payload, [V || {V, _} <- Lst2], Msg),
+
+            %% now that we are ready to send out our message, we are completed
+            %% with the message that make up that message (!!) so those
+            %% messages should be sent to a complete node - if there is one
+            %% See this post for details:
+            %%   https://discourse.nodered.org/t/complete-node-msg-before-or-after-computation/96648/5
+            [post_completed(NodeDef, M) || {_, M} <- Lst2],
+
+            send_msg_to_connected_nodes(NodeDef, Msg2),
+
+            {ok, Count} = maps:find(count, NodeDef),
+            {ok, Cnt} = convert_to_int(Count),
+            NodeDef2 = maps:put(
+                '_is_manually_collecting',
+                {ok, Cnt, {ok, PropName}, []},
+                NodeDef
+            ),
+            {NodeDef2, dont_send_complete_msg};
+        {ok, {ok, Cnt, {ok, PropName}, Lst}} ->
+            NodeDef2 = maps:put(
+                '_is_manually_collecting',
+                {ok, Cnt - 1, {ok, PropName}, [
+                    {get_prop_value_from_map(PropName, Msg), Msg} | Lst
+                ]},
+                NodeDef
+            ),
+
+            %% dont_send is an message to the post_completed callback
+            %% to ignore this msg. This is becuase the join node didn't
+            %% send anything - yet.
+            {NodeDef2, dont_send_complete_msg};
+        %%
+        %% Handle the entire message object
+        %%
+        {ok, {ok, 1, {entire_msg}, Lst}} ->
             Lst2 = [Msg | Lst],
             Msg2 = maps:put(payload, Lst2, Msg),
 
@@ -57,16 +100,17 @@ handle_incoming(NodeDef, Msg) ->
 
             {ok, Count} = maps:find(count, NodeDef),
             {ok, Cnt} = convert_to_int(Count),
+
             NodeDef2 = maps:put(
                 '_is_manually_collecting',
-                {ok, Cnt, []},
+                {ok, Cnt, {entire_msg}, []},
                 NodeDef
             ),
             {NodeDef2, dont_send_complete_msg};
-        {ok, {ok, Cnt, Lst}} ->
+        {ok, {ok, Cnt, {entire_msg}, Lst}} ->
             NodeDef2 = maps:put(
                 '_is_manually_collecting',
-                {ok, Cnt - 1, [Msg | Lst]},
+                {ok, Cnt - 1, {entire_msg}, [Msg | Lst]},
                 NodeDef
             ),
 
@@ -100,12 +144,36 @@ convert_to_int(Val) ->
 
 %%
 %%
+use_manual(<<"custom">>, <<"array">>, <<"msg">>, Count, NodeDef) ->
+    %% This means take a specific property of the msg, e.g. payload
+    %%    "mode": "custom",
+    %%    "build": "array",
+    %%    "property": "payload",
+    %%    "propertyType": "msg",
+    case convert_to_int(Count) of
+        {ok, 0} ->
+            {false, NodeDef};
+        {ok, Cnt} ->
+            {ok,
+                maps:put(
+                    '_is_manually_collecting',
+                    {ok, Cnt, maps:find(property, NodeDef), []},
+                    NodeDef
+                )};
+        _ ->
+            {false, NodeDef}
+    end;
 use_manual(<<"custom">>, <<"array">>, <<"full">>, Count, NodeDef) ->
     case convert_to_int(Count) of
         {ok, 0} ->
             {false, NodeDef};
         {ok, Cnt} ->
-            {ok, maps:put('_is_manually_collecting', {ok, Cnt, []}, NodeDef)};
+            {ok,
+                maps:put(
+                    '_is_manually_collecting',
+                    {ok, Cnt, {entire_msg}, []},
+                    NodeDef
+                )};
         _ ->
             {false, NodeDef}
     end;
