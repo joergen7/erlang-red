@@ -8,8 +8,8 @@
         "env": [
             {
                 "name": "ERED_PENDING",
-                "value": "false",
-                "type": "bool"
+                "type": "bool",
+                "value": "false"
             }
         ]
     },
@@ -123,21 +123,21 @@
         "name": "",
         "rules": [
             {
-                "t": "set",
                 "p": "error",
-                "pt": "msg"
+                "pt": "msg",
+                "t": "set"
             },
             {
-                "t": "eql",
                 "p": "error.source.name",
                 "pt": "msg",
+                "t": "eql",
                 "to": "this is the name",
                 "tot": "str"
             },
             {
-                "t": "eql",
                 "p": "error.source.id",
                 "pt": "msg",
+                "t": "eql",
                 "to": "39cedd1c01be1c7b",
                 "tot": "str"
             }
@@ -155,9 +155,9 @@
         "name": "",
         "rules": [
             {
-                "t": "notset",
                 "p": "error",
-                "pt": "msg"
+                "pt": "msg",
+                "t": "notset"
             }
         ],
         "x": 415,

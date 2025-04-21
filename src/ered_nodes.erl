@@ -14,10 +14,6 @@
     jstr/1,
     nodeid_to_pid/2,
     node_init/1,
-    pg_catch_group_name/2,
-    pg_complete_group_name/2,
-    post_completed_msg/2,
-    post_exception/3,
     tabid_to_error_collector/1,
     this_should_not_happen/2,
     trigger_outgoing_messages/3,
@@ -34,6 +30,11 @@
 
 -import(ered_nodered_comm, [
     ws_from/1
+]).
+
+-import(ered_message_exchange, [
+    subscribe_to_exception/3,
+    subscribe_to_completed/3
 ]).
 
 %%
@@ -119,17 +120,6 @@ tabid_to_error_collector(IdStr) ->
     ).
 
 %%
-%% Generate a group name for the pg module to group together all catch
-%% nodes on one flow.
-pg_catch_group_name(NodeDef, WsName) ->
-    {ok, FlowId} = maps:find(z, NodeDef),
-    jstr("catch_nodes_~s_~s", [atom_to_list(WsName), FlowId]).
-
-pg_complete_group_name(NodeDef, WsName) ->
-    {ok, FlowId} = maps:find(z, NodeDef),
-    jstr("complete_nodes_~s_~s", [atom_to_list(WsName), FlowId]).
-
-%%
 %% Called by a node before it enters receivership. Does not much but
 %% might later on, original it dumped some debug to the console.
 node_init(_NodeDef) ->
@@ -193,12 +183,12 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
             %% register the catch node as being responsible for z value
             %% beware multiple catch nodes can be included in a flow so the
             %% z value won't be unique
-            pg:join(pg_complete_group_name(FinalNodeDef,WsName), Pid);
+            subscribe_to_completed(FinalNodeDef, WsName, Pid);
         {false, <<"catch">>} ->
             %% register the catch node as being responsible for z value
             %% beware multiple catch nodes can be included in a flow so the
             %% z value won't be unique
-            pg:join(pg_catch_group_name(FinalNodeDef, WsName), Pid);
+            subscribe_to_exception(NodeDef, WsName, Pid);
         {false, <<"ut-assert-status">>} ->
             {ok, TgtNodeId} = maps:find(nodeid, FinalNodeDef),
             ered_ws_event_exchange:subscribe(
@@ -248,30 +238,6 @@ disabled(NodeDef) ->
                 _ ->
                     false
             end
-    end.
-
-%%
-%% Post exception passes errors to the catch nodes, if any are defined.
-%% It also provides feed back to the caller as to whether there was a
-%% catch node or not, if not, deal with it yourself is the message.
-%%
-post_exception(SrcNode, SrcMsg, ErrMsg) ->
-    case pg:get_members(pg_catch_group_name(SrcNode, ws_from(SrcMsg))) of
-        [] ->
-            deal_with_it_yourself;
-        Members ->
-            [M ! {exception, SrcNode, SrcMsg, ErrMsg} || M <- Members],
-            dealt_with
-    end.
-
-%%
-%% Called after a node has completed handling a msg
-post_completed_msg(_NodeDef, dont_send_complete_msg) ->
-    ok;
-post_completed_msg(NodeDef, Msg) ->
-    case pg:get_members(pg_complete_group_name(NodeDef, ws_from(Msg))) of
-        Members ->
-            [M ! {completed_msg, NodeDef, Msg} || M <- Members]
     end.
 
 %%

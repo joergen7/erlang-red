@@ -3,8 +3,10 @@
 -export([enter_receivership/3]).
 
 -import(ered_nodes, [
-    post_completed_msg/2,
     this_should_not_happen/2
+]).
+-import(ered_message_exchange, [
+    post_completed/2
 ]).
 
 increment_message_counter(NodeDef, CntName) ->
@@ -57,8 +59,8 @@ enter_receivership(Module, NodeDef, completed_messages) ->
             %% here.
             %%
             %% Completed Nodes can also be listened to by a complete
-            %% node, hence this post_completed_msg is here.
-            post_completed_msg(NodeDef2, Msg2),
+            %% node, hence this post_completed is here.
+            post_completed(NodeDef2, Msg2),
             enter_receivership(Module, NodeDef2, completed_messages)
     end;
 %% used by the ignore node, this is really a zombie node.
@@ -90,7 +92,7 @@ enter_receivership(Module, NodeDef, only_exception) ->
                 handle_exception,
                 [NodeDef2, From, Msg, ErrMsg]
             ),
-            post_completed_msg(NodeDef3, Msg2),
+            post_completed(NodeDef3, Msg2),
             enter_receivership(Module, NodeDef3, only_exception);
         {incoming, Msg} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
@@ -120,7 +122,7 @@ enter_receivership(Module, NodeDef, only_incoming_with_active) ->
             {NodeDef3, Msg2} = erlang:apply(
                 Module, handle_incoming, [NodeDef2, Msg]
             ),
-            post_completed_msg(NodeDef3, Msg2),
+            post_completed(NodeDef3, Msg2),
             enter_receivership(Module, NodeDef3, only_incoming_with_active);
         {outgoing, Msg} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
@@ -138,7 +140,7 @@ enter_receivership(Module, NodeDef, stop_and_incoming) ->
             {NodeDef3, Msg2} = erlang:apply(
                 Module, handle_incoming, [NodeDef2, Msg]
             ),
-            post_completed_msg(NodeDef3, Msg2),
+            post_completed(NodeDef3, Msg2),
             enter_receivership(Module, NodeDef3, stop_and_incoming);
         {outgoing, Msg} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
@@ -187,7 +189,7 @@ enter_receivership(Module, NodeDef, incoming_and_outgoing) ->
             {NodeDef3, Msg2} = erlang:apply(
                 Module, handle_incoming, [NodeDef2, Msg]
             ),
-            post_completed_msg(NodeDef3, Msg2),
+            post_completed(NodeDef3, Msg2),
             enter_receivership(Module, NodeDef3, incoming_and_outgoing);
         {outgoing, Msg} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
@@ -209,7 +211,7 @@ enter_receivership(Module, NodeDef, link_call_node) ->
             ),
             %% in fact this will return a msg object to ensure nothing
             %% is posted - this is caught by the complete node.
-            post_completed_msg(NodeDef3, Msg2),
+            post_completed(NodeDef3, Msg2),
             enter_receivership(Module, NodeDef3, link_call_node);
         {outgoing, Msg} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
@@ -220,7 +222,7 @@ enter_receivership(Module, NodeDef, link_call_node) ->
             {NodeDef3, Msg2} = erlang:apply(
                 Module, handle_link_return, [NodeDef2, Msg]
             ),
-            post_completed_msg(NodeDef3, Msg2),
+            post_completed(NodeDef3, Msg2),
             enter_receivership(Module, NodeDef3, link_call_node)
     end;
 %%
@@ -236,7 +238,7 @@ enter_receivership(Module, NodeDef, only_incoming) ->
             {NodeDef3, Msg2} = erlang:apply(
                 Module, handle_incoming, [NodeDef2, Msg]
             ),
-            post_completed_msg(NodeDef3, Msg2),
+            post_completed(NodeDef3, Msg2),
             enter_receivership(Module, NodeDef3, only_incoming);
         {outgoing, Msg} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
@@ -261,7 +263,7 @@ enter_receivership(Module, NodeDef, only_outgoing) ->
             {NodeDef3, Msg2} = erlang:apply(
                 Module, handle_outgoing, [NodeDef2, Msg]
             ),
-            post_completed_msg(NodeDef3, Msg2),
+            post_completed(NodeDef3, Msg2),
             enter_receivership(Module, NodeDef3, only_outgoing)
     end;
 enter_receivership(Module, NodeDef, Type) ->

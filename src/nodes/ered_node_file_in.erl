@@ -13,7 +13,6 @@
     get_prop_value_from_map/3,
     jstr/1,
     jstr/2,
-    post_exception/3,
     send_msg_to_connected_nodes/2,
     this_should_not_happen/2,
     unpriv/1
@@ -22,6 +21,10 @@
     debug/3,
     send_out_debug_msg/4,
     ws_from/1
+]).
+
+-import(ered_message_exchange, [
+    post_exception/3
 ]).
 
 debug_msg(NodeDef, Msg, {filename_type_not_supported, FileNameType}) ->

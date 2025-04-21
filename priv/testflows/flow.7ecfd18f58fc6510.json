@@ -61,7 +61,8 @@
         "y": 450,
         "wires": [
             [
-                "99609972e69be0b8"
+                "99609972e69be0b8",
+                "8ed6cdc7aef25d5e"
             ]
         ]
     },
@@ -107,7 +108,8 @@
         "y": 657,
         "wires": [
             [
-                "0cfe82f49cc86081"
+                "0cfe82f49cc86081",
+                "89e9f9ae4a3718c5"
             ]
         ]
     },
@@ -146,6 +148,24 @@
         "statusType": "counter",
         "x": 878.5,
         "y": 496,
+        "wires": []
+    },
+    {
+        "id": "8ed6cdc7aef25d5e",
+        "type": "ut-assert-success",
+        "z": "7ecfd18f58fc6510",
+        "name": "",
+        "x": 1003,
+        "y": 381.5,
+        "wires": []
+    },
+    {
+        "id": "89e9f9ae4a3718c5",
+        "type": "ut-assert-success",
+        "z": "7ecfd18f58fc6510",
+        "name": "",
+        "x": 966,
+        "y": 639.5,
         "wires": []
     }
 ]

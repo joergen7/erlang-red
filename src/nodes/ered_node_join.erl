@@ -31,11 +31,13 @@
 -import(ered_node_receivership, [enter_receivership/3]).
 -import(ered_nodes, [
     jstr/2,
-    post_completed_msg/2,
     send_msg_to_connected_nodes/2
 ]).
 -import(ered_nodered_comm, [
     unsupported/3
+]).
+-import(ered_message_exchange, [
+    post_completed/2
 ]).
 
 handle_incoming(NodeDef, Msg) ->
@@ -49,7 +51,7 @@ handle_incoming(NodeDef, Msg) ->
             %% messages should be sent to a complete node - if there is one
             %% See this post for details:
             %%   https://discourse.nodered.org/t/complete-node-msg-before-or-after-computation/96648/5
-            [post_completed_msg(NodeDef, M) || M <- Lst2],
+            [post_completed(NodeDef, M) || M <- Lst2],
 
             send_msg_to_connected_nodes(NodeDef, Msg2),
 
@@ -67,7 +69,8 @@ handle_incoming(NodeDef, Msg) ->
                 {ok, Cnt - 1, [Msg | Lst]},
                 NodeDef
             ),
-            %% dont_send is an message to the post_completed_msg callback
+
+            %% dont_send is an message to the post_completed callback
             %% to ignore this msg. This is becuase the join node didn't
             %% send anything - yet.
             {NodeDef2, dont_send_complete_msg};

@@ -24,8 +24,10 @@
 
 -import(ered_node_receivership, [enter_receivership/3]).
 -import(ered_nodes, [
-    post_completed_msg/2,
     send_msg_on/2
+]).
+-import(ered_message_exchange, [
+    post_completed/2
 ]).
 
 is_same(Same, Same) -> true;
@@ -113,7 +115,7 @@ handle_check_all_rules([Rule | Rules], Val, [Wires | MoreWires], NodeDef, Msg) -
             %% ?? complete node - make sense since the switch node is only
             %% ?? control not computation, i.e. it's direct the flow of data
             %% ?? but not directly altering data.
-            %% post_completed_msg(NodeDef, Msg),
+            %% post_completed(NodeDef, Msg),
             send_msg_on(Wires, Msg);
         _ ->
             ok
@@ -135,7 +137,7 @@ handle_stop_after_one([Rule | Rules], Val, [Wires | MoreWires], NodeDef, Msg) ->
             %% ?? complete node - make sense since the switch node is only
             %% ?? control not computation, i.e. it's direct the flow of data
             %% ?? but not directly altering data.
-            %% post_completed_msg(NodeDef, Msg),
+            %% post_completed(NodeDef, Msg),
             send_msg_on(Wires, Msg);
         _ ->
             handle_stop_after_one(Rules, Val, MoreWires, NodeDef, Msg)

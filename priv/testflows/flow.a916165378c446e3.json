@@ -1,0 +1,160 @@
+[
+    {
+        "id": "a916165378c446e3",
+        "type": "tab",
+        "label": "[status] only one message per status value",
+        "disabled": false,
+        "info": "Statue node generates a message but only if the status differs from the previous status value.\n\nAlso status also has an endless loop problem when second degree nodes also generate a status.\n\nStatus nodes ignore direct connections but not indirect connections.",
+        "env": [
+            {
+                "name": "ERED_PENDING",
+                "value": "true",
+                "type": "bool"
+            }
+        ]
+    },
+    {
+        "id": "c2408447e5f0e1ef",
+        "type": "inject",
+        "z": "a916165378c446e3",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "b",
+        "payloadType": "str",
+        "x": 217,
+        "y": 131,
+        "wires": [
+            [
+                "116137642eb0cbe7"
+            ]
+        ]
+    },
+    {
+        "id": "116137642eb0cbe7",
+        "type": "debug",
+        "z": "a916165378c446e3",
+        "name": "debug 395",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 463,
+        "y": 182,
+        "wires": []
+    },
+    {
+        "id": "34cbd3682d560baf",
+        "type": "status",
+        "z": "a916165378c446e3",
+        "name": "",
+        "scope": null,
+        "x": 192,
+        "y": 393,
+        "wires": [
+            [
+                "79e473797e869e38",
+                "856d98266ab783a4"
+            ]
+        ]
+    },
+    {
+        "id": "79e473797e869e38",
+        "type": "debug",
+        "z": "a916165378c446e3",
+        "name": "debug 397",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "status",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 632,
+        "y": 389,
+        "wires": []
+    },
+    {
+        "id": "d4a3eab1fe256e75",
+        "type": "inject",
+        "z": "a916165378c446e3",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "3",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "e",
+        "payloadType": "str",
+        "x": 224,
+        "y": 260,
+        "wires": [
+            [
+                "116137642eb0cbe7"
+            ]
+        ]
+    },
+    {
+        "id": "856d98266ab783a4",
+        "type": "change",
+        "z": "a916165378c446e3",
+        "d": true,
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 455,
+        "y": 495,
+        "wires": [
+            [
+                "ecba5a15ccb7da74"
+            ]
+        ]
+    },
+    {
+        "id": "ecba5a15ccb7da74",
+        "type": "debug",
+        "z": "a916165378c446e3",
+        "name": "debug 398",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "status",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 649,
+        "y": 601,
+        "wires": []
+    }
+]

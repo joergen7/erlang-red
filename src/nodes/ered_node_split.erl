@@ -44,8 +44,10 @@
     generate_id/0,
     jstr/1,
     jstr/2,
-    post_completed_msg/2,
     send_msg_to_connected_nodes/2
+]).
+-import(ered_message_exchange, [
+    post_completed/2
 ]).
 
 %%
@@ -93,8 +95,7 @@ split_array([], _Cnt, _TotalLength, NodeDef, Msg) ->
     %% not the original --> https://discourse.nodered.org/t/complete-split-is-the-value-wrong/96650/2
     %% logically speaking, the split node *completed* with the original
     %% message and has *initiated* the last message.
-    post_completed_msg(NodeDef, Msg),
-    ok;
+    post_completed(NodeDef, Msg);
 split_array([Val | MoreVals], Cnt, TotalCnt, NodeDef, Msg) ->
     Msg2 = maps:put('_msgid', generate_id(), Msg),
     Msg3 = maps:put(payload, Val, Msg2),
