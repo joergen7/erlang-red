@@ -57,31 +57,13 @@
             "b0d85e6ead9d9286"
         ],
         "uncaught": false,
-        "x": 631.5,
-        "y": 450,
+        "x": 624.5,
+        "y": 562,
         "wires": [
             [
-                "99609972e69be0b8",
-                "8ed6cdc7aef25d5e"
+                "8e948a0c134c4c14"
             ]
         ]
-    },
-    {
-        "id": "99609972e69be0b8",
-        "type": "debug",
-        "z": "7ecfd18f58fc6510",
-        "name": "debug 394",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": true,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "counter",
-        "x": 941.5,
-        "y": 241,
-        "wires": []
     },
     {
         "id": "b0d85e6ead9d9286",
@@ -90,8 +72,8 @@
         "name": "",
         "mode": "custom",
         "build": "array",
-        "property": "",
-        "propertyType": "full",
+        "property": "payload",
+        "propertyType": "msg",
         "key": "topic",
         "joiner": "\\n",
         "joinerType": "str",
@@ -109,7 +91,8 @@
         "wires": [
             [
                 "0cfe82f49cc86081",
-                "89e9f9ae4a3718c5"
+                "89e9f9ae4a3718c5",
+                "31c312f378447bf1"
             ]
         ]
     },
@@ -146,8 +129,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "counter",
-        "x": 878.5,
-        "y": 496,
+        "x": 928.5,
+        "y": 589,
         "wires": []
     },
     {
@@ -155,8 +138,8 @@
         "type": "ut-assert-success",
         "z": "7ecfd18f58fc6510",
         "name": "",
-        "x": 1003,
-        "y": 381.5,
+        "x": 1105,
+        "y": 189.5,
         "wires": []
     },
     {
@@ -164,8 +147,95 @@
         "type": "ut-assert-success",
         "z": "7ecfd18f58fc6510",
         "name": "",
-        "x": 966,
-        "y": 639.5,
+        "x": 956,
+        "y": 744.5,
         "wires": []
+    },
+    {
+        "id": "8e948a0c134c4c14",
+        "type": "join",
+        "z": "7ecfd18f58fc6510",
+        "name": "",
+        "mode": "custom",
+        "build": "array",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "useparts": false,
+        "accumulate": false,
+        "timeout": "",
+        "count": "4",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 881,
+        "y": 297,
+        "wires": [
+            [
+                "8ed6cdc7aef25d5e",
+                "efe78c5d33a3af5b",
+                "aaa0bfd4f046c84e"
+            ]
+        ]
+    },
+    {
+        "id": "efe78c5d33a3af5b",
+        "type": "debug",
+        "z": "7ecfd18f58fc6510",
+        "name": "debug 14",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1275,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "aaa0bfd4f046c84e",
+        "type": "ut-assert-values",
+        "z": "7ecfd18f58fc6510",
+        "name": "",
+        "rules": [
+            {
+                "t": "eql",
+                "p": "payload",
+                "pt": "msg",
+                "to": "[1,2,3,4]",
+                "tot": "json"
+            }
+        ],
+        "x": 1169,
+        "y": 383,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "31c312f378447bf1",
+        "type": "ut-assert-values",
+        "z": "7ecfd18f58fc6510",
+        "name": "",
+        "rules": [
+            {
+                "t": "eql",
+                "p": "payload",
+                "pt": "msg",
+                "to": "[4,3,2,1]",
+                "tot": "json"
+            }
+        ],
+        "x": 1035,
+        "y": 666,
+        "wires": [
+            []
+        ]
     }
 ]
