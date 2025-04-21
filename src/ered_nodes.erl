@@ -258,6 +258,8 @@ send_msg_to_connected_nodes(NodeDef, Msg) ->
 %%
 %% Avoid having to create the same case all the time.
 %%
+get_prop_value_from_map(Prop, Map, Default) when is_binary(Prop) ->
+    get_prop_value_from_map(binary_to_atom(Prop), Map, Default);
 get_prop_value_from_map(Prop, Map, Default) ->
     case maps:find(Prop, Map) of
         {ok, Val} ->
