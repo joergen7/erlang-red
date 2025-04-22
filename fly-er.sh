@@ -23,8 +23,30 @@ fly auth whoami
 # Ask them for an appname.  We cannot easily determine if it
 # fits fly naming rules (and is available).. so just take any string
 read -p "Provide a fly app name: " APPNAME
+
+read -p "Use basic auth to protect this instance? [yN] " DO_BASIC
+
+if [[ "Y" == ${DO_BASIC}  || "y" == ${DO_BASIC} ]]; then
+	# Gather them now, but it needs to be launched before
+	# they can be applied.
+	# It's only a line below, but it's a relatively long
+	# time in the flow of a run.
+	read -p "Site user: " ERED_USER
+	read -p "Site pass: " ERED_PASS
+fi
+
 echo "=> Attempting to launch ${APPNAME}..."
 fly launch --name="${APPNAME}" --ha="false" --dockerfile "${FLY_DOCKERFILE}"
+
+if [[ "Y" == ${DO_BASIC}  || "y" == ${DO_BASIC} ]]; then
+	echo "==> Setting secrets for basic auth...";
+	# Fly secrets are put into environment variables when
+	# the application is started
+	echo "   ...user";
+	fly secrets set ERED_USER="${ERED_USER}"
+	echo "   ...password";
+	fly secrets set ERED_PASS="${ERED_PASS}"
+fi
 
 # Warn them that the config file might be sort of ephemeral
 # in its current location
