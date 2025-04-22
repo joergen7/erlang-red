@@ -236,7 +236,9 @@ function runTestForFlowId(flowid,dirList=undefined) {
     if (dirList) {
       resetTestResultsForFlowId(dirList,flowid)
     }
+
     clearNodeStatusForFlow(flowid)
+    resetTestResultsRow()
 
     if ( $('#node-input-unittestingpull-clear-debug-on-testrun').is(':checked')) {
       clearDebugPanel()
@@ -276,11 +278,18 @@ function sendUnittestngHalt() {
   });
 }
 
+function resetTestResultsRow() {
+  $('#node-input-unittestingpull-testresults-row').show();
+  [".pending", ".total", ".success",".failed"].forEach( d => {
+    $('#node-input-unittestingpull-testresults-row').find(d).html("0")
+  })
+}
 function runAllTests(dirList) {
   if (RED.comms.isConnected && !RED.comms.isConnected()) {
     return RED.notify("Not connected to server, websocket down", "error")
   }
 
+  resetTestResultsRow();
   expandAllTests(dirList)
   clearAllNodeStatus()
 
@@ -426,6 +435,12 @@ let handleTestResult = (event, data) => {
       timeout: (data.status == "failed" || data.status == "pending") ? 3000 : 2000
     });
 
+    // update the test results row
+    let v = parseInt($("#node-input-unittestingpull-testresults-row").find("."+data.status).html());
+    $("#node-input-unittestingpull-testresults-row").find("." + data.status).html(`${v+1}`)
+    v = parseInt($("#node-input-unittestingpull-testresults-row").find(".total").html());
+    $("#node-input-unittestingpull-testresults-row").find(".total").html(`${v + 1}`)
+
     highlightTestResult(dirList, data.flowid, data.status);
   }
 }
@@ -517,6 +532,14 @@ RED.actions.add("unittesting:run-all-tests", () => { runAllTests(dirList) } )
                <div id="node-input-unittestingpull-sb-target-container-div" style="min-height: 500px;"></div>
             </div>
          </div>
+      </div>
+
+      <div id="node-input-unittestingpull-testresults-row" class="form-row"
+                style="margin-left: 10px; margin-top: 30px; display: none;">
+         Succeed <span class="success" style="color: green">0</span>
+         / Pending <span class="pending" style="color: orange">0</span>
+         / Failed <span class="failed" style="color: red">0</span>
+         / Total <span class='total'>0</span>
       </div>
 
       <div class="form-row" style="margin-left: 10px; margin-top: 30px;">
