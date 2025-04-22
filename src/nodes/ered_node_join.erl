@@ -103,7 +103,6 @@ use_manual(<<"custom">>, <<"array">>, <<"full">>, Count, NodeDef) ->
 use_manual(_, _, _, _, NodeDef) ->
     {false, NodeDef}.
 
-
 retrieve_prop_value(PropName, Msg) ->
     case get_prop({ok, PropName}, Msg) of
         {ok, V, _} ->

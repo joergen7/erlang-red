@@ -130,11 +130,6 @@ add_state(NodeDef, NodePid) ->
 %% TODO: a tab node (i.e. the tab containing a flow) also has a disabled
 %% TODO: flag but this is called 'disabled'. If it is set, then the entire
 %% TODO: flow should be ignoreed --> this is not handled at the moment.
-%%
-%% TODO2: Append the websocket name to the pid so that two browsers
-%% TODO2: don't test with the same set of nodes. Each node is given the
-%% TODO2: websocket name in the Msg object, so its not a problem for them
-%% TODO2: to send their messages to the correct processes.
 create_pid_for_node(Ary, WsName) ->
     create_pid_for_node(Ary, [], WsName).
 
