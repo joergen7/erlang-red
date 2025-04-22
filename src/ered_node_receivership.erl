@@ -132,7 +132,7 @@ enter_receivership(Module, NodeDef, ReceiverType = only_incoming_with_active) ->
         CatchAll ->
             catchall_receivership(CatchAll, Module, NodeDef, ReceiverType)
     end;
-enter_receivership(Module, NodeDef, ReceiverType = websocket_events_and_stop) ->
+enter_receivership(Module, NodeDef, ReceiverType = websocket_events) ->
     receive
         {ws_event, Details} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_websocket'),

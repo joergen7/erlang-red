@@ -104,4 +104,4 @@ handle_ws_event(_, NodeDef) ->
 %%
 %%
 node_assert_debug(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, websocket_events_and_stop).
+    enter_receivership(?MODULE, NodeDef, websocket_events).
