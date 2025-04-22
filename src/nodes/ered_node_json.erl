@@ -1,6 +1,7 @@
 -module(ered_node_json).
 
 -export([node_json/2]).
+-export([handle_event/2]).
 -export([handle_incoming/2]).
 
 %%
@@ -51,6 +52,13 @@ action_to_content(Val, <<"str">>, _Pretty) ->
 action_to_content(_, _, _) ->
     unsupported.
 
+%%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
+%%
 handle_incoming(NodeDef, Msg) ->
     {ok, Prop} = maps:find(property, NodeDef),
     case maps:find(binary_to_atom(Prop), Msg) of
@@ -79,5 +87,4 @@ handle_incoming(NodeDef, Msg) ->
     end.
 
 node_json(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

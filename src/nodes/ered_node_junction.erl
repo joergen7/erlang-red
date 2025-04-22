@@ -1,6 +1,7 @@
 -module(ered_node_junction).
 
 -export([node_junction/2]).
+-export([handle_event/2]).
 -export([handle_incoming/2]).
 
 %%
@@ -13,10 +14,16 @@
     send_msg_to_connected_nodes/2
 ]).
 
+%%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
+%%
 handle_incoming(NodeDef, Msg) ->
     send_msg_to_connected_nodes(NodeDef, Msg),
     {NodeDef, dont_send_complete_msg}.
 
 node_junction(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

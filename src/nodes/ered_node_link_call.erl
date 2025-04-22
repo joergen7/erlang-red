@@ -1,6 +1,7 @@
 -module(ered_node_link_call).
 
 -export([node_link_call/2]).
+-export([handle_event/2]).
 -export([handle_incoming/2]).
 -export([handle_link_return/2]).
 
@@ -30,6 +31,11 @@ update_linksource(NodeDef, Msg) ->
         _ ->
             maps:put('_linkSource', [LinkBack], Msg)
     end.
+
+%%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
 
 %%
 %% send message to the link in node that this is linked to provided the node
@@ -72,5 +78,4 @@ handle_link_return(NodeDef, Msg) ->
     {NodeDef, Msg}.
 
 node_link_call(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, link_call_node).

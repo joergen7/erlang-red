@@ -1,8 +1,8 @@
 -module(ered_node_assert_status).
 
 -export([node_assert_status/2]).
+-export([handle_event/2]).
 -export([handle_ws_event/2]).
--export([handle_stop/2]).
 
 %%
 %% Assert node for checking whether another node generated a status
@@ -17,6 +17,9 @@
 -import(ered_nodered_comm, [
     assert_failure/3,
     node_status/5
+]).
+-import(ered_ws_event_exchange, [
+    subscribe/4
 ]).
 
 is_same({A, A}) -> true;
@@ -57,7 +60,14 @@ check_attributes(Clr, Shp, Txt) ->
 
 %%
 %%
-handle_stop(NodeDef, WsName) ->
+handle_event({registered, WsName, _Pid}, NodeDef) ->
+    {ok, TgtNodeId} = maps:find(nodeid, NodeDef),
+    {ok, NodePid} = maps:find('_node_pid_', NodeDef),
+    ered_ws_event_exchange:subscribe(
+        WsName, TgtNodeId, status, NodePid
+    ),
+    NodeDef;
+handle_event({stop, WsName}, NodeDef) ->
     case maps:find('_mc_websocket', NodeDef) of
         {ok, 0} ->
             case maps:find(inverse, NodeDef) of
@@ -83,38 +93,41 @@ handle_stop(NodeDef, WsName) ->
                 "ring"
             )
     end,
+    {ok, NodePid} = maps:find('_node_pid_', NodeDef),
+    ered_ws_event_exchange:unsubscribe(WsName, NodePid),
+    NodeDef;
+handle_event(_, NodeDef) ->
     NodeDef.
 
 %%
 %%
-%% erlfmt:ignore equals and arrows should line up here.
-handle_ws_event(NodeDef, {status, WsName, NodeId, Txt, Clr, Shp}) ->
+handle_ws_event({status, WsName, NodeId, Txt, Clr, Shp}, NodeDef) ->
     case maps:find(inverse, NodeDef) of
         {ok, true} ->
-            ErrMsg = jstr("No status expected from ~p\n",[NodeId]),
-            assert_failure(NodeDef,WsName,ErrMsg);
-
+            ErrMsg = jstr("No status expected from ~p\n", [NodeId]),
+            assert_failure(NodeDef, WsName, ErrMsg);
         _ ->
-            {ok, ExpClr} = maps:find(colour,  NodeDef),
-            {ok, ExpShp} = maps:find(shape,   NodeDef),
+            {ok, ExpClr} = maps:find(colour, NodeDef),
+            {ok, ExpShp} = maps:find(shape, NodeDef),
             {ok, ExpTxt} = maps:find(content, NodeDef),
-            Errors = check_attributes({ExpClr,list_to_binary(Clr)},
-                                      {ExpShp,list_to_binary(Shp)},
-                                      {ExpTxt,list_to_binary(Txt)}),
+            Errors = check_attributes(
+                {ExpClr, list_to_binary(Clr)},
+                {ExpShp, list_to_binary(Shp)},
+                {ExpTxt, list_to_binary(Txt)}
+            ),
             case lists:flatten(Errors) of
-                [] ->  success;
+                [] ->
+                    success;
                 _ ->
                     ErrMsg = list_to_binary(Errors),
-                    assert_failure(NodeDef,WsName,ErrMsg)
+                    assert_failure(NodeDef, WsName, ErrMsg)
             end
     end,
     NodeDef;
-
-handle_ws_event(NodeDef,_) ->
+handle_ws_event(_, NodeDef) ->
     NodeDef.
 
 %%
 %%
 node_assert_status(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, websocket_events_and_stop).

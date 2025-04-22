@@ -1,6 +1,7 @@
 -module(ered_node_complete).
 
 -export([node_complete/2]).
+-export([handle_event/2]).
 -export([handle_completed_msg/3]).
 
 %%
@@ -30,6 +31,9 @@
 -import(ered_nodes, [
     send_msg_to_connected_nodes/2
 ]).
+-import(ered_message_exchange, [
+    subscribe_to_completed/3
+]).
 
 %%
 %% To avoid infinite loops by listening to nodes that are connected to this
@@ -53,6 +57,14 @@ mark_msg(NodeDef, Msg) ->
 
 %%
 %%
+handle_event({registered, WsName, Pid}, NodeDef) ->
+    subscribe_to_completed(NodeDef, WsName, Pid),
+    NodeDef;
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
+%%
 handle_completed_msg(NodeDef, FromDef, Msg) ->
     {ok, FromId} = maps:find(id, FromDef),
     {ok, Scope} = maps:find(scope, NodeDef),
@@ -71,5 +83,4 @@ handle_completed_msg(NodeDef, FromDef, Msg) ->
     end.
 
 node_complete(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, completed_messages).

@@ -1,6 +1,7 @@
 -module(ered_node_catch).
 
 -export([node_catch/2]).
+-export([handle_event/2]).
 -export([handle_exception/4]).
 
 %%
@@ -25,7 +26,20 @@
     jstr/1,
     send_msg_to_connected_nodes/2
 ]).
+-import(ered_message_exchange, [
+    subscribe_to_exception/3
+]).
 
+%%
+%%
+handle_event({registered, WsName, Pid}, NodeDef) ->
+    subscribe_to_exception(NodeDef, WsName, Pid),
+    NodeDef;
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
+%%
 handle_exception(NodeDef, FromDef, Msg, ErrMsg) ->
     ErrObj = #{
         message => ErrMsg,
@@ -42,5 +56,4 @@ handle_exception(NodeDef, FromDef, Msg, ErrMsg) ->
     {NodeDef, Msg2}.
 
 node_catch(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_exception).

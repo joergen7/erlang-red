@@ -1,6 +1,7 @@
 -module(ered_node_change).
 
 -export([node_change/2]).
+-export([handle_event/2]).
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
@@ -206,6 +207,11 @@ handle_rule(_, Rule, Msg, NodeDef) ->
     unsupported(NodeDef, Msg, jstr("Rule: ~p", [Rule])),
     Msg.
 
+%%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
+
 handle_incoming(NodeDef, Msg) ->
     {ok, Rules} = maps:find(rules, NodeDef),
     Msg2 = handle_rules(Rules, Msg, NodeDef),
@@ -213,5 +219,4 @@ handle_incoming(NodeDef, Msg) ->
     {NodeDef, Msg2}.
 
 node_change(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

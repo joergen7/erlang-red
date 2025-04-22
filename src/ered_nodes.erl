@@ -4,6 +4,7 @@
 %% External exports, should be used by others.
 %%
 -export([
+    add_state/2,
     create_outgoing_msg/1,
     create_pid_for_node/2,
     get_prop_value_from_map/2,
@@ -13,7 +14,6 @@
     jstr/2,
     jstr/1,
     nodeid_to_pid/2,
-    node_init/1,
     tabid_to_error_collector/1,
     this_should_not_happen/2,
     trigger_outgoing_messages/3,
@@ -30,11 +30,6 @@
 
 -import(ered_nodered_comm, [
     ws_from/1
-]).
-
--import(ered_message_exchange, [
-    subscribe_to_exception/3,
-    subscribe_to_completed/3
 ]).
 
 %%
@@ -120,10 +115,17 @@ tabid_to_error_collector(IdStr) ->
     ).
 
 %%
-%% Called by a node before it enters receivership. Does not much but
-%% might later on, original it dumped some debug to the console.
-node_init(_NodeDef) ->
-    ok.
+%% Add the state to the NodeDef to prepare it for starting the flow.
+%%
+%% internal message counters, get updated automagically in
+%% enter_receivership ==> 'mc' is message counter.
+add_state(NodeDef, NodePid) ->
+    NodeDef1 = maps:put('_node_pid_', NodePid, NodeDef),
+    NodeDef2 = maps:put('_mc_incoming', 0, NodeDef1),
+    NodeDef3 = maps:put('_mc_link_return', 0, NodeDef2),
+    NodeDef4 = maps:put('_mc_websocket', 0, NodeDef3),
+    NodeDef5 = maps:put('_mc_outgoing', 0, NodeDef4),
+    maps:put('_mc_exception', 0, NodeDef5).
 
 %% TODO: a tab node (i.e. the tab containing a flow) also has a disabled
 %% TODO: flag but this is called 'disabled'. If it is set, then the entire
@@ -157,71 +159,17 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
             unregister(NodePid)
     end,
 
-    %% internal message counters, get updated automagically in
-    %% enter_receivership ==> 'mc' is message counter.
-    NodeDef2 = maps:put('_mc_incoming',    0, NodeDef),
-    NodeDef3 = maps:put('_mc_link_return', 0, NodeDef2),
-    NodeDef4 = maps:put('_mc_websocket',   0, NodeDef3),
-    NodeDef5 = maps:put('_mc_outgoing',    0, NodeDef4),
-    NodeDef6 = maps:put('_mc_exception',   0, NodeDef5),
+    StatefulNodeDef = add_state(NodeDef, NodePid),
 
-    NodeDef7 = maps:put('_node_pid_', NodePid, NodeDef6),
-
-    FinalNodeDef = NodeDef7,
-
-    Pid = spawn(Module, Fun, [FinalNodeDef, WsName]),
+    Pid = spawn(Module, Fun, [StatefulNodeDef, WsName]),
     register(NodePid, Pid),
 
-    %% Post spawn activities. Important one is the catch node to the pg group
-    %% because any exceptions caused by nodes needs dealing with.
-    %% Also need to reprsent the disabled flags extra here - the catch node
-    %% here is actually a disabled node but it's configuration is still
-    %% that of a catch node for example.
-    {ok, NodeType} = maps:find(type, FinalNodeDef),
-    case {disabled(FinalNodeDef), NodeType} of
-        {false, <<"complete">>} ->
-            %% register the catch node as being responsible for z value
-            %% beware multiple catch nodes can be included in a flow so the
-            %% z value won't be unique
-            subscribe_to_completed(FinalNodeDef, WsName, Pid);
-        {false, <<"catch">>} ->
-            %% register the catch node as being responsible for z value
-            %% beware multiple catch nodes can be included in a flow so the
-            %% z value won't be unique
-            subscribe_to_exception(NodeDef, WsName, Pid);
-        {false, <<"ut-assert-status">>} ->
-            {ok, TgtNodeId} = maps:find(nodeid, FinalNodeDef),
-            ered_ws_event_exchange:subscribe(
-                WsName, TgtNodeId, status, NodePid
-            );
-        {false, <<"ut-assert-debug">>} ->
-            {ok, TgtNodeId} = maps:find(nodeid, FinalNodeDef),
-            {ok, MsgType} = maps:find(msgtype, FinalNodeDef),
-            %%
-            %% inverse means that there should be **no** debug message, this
-            %% means that this node needs to subscribe too all types of debug
-            %% messages.
-            case maps:find(inverse, NodeDef) of
-                {ok, true} ->
-                    ered_ws_event_exchange:subscribe(
-                      WsName,
-                      TgtNodeId,
-                      debug,
-                      any,
-                      NodePid
-                     );
-                _ ->
-                    ered_ws_event_exchange:subscribe(
-                      WsName,
-                      TgtNodeId,
-                      debug,
-                      MsgType,
-                      NodePid
-                     )
-            end;
-        _ ->
-            ignore
-    end,
+    %% Perform any Post spawn activities. This is mostly registering with
+    %% collectors of events as subscribers, see catch and complete nodes
+    %% for examples. This is done after the spawn because to register
+    %% with the various servers, a Pid is needed and that is not known
+    %% when a node is initialised via the spawn.
+    NodePid ! {registered, WsName, Pid},
 
     create_pid_for_node(MoreNodeDefs, [NodePid | Pids], WsName).
 

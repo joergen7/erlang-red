@@ -1,8 +1,8 @@
 -module(ered_node_assert_values).
 
 -export([node_assert_values/2]).
+-export([handle_event/2]).
 -export([handle_incoming/2]).
--export([handle_stop/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
 -import(ered_nodered_comm, [
@@ -297,8 +297,8 @@ check_rules([H | T], NodeDef, Msg, FCnt) ->
 
 %%
 %%
-%% erlfmt:ignore equals and arrows should line up here.
-handle_stop(NodeDef,WsName) ->
+%% erlfmt:ignore stars are aligned
+handle_event({stop,WsName}, NodeDef) ->
     case maps:find('_mc_incoming',NodeDef) of
         {ok,0} ->
             {ok, IdStr}   = maps:find(id,NodeDef),
@@ -328,8 +328,14 @@ handle_stop(NodeDef,WsName) ->
             node_status(WsName, NodeDef, "assert failed", "red", "dot");
         _ ->
             ok
-    end.
+    end,
+    NodeDef;
 
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
+%%
 handle_incoming(NodeDef, Msg) ->
     case maps:find(rules, NodeDef) of
         {ok, Ary} ->
@@ -341,5 +347,4 @@ handle_incoming(NodeDef, Msg) ->
     {NodeDef, Msg}.
 
 node_assert_values(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
-    enter_receivership(?MODULE, NodeDef, stop_and_incoming).
+    enter_receivership(?MODULE, NodeDef, only_incoming).

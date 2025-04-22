@@ -5,6 +5,7 @@
 %% a deadend for a message, it stops here.
 
 -export([node_noop/2]).
+-export([handle_event/2]).
 -export([handle_incoming/2]).
 -export([handle_outgoing/2]).
 
@@ -39,6 +40,13 @@ create_data_for_debug(NodeDef,TypeStr) ->
        format   => <<"string">>
     }.
 
+%%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
+%%
 handle_incoming(NodeDef, Msg) ->
     {ok, IdStr} = maps:find(id, NodeDef),
     {ok, TypeStr} = maps:find(type, NodeDef),
@@ -66,6 +74,8 @@ handle_incoming(NodeDef, Msg) ->
 
     {NodeDef, Msg}.
 
+%%
+%%
 handle_outgoing(NodeDef, Msg) ->
     {ok, IdStr} = maps:find(id, NodeDef),
     {ok, TypeStr} = maps:find(type, NodeDef),
@@ -94,7 +104,6 @@ handle_outgoing(NodeDef, Msg) ->
     {NodeDef, Msg}.
 
 node_noop(NodeDef, WsName) ->
-    ered_nodes:node_init(NodeDef),
     {ok, TypeStr} = maps:find(type, NodeDef),
     debug(WsName, create_data_for_debug(NodeDef, TypeStr), warning),
     enter_receivership(?MODULE, NodeDef, incoming_and_outgoing).

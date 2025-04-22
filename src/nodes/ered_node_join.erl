@@ -1,6 +1,7 @@
 -module(ered_node_join).
 
 -export([node_join/2]).
+-export([handle_event/2]).
 -export([handle_incoming/2]).
 
 %%
@@ -40,6 +41,69 @@
 -import(ered_message_exchange, [
     post_completed/2
 ]).
+
+%%
+%%
+convert_to_int(Val) when is_integer(Val) ->
+    {ok, Val};
+convert_to_int(Val) when is_float(Val) ->
+    {ok, erlang:element(1, string:to_integer(io_lib:format("~p", [Val])))};
+convert_to_int(Val) ->
+    case string:to_float(Val) of
+        {error, _} ->
+            case string:to_integer(Val) of
+                {error, _} ->
+                    {error, "no conversion possible"};
+                {V, _} ->
+                    {ok, V}
+            end;
+        {V, _} ->
+            %% V is now a float and the guard 'is_float' will catch it now
+            {ok, convert_to_int(V)}
+    end.
+
+%%
+%%
+use_manual(<<"custom">>, <<"array">>, <<"msg">>, Count, NodeDef) ->
+    %% This means take a specific property of the msg, e.g. payload
+    %%    "mode": "custom",
+    %%    "build": "array",
+    %%    "property": "payload",
+    %%    "propertyType": "msg",
+    case convert_to_int(Count) of
+        {ok, 0} ->
+            {false, NodeDef};
+        {ok, Cnt} ->
+            {ok,
+                maps:put(
+                    '_is_manually_collecting',
+                    {ok, Cnt, maps:find(property, NodeDef), []},
+                    NodeDef
+                )};
+        _ ->
+            {false, NodeDef}
+    end;
+use_manual(<<"custom">>, <<"array">>, <<"full">>, Count, NodeDef) ->
+    case convert_to_int(Count) of
+        {ok, 0} ->
+            {false, NodeDef};
+        {ok, Cnt} ->
+            {ok,
+                maps:put(
+                    '_is_manually_collecting',
+                    {ok, Cnt, {entire_msg}, []},
+                    NodeDef
+                )};
+        _ ->
+            {false, NodeDef}
+    end;
+use_manual(_, _, _, _, NodeDef) ->
+    {false, NodeDef}.
+
+%%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
 
 handle_incoming(NodeDef, Msg) ->
     case maps:find('_is_manually_collecting', NodeDef) of
@@ -124,67 +188,7 @@ handle_incoming(NodeDef, Msg) ->
 
 %%
 %%
-convert_to_int(Val) when is_integer(Val) ->
-    {ok, Val};
-convert_to_int(Val) when is_float(Val) ->
-    {ok, erlang:element(1, string:to_integer(io_lib:format("~p", [Val])))};
-convert_to_int(Val) ->
-    case string:to_float(Val) of
-        {error, _} ->
-            case string:to_integer(Val) of
-                {error, _} ->
-                    {error, "no conversion possible"};
-                {V, _} ->
-                    {ok, V}
-            end;
-        {V, _} ->
-            %% V is now a float and the guard 'is_float' will catch it now
-            {ok, convert_to_int(V)}
-    end.
-
-%%
-%%
-use_manual(<<"custom">>, <<"array">>, <<"msg">>, Count, NodeDef) ->
-    %% This means take a specific property of the msg, e.g. payload
-    %%    "mode": "custom",
-    %%    "build": "array",
-    %%    "property": "payload",
-    %%    "propertyType": "msg",
-    case convert_to_int(Count) of
-        {ok, 0} ->
-            {false, NodeDef};
-        {ok, Cnt} ->
-            {ok,
-                maps:put(
-                    '_is_manually_collecting',
-                    {ok, Cnt, maps:find(property, NodeDef), []},
-                    NodeDef
-                )};
-        _ ->
-            {false, NodeDef}
-    end;
-use_manual(<<"custom">>, <<"array">>, <<"full">>, Count, NodeDef) ->
-    case convert_to_int(Count) of
-        {ok, 0} ->
-            {false, NodeDef};
-        {ok, Cnt} ->
-            {ok,
-                maps:put(
-                    '_is_manually_collecting',
-                    {ok, Cnt, {entire_msg}, []},
-                    NodeDef
-                )};
-        _ ->
-            {false, NodeDef}
-    end;
-use_manual(_, _, _, _, NodeDef) ->
-    {false, NodeDef}.
-
-%%
-%%
 node_join(NodeDef, WsName) ->
-    ered_nodes:node_init(NodeDef),
-
     {ok, Mode} = maps:find(mode, NodeDef),
     {ok, Build} = maps:find(build, NodeDef),
     {ok, Count} = maps:find(count, NodeDef),

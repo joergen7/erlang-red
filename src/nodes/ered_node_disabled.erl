@@ -11,10 +11,16 @@
 %% node is replaced by this, then so be it. Ignore the message and move on.
 %%
 -export([node_disabled/2]).
+-export([handle_event/2]).
 -export([handle_incoming/2]).
 -export([handle_outgoing/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
+
+%%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
 
 handle_incoming(NodeDef, Msg) ->
     {NodeDef, Msg}.
@@ -23,5 +29,4 @@ handle_outgoing(NodeDef, Msg) ->
     {NodeDef, Msg}.
 
 node_disabled(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, incoming_and_outgoing).

@@ -1,6 +1,7 @@
 -module(ered_node_file_in).
 
 -export([node_file_in/2]).
+-export([handle_event/2]).
 -export([handle_incoming/2]).
 
 %%
@@ -58,6 +59,11 @@ get_filename(FileNameType, NodeDef, Msg) ->
     debug_msg(NodeDef, Msg, {filename_type_not_supported, FileNameType}),
     failed.
 
+%%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
+
 handle_incoming(NodeDef, Msg) ->
     {ok, FileNameType} = maps:find(filenameType, NodeDef),
 
@@ -95,5 +101,4 @@ handle_incoming(NodeDef, Msg) ->
     end.
 
 node_file_in(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

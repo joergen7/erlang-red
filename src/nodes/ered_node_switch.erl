@@ -1,6 +1,7 @@
 -module(ered_node_switch).
 
 -export([node_switch/2]).
+-export([handle_event/2]).
 -export([handle_incoming/2]).
 
 %%
@@ -144,6 +145,11 @@ handle_stop_after_one([Rule | Rules], Val, [Wires | MoreWires], NodeDef, Msg) ->
     end.
 
 %%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
 %% Handler for incoming messages
 %%
 handle_incoming(NodeDef, Msg) ->
@@ -168,5 +174,4 @@ handle_incoming(NodeDef, Msg) ->
 %%
 %%
 node_switch(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

@@ -1,6 +1,7 @@
 -module(ered_node_template).
 
 -export([node_template/2]).
+-export([handle_event/2]).
 -export([handle_incoming/2]).
 
 %%
@@ -36,6 +37,13 @@ doit(Prop, <<"msg">>, Template, <<"plain">>, <<"str">>, Msg) ->
 doit(_, _, _, _, _, _) ->
     unsupported.
 
+%%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
+%%
 handle_incoming(NodeDef, Msg) ->
     {ok, Prop} = maps:find(field, NodeDef),
     {ok, PropType} = maps:find(fieldType, NodeDef),
@@ -55,5 +63,4 @@ handle_incoming(NodeDef, Msg) ->
     end.
 
 node_template(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

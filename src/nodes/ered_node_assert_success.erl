@@ -1,7 +1,7 @@
 -module(ered_node_assert_success).
 
 -export([node_assert_success/2]).
--export([handle_stop/2]).
+-export([handle_event/2]).
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
@@ -15,8 +15,10 @@
     node_status/5
 ]).
 
+%%
+%%
 %% erlfmt:ignore equals and arrows should line up here.
-handle_stop(NodeDef,WsName) ->
+handle_event({stop,WsName}, NodeDef) ->
     case maps:find('_mc_incoming',NodeDef) of
         {ok,0} ->
             {ok, IdStr}   = maps:find(id,NodeDef),
@@ -46,7 +48,11 @@ handle_stop(NodeDef,WsName) ->
             node_status(WsName, NodeDef, "assert failed", "red", "dot");
         _ ->
             node_status(WsName, NodeDef, "assert succeed", "green", "ring")
-    end.
+    end,
+    NodeDef;
+
+handle_event(_, NodeDef) ->
+    NodeDef.
 
 %%
 %% even though it does nothing with these messages, it still needs to
@@ -55,5 +61,4 @@ handle_incoming(NodeDef, Msg) ->
     {NodeDef, Msg}.
 
 node_assert_success(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
-    enter_receivership(?MODULE, NodeDef, stop_and_incoming).
+    enter_receivership(?MODULE, NodeDef, only_incoming).

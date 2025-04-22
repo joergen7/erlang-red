@@ -1,6 +1,7 @@
 -module(ered_node_delay).
 
 -export([node_delay/2]).
+-export([handle_event/2]).
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
@@ -45,11 +46,14 @@ compute_pause(PType, NodeDef, Msg) ->
 
 %%
 %%
+handle_event(_, NodeDef) ->
+    NodeDef.
+%%
+%%
 handle_incoming(NodeDef, Msg) ->
     timer:sleep(compute_pause(maps:find(pauseType, NodeDef), NodeDef, Msg)),
     send_msg_to_connected_nodes(NodeDef, Msg),
     {NodeDef, Msg}.
 
 node_delay(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

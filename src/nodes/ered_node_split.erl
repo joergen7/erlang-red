@@ -1,6 +1,7 @@
 -module(ered_node_split).
 
 -export([node_split/2]).
+-export([handle_event/2]).
 -export([handle_incoming/2]).
 
 %%
@@ -113,6 +114,11 @@ split_buffer(_Val, NodeDef, Msg) ->
 
 %%
 %%
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
+%%
 handle_incoming(NodeDef, Msg) ->
     {ok, Prop} = maps:find(property, NodeDef),
 
@@ -130,5 +136,4 @@ handle_incoming(NodeDef, Msg) ->
     {NodeDef, dont_send_complete_msg}.
 
 node_split(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

@@ -1,6 +1,7 @@
 -module(ered_node_inject).
 
 -export([node_inject/2]).
+-export([handle_event/2]).
 -export([handle_outgoing/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
@@ -124,6 +125,11 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
     end.
 
 %%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
 %% outgoing messages are triggered by button presses on the UI
 %%
 handle_outgoing(NodeDef, Msg) ->
@@ -139,5 +145,4 @@ handle_outgoing(NodeDef, Msg) ->
     {NodeDef, Msg2}.
 
 node_inject(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_outgoing).

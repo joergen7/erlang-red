@@ -35,7 +35,11 @@ execute(Req, Env) ->
 %% Convenience function to send the auth demand
 say_no(Req) ->
     {stop,
-        cowboy_req:reply(401, #{<<"www-authenticate">> => <<"Basic realm=\"Erlang-RED\"">>}, Req)}.
+        cowboy_req:reply(
+            401,
+            #{<<"www-authenticate">> => <<"Basic realm=\"Erlang-RED\"">>},
+            Req
+        )}.
 
 % Using the request object because we might want additional different logic later
 is_protected(#{path := Path}) ->

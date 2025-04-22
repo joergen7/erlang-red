@@ -1,6 +1,7 @@
 -module(ered_node_link_out).
 
 -export([node_link_out/2]).
+-export([handle_event/2]).
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
@@ -36,6 +37,13 @@ last_value([H | []], Rest) ->
 last_value([H | Ary], Rest) ->
     last_value(Ary, [H | Rest]).
 
+%%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
+%%
 handle_incoming(NodeDef, Msg) ->
     case maps:find(mode, NodeDef) of
         {ok, <<"link">>} ->
@@ -81,5 +89,4 @@ handle_incoming(NodeDef, Msg) ->
     end.
 
 node_link_out(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming).

@@ -1,6 +1,7 @@
 -module(ered_node_ignore).
 
 -export([node_ignore/2]).
+-export([handle_event/2]).
 
 %%
 %% This is for nodes that appear in the flow data but that its ok not to
@@ -11,6 +12,10 @@
 
 -import(ered_node_receivership, [enter_receivership/3]).
 
+%%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
+
 node_ignore(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, nothing).

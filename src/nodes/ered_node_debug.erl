@@ -1,6 +1,7 @@
 -module(ered_node_debug).
 
 -export([node_debug/2]).
+-export([handle_event/2]).
 -export([handle_incoming/2]).
 
 -import(ered_node_receivership, [enter_receivership/3]).
@@ -66,6 +67,13 @@ handle_status_setting({ok, false}, _, _, _) ->
 handle_status_setting({ok, true}, {ok, StatusType}, NodeDef, Msg) ->
     unsupported(NodeDef, Msg, jstr("StatusType: ~p", [StatusType])).
 
+%%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
+%%
 handle_incoming(NodeDef, Msg) ->
     case maps:find(console, NodeDef) of
         {ok, true} ->
@@ -101,5 +109,4 @@ handle_incoming(NodeDef, Msg) ->
     {NodeDef, Msg}.
 
 node_debug(NodeDef, _WsName) ->
-    ered_nodes:node_init(NodeDef),
     enter_receivership(?MODULE, NodeDef, only_incoming_with_active).
