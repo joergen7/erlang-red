@@ -23,12 +23,26 @@ bad_routing(NodeDef, Type, Msg) ->
             "Node received unhandled type ~p Node: ~p Msg: ~p\n",
             [Type, NodeDef, Msg]
         )
-    ).
+     ),
+    NodeDef.
 
-%%
-%% TODO Not to self: once I get the hang of MACROS replace this receivership
-%% TODO stuff with MACROS - this stuff needs to be fast since its called
-%% TODO whenever messages are bounced around a flow.
+bump_incoming(NodeDef) ->
+    increment_message_counter(NodeDef, '_mc_incoming').
+bump_outgoing(NodeDef) ->
+    increment_message_counter(NodeDef, '_mc_outgoing').
+
+catchall_receivership(CatchAll, Module, NodeDef, ReceiverType) ->
+    case CatchAll of
+        {stop, _WsName} ->
+            ok;
+        {incoming, Msg} ->
+            NodeDef2 = bad_routing(bump_incoming(NodeDef), incoming, Msg),
+            enter_receivership(Module, NodeDef2, ReceiverType);
+        {outgoing, Msg} ->
+            NodeDef2 = bad_routing(bump_outgoing(NodeDef), outgoing, Msg),
+            enter_receivership(Module, NodeDef2, ReceiverType)
+    end.
+
 %%
 %% TODO2 enter_receivership is bullshit. Because this does not allow
 %% TODO2 module nodes to be defined in a single module. What I want to
@@ -44,10 +58,8 @@ bad_routing(NodeDef, Type, Msg) ->
 %% used by the complete node to receive messages from nodes that have
 %% completed. Ensure that it doesn't receive its own messages thus creating
 %% and endless loop.
-enter_receivership(Module, NodeDef, completed_messages) ->
+enter_receivership(Module, NodeDef, ReceiverType = completed_messages) ->
     receive
-        {stop, _WsName} ->
-            ok;
         {completed_msg, FromNodeDef, Msg} ->
             {NodeDef2, Msg2} = erlang:apply(
                 Module,
@@ -61,30 +73,22 @@ enter_receivership(Module, NodeDef, completed_messages) ->
             %% Completed Nodes can also be listened to by a complete
             %% node, hence this post_completed is here.
             post_completed(NodeDef2, Msg2),
-            enter_receivership(Module, NodeDef2, completed_messages)
+            enter_receivership(Module, NodeDef2, ReceiverType);
+        CatchAll ->
+            catchall_receivership(CatchAll, Module, NodeDef, ReceiverType)
     end;
 %%
 %% used by the ignore node, this is really a zombie node. Good for things
 %% such as comment nodes.
-enter_receivership(Module, NodeDef, nothing) ->
+enter_receivership(Module, NodeDef, ReceiverType = nothing) ->
     receive
-        {stop, _WsName} ->
-            ok;
-        {incoming, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
-            bad_routing(NodeDef2, incoming, Msg),
-            enter_receivership(Module, NodeDef2, nothing);
-        {outgoing, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
-            bad_routing(NodeDef2, outgoing, Msg),
-            enter_receivership(Module, NodeDef2, nothing)
+        CatchAll ->
+            catchall_receivership(CatchAll, Module, NodeDef, ReceiverType)
     end;
 %%
 %% used by catch nodes to receive exceptions from other nodes.
-enter_receivership(Module, NodeDef, only_exception) ->
+enter_receivership(Module, NodeDef, ReceiverType = only_exception) ->
     receive
-        {stop, _WsName} ->
-            ok;
         {exception, From, Msg, ErrMsg} ->
             %% From is the NodeDef of the source node and Msg is the
             %% Msg object it received. ErrMsg is a string explaining the
@@ -96,84 +100,61 @@ enter_receivership(Module, NodeDef, only_exception) ->
                 [NodeDef2, From, Msg, ErrMsg]
             ),
             post_completed(NodeDef3, Msg2),
-            enter_receivership(Module, NodeDef3, only_exception);
-        {incoming, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
-            bad_routing(NodeDef2, incoming, Msg),
-            enter_receivership(Module, NodeDef2, only_exception);
-        {outgoing, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
-            bad_routing(NodeDef2, outgoing, Msg),
-            enter_receivership(Module, NodeDef2, only_exception)
+            enter_receivership(Module, NodeDef3, ReceiverType);
+        CatchAll ->
+            catchall_receivership(CatchAll, Module, NodeDef, ReceiverType)
     end;
 %% the disabled and enabled messages are specifically for the debug node.
 %% Active here is an attribute on the NodeDef that is used to turn the
 %% debug node on and off. But it can also be used for other nodes if
 %% necessary.
-enter_receivership(Module, NodeDef, only_incoming_with_active) ->
+enter_receivership(Module, NodeDef, ReceiverType = only_incoming_with_active) ->
     receive
-        {stop, _WsName} ->
-            ok;
         {disable, _WsName} ->
             NodeDef2 = maps:put(active, false, NodeDef),
-            enter_receivership(Module, NodeDef2, only_incoming_with_active);
+            enter_receivership(Module, NodeDef2, ReceiverType);
         {enable, _WsName} ->
             NodeDef2 = maps:put(active, true, NodeDef),
-            enter_receivership(Module, NodeDef2, only_incoming_with_active);
+            enter_receivership(Module, NodeDef2, ReceiverType);
         {incoming, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
             {NodeDef3, Msg2} = erlang:apply(
-                Module, handle_incoming, [NodeDef2, Msg]
+                Module, handle_incoming, [bump_incoming(NodeDef), Msg]
             ),
             post_completed(NodeDef3, Msg2),
-            enter_receivership(Module, NodeDef3, only_incoming_with_active);
-        {outgoing, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
-            bad_routing(NodeDef2, outgoing, Msg),
-            enter_receivership(Module, NodeDef2, only_incoming_with_active)
+            enter_receivership(Module, NodeDef3, ReceiverType);
+        CatchAll ->
+            catchall_receivership(CatchAll, Module, NodeDef, ReceiverType)
     end;
 %% assert values fails if it never recevied a message
-enter_receivership(Module, NodeDef, stop_and_incoming) ->
+enter_receivership(Module, NodeDef, ReceiverType = stop_and_incoming) ->
     receive
         {stop, WsName} ->
-            erlang:apply(Module, handle_stop, [NodeDef, WsName]),
-            ok;
+            erlang:apply(Module, handle_stop, [NodeDef, WsName]);
         {incoming, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
             {NodeDef3, Msg2} = erlang:apply(
-                Module, handle_incoming, [NodeDef2, Msg]
+                Module, handle_incoming, [bump_incoming(NodeDef), Msg]
             ),
             post_completed(NodeDef3, Msg2),
-            enter_receivership(Module, NodeDef3, stop_and_incoming);
-        {outgoing, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
-            bad_routing(NodeDef2, outgoing, Msg),
-            enter_receivership(Module, NodeDef2, stop_and_incoming)
+            enter_receivership(Module, NodeDef3, ReceiverType);
+        CatchAll ->
+            catchall_receivership(CatchAll, Module, NodeDef, ReceiverType)
     end;
 %% this is used  by the assert success node, since it does nothing with a
 %% message (i.e. it has no output ports), it only needs the stop notification
 %% so shortcut the callback stuff.
-enter_receivership(Module, NodeDef, only_stop) ->
+enter_receivership(Module, NodeDef, ReceiverType = only_stop) ->
     receive
         {stop, WsName} ->
-            erlang:apply(Module, handle_stop, [NodeDef, WsName]),
-            ok;
-        {incoming, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
-            bad_routing(NodeDef2, incoming, Msg),
-            enter_receivership(Module, NodeDef2, only_stop);
-        {outgoing, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
-            bad_routing(NodeDef2, outgoing, Msg),
-            enter_receivership(Module, NodeDef2, only_stop)
+            erlang:apply(Module, handle_stop, [NodeDef, WsName]);
+        CatchAll ->
+            catchall_receivership(CatchAll, Module, NodeDef, ReceiverType)
     end;
-enter_receivership(Module, NodeDef, websocket_events_and_stop) ->
+enter_receivership(Module, NodeDef, ReceiverType = websocket_events_and_stop) ->
     receive
         {stop, WsName} ->
             NodeDef2 = erlang:apply(Module, handle_stop, [NodeDef, WsName]),
             {ok, NodePid} = maps:find('_node_pid_', NodeDef2),
-            ered_ws_event_exchange:unsubscribe(WsName, NodePid),
-            ok;
+            ered_ws_event_exchange:unsubscribe(WsName, NodePid);
         {ws_event, Details} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_websocket'),
             NodeDef3 = erlang:apply(
@@ -181,93 +162,80 @@ enter_receivership(Module, NodeDef, websocket_events_and_stop) ->
                 handle_ws_event,
                 [NodeDef2, Details]
             ),
-            enter_receivership(Module, NodeDef3, websocket_events_and_stop)
+            enter_receivership(Module, NodeDef3, ReceiverType);
+        CatchAll ->
+            catchall_receivership(CatchAll, Module, NodeDef, ReceiverType)
     end;
-enter_receivership(Module, NodeDef, incoming_and_outgoing) ->
+enter_receivership(Module, NodeDef, ReceiverType = incoming_and_outgoing) ->
     receive
-        {stop, _WsName} ->
-            ok;
         {incoming, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
             {NodeDef3, Msg2} = erlang:apply(
-                Module, handle_incoming, [NodeDef2, Msg]
+                Module, handle_incoming, [bump_incoming(NodeDef), Msg]
             ),
             post_completed(NodeDef3, Msg2),
-            enter_receivership(Module, NodeDef3, incoming_and_outgoing);
+            enter_receivership(Module, NodeDef3, ReceiverType);
         {outgoing, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
-            NodeDef3 = erlang:apply(Module, handle_outgoing, [NodeDef2, Msg]),
-            enter_receivership(Module, NodeDef3, incoming_and_outgoing)
+            {NodeDef3, _Msg2} = erlang:apply(
+                Module, handle_outgoing, [bump_outgoing(NodeDef), Msg]
+            ),
+            enter_receivership(Module, NodeDef3, ReceiverType);
+        CatchAll ->
+            catchall_receivership(CatchAll, Module, NodeDef, ReceiverType)
     end;
 %%
 %% link call nodes need a third type of message and that is the response
 %% from a link out node that is in return mode. But a link call node does
 %% not require an outgoing message type so ignore that.
-enter_receivership(Module, NodeDef, link_call_node) ->
+enter_receivership(Module, NodeDef, ReceiverType = link_call_node) ->
     receive
-        {stop, _WsName} ->
-            ok;
         {incoming, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
             {NodeDef3, Msg2} = erlang:apply(
-                Module, handle_incoming, [NodeDef2, Msg]
+                Module, handle_incoming, [bump_incoming(NodeDef), Msg]
             ),
             %% in fact this will return a msg object to ensure nothing
             %% is posted - this is caught by the complete node.
             post_completed(NodeDef3, Msg2),
-            enter_receivership(Module, NodeDef3, link_call_node);
-        {outgoing, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
-            bad_routing(NodeDef2, outgoing, Msg),
-            enter_receivership(Module, NodeDef2, link_call_node);
+            enter_receivership(Module, NodeDef3, ReceiverType);
         {link_return, Msg} ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_link_return'),
             {NodeDef3, Msg2} = erlang:apply(
                 Module, handle_link_return, [NodeDef2, Msg]
             ),
             post_completed(NodeDef3, Msg2),
-            enter_receivership(Module, NodeDef3, link_call_node)
+            enter_receivership(Module, NodeDef3, ReceiverType);
+        CatchAll ->
+            catchall_receivership(CatchAll, Module, NodeDef, ReceiverType)
     end;
 %%
 %% incoming only nodes are things such debug or data stores node that receives
 %% messages and store them. These nodes don't perform any computation on the
 %% messages.
-enter_receivership(Module, NodeDef, only_incoming) ->
+enter_receivership(Module, NodeDef, ReceiverType = only_incoming) ->
     receive
-        {stop, _WsName} ->
-            ok;
         {incoming, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
             {NodeDef3, Msg2} = erlang:apply(
-                Module, handle_incoming, [NodeDef2, Msg]
+                Module, handle_incoming, [bump_incoming(NodeDef), Msg]
             ),
             post_completed(NodeDef3, Msg2),
-            enter_receivership(Module, NodeDef3, only_incoming);
-        {outgoing, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
-            bad_routing(NodeDef2, outgoing, Msg),
-            enter_receivership(Module, NodeDef2, only_incoming)
+            enter_receivership(Module, NodeDef3, ReceiverType);
+        CatchAll ->
+            catchall_receivership(CatchAll, Module, NodeDef, ReceiverType)
     end;
 %%
 %% outgoing only nodes are things like inject, http in and mqtt in - these
 %% nodes are sources of messages but never receive these within the flow
 %% rather they receive data from a third-party source and pass that data
 %% into the flow.
-enter_receivership(Module, NodeDef, only_outgoing) ->
+enter_receivership(Module, NodeDef, ReceiverType = only_outgoing) ->
     receive
-        {stop, _WsName} ->
-            ok;
-        {incoming, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_incoming'),
-            bad_routing(NodeDef2, incoming, Msg),
-            enter_receivership(Module, NodeDef2, only_outgoing);
         {outgoing, Msg} ->
-            NodeDef2 = increment_message_counter(NodeDef, '_mc_outgoing'),
             {NodeDef3, Msg2} = erlang:apply(
-                Module, handle_outgoing, [NodeDef2, Msg]
+                Module, handle_outgoing, [bump_outgoing(NodeDef), Msg]
             ),
             post_completed(NodeDef3, Msg2),
-            enter_receivership(Module, NodeDef3, only_outgoing)
+            enter_receivership(Module, NodeDef3, ReceiverType);
+        CatchAll ->
+            catchall_receivership(CatchAll, Module, NodeDef, ReceiverType)
     end;
 enter_receivership(Module, NodeDef, Type) ->
     throw(
