@@ -63,7 +63,9 @@ enter_receivership(Module, NodeDef, completed_messages) ->
             post_completed(NodeDef2, Msg2),
             enter_receivership(Module, NodeDef2, completed_messages)
     end;
-%% used by the ignore node, this is really a zombie node.
+%%
+%% used by the ignore node, this is really a zombie node. Good for things
+%% such as comment nodes.
 enter_receivership(Module, NodeDef, nothing) ->
     receive
         {stop, _WsName} ->
@@ -77,6 +79,7 @@ enter_receivership(Module, NodeDef, nothing) ->
             bad_routing(NodeDef2, outgoing, Msg),
             enter_receivership(Module, NodeDef2, nothing)
     end;
+%%
 %% used by catch nodes to receive exceptions from other nodes.
 enter_receivership(Module, NodeDef, only_exception) ->
     receive
