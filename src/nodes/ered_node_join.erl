@@ -41,6 +41,9 @@
 -import(ered_message_exchange, [
     post_completed/2
 ]).
+-import(ered_msg_handling, [
+    get_prop/2
+]).
 
 %%
 %%
@@ -100,6 +103,14 @@ use_manual(<<"custom">>, <<"array">>, <<"full">>, Count, NodeDef) ->
 use_manual(_, _, _, _, NodeDef) ->
     {false, NodeDef}.
 
+
+retrieve_prop_value(PropName, Msg) ->
+    case get_prop({ok, PropName}, Msg) of
+        {ok, V, _} ->
+            V;
+        _ ->
+            ""
+    end.
 %%
 %%
 handle_event(_, NodeDef) ->
@@ -113,7 +124,7 @@ handle_incoming(NodeDef, Msg) ->
         {ok, {ok, 1, {ok, PropName}, Lst}} ->
             %% because these values are sent off to the complete node,
             %% need to keep a copy of the original message.
-            Lst2 = [{get_prop_value_from_map(PropName, Msg), Msg} | Lst],
+            Lst2 = [{retrieve_prop_value(PropName, Msg), Msg} | Lst],
             Msg2 = maps:put(payload, [V || {V, _} <- Lst2], Msg),
 
             %% now that we are ready to send out our message, we are completed
@@ -137,7 +148,7 @@ handle_incoming(NodeDef, Msg) ->
             NodeDef2 = maps:put(
                 '_is_manually_collecting',
                 {ok, Cnt - 1, {ok, PropName}, [
-                    {get_prop_value_from_map(PropName, Msg), Msg} | Lst
+                    {retrieve_prop_value(PropName, Msg), Msg} | Lst
                 ]},
                 NodeDef
             ),
