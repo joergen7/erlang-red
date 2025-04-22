@@ -341,6 +341,8 @@ node_type_to_fun(<<"tab">>) ->
     {ered_node_ignore, node_ignore};
 node_type_to_fun(<<"complete">>) ->
     {ered_node_complete, node_complete};
+node_type_to_fun(<<"group">>) ->
+    {ered_node_ignore, node_ignore};
 %%
 %% Assert nodes for testing functionality of the nodes
 %%

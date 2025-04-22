@@ -23,7 +23,7 @@ bad_routing(NodeDef, Type, Msg) ->
             "Node received unhandled type ~p Node: ~p Msg: ~p\n",
             [Type, NodeDef, Msg]
         )
-     ),
+    ),
     NodeDef.
 
 bump_incoming(NodeDef) ->
