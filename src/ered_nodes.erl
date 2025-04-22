@@ -5,7 +5,6 @@
 %%
 -export([
     add_state/2,
-    create_outgoing_msg/1,
     create_pid_for_node/2,
     get_prop_value_from_map/2,
     get_prop_value_from_map/3,
@@ -30,6 +29,9 @@
 
 -import(ered_nodered_comm, [
     ws_from/1
+]).
+-import(ered_msg_handling, [
+    create_outgoing_msg/1
 ]).
 
 %%
@@ -286,6 +288,8 @@ node_type_to_fun(<<"complete">>) ->
     {ered_node_complete, node_complete};
 node_type_to_fun(<<"group">>) ->
     {ered_node_ignore, node_ignore};
+node_type_to_fun(<<"status">>) ->
+    {ered_node_status, node_status};
 %%
 %% Assert nodes for testing functionality of the nodes
 %%
@@ -302,11 +306,6 @@ node_type_to_fun(<<"ut-assert-debug">>) ->
 node_type_to_fun(Unknown) ->
     io:format("noop node initiated for unknown type: ~p\n", [Unknown]),
     {ered_node_noop, node_noop}.
-
-%%
-%%
-create_outgoing_msg(WsName) ->
-    {outgoing, #{'_msgid' => generate_id(), '_ws' => WsName}}.
 
 %% A list of all nodes that support outgoing messages, this was originally
 %% only the inject node but then I realised that for testing purposes there

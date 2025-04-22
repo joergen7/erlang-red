@@ -42,7 +42,7 @@
     post_completed/2
 ]).
 -import(ered_msg_handling, [
-    get_prop/2
+    retrieve_prop_value/2
 ]).
 
 %%
@@ -103,13 +103,6 @@ use_manual(<<"custom">>, <<"array">>, <<"full">>, Count, NodeDef) ->
 use_manual(_, _, _, _, NodeDef) ->
     {false, NodeDef}.
 
-retrieve_prop_value(PropName, Msg) ->
-    case get_prop({ok, PropName}, Msg) of
-        {ok, V, _} ->
-            V;
-        _ ->
-            ""
-    end.
 %%
 %%
 handle_event(_, NodeDef) ->

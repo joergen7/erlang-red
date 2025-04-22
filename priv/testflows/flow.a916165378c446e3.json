@@ -2,40 +2,15 @@
     {
         "id": "a916165378c446e3",
         "type": "tab",
-        "label": "[status] only one message per status value",
+        "label": "[status] basic working version",
         "disabled": false,
-        "info": "Statue node generates a message but only if the status differs from the previous status value.\n\nAlso status also has an endless loop problem when second degree nodes also generate a status.\n\nStatus nodes ignore direct connections but not indirect connections.",
+        "info": "Status node listens to other nodes for their status updates. It then posts these status updates as its messages",
         "env": [
             {
                 "name": "ERED_PENDING",
-                "value": "true",
+                "value": "false",
                 "type": "bool"
             }
-        ]
-    },
-    {
-        "id": "c2408447e5f0e1ef",
-        "type": "inject",
-        "z": "a916165378c446e3",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            }
-        ],
-        "repeat": "1",
-        "crontab": "",
-        "once": true,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "b",
-        "payloadType": "str",
-        "x": 217,
-        "y": 131,
-        "wires": [
-            [
-                "116137642eb0cbe7"
-            ]
         ]
     },
     {
@@ -47,12 +22,12 @@
         "tosidebar": true,
         "console": false,
         "tostatus": true,
-        "complete": "payload",
+        "complete": "status.text",
         "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 463,
-        "y": 182,
+        "statusVal": "payload",
+        "statusType": "msg",
+        "x": 727,
+        "y": 316,
         "wires": []
     },
     {
@@ -60,13 +35,15 @@
         "type": "status",
         "z": "a916165378c446e3",
         "name": "",
-        "scope": null,
-        "x": 192,
-        "y": 393,
+        "scope": [
+            "116137642eb0cbe7"
+        ],
+        "x": 239,
+        "y": 702,
         "wires": [
             [
                 "79e473797e869e38",
-                "856d98266ab783a4"
+                "a1142417496ed5ef"
             ]
         ]
     },
@@ -83,8 +60,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "counter",
-        "x": 632,
-        "y": 389,
+        "x": 653,
+        "y": 702,
         "wires": []
     },
     {
@@ -97,15 +74,40 @@
                 "p": "payload"
             }
         ],
-        "repeat": "3",
+        "repeat": "",
         "crontab": "",
-        "once": true,
+        "once": false,
         "onceDelay": 0.1,
         "topic": "",
         "payload": "e",
         "payloadType": "str",
-        "x": 224,
-        "y": 260,
+        "x": 307,
+        "y": 489,
+        "wires": [
+            [
+                "aa935988bc52cb94"
+            ]
+        ]
+    },
+    {
+        "id": "aa935988bc52cb94",
+        "type": "delay",
+        "z": "a916165378c446e3",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "500",
+        "timeoutUnits": "milliseconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 524,
+        "y": 489,
         "wires": [
             [
                 "116137642eb0cbe7"
@@ -113,48 +115,155 @@
         ]
     },
     {
-        "id": "856d98266ab783a4",
-        "type": "change",
+        "id": "f85c03456c8d0d25",
+        "type": "inject",
         "z": "a916165378c446e3",
-        "d": true,
         "name": "",
-        "rules": [
+        "props": [
             {
-                "t": "set",
-                "p": "payload",
-                "pt": "msg",
-                "to": "",
-                "tot": "str"
+                "p": "payload"
             }
         ],
-        "action": "",
-        "property": "",
-        "from": "",
-        "to": "",
-        "reg": false,
-        "x": 455,
-        "y": 495,
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "b",
+        "payloadType": "str",
+        "x": 215,
+        "y": 407.5,
         "wires": [
             [
-                "ecba5a15ccb7da74"
+                "792349f35f115592"
             ]
         ]
     },
     {
-        "id": "ecba5a15ccb7da74",
+        "id": "792349f35f115592",
+        "type": "delay",
+        "z": "a916165378c446e3",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "750",
+        "timeoutUnits": "milliseconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 414,
+        "y": 407.5,
+        "wires": [
+            [
+                "116137642eb0cbe7"
+            ]
+        ]
+    },
+    {
+        "id": "a1142417496ed5ef",
+        "type": "join",
+        "z": "a916165378c446e3",
+        "name": "",
+        "mode": "custom",
+        "build": "array",
+        "property": "status.text",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "useparts": false,
+        "accumulate": false,
+        "timeout": "",
+        "count": "3",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 505,
+        "y": 772.5,
+        "wires": [
+            [
+                "0532caa79b85ad02",
+                "72485fc40bd697ba",
+                "8e7239952bc1b21c"
+            ]
+        ]
+    },
+    {
+        "id": "0532caa79b85ad02",
+        "type": "ut-assert-success",
+        "z": "a916165378c446e3",
+        "name": "",
+        "x": 738,
+        "y": 772.5,
+        "wires": []
+    },
+    {
+        "id": "249a4c9fa0ef8ded",
+        "type": "inject",
+        "z": "a916165378c446e3",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "b",
+        "payloadType": "str",
+        "x": 299,
+        "y": 316,
+        "wires": [
+            [
+                "116137642eb0cbe7"
+            ]
+        ]
+    },
+    {
+        "id": "72485fc40bd697ba",
         "type": "debug",
         "z": "a916165378c446e3",
-        "name": "debug 398",
+        "name": "debug 3",
         "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": true,
-        "complete": "status",
+        "complete": "payload",
         "targetType": "msg",
         "statusVal": "",
         "statusType": "counter",
-        "x": 649,
-        "y": 601,
+        "x": 655,
+        "y": 934,
         "wires": []
+    },
+    {
+        "id": "8e7239952bc1b21c",
+        "type": "ut-assert-values",
+        "z": "a916165378c446e3",
+        "name": "",
+        "rules": [
+            {
+                "t": "eql",
+                "p": "payload",
+                "pt": "msg",
+                "to": "[\"b\", \"e\", \"b\"]",
+                "tot": "json"
+            }
+        ],
+        "x": 734,
+        "y": 854.5,
+        "wires": [
+            []
+        ]
     }
 ]

@@ -1,9 +1,15 @@
 -module(ered_msg_handling).
 
 -export([
+    create_outgoing_msg/1,
     get_prop/2,
     decode_json/1,
+    retrieve_prop_value/2,
     timestamp/0
+]).
+
+-import(ered_nodes, [
+    generate_id/0
 ]).
 
 %%
@@ -73,3 +79,18 @@ get_prop({ok, Prop}, Msg) ->
         undefined ->
             {undefined, Prop}
     end.
+
+%%
+%% slightly simpler API, without the {ok, ...}
+retrieve_prop_value(PropName, Msg) ->
+    case get_prop({ok, PropName}, Msg) of
+        {ok, V, _} ->
+            V;
+        _ ->
+            ""
+    end.
+
+%%
+%% Generate an empty message map with just an _msgid
+create_outgoing_msg(WsName) ->
+    {outgoing, #{'_msgid' => generate_id(), '_ws' => WsName}}.

@@ -18,6 +18,10 @@
     jstr/2
 ]).
 
+-import(ered_msg_handling, [
+    retrieve_prop_value/2
+]).
+
 %%
 %% Debug nodes have no outgoing wires.
 %%
@@ -47,7 +51,6 @@ send_to_sidebar(NodeDef,Msg) ->
     Data = #{
              id       => IdStr,
              z        => ZStr,
-             '_alias' => IdStr,
              path     => ZStr,
              name     => NameStr,
              topic    => to_binary_if_not_binary(TopicStr),
@@ -59,6 +62,10 @@ send_to_sidebar(NodeDef,Msg) ->
 
 %%
 %%
+handle_status_setting({ok, true}, {ok, <<"msg">>}, NodeDef, Msg) ->
+    {ok, PropName} = maps:find(statusVal, NodeDef),
+    Val = retrieve_prop_value(PropName, Msg),
+    node_status(ws_from(Msg), NodeDef, Val, "grey", "dot");
 handle_status_setting({ok, true}, {ok, <<"counter">>}, NodeDef, Msg) ->
     Cnt = get_prop_value_from_map('_mc_incoming', NodeDef),
     node_status(ws_from(Msg), NodeDef, Cnt, "blue", "ring");
