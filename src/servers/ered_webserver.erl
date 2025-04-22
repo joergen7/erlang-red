@@ -41,7 +41,10 @@ herd_up_the_cattle() ->
     {ok, _} = cowboy:start_clear(
         erlang_red_listener,
         [{port, 8080}],
-        #{env => #{dispatch => router()}, middlewares => [ered_http_auth, cowboy_router, cowboy_handler]}
+        #{
+            env => #{dispatch => router()},
+            middlewares => [ered_http_auth, cowboy_router, cowboy_handler]
+        }
     ).
 
 %%
