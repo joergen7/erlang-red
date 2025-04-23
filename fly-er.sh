@@ -36,7 +36,7 @@ if [[ "Y" == ${DO_BASIC}  || "y" == ${DO_BASIC} ]]; then
 fi
 
 echo "=> Attempting to launch ${APPNAME}..."
-fly launch --name="${APPNAME}" --ha="false" --dockerfile "${FLY_DOCKERFILE}"
+fly launch --name="${APPNAME}" --ha="false" --vm-cpu-kind="shared" --vm-cpus=4 --vm-memory=4096 --dockerfile "${FLY_DOCKERFILE}"
 
 if [[ "Y" == ${DO_BASIC}  || "y" == ${DO_BASIC} ]]; then
 	echo "==> Setting secrets for basic auth...";
