@@ -3,6 +3,7 @@
 -export([
     clear_completed_group/2,
     clear_exception_group/2,
+    clear_pg_group/1,
     post_completed/2,
     post_exception/3,
     subscribe_to_completed/3,

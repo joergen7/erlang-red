@@ -33,6 +33,9 @@
 -import(ered_msg_handling, [
     create_outgoing_msg/1
 ]).
+-import(ered_message_exchange, [
+    clear_pg_group/1
+]).
 
 %%
 %% Map priv directory in file names
@@ -96,16 +99,26 @@ generate_id() ->
 
 %% processes for nodes are scoped by the websocket name so that each
 %% each websocket connection gets its own collection of processes for nodes.
-nodeid_to_pid(WsName, IdStr) ->
-    binary_to_atom(
-        list_to_binary(
-            lists:flatten(
-                io_lib:format("~s~s~s~s", [
-                    "node_pid_", jstr(WsName), "_", IdStr
-                ])
-            )
+get_node_name(WsName, IdStr) ->
+    list_to_binary(
+        lists:flatten(
+            io_lib:format("~s~s~s~s", [
+                "node_pid_", jstr(WsName), "_", IdStr
+            ])
         )
     ).
+
+nodeid_to_pid(WsName, IdStr) ->
+    Name = get_node_name(WsName, IdStr),
+    case pg:get_members(Name) of
+        [] ->
+            {error, undefined};
+        [Pid | []] ->
+            {ok, Pid};
+        [_H | _T] ->
+            io:format("Multiple PIDs for node name ~p~n", [Name]),
+            {error, too_many}
+    end.
 
 tabid_to_error_collector(IdStr) ->
     binary_to_atom(
@@ -146,29 +159,22 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
     %% the node does not need to have a Pid created for it.
     {Module, Fun} = node_type_to_fun(TypeStr, disabled(NodeDef)),
 
-    NodePid = nodeid_to_pid(WsName, IdStr),
+    GrpName = get_node_name(WsName, IdStr),
+    clear_pg_group(GrpName),
 
-    case whereis(NodePid) of
-        undefined ->
-            ok;
-        _ ->
-            NodePid ! stop,
-            unregister(NodePid)
-    end,
-
-    StatefulNodeDef = add_state(NodeDef, NodePid),
+    StatefulNodeDef = add_state(NodeDef, GrpName),
 
     Pid = spawn(Module, Fun, [StatefulNodeDef, WsName]),
-    register(NodePid, Pid),
+    pg:join(GrpName, Pid),
 
     %% Perform any Post spawn activities. This is mostly registering with
     %% collectors of events as subscribers, see catch and complete nodes
     %% for examples. This is done after the spawn because to register
     %% with the various servers, a Pid is needed and that is not known
     %% when a node is initialised via the spawn.
-    NodePid ! {registered, WsName, Pid},
+    Pid ! {registered, WsName, Pid},
 
-    create_pid_for_node(MoreNodeDefs, [NodePid | Pids], WsName).
+    create_pid_for_node(MoreNodeDefs, [Pid | Pids], WsName).
 
 %%
 %% tab node usses 'disabled', everything else 'd'.
@@ -231,11 +237,11 @@ send_msg_on([], _) ->
 send_msg_on([NodeId | Wires], Msg) ->
     NodePid = nodeid_to_pid(ws_from(Msg), NodeId),
 
-    case whereis(NodePid) of
-        undefined ->
-            ok;
-        _ ->
-            NodePid ! {incoming, Msg}
+    case NodePid of
+        {error, _} ->
+            ignore;
+        {ok, Pid} ->
+            Pid ! {incoming, Msg}
     end,
     send_msg_on(Wires, Msg).
 
@@ -311,8 +317,18 @@ node_type_to_fun(Unknown) ->
 %% only the inject node but then I realised that for testing purposes there
 %% are in fact more.
 trigger_outgoing_messages({ok, <<"http in">>}, {ok, IdStr}, WsName) ->
-    nodeid_to_pid(WsName, IdStr) ! create_outgoing_msg(WsName);
+    case nodeid_to_pid(WsName, IdStr) of
+        {ok, Pid} ->
+            Pid ! create_outgoing_msg(WsName);
+        {error, _} ->
+            ignore
+    end;
 trigger_outgoing_messages({ok, <<"inject">>}, {ok, IdStr}, WsName) ->
-    nodeid_to_pid(WsName, IdStr) ! create_outgoing_msg(WsName);
+    case nodeid_to_pid(WsName, IdStr) of
+        {ok, Pid} ->
+            Pid ! create_outgoing_msg(WsName);
+        {error, _} ->
+            ignore
+    end;
 trigger_outgoing_messages(_, _, _) ->
     ok.

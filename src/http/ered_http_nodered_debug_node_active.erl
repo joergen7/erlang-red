@@ -37,21 +37,21 @@ handle_json_body(Req, State) ->
             WsName = websocket_name_from_request(Req),
             NodePid = nodeid_to_pid(WsName, IdStr),
 
-            case whereis(NodePid) of
-                undefined ->
-                    ok;
-                _ ->
+            case NodePid of
+                {ok, Pid} ->
                     %% ensure that actstr is correct, there is no checking
                     %% of message types in the receivership code so an
                     %% incorrect value here will kill the process.
                     case ActStr of
                         <<"disable">> ->
-                            NodePid ! {disable, WsName};
+                            Pid ! {disable, WsName};
                         <<"enable">> ->
-                            NodePid ! {enable, WsName};
+                            Pid ! {enable, WsName};
                         _ ->
                             ok
-                    end
+                    end;
+                {error, _} ->
+                    ignore
             end
     end,
     Resp = cowboy_req:set_resp_body(<<"OK">>, Req),

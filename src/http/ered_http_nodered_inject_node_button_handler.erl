@@ -44,13 +44,11 @@ handle_json_body(Req, State) ->
         undefined ->
             ok;
         IdStr ->
-            NodePid = nodeid_to_pid(WsName, IdStr),
-
-            case whereis(NodePid) of
-                undefined ->
-                    ok;
-                _ ->
-                    NodePid ! create_outgoing_msg(WsName)
+            case nodeid_to_pid(WsName, IdStr) of
+                {ok, Pid} ->
+                    Pid ! create_outgoing_msg(WsName);
+                {error, _} ->
+                    ignore
             end
     end,
 

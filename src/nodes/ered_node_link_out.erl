@@ -23,11 +23,11 @@
 
 send_to_link_call({ok, NodeId}, Msg) ->
     NodePid = nodeid_to_pid(ws_from(Msg), NodeId),
-    case whereis(NodePid) of
-        undefined ->
-            ok;
-        _ ->
-            NodePid ! {link_return, Msg}
+    case NodePid of
+        {error, _} ->
+            ignore;
+        {ok, Pid} ->
+            Pid ! {link_return, Msg}
     end.
 
 last_value([], _) ->
