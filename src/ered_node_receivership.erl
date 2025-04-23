@@ -138,7 +138,7 @@ enter_receivership(Module, NodeDef, ReceiverType = websocket_events) ->
             NodeDef2 = increment_message_counter(NodeDef, '_mc_websocket'),
             NodeDef3 = erlang:apply(
                 Module,
-                handle_ws_event,
+                handle_websocket,
                 [Details, NodeDef2]
             ),
             enter_receivership(Module, NodeDef3, ReceiverType);

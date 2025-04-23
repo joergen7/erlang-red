@@ -2,7 +2,7 @@
 
 -export([node_assert_debug/2]).
 -export([handle_event/2]).
--export([handle_ws_event/2]).
+-export([handle_websocket/2]).
 
 %%
 %% Assert node for checking whether another node generated a debug
@@ -78,7 +78,7 @@ handle_event(_, NodeDef) ->
 
 %%
 %%
-handle_ws_event({debug, WsName, NodeId, Type, _Data}, NodeDef) ->
+handle_websocket({debug, WsName, NodeId, Type, _Data}, NodeDef) ->
     case maps:find(inverse, NodeDef) of
         {ok, true} ->
             ErrMsg = jstr("No debug expected from ~p\n", [NodeId]),
@@ -98,7 +98,7 @@ handle_ws_event({debug, WsName, NodeId, Type, _Data}, NodeDef) ->
             end
     end,
     NodeDef;
-handle_ws_event(_, NodeDef) ->
+handle_websocket(_, NodeDef) ->
     NodeDef.
 
 %%

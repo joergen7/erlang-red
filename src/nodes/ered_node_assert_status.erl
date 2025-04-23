@@ -2,7 +2,7 @@
 
 -export([node_assert_status/2]).
 -export([handle_event/2]).
--export([handle_ws_event/2]).
+-export([handle_websocket/2]).
 
 %%
 %% Assert node for checking whether another node generated a status
@@ -101,7 +101,7 @@ handle_event(_, NodeDef) ->
 
 %%
 %%
-handle_ws_event({status, WsName, NodeId, Txt, Clr, Shp}, NodeDef) ->
+handle_websocket({status, WsName, NodeId, Txt, Clr, Shp}, NodeDef) ->
     case maps:find(inverse, NodeDef) of
         {ok, true} ->
             ErrMsg = jstr("No status expected from ~p\n", [NodeId]),
@@ -124,7 +124,7 @@ handle_ws_event({status, WsName, NodeId, Txt, Clr, Shp}, NodeDef) ->
             end
     end,
     NodeDef;
-handle_ws_event(_, NodeDef) ->
+handle_websocket(_, NodeDef) ->
     NodeDef.
 
 %%

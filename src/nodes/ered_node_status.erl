@@ -2,7 +2,7 @@
 
 -export([node_status/2]).
 -export([handle_event/2]).
--export([handle_ws_event/2]).
+-export([handle_websocket/2]).
 
 %%
 %% Status nodes receives status updates from those nodes it listens to.
@@ -56,7 +56,7 @@ handle_event(_, NodeDef) ->
 
 %%
 %%
-handle_ws_event({status, WsName, NodeId, Txt, Clr, Shp}, NodeDef) ->
+handle_websocket({status, WsName, NodeId, Txt, Clr, Shp}, NodeDef) ->
     {outgoing, Msg} = create_outgoing_msg(WsName),
     %% TODO should really find the name and type of the source node
     %% TODO but on the other hand, with the node id, the frontend can
@@ -73,7 +73,7 @@ handle_ws_event({status, WsName, NodeId, Txt, Clr, Shp}, NodeDef) ->
     ),
     send_msg_to_connected_nodes(NodeDef, FinalMsg),
     NodeDef;
-handle_ws_event(_, NodeDef) ->
+handle_websocket(_, NodeDef) ->
     NodeDef.
 
 node_status(NodeDef, _WsName) ->

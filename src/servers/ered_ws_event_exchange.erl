@@ -3,7 +3,7 @@
 -behaviour(gen_server).
 
 %%
-%% This service distributes websocket events to listeners. These listners are
+%% This service distributes websocket events to listeners. These listeners are
 %% unit test assertors that ensure that specific things happen that specific
 %% nodes promised to do. This is not a store of events, rather a bus that
 %% passes events on to listeners - these listeners check the events and
