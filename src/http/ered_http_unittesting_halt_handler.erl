@@ -22,8 +22,17 @@ allowed_methods(Req, State) ->
 content_types_provided(Req, State) ->
     {[{{<<"application">>, <<"json">>, '*'}, handle_response}], Req, State}.
 
-handle_response(_Req, _State) ->
-    halt(0).
+handle_response(Req, State) ->
+    %% stupid little endpoint to cycle the server that is stuck in a
+    %% while [ 1 ] ; ... loop - in the frontend the functionality is hidden
+    %% away behind a shortcut.
+    Pid = spawn(fun() ->
+        receive
+            _ -> halt(0)
+        end
+    end),
+    timer:send_after(500, Pid, ok),
+    {<<"{\"status\": \"ok\"}">>, Req, State}.
 
 format_error(Reason, Req) ->
     {
