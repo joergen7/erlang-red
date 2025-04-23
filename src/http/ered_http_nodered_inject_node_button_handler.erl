@@ -46,7 +46,7 @@ handle_json_body(Req, State) ->
         IdStr ->
             case nodeid_to_pid(WsName, IdStr) of
                 {ok, Pid} ->
-                    Pid ! create_outgoing_msg(WsName);
+                    gen_server:cast(Pid, create_outgoing_msg(WsName));
                 {error, _} ->
                     ignore
             end

@@ -1,8 +1,10 @@
 -module(ered_node_json).
 
--export([node_json/2]).
+-behaviour(ered_node).
+
+-export([start/2]).
+-export([handle_msg/2]).
 -export([handle_event/2]).
--export([handle_incoming/2]).
 
 %%
 %% Json node only deals with data coming in on the msg object:
@@ -13,7 +15,6 @@
 %%    "action": "",
 %%    "pretty": false,
 
--import(ered_node_receivership, [enter_receivership/3]).
 -import(ered_nodes, [
     jstr/2,
     send_msg_to_connected_nodes/2
@@ -24,6 +25,11 @@
     ws_from/1,
     unsupported/3
 ]).
+
+%%
+%%
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
 
 string_like(Val) when is_binary(Val) ->
     true;
@@ -86,5 +92,10 @@ handle_incoming(NodeDef, Msg) ->
             {NodeDef, Msg}
     end.
 
-node_json(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, only_incoming).
+%%
+%%
+handle_msg({incoming, Msg}, NodeDef) ->
+    {NodeDef2, Msg2} = handle_incoming(NodeDef, Msg),
+    {handled, NodeDef2, Msg2};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

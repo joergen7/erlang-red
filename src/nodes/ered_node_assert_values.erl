@@ -1,10 +1,15 @@
 -module(ered_node_assert_values).
 
--export([node_assert_values/2]).
--export([handle_event/2]).
--export([handle_incoming/2]).
+-behaviour(ered_node).
 
--import(ered_node_receivership, [enter_receivership/3]).
+-export([start/2]).
+-export([handle_msg/2]).
+-export([handle_event/2]).
+
+%%
+%% Assert node that checks the msg for correct values.
+%%
+
 -import(ered_nodered_comm, [
     assert_failure/3,
     debug/3,
@@ -22,6 +27,11 @@
     decode_json/1,
     get_prop/2
 ]).
+
+%%
+%%
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
 
 is_same(Same, Same) -> true;
 is_same(_, _) -> false.
@@ -298,7 +308,7 @@ check_rules([H | T], NodeDef, Msg, FCnt) ->
 %%
 %%
 %% erlfmt:ignore stars are aligned
-handle_event({stop,WsName}, NodeDef) ->
+handle_event({stop, WsName}, NodeDef) ->
     case maps:find('_mc_incoming',NodeDef) of
         {ok,0} ->
             {ok, IdStr}   = maps:find(id,NodeDef),
@@ -346,5 +356,10 @@ handle_incoming(NodeDef, Msg) ->
     send_msg_to_connected_nodes(NodeDef, Msg),
     {NodeDef, Msg}.
 
-node_assert_values(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, only_incoming).
+%%
+%%
+handle_msg({incoming, Msg}, NodeDef) ->
+    {NodeDef2, Msg2} = handle_incoming(NodeDef, Msg),
+    {handled, NodeDef2, Msg2};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

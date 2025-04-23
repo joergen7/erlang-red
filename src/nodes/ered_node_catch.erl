@@ -1,8 +1,10 @@
 -module(ered_node_catch).
 
--export([node_catch/2]).
+-behaviour(ered_node).
+
+-export([start/2]).
+-export([handle_msg/2]).
 -export([handle_event/2]).
--export([handle_exception/4]).
 
 %%
 %% Catch node receives exceptions and passes these onto its connections.
@@ -20,7 +22,6 @@
 %% TODO Not sure about the stack
 %%
 
--import(ered_node_receivership, [enter_receivership/3]).
 -import(ered_nodes, [
     get_prop_value_from_map/2,
     jstr/1,
@@ -29,6 +30,9 @@
 -import(ered_message_exchange, [
     subscribe_to_exception/3
 ]).
+
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
 
 %%
 %%
@@ -55,5 +59,10 @@ handle_exception(NodeDef, FromDef, Msg, ErrMsg) ->
     send_msg_to_connected_nodes(NodeDef, Msg2),
     {NodeDef, Msg2}.
 
-node_catch(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, only_exception).
+%%
+%%
+handle_msg({exception, From, Msg, ErrMsg}, NodeDef) ->
+    {NodeDef2, Msg2} = handle_exception(NodeDef, From, Msg, ErrMsg),
+    {handled, NodeDef2, Msg2};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

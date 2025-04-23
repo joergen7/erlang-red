@@ -203,7 +203,12 @@ run_the_test(FlowId, WsName, Ary) ->
             %% some asserts work on the stop notification, give'em
             %% time to generate their results.
             timer:sleep(543),
-            ErrColl ! stop,
+            case whereis(ErrColl) of
+                undefined ->
+                    ignore;
+                _ ->
+                    ErrColl ! stop
+            end,
 
             send_off_test_result(
                 WsName,

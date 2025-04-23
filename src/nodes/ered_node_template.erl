@@ -1,8 +1,10 @@
 -module(ered_node_template).
 
--export([node_template/2]).
+-behaviour(ered_node).
+
+-export([start/2]).
+-export([handle_msg/2]).
 -export([handle_event/2]).
--export([handle_incoming/2]).
 
 %%
 %%
@@ -15,8 +17,6 @@
 %%    "output": "str",   <<---- (can be "parse the content as json")
 %%    "template": "This is the payload: {{payload}} !",
 %%
-
--import(ered_node_receivership, [enter_receivership/3]).
 
 -import(ered_nodered_comm, [
     debug/3,
@@ -36,6 +36,11 @@ doit(Prop, <<"msg">>, Template, <<"plain">>, <<"str">>, Msg) ->
     {ok, Msg2};
 doit(_, _, _, _, _, _) ->
     unsupported.
+
+%%
+%%
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
 
 %%
 %%
@@ -62,5 +67,10 @@ handle_incoming(NodeDef, Msg) ->
             {NodeDef, Msg}
     end.
 
-node_template(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, only_incoming).
+%%
+%%
+handle_msg({incoming, Msg}, NodeDef) ->
+    {NodeDef2, Msg2} = handle_incoming(NodeDef, Msg),
+    {handled, NodeDef2, Msg2};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

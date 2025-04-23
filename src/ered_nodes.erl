@@ -157,15 +157,15 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
 
     %% here have to respect the 'd' (disabled) attribute. if true, then
     %% the node does not need to have a Pid created for it.
-    {Module, Fun} = node_type_to_fun(TypeStr, disabled(NodeDef)),
+    Module = node_type_to_fun(TypeStr, disabled(NodeDef)),
 
     GrpName = get_node_name(WsName, IdStr),
+
     clear_pg_group(GrpName),
 
     StatefulNodeDef = add_state(NodeDef, GrpName),
 
-    Pid = spawn(Module, Fun, [StatefulNodeDef, WsName]),
-    pg:join(GrpName, Pid),
+    {ok, Pid} = Module:start(StatefulNodeDef, WsName),
 
     %% Perform any Post spawn activities. This is mostly registering with
     %% collectors of events as subscribers, see catch and complete nodes
@@ -241,7 +241,7 @@ send_msg_on([NodeId | Wires], Msg) ->
         {error, _} ->
             ignore;
         {ok, Pid} ->
-            Pid ! {incoming, Msg}
+            gen_server:cast(Pid, {incoming, Msg})
     end,
     send_msg_on(Wires, Msg).
 
@@ -250,68 +250,51 @@ send_msg_on([NodeId | Wires], Msg) ->
 %% disabled flag: if node is disabled, give it a noop node else continue
 %% on checking by type.
 %%
+
 node_type_to_fun(_Type, true) ->
     io:format("node disabled, ignoring\n"),
-    {ered_node_disabled, node_disabled};
+    ered_node_disabled;
 node_type_to_fun(Type, _) ->
     node_type_to_fun(Type).
 
-node_type_to_fun(<<"inject">>) ->
-    {ered_node_inject, node_inject};
-node_type_to_fun(<<"switch">>) ->
-    {ered_node_switch, node_switch};
-node_type_to_fun(<<"debug">>) ->
-    {ered_node_debug, node_debug};
-node_type_to_fun(<<"junction">>) ->
-    {ered_node_junction, node_junction};
-node_type_to_fun(<<"change">>) ->
-    {ered_node_change, node_change};
-node_type_to_fun(<<"link out">>) ->
-    {ered_node_link_out, node_link_out};
-node_type_to_fun(<<"link in">>) ->
-    {ered_node_link_in, node_link_in};
-node_type_to_fun(<<"link call">>) ->
-    {ered_node_link_call, node_link_call};
-node_type_to_fun(<<"delay">>) ->
-    {ered_node_delay, node_delay};
-node_type_to_fun(<<"file in">>) ->
-    {ered_node_file_in, node_file_in};
-node_type_to_fun(<<"json">>) ->
-    {ered_node_json, node_json};
-node_type_to_fun(<<"template">>) ->
-    {ered_node_template, node_template};
-node_type_to_fun(<<"join">>) ->
-    {ered_node_join, node_join};
-node_type_to_fun(<<"split">>) ->
-    {ered_node_split, node_split};
-node_type_to_fun(<<"catch">>) ->
-    {ered_node_catch, node_catch};
-node_type_to_fun(<<"comment">>) ->
-    {ered_node_ignore, node_ignore};
-node_type_to_fun(<<"tab">>) ->
-    {ered_node_ignore, node_ignore};
-node_type_to_fun(<<"complete">>) ->
-    {ered_node_complete, node_complete};
-node_type_to_fun(<<"group">>) ->
-    {ered_node_ignore, node_ignore};
-node_type_to_fun(<<"status">>) ->
-    {ered_node_status, node_status};
+%%
+%% TODO it's questionable whether this lookup is needed since
+%% TODO    binary_to_atom( io_lib:format("ered_node_~s",[Type]))
+%% TODO will do pretty much the same thing! nostalgia is always a good
+%% TODO reason: this list provides the order in which I implemented the nodes
+%% erlfmt:ignore alignment.
+node_type_to_fun(<<"inject">>)    -> ered_node_inject;
+node_type_to_fun(<<"switch">>)    -> ered_node_switch;
+node_type_to_fun(<<"debug">>)     -> ered_node_debug;
+node_type_to_fun(<<"junction">>)  -> ered_node_junction;
+node_type_to_fun(<<"change">>)    -> ered_node_change;
+node_type_to_fun(<<"link out">>)  -> ered_node_link_out;
+node_type_to_fun(<<"link in">>)   -> ered_node_link_in;
+node_type_to_fun(<<"link call">>) -> ered_node_link_call;
+node_type_to_fun(<<"delay">>)     -> ered_node_delay;
+node_type_to_fun(<<"file in">>)   -> ered_node_file_in;
+node_type_to_fun(<<"json">>)      -> ered_node_json;
+node_type_to_fun(<<"template">>)  -> ered_node_template;
+node_type_to_fun(<<"join">>)      -> ered_node_join;
+node_type_to_fun(<<"split">>)     -> ered_node_split;
+node_type_to_fun(<<"catch">>)     -> ered_node_catch;
+node_type_to_fun(<<"comment">>)   -> ered_node_ignore;
+node_type_to_fun(<<"tab">>)       -> ered_node_ignore;
+node_type_to_fun(<<"complete">>)  -> ered_node_complete;
+node_type_to_fun(<<"group">>)     -> ered_node_ignore;
+node_type_to_fun(<<"status">>)    -> ered_node_status;
+node_type_to_fun(<<"trigger">>)   -> ered_node_trigger;
 %%
 %% Assert nodes for testing functionality of the nodes
 %%
-node_type_to_fun(<<"ut-assert-values">>) ->
-    {ered_node_assert_values, node_assert_values};
-node_type_to_fun(<<"ut-assert-failure">>) ->
-    {ered_node_assert_failure, node_assert_failure};
-node_type_to_fun(<<"ut-assert-success">>) ->
-    {ered_node_assert_success, node_assert_success};
-node_type_to_fun(<<"ut-assert-status">>) ->
-    {ered_node_assert_status, node_assert_status};
-node_type_to_fun(<<"ut-assert-debug">>) ->
-    {ered_node_assert_debug, node_assert_debug};
+node_type_to_fun(<<"ut-assert-values">>)  -> ered_node_assert_values;
+node_type_to_fun(<<"ut-assert-failure">>) -> ered_node_assert_failure;
+node_type_to_fun(<<"ut-assert-success">>) -> ered_node_assert_success;
+node_type_to_fun(<<"ut-assert-status">>)  -> ered_node_assert_status;
+node_type_to_fun(<<"ut-assert-debug">>)   -> ered_node_assert_debug;
 node_type_to_fun(Unknown) ->
     io:format("noop node initiated for unknown type: ~p\n", [Unknown]),
-    {ered_node_noop, node_noop}.
+    ered_node_noop.
 
 %% A list of all nodes that support outgoing messages, this was originally
 %% only the inject node but then I realised that for testing purposes there
@@ -319,14 +302,14 @@ node_type_to_fun(Unknown) ->
 trigger_outgoing_messages({ok, <<"http in">>}, {ok, IdStr}, WsName) ->
     case nodeid_to_pid(WsName, IdStr) of
         {ok, Pid} ->
-            Pid ! create_outgoing_msg(WsName);
+            gen_server:cast(Pid, create_outgoing_msg(WsName));
         {error, _} ->
             ignore
     end;
 trigger_outgoing_messages({ok, <<"inject">>}, {ok, IdStr}, WsName) ->
     case nodeid_to_pid(WsName, IdStr) of
         {ok, Pid} ->
-            Pid ! create_outgoing_msg(WsName);
+            gen_server:cast(Pid, create_outgoing_msg(WsName));
         {error, _} ->
             ignore
     end;

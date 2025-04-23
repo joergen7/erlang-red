@@ -1,14 +1,16 @@
 -module(ered_node_file_in).
 
--export([node_file_in/2]).
+-behaviour(ered_node).
+
+-export([start/2]).
+-export([handle_msg/2]).
 -export([handle_event/2]).
--export([handle_incoming/2]).
 
 %%
-%% No Operation node that is used for all unknown types. It represents
-%% a deadend for a message, it stops here.
+%% Read file contents from disk and stream the data into the flow. Well
+%% not stream but dump into a message.
+%%
 
--import(ered_node_receivership, [enter_receivership/3]).
 -import(ered_nodes, [
     get_prop_value_from_map/2,
     get_prop_value_from_map/3,
@@ -23,10 +25,14 @@
     send_out_debug_msg/4,
     ws_from/1
 ]).
-
 -import(ered_message_exchange, [
     post_exception/3
 ]).
+
+%%
+%%
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
 
 debug_msg(NodeDef, Msg, {filename_type_not_supported, FileNameType}) ->
     ErrMsg = jstr(
@@ -100,5 +106,10 @@ handle_incoming(NodeDef, Msg) ->
             {NodeDef, Msg}
     end.
 
-node_file_in(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, only_incoming).
+%%
+%%
+handle_msg({incoming, Msg}, NodeDef) ->
+    {NodeDef2, Msg2} = handle_incoming(NodeDef, Msg),
+    {handled, NodeDef2, Msg2};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

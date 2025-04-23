@@ -1,8 +1,10 @@
 -module(ered_node_split).
 
--export([node_split/2]).
+-behaviour(ered_node).
+
+-export([start/2]).
+-export([handle_msg/2]).
 -export([handle_event/2]).
--export([handle_incoming/2]).
 
 %%
 %% Split node takes an array, string or buffer and for each item, it generates
@@ -34,9 +36,6 @@
 %% TODO: atoms, binaries and lists. This split node is basically a burning
 %% TODO: wreck what to wreak havoc!
 
--import(ered_node_receivership, [
-    enter_receivership/3
-]).
 -import(ered_nodered_comm, [
     send_out_debug_msg/4,
     unsupported/3
@@ -50,6 +49,11 @@
 -import(ered_message_exchange, [
     post_completed/2
 ]).
+
+%%
+%%
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
 
 %%
 %%
@@ -133,7 +137,11 @@ handle_incoming(NodeDef, Msg) ->
             send_out_debug_msg(NodeDef, Msg, ErrMsg, error)
     end,
 
-    {NodeDef, dont_send_complete_msg}.
+    {handled, NodeDef, dont_send_complete_msg}.
 
-node_split(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, only_incoming).
+%%
+%%
+handle_msg({incoming, Msg}, NodeDef) ->
+    handle_incoming(NodeDef, Msg);
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

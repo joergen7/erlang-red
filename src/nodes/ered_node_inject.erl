@@ -1,10 +1,15 @@
 -module(ered_node_inject).
 
--export([node_inject/2]).
--export([handle_event/2]).
--export([handle_outgoing/2]).
+-behaviour(ered_node).
 
--import(ered_node_receivership, [enter_receivership/3]).
+-export([start/2]).
+-export([handle_msg/2]).
+-export([handle_event/2]).
+
+%%
+%% Inject node should have at least one outgoing wire, if not then the
+%% needle won't hit the vein, i.e. the message won't flow through any nodes.
+%%
 
 -import(ered_nodes, [
     get_prop_value_from_map/2,
@@ -12,20 +17,21 @@
     jstr/2,
     send_msg_to_connected_nodes/2
 ]).
-
 -import(ered_nodered_comm, [
     unsupported/3
 ]).
-
 -import(ered_msg_handling, [
     timestamp/0,
     decode_json/1
 ]).
+-import(ered_message_exchange, [
+    post_completed/2
+]).
 
 %%
-%% Inject node should have at least one outgoing wire, if not then the
-%% needle won't hit the vein, i.e. the message won't flow through any nodes.
 %%
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
 
 handle_topic_value(NodeDef, _Prop, {ok, <<"str">>}) ->
     get_prop_value_from_map(topic, NodeDef);
@@ -142,7 +148,16 @@ handle_outgoing(NodeDef, Msg) ->
 
     Msg2 = parse_props(Props, NodeDef, Msg),
     send_msg_to_connected_nodes(NodeDef, Msg2),
+    %% this should be done by the behaviour but it does not allow
+    %% outgoing messages to generated completed messages, so do this
+    %% here directly.
+    post_completed(NodeDef, Msg2),
     {NodeDef, Msg2}.
 
-node_inject(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, only_outgoing).
+%%
+%%
+handle_msg({outgoing, Msg}, NodeDef) ->
+    {NodeDef2, Msg2} = handle_outgoing(NodeDef, Msg),
+    {handled, NodeDef2, Msg2};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

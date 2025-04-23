@@ -1,10 +1,16 @@
 -module(ered_node_assert_failure).
 
--export([node_assert_failure/2]).
--export([handle_event/2]).
--export([handle_incoming/2]).
+-behaviour(ered_node).
 
--import(ered_node_receivership, [enter_receivership/3]).
+-export([start/2]).
+-export([handle_msg/2]).
+-export([handle_event/2]).
+
+%%
+%% Assert node that fails if it receives a message. This is basically a node
+%% that indicates paths that should not be reached.
+%%
+
 -import(ered_nodered_comm, [
     debug/3,
     node_status/5,
@@ -15,6 +21,9 @@
     get_prop_value_from_map/3,
     this_should_not_happen/2
 ]).
+
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
 
 to_binary_if_not_binary(Obj) when is_binary(Obj) ->
     Obj;
@@ -70,5 +79,10 @@ handle_incoming(NodeDef,Msg) ->
 
     {NodeDef, Msg}.
 
-node_assert_failure(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, only_incoming).
+%%
+%%
+handle_msg({incoming, Msg}, NodeDef) ->
+    {NodeDef2, Msg2} = handle_incoming(NodeDef, Msg),
+    {handled, NodeDef2, Msg2};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

@@ -1,8 +1,10 @@
 -module(ered_node_switch).
 
--export([node_switch/2]).
+-behaviour(ered_node).
+
+-export([start/2]).
+-export([handle_msg/2]).
 -export([handle_event/2]).
--export([handle_incoming/2]).
 
 %%
 %% TODO needs refactoring to use the unsupported/3 function to send off
@@ -23,13 +25,17 @@
 %% that is specified by the "checkall" attribute.
 %%
 
--import(ered_node_receivership, [enter_receivership/3]).
 -import(ered_nodes, [
     send_msg_on/2
 ]).
 -import(ered_message_exchange, [
     post_completed/2
 ]).
+
+%%
+%%
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
 
 is_same(Same, Same) -> true;
 is_same(_, _) -> false.
@@ -169,9 +175,11 @@ handle_incoming(NodeDef, Msg) ->
             handle_stop_after_one(Rules, Val, Wires, NodeDef, Msg)
     end,
 
-    {NodeDef, dont_send_complete_msg}.
+    {handled, NodeDef, dont_send_complete_msg}.
 
 %%
 %%
-node_switch(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, only_incoming).
+handle_msg({incoming, Msg}, NodeDef) ->
+    handle_incoming(NodeDef, Msg);
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

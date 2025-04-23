@@ -1,8 +1,10 @@
 -module(ered_node_join).
 
--export([node_join/2]).
+-behaviour(ered_node).
+
+-export([start/2]).
+-export([handle_msg/2]).
 -export([handle_event/2]).
--export([handle_incoming/2]).
 
 %%
 %% join node is the companion of the split node that generates many messages
@@ -29,7 +31,6 @@
 %%       "reduceFixup": "",
 %%
 
--import(ered_node_receivership, [enter_receivership/3]).
 -import(ered_nodes, [
     jstr/2,
     get_prop_value_from_map/2,
@@ -44,6 +45,25 @@
 -import(ered_msg_handling, [
     retrieve_prop_value/2
 ]).
+
+%%
+%%
+start(NodeDef, WsName) ->
+    {ok, Mode} = maps:find(mode, NodeDef),
+    {ok, Build} = maps:find(build, NodeDef),
+    {ok, Count} = maps:find(count, NodeDef),
+    {ok, PropType} = maps:find(propertyType, NodeDef),
+
+    NodeDef2 =
+        case use_manual(Mode, Build, PropType, Count, NodeDef) of
+            {ok, V} ->
+                V;
+            {false, V} ->
+                ErrMsg = jstr("Node Config ~p", [NodeDef]),
+                unsupported(NodeDef, {websocket, WsName}, ErrMsg),
+                V
+        end,
+    ered_node:start(NodeDef2, ?MODULE).
 
 %%
 %%
@@ -191,23 +211,8 @@ handle_incoming(NodeDef, Msg) ->
 
 %%
 %%
-node_join(NodeDef, WsName) ->
-    {ok, Mode} = maps:find(mode, NodeDef),
-    {ok, Build} = maps:find(build, NodeDef),
-    {ok, Count} = maps:find(count, NodeDef),
-    {ok, PropType} = maps:find(propertyType, NodeDef),
-
-    NodeDef2 =
-        case use_manual(Mode, Build, PropType, Count, NodeDef) of
-            {ok, V} ->
-                V;
-            {false, V} ->
-                ErrMsg = jstr("Node Config ~p", [NodeDef]),
-                unsupported(NodeDef, {websocket, WsName}, ErrMsg),
-                V
-        end,
-
-    %% TODO here would be nice to select a different function that should
-    %% TODO be used for incoming messages - since the configuration is
-    %% TODO is static for the node.
-    enter_receivership(?MODULE, NodeDef2, only_incoming).
+handle_msg({incoming, Msg}, NodeDef) ->
+    {NodeDef2, Msg2} = handle_incoming(NodeDef, Msg),
+    {handled, NodeDef2, Msg2};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

@@ -1,10 +1,17 @@
 -module(ered_node_change).
 
--export([node_change/2]).
--export([handle_event/2]).
--export([handle_incoming/2]).
+-behaviour(ered_node).
 
--import(ered_node_receivership, [enter_receivership/3]).
+-export([start/2]).
+-export([handle_msg/2]).
+-export([handle_event/2]).
+
+%%
+%% Change node modifies the contents of messages but also sets values in
+%% the flow and global contexts. It has many possible features and this
+%% implementation only implements a small subset
+%%
+
 -import(ered_nodered_comm, [
     unsupported/3
 ]).
@@ -19,10 +26,9 @@
 ]).
 
 %%
-%% Change node modifies the contents of messages but also sets values in
-%% the flow and global contexts. It has many possible features and this
-%% implementation only implements a small subset
 %%
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
 
 do_move({ok, <<"msg">>}, {ok, <<"msg">>}, {ok, FromProp}, {ok, ToProp}, Msg, _) ->
     case maps:find(binary_to_atom(FromProp), Msg) of
@@ -218,5 +224,10 @@ handle_incoming(NodeDef, Msg) ->
     send_msg_to_connected_nodes(NodeDef, Msg2),
     {NodeDef, Msg2}.
 
-node_change(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, only_incoming).
+%%
+%%
+handle_msg({incoming, Msg}, NodeDef) ->
+    {NodeDef2, Msg2} = handle_incoming(NodeDef, Msg),
+    {handled, NodeDef2, Msg2};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

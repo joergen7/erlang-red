@@ -1,10 +1,16 @@
 -module(ered_node_debug).
 
--export([node_debug/2]).
--export([handle_event/2]).
--export([handle_incoming/2]).
+-behaviour(ered_node).
 
--import(ered_node_receivership, [enter_receivership/3]).
+-export([start/2]).
+-export([handle_msg/2]).
+-export([handle_event/2]).
+
+%%
+%% Debug nodes has no outgoing wires.
+%% Debug node dumps messages to the debug panel in the flow editor.
+%% It's data is transmitted via a websocket to the browser.
+%%
 
 -import(ered_nodered_comm, [
     debug/3,
@@ -17,14 +23,14 @@
     get_prop_value_from_map/3,
     jstr/2
 ]).
-
 -import(ered_msg_handling, [
     retrieve_prop_value/2
 ]).
 
 %%
-%% Debug nodes have no outgoing wires.
 %%
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
 
 to_binary_if_not_binary(Obj) when is_binary(Obj) ->
     Obj;
@@ -115,5 +121,10 @@ handle_incoming(NodeDef, Msg) ->
 
     {NodeDef, Msg}.
 
-node_debug(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, only_incoming_with_active).
+%%
+%%
+handle_msg({incoming, Msg}, NodeDef) ->
+    {NodeDef2, Msg2} = handle_incoming(NodeDef, Msg),
+    {handled, NodeDef2, Msg2};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

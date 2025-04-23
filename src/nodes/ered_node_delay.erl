@@ -1,10 +1,15 @@
 -module(ered_node_delay).
 
--export([node_delay/2]).
--export([handle_event/2]).
--export([handle_incoming/2]).
+-behaviour(ered_node).
 
--import(ered_node_receivership, [enter_receivership/3]).
+-export([start/2]).
+-export([handle_msg/2]).
+-export([handle_event/2]).
+
+%%
+%% Delay pauses the travels of a message by XX units of time.
+%%
+
 -import(ered_nodered_comm, [
     unsupported/3
 ]).
@@ -12,6 +17,11 @@
     jstr/2,
     send_msg_to_connected_nodes/2
 ]).
+
+%%
+%%
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
 
 convert_units_to_milliseconds({ok, <<"days">>}, {ok, Val}) ->
     {ok, element(1, string:to_integer(Val)) * 1000 * 60 * 60 * 24};
@@ -55,5 +65,10 @@ handle_incoming(NodeDef, Msg) ->
     send_msg_to_connected_nodes(NodeDef, Msg),
     {NodeDef, Msg}.
 
-node_delay(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, only_incoming).
+%%
+%%
+handle_msg({incoming, Msg}, NodeDef) ->
+    {NodeDef2, Msg2} = handle_incoming(NodeDef, Msg),
+    {handled, NodeDef2, Msg2};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

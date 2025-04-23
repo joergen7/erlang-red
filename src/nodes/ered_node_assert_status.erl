@@ -1,15 +1,15 @@
 -module(ered_node_assert_status).
 
--export([node_assert_status/2]).
+-behaviour(ered_node).
+
+-export([start/2]).
+-export([handle_msg/2]).
 -export([handle_event/2]).
--export([handle_websocket/2]).
 
 %%
 %% Assert node for checking whether another node generated a status
 %% update for itself. Or not.
 %%
-
--import(ered_node_receivership, [enter_receivership/3]).
 
 -import(ered_nodes, [
     jstr/2
@@ -21,6 +21,11 @@
 -import(ered_ws_event_exchange, [
     subscribe/4
 ]).
+
+%%
+%%
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
 
 is_same({A, A}) -> true;
 is_same({_, _}) -> false.
@@ -129,5 +134,7 @@ handle_websocket(_, NodeDef) ->
 
 %%
 %%
-node_assert_status(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, websocket_events).
+handle_msg({ws_event, Details}, NodeDef) ->
+    {handled, handle_websocket(Details, NodeDef), empty};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

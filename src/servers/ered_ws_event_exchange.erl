@@ -109,8 +109,10 @@ handle_call({debug_event, WsName, NodeId, Type, Data}, _From, SubscriberStore) -
                 {ok, CbAry} ->
                     List = lists:filter(fun({A, _}) -> A =:= Type end, CbAry),
                     [
-                        cb_to_pid(Cb) !
+                        gen_server:cast(
+                            cb_to_pid(Cb),
                             {ws_event, {debug, WsName, NodeId, Type, Data}}
+                        )
                      || {_, Cb} <- List
                     ];
                 _ ->
@@ -130,8 +132,10 @@ handle_call(
             case maps:find(NodeId, Map) of
                 {ok, CbAry} ->
                     [
-                        cb_to_pid(Cb) !
+                        gen_server:cast(
+                            cb_to_pid(Cb),
                             {ws_event, {status, WsName, NodeId, Txt, Clr, Shp}}
+                        )
                      || Cb <- CbAry
                     ];
                 _ ->

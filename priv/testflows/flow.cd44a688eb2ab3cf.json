@@ -8,8 +8,8 @@
         "env": [
             {
                 "name": "ERED_PENDING",
-                "value": "false",
-                "type": "bool"
+                "type": "bool",
+                "value": "false"
             }
         ]
     },
@@ -91,9 +91,9 @@
         "name": "",
         "rules": [
             {
-                "t": "mth",
                 "p": "payload",
                 "pt": "msg",
+                "t": "mth",
                 "to": "^[0-9]+$",
                 "tot": "str"
             }

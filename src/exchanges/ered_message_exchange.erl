@@ -48,7 +48,10 @@ post_exception(SrcNode, SrcMsg, ErrMsg) ->
         [] ->
             deal_with_it_yourself;
         Members ->
-            [M ! {exception, SrcNode, SrcMsg, ErrMsg} || M <- Members],
+            [
+                gen_server:cast(M, {exception, SrcNode, SrcMsg, ErrMsg})
+             || M <- Members
+            ],
             dealt_with
     end.
 
@@ -59,7 +62,7 @@ post_completed(_NodeDef, dont_send_complete_msg) ->
 post_completed(NodeDef, Msg) ->
     case pg:get_members(pg_complete_group_name(NodeDef, ws_from(Msg))) of
         Members ->
-            [M ! {completed_msg, NodeDef, Msg} || M <- Members]
+            [gen_server:cast(M, {completed_msg, NodeDef, Msg}) || M <- Members]
     end.
 
 %% clear out the pg group for the complete nodes.

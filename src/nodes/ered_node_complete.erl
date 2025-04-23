@@ -1,8 +1,10 @@
 -module(ered_node_complete).
 
--export([node_complete/2]).
+-behaviour(ered_node).
+
+-export([start/2]).
+-export([handle_msg/2]).
 -export([handle_event/2]).
--export([handle_completed_msg/3]).
 
 %%
 %% The complete node is a complex character. It raises the question "when is
@@ -27,13 +29,17 @@
 %%
 %% Complete nodes can also listen to each other and cause endless loops.
 %%
--import(ered_node_receivership, [enter_receivership/3]).
 -import(ered_nodes, [
     send_msg_to_connected_nodes/2
 ]).
 -import(ered_message_exchange, [
     subscribe_to_completed/3
 ]).
+
+%%
+%%
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
 
 %%
 %% To avoid infinite loops by listening to nodes that are connected to this
@@ -82,5 +88,10 @@ handle_completed_msg(NodeDef, FromDef, Msg) ->
             {NodeDef, dont_send_complete_msg}
     end.
 
-node_complete(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, completed_messages).
+%%
+%%
+handle_msg({completed_msg, FromNodeDef, Msg}, NodeDef) ->
+    {NodeDef2, Msg2} = handle_completed_msg(NodeDef, FromNodeDef, Msg),
+    {handled, NodeDef2, Msg2};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

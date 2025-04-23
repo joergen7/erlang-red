@@ -1,10 +1,16 @@
 -module(ered_node_assert_success).
 
--export([node_assert_success/2]).
--export([handle_event/2]).
--export([handle_incoming/2]).
+-behaviour(ered_node).
 
--import(ered_node_receivership, [enter_receivership/3]).
+-export([start/2]).
+-export([handle_msg/2]).
+-export([handle_event/2]).
+
+%%
+%% This assert node is simply being reached is success, if it never receives
+%% a message, it fails.
+%%
+
 -import(ered_nodes, [
     get_prop_value_from_map/2,
     get_prop_value_from_map/3,
@@ -14,6 +20,11 @@
     debug/3,
     node_status/5
 ]).
+
+%%
+%%
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
 
 %%
 %%
@@ -57,8 +68,7 @@ handle_event(_, NodeDef) ->
 %%
 %% even though it does nothing with these messages, it still needs to
 %% recieve them, after all it counts them.
-handle_incoming(NodeDef, Msg) ->
-    {NodeDef, Msg}.
-
-node_assert_success(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, only_incoming).
+handle_msg({incoming, Msg}, NodeDef) ->
+    {handled, NodeDef, Msg};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

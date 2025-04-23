@@ -1,11 +1,11 @@
 -module(ered_node_link_call).
 
--export([node_link_call/2]).
--export([handle_event/2]).
--export([handle_incoming/2]).
--export([handle_link_return/2]).
+-behaviour(ered_node).
 
--import(ered_node_receivership, [enter_receivership/3]).
+-export([start/2]).
+-export([handle_msg/2]).
+-export([handle_event/2]).
+
 -import(ered_nodes, [
     generate_id/1,
     jstr/2,
@@ -20,6 +20,11 @@
     unsupported/3,
     ws_from/1
 ]).
+
+%%
+%%
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
 
 update_linksource(NodeDef, Msg) ->
     {ok, IdStr} = maps:find(id, NodeDef),
@@ -68,14 +73,17 @@ handle_incoming(NodeDef, Msg) ->
         _ ->
             ignore
     end,
-    {NodeDef, dont_send_complete_msg}.
+    {handled, NodeDef, dont_send_complete_msg}.
 
 %%
-%% This comes from a link out node in return mode, this means we pass
-%% the message on to all the nodes connected to us, i.e. the 'wires' attribute.
-handle_link_return(NodeDef, Msg) ->
+%%
+handle_msg({incoming, Msg}, NodeDef) ->
+    handle_incoming(NodeDef, Msg);
+handle_msg({link_return, Msg}, NodeDef) ->
+    %% This comes from a link out node in return mode, this means we pass
+    %% the message on to all the nodes connected to us, i.e. the 'wires'
+    %% attribute.
     send_msg_to_connected_nodes(NodeDef, Msg),
-    {NodeDef, Msg}.
-
-node_link_call(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, link_call_node).
+    {handled, NodeDef, Msg};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.

@@ -44,9 +44,9 @@ handle_json_body(Req, State) ->
                     %% incorrect value here will kill the process.
                     case ActStr of
                         <<"disable">> ->
-                            Pid ! {disable, WsName};
+                            gen_server:cast(Pid, {disable, WsName});
                         <<"enable">> ->
-                            Pid ! {enable, WsName};
+                            gen_server:cast(Pid, {enable, WsName});
                         _ ->
                             ok
                     end;

@@ -1,10 +1,15 @@
 -module(ered_node_link_out).
 
--export([node_link_out/2]).
--export([handle_event/2]).
--export([handle_incoming/2]).
+-behaviour(ered_node).
 
--import(ered_node_receivership, [enter_receivership/3]).
+-export([start/2]).
+-export([handle_msg/2]).
+-export([handle_event/2]).
+
+%%
+%% Link out node is the is node that sends messages to the link in node
+%% that can be located somewhere completely different.
+%%
 
 -import(ered_nodered_comm, [
     debug/3,
@@ -21,13 +26,18 @@
     this_should_not_happen/2
 ]).
 
+%%
+%%
+start(NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE).
+
 send_to_link_call({ok, NodeId}, Msg) ->
     NodePid = nodeid_to_pid(ws_from(Msg), NodeId),
     case NodePid of
         {error, _} ->
             ignore;
         {ok, Pid} ->
-            Pid ! {link_return, Msg}
+            gen_server:cast(Pid, {link_return, Msg})
     end.
 
 last_value([], _) ->
@@ -88,5 +98,10 @@ handle_incoming(NodeDef, Msg) ->
             {NodeDef, Msg}
     end.
 
-node_link_out(NodeDef, _WsName) ->
-    enter_receivership(?MODULE, NodeDef, only_incoming).
+%%
+%%
+handle_msg({incoming, Msg}, NodeDef) ->
+    {NodeDef2, Msg2} = handle_incoming(NodeDef, Msg),
+    {handled, NodeDef2, Msg2};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.
