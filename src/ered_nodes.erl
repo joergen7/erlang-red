@@ -6,6 +6,7 @@
 -export([
     add_state/2,
     create_pid_for_node/2,
+    get_node_name/2,
     get_prop_value_from_map/2,
     get_prop_value_from_map/3,
     generate_id/0,

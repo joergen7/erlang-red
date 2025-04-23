@@ -11,8 +11,9 @@
     format_error/2
 ]).
 
--import(ered_nodes, [
-    create_pid_for_node/2
+-import(ered_compute_engine, [
+    deploy/2,
+    reload/1
 ]).
 -import(ered_nodered_comm, [
     websocket_name_from_request/1
@@ -36,29 +37,14 @@ content_types_accepted(Req, State) ->
     }.
 
 handle_flow_restart(Req, State) ->
-    Resp = cowboy_req:set_resp_body(<<"{\"rev\":\"dead73d0\"}">>, Req),
+    WsName = websocket_name_from_request(Req),
+    Resp = cowboy_req:set_resp_body(reload(WsName), Req),
     {true, Resp, State}.
 
 handle_json_body(Req, State) ->
-    {ok, _Body, Req2} = ered_http_utils:read_body(Req, <<"">>),
-
-    %%
-    %% TODO all this stuff needs to be pushed off to another Pids doing
-    %% TODO flow management.
-    %%
-    %% Push = fun(Key, Value, Acc) ->
-    %%    [{binary_to_atom(Key), Value} | Acc]
-    %% end,
-
-    %% {FlowMap,_,_} = json:decode(Body, ok, #{object_push => Push}),
-    %% {ok, NodeAry} = maps:find(flows,FlowMap),
-    %% WsName = websocket_name_from_request(Req),
-
-    %% Pids = create_pid_for_node(NodeAry, WsName),
-
-    %% io:format("Pids for flow: ~p\n",[Pids]),
-
-    Resp = cowboy_req:set_resp_body(<<"{\"rev\":\"dead73d0\"}">>, Req2),
+    {ok, Body, Req2} = ered_http_utils:read_body(Req, <<"">>),
+    WsName = websocket_name_from_request(Req),
+    Resp = cowboy_req:set_resp_body(deploy(Body, WsName), Req2),
     {true, Resp, State}.
 
 format_error(Reason, Req) ->
