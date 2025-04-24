@@ -60,7 +60,9 @@ for fle in vendor/jquery/css/base/jquery-ui.min.css \
            red/images/deploy-full.svg \
            red/images/deploy-full-o.svg \
            red/images/deploy-flows.svg \
+           red/images/deploy-flows-o.svg \
            red/images/deploy-nodes.svg \
+           red/images/deploy-nodes-o.svg \
            red/images/deploy-reload.svg \
            red/images/grip.svg \
            red/images/grip-horizontal.svg \
