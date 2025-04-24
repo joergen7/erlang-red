@@ -80,6 +80,8 @@ router() ->
               ered_http_unittesting_runtests_get_handler, []},
           {"/UnitTesting/:flowid/retrieve",
               ered_http_unittesting_retrieve_flow_handler, []},
+          {"/flows.test.json",
+              ered_http_unittesting_retrieve_flow_handler, []},
           {"/UnitTesting/halt",
               ered_http_unittesting_halt_handler, []},
 
@@ -132,7 +134,7 @@ router() ->
           {"/node-red", [{method, <<"GET">>}], cowboy_static,
               {priv_file, erlang_red, "node-red-frontend/index.html"}},
 
-        %%% Wrapper site nonsense starts
+          %%% Wrapper site nonsense starts
           {"/", [{method, <<"GET">>}], ered_http_release_status, []},
 
           {"/media/[...]", [{method, <<"GET">>}], cowboy_static,
@@ -140,7 +142,7 @@ router() ->
 
           {"/styles/[...]", [{method, <<"GET">>}], cowboy_static,
               {priv_dir, erlang_red, "wrapper_site/styles", []}},
-        %%% Wrapper site nonsense ends
+          %%% Wrapper site nonsense ends
 
 
           {"/[...]", [{method, <<"GET">>}],
