@@ -2,7 +2,7 @@
 <!-- --- [red-plugin:@gorenje/erlang-red-unittest/unittesting_sidebar] --- -->
 <script type="text/javascript">
   (function() {
-
+         
    function unitTestingPullUpdateFlows(cb = null, token = null) {
   let handleResponse = (resp) => {
     if (resp.status == "failed") {
@@ -236,10 +236,9 @@ function runTestForFlowId(flowid,dirList=undefined) {
     if (dirList) {
       resetTestResultsForFlowId(dirList,flowid)
     }
-
     clearNodeStatusForFlow(flowid)
-    resetTestResultsRow()
-
+    resetTestResultsRow();
+    
     if ( $('#node-input-unittestingpull-clear-debug-on-testrun').is(':checked')) {
       clearDebugPanel()
     }
@@ -250,7 +249,7 @@ function runTestForFlowId(flowid,dirList=undefined) {
     } else {
       params = `${params}&testpend=false`
     }
-
+    
     $.get({
       url: `/UnitTesting/${flowid}/runtest?${params}`
     }).done((resp) => {
@@ -288,7 +287,7 @@ function runAllTests(dirList) {
   if (RED.comms.isConnected && !RED.comms.isConnected()) {
     return RED.notify("Not connected to server, websocket down", "error")
   }
-
+  
   resetTestResultsRow();
   expandAllTests(dirList)
   clearAllNodeStatus()
@@ -314,13 +313,13 @@ function runAllTests(dirList) {
     }).fail((e) => {
       RED.notify("Failed to trigger tests", "error")
     });
-  }, 200)
+  }, 200)  
 }
 
    // Add your plugin as a new tabsheet in the right sidebar AFTER the flow editor is completely started
    var initialiseConfigNodeOnce = () => {
       RED.events.off('runtime-state', initialiseConfigNodeOnce);
-
+    
       var content = $($('script[type="text/x-red"][data-template-name="UnitTestingSidebar"]').i18n().html());
 
 // Add a "Your sidebar" tabsheet to the right sidebar panel, in which this sidebar panel can be displayed
@@ -376,6 +375,13 @@ var dirList = $("#node-input-unittestingpull-sb-target-container-div").css({
     multi: false
   }
 ).on('treelistselect', function (event, item) {
+    if ( item.flowid) {
+      $('#unittesting-view-testflow-link').prop('href', `?tstid=${item.flowid}`)
+      $('#unittesting-view-testflow-link').fadeIn(300)
+    } else {
+      $('#unittesting-view-testflow-link').fadeOut(300)
+      $('#unittesting-view-testflow-link').prop('href', "")
+    }
 }).on('treelistconfirm', function (event, item) {
   if (item.flowid) {
     doFlowImportForSidebarUnittesting(item.flowid)
@@ -406,7 +412,7 @@ $('#node-input-unittestingpull-sb-test-flow-but').on('click', function (e) {
   if (RED.comms.isConnected && !RED.comms.isConnected()) {
     return RED.notify("Not connected to server, websocket down", "error")
   }
-
+  
   let sltd = dirList.treeList('selected')
   if ( sltd.flowid) {
     runTestForFlowId(sltd.flowid,dirList)
@@ -434,7 +440,7 @@ let handleTestResult = (event, data) => {
       type: data.status == "failed" ? "error" : (data.status == "pending" ? "warning" : "success"),
       timeout: (data.status == "failed" || data.status == "pending") ? 3000 : 2000
     });
-
+    
     // update the test results row
     let v = parseInt($("#node-input-unittestingpull-testresults-row").find("."+data.status).html());
     $("#node-input-unittestingpull-testresults-row").find("." + data.status).html(`${v+1}`)
@@ -499,7 +505,7 @@ RED.actions.add("unittesting:test-current-workspace", testCurrentWorkspace)
 RED.actions.add("unittesting:run-all-tests", () => { runAllTests(dirList) } )
 
    };
-
+   
    RED.events.on('runtime-state', initialiseConfigNodeOnce);
 })();
 </script>
@@ -521,8 +527,11 @@ RED.actions.add("unittesting:run-all-tests", () => { runAllTests(dirList) } )
             <div class="form-row" style="margin-left: 10px; margin-top: 30px;">
                <button id="node-input-unittestingpull-sb-refresh-list-but"
                         class="red-ui-button"><i class="fa fa-refresh"></i> Refresh Test List</button>
+                <a id="unittesting-view-testflow-link" 
+                    style="color: blue; display: none; margin-left: 20px;" 
+                    target="_blank" href="">Share Testcase <i class="fa fa-external-link"></i></a>            
             </div>
-
+ 
             <div class="form-row"
                style="position: relative; min-height: 100px; height: 500px; margin-left: 10px; margin-right: 15px; margin-top: 5px;">
                <div style="position: absolute; top: -30px; right: 0px;">
@@ -534,12 +543,12 @@ RED.actions.add("unittesting:run-all-tests", () => { runAllTests(dirList) } )
          </div>
       </div>
 
-      <div id="node-input-unittestingpull-testresults-row" class="form-row"
+      <div id="node-input-unittestingpull-testresults-row" class="form-row" 
                 style="margin-left: 10px; margin-top: 30px; display: none;">
          Succeed <span class="success" style="color: green">0</span>
          / Pending <span class="pending" style="color: orange">0</span>
          / Failed <span class="failed" style="color: red">0</span>
-         / Total <span class='total'>0</span>
+         / Total <span class='total'>0</span> 
       </div>
 
       <div class="form-row" style="margin-left: 10px; margin-top: 30px;">
@@ -727,8 +736,8 @@ function createDiff(ndeV1, ndeV2) {
     }
   });
 
-  /*
-   * strange happenings, the server says that these two nodes differ but
+  /* 
+   * strange happenings, the server says that these two nodes differ but 
    * there are zero changed attributes ... hm  ... so do a diff over the
    * entire nodes.
    */
@@ -1001,7 +1010,7 @@ function generateVisualDiff(resp) {
       return;
     }
 
-    /*
+    /* 
      * Pass this point only nodes, no groups, tabs or junctions
      */
     var n = RED.nodes.node(nId);
@@ -1162,12 +1171,12 @@ function doSubmission(flowdata) {
     }
 
     let resp = fakeComparisonCallToBackend(flowid, e.flowdata /* from server */, flowdata /* here */)
-    generateVisualDiff(resp)
-
+    generateVisualDiff(resp) 
+    
   }).fail(e => {
     // flow data not available becauase test has not be created, test against an empty flow file.
     let resp = fakeComparisonCallToBackend(flowid, [], flowdata /* here */)
-    generateVisualDiff(resp)
+    generateVisualDiff(resp) 
   });
 }
 
@@ -1208,8 +1217,8 @@ function showNextChangeButtonPressed(e) {
       if (globalYourConfigNode === null) {
          var configNodes = [];
          RED.nodes.eachConfig(function(configNode) {
-             if (configNode.type === 'FlowCompareCfg') {
-                 configNodes.push(configNode);
+             if (configNode.type === 'FlowCompareCfg') { 
+                 configNodes.push(configNode); 
              }
          });
 
@@ -1234,7 +1243,7 @@ function showNextChangeButtonPressed(e) {
              id: RED.nodes.id(), // on the server side, this is called RED.util.generateId()
              _def: RED.nodes.getType("FlowCompareCfg"),
              type: "FlowCompareCfg",
-             hasUsers: false,
+             hasUsers: false, 
              users: [],
              name: "FlowCompare",
              label: function() { return this.name || "FlowCompare"},
@@ -1247,7 +1256,7 @@ function showNextChangeButtonPressed(e) {
 
          // Make sure the "Deploy" button becomes active
          RED.nodes.dirty(true);
-      }
+      }      
    }
 
    // Add your plugin as a new tabsheet in the right sidebar AFTER the flow editor is completely started
@@ -1256,7 +1265,7 @@ function showNextChangeButtonPressed(e) {
 
       // The html content of the sidebar has been specified below as a data-template, from where it can be loaded:
       var content = $($('script[type="text/x-red"][data-template-name="FlowCompare"]').i18n().html());
-
+    
       // Add a "Your sidebar" tabsheet to the right sidebar panel, in which this sidebar panel can be displayed
       // --> more details: https://nodered.org/docs/api/ui/sidebar/
       RED.sidebar.addTab({
@@ -1269,7 +1278,7 @@ function showNextChangeButtonPressed(e) {
          enableOnEdit: true,
          iconClass: "fa fa-map" // your fontawesome icon
       });
-
+      
       addPanZoom();
       ensureYourConfigNodeExists();
 
@@ -1286,7 +1295,7 @@ function showNextChangeButtonPressed(e) {
       });
 
       $('#node-input-flowcompare-next-change-btn').on('click', showNextChangeButtonPressed)
-
+      
       RED.panels.create({
          id: "flowcompare-diff-panel",
          resize: (topSze,botSze) => {

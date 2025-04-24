@@ -891,7 +891,6 @@ var RED = (function() {
 
     function loadEditor() {
 
-
         // cheeky little function for exporting test flows whenever a deploy
         // is done.
         function onDeployCreateTestFlowFromCurrentWorkspace() {
@@ -959,6 +958,8 @@ var RED = (function() {
         };
         RED.events.on( "workspace:dirty", initPlugins);
 
+        let srchParams = new URLSearchParams(window.location.search);
+
         $.ajaxPrefilter(function( options, originalOptions, jqXHR ) {
             let mth = undefined;
 
@@ -985,38 +986,53 @@ var RED = (function() {
                 options.url = "icons.json"
             }
 
-            // retrieve the current flow but if its storeed in the browser
-            // then use that.
+            // retrieve the initial flow. This can either be a test case
+            // flow (if tstid='...' parameter is set) or it can be the
+            // flow stored in the browser storage or it can be an initial
+            // empty flow from the server.
             if ( options.url == "flows" && options.type == "GET" ) {
-                let flowdata = RED.settings.getLocal( "flowdata" )
+                if ( srchParams.get("tstid") ) {
+                  // retrieve a specific test flow, ignore all other
+                  // previously engaged into activities.
+                  options.url = `flows.test.json?tstid=${srchParams.get("tstid")}`
+                  options.headers["Content-Type"] =
+                        "application/x-json-testflow";
+                  options.headers["Accept"] =
+                        "application/x-json-testflow";
 
-                if ( !flowdata ) {
-                    options.url = "flows.initial.json"
-
-                    /* setTimeout( () => {
-                     *     RED.nodes.dirty(true);
-                     *     RED.actions.invoke("core:deploy-flows")
-                     * },2300);*/
                 } else {
-                    try {
-                        options.success({
-                            "rev": "ea246f68766c8630ea246f68766c8630",
-                            "revision": "fb0df6d24f37fbdf5b3ff97b723416ab4d5f00f9",
-                            "flowid": "ea246f68766c8630",
-                            "flows": JSON.parse(flowdata)["flows"]
-                        })
+                  // retrieve the current flow but if its storeed in the browser
+                  // then use that.
+                  let flowdata = RED.settings.getLocal( "flowdata" )
 
-                        // update the server with the flow that was stored
-                        // locally, trigger a deploy.
-                        /* setTimeout( () => {
-                         *     RED.nodes.dirty(true);
-                         *     RED.actions.invoke("core:deploy-flows")
-                         * },1300);
-                         */
-                        jqXHR.abort();
-                    } catch(ex) {
-                        options.url = "flows.initial.json"
-                    }
+                  if ( !flowdata ) {
+                      options.url = "flows.initial.json"
+
+                      /* setTimeout( () => {
+                       *     RED.nodes.dirty(true);
+                       *     RED.actions.invoke("core:deploy-flows")
+                       * },2300);*/
+                  } else {
+                      try {
+                          options.success({
+                              "rev": "ea246f68766c8630ea246f68766c8630",
+                              "revision": "fb0df6d24f37fbdf5b3ff97b723416ab4d5f00f9",
+                              "flowid": "ea246f68766c8630",
+                              "flows": JSON.parse(flowdata)["flows"]
+                          })
+
+                          // update the server with the flow that was stored
+                          // locally, trigger a deploy.
+                          /* setTimeout( () => {
+                           *     RED.nodes.dirty(true);
+                           *     RED.actions.invoke("core:deploy-flows")
+                           * },1300);
+                           */
+                          jqXHR.abort();
+                      } catch(ex) {
+                          options.url = "flows.initial.json"
+                      }
+                  }
                 }
             }
 
@@ -1042,10 +1058,17 @@ var RED = (function() {
             if ( options.url == "flows" && options.type == "POST" ) {
                 if ( options.headers &&
                      options.headers["Node-RED-Deployment-Type"] == "reload" ) {
-                    options.headers["Content-Type"] = "application/x-json-restart"
+
+                    options.headers["Content-Type"] =
+                        "application/x-json-restart";
                     reloadFlows()
                 } else {
+                  if ( !srchParams.get("tstid") ) {
+                    // don't change the locally stored flow data *if* the
+                    // test id is set - this means someone came here viewing
+                    // a test flow - don't overwrite their stored flow.
                     RED.settings.setLocal( "flowdata", options.data)
+                  }
                 }
             }
         })
