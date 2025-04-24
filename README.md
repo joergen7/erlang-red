@@ -36,25 +36,16 @@ A kind of HOWTO describes my development process, best described as [flow driven
 
 The description is aimed at folks who have never used Node-RED but who would like to contribute. Feel free to [send me](erlang.red@flowhub.org) questions relating to the project and its development.
 
-Implementation Ramblings
+Architecture
 ----
 
-The idea is to convert Node-RED flows into Erlang processes to which message are sent.
+The architecture, along with a background to Flow Based Programming and Node-RED has been [written](Architecture.md).
 
-All this does is take an [example flow](https://cdn.flowhub.org/?t=0&fhid=ea246f68766c8630&tk=#flow/ea246f68766c8630) exported as [Json](priv/flow.json), parse the Json and create processes for each node found. It then sends a message to an inject node that then passes that message onto its connected nodes.
+The codebase as it stands, has many interdependence because of testing flows: [assert nodes](https://github.com/gorenje/erlang-red/blob/e2bd2f324ddc1bbe611dff29216246b80151ffc0/src/nodes/ered_node_assert_status.erl#L109-L131) need to know about [web-socket communication](https://github.com/gorenje/erlang-red/blob/e2bd2f324ddc1bbe611dff29216246b80151ffc0/src/servers/ered_ws_event_exchange.erl), or because of the nature of nodes: the [complete](https://github.com/gorenje/erlang-red/blob/e2bd2f324ddc1bbe611dff29216246b80151ffc0/src/nodes/ered_node_complete.erl#L74-L89) node needs to know of [completed messages](https://github.com/gorenje/erlang-red/blob/e2bd2f324ddc1bbe611dff29216246b80151ffc0/src/exchanges/ered_message_exchange.erl#L36-L39).
 
+While the [exception node](https://github.com/gorenje/erlang-red/blob/e2bd2f324ddc1bbe611dff29216246b80151ffc0/src/nodes/ered_node_catch.erl#L40) needs to know about exceptions when they [happen](https://github.com/gorenje/erlang-red/blob/e2bd2f324ddc1bbe611dff29216246b80151ffc0/src/exchanges/ered_message_exchange.erl#L46-L56).
 
-It’s an extremely simple demo but the underlying workflow is this:
-
-1. take a Node-RED flows.json file containing nodes and their connections
-
-2. parse the JSON and create for each node a process.
-
-3. each process is assigned a different function depending on the node type (Node-RED is low-code so there are nodes for doing switch (i.e. case & if), change (add/deleting entries in hashes) and debug (for printing contents of messages). So each type has a function and multiple nodes of the same time are each assigned an Erlang process.
-
-4. generate a message and send to a random process. In the demo this happens to be an “inject” node that is responsible (in the Node-RED world) for generating messages. That process that alters the message before passing it on.
-
-The demo is based on simple Node-RED flows that have been exported as Json and then interpreted - no modification of the exported Jsons has made.
+So an architectural diagram of this interconnectedness would be probably be just as confusing the code itself.
 
 Build
 -----
@@ -174,6 +165,12 @@ Acknowledgement
 ---
 
 [Nick](https://github.com/knolleary) and [Dave](https://github.com/dceejay) for bring Node-RED to live - amazing quality and flexibility and the entire [Node-RED community](https://discourse.nodered.org/).
+
+Much thanks to
+
+- [@mwmiller](https://github.com/mwmiller) for providing a fly server for running a [live version](https://ered.fly.dev/node-red) of Erlang-RED,
+- [@joaohf](https://erlangforums.com/u/joaohf/summary) many tips on coding Erlang and structuring an Erlang project, and
+- [@Maria-12648430](https://erlangforums.com/u/maria-12648430/summary) for debugging my initial attempt to create a gen_server for nodes.
 
 Disclaimer
 ---
