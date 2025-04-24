@@ -67,7 +67,7 @@ handle_call({reload, WsName}, _From, State) ->
         pg:which_groups()
     ),
     [[M ! {reload} || M <- pg:get_members(GrpName)] || GrpName <- Nodes],
-    {reply, <<"{\"rev\":\"dead73d0\"}">>, State};
+    {reply, <<"{\"rev\":\"dead060d\"}">>, State};
 handle_call({deploy, JsonStr, WsName}, _From, State) ->
     %% here we want to do a deploy which means using the prefix
     %% node_pid_ws<....> and either stopping those processes that no
@@ -91,7 +91,7 @@ handle_call({deploy, JsonStr, WsName}, _From, State) ->
     {ok, NodeAry} = maps:find(flows, FlowMap),
     create_pid_for_node(NodeAry, WsName),
 
-    {reply, <<"{\"rev\":\"dead73d0\"}">>, State};
+    {reply, <<"{\"rev\":\"fed00d06\"}">>, State};
 handle_call(_Msg, _From, State) ->
     {reply, State, State}.
 
