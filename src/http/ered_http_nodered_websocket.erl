@@ -88,6 +88,21 @@ websocket_info({error_debug, Data}, State) ->
     ered_ws_event_exchange:debug_msg(maps:find(wsname, State), error, Data3),
     Msg = json:encode([#{topic => debug, data => Data3}]),
     {reply, {text, Msg}, State};
+
+%%
+%% Clear a previous status
+websocket_info({status, NodeId, clear}, State) ->
+    Msg = json:encode([
+        #{
+            topic => jstr("status/~s", [NodeId]),
+            data => #{}
+        }
+    ]),
+
+    %% TODO this isn't sent to the status ered_ws_event_exchange:node because
+    %% TODO there does not seem to be a need and there is no API.
+    {reply, {text, Msg}, State};
+
 %%
 %% Here are the details to the possible values of the status
 %% elements.
@@ -118,6 +133,8 @@ websocket_info({status, NodeId, Txt, Clr, Shp}, State) ->
     ),
 
     {reply, {text, Msg}, State};
+
+
 %%
 %% Results of a unit test run. The details are sent via a debug message if
 %% there were errors.

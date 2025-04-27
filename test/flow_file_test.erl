@@ -50,6 +50,8 @@ websocket_faker(WsName) ->
         {status, NodeId, T, C, S} ->
             ered_ws_event_exchange:node_status({ok, WsName}, NodeId, T, C, S),
             websocket_faker(WsName);
+        {status, _NodeId, clear} ->
+            websocket_faker(WsName);
         Unknown ->
             io:format("WS faker got unknown msg: ~p~n", [Unknown]),
             websocket_faker(WsName)

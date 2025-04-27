@@ -12,6 +12,7 @@
     debug_string/2,
     debug_string/3,
     get_websocket_name/0,
+    node_status_clear/2,
     node_status/5,
     send_out_debug_msg/4,
     unittest_result/3,
@@ -30,18 +31,22 @@
 ]).
 
 send_on_if_ws(none, Msg) ->
-    io:format("WARNING[nodered](none): not sending ~p~n", [Msg]),
-    ok;
+    io:format("WARNING[nodered](none): not sending ~p~n", [Msg]);
 send_on_if_ws(WsName, Msg) ->
     case whereis(WsName) of
         undefined ->
             io:format("WARNING[nodered](Wsname): not sending ~p ~p~n", [
                 WsName, Msg
-            ]),
-            ok;
+            ]);
         _ ->
             WsName ! Msg
     end.
+
+%%
+%% clear a previous node status value.
+node_status_clear(WsName, NodeDef) ->
+    {ok, NodeId} = maps:find(id, NodeDef),
+    send_on_if_ws(WsName, {status, NodeId, clear}).
 
 node_status(WsName, NodeDef, Txt, Clr, Shp) when is_integer(Txt) ->
     TxtStr = io_lib:format("~p", [Txt]),
@@ -49,6 +54,7 @@ node_status(WsName, NodeDef, Txt, Clr, Shp) when is_integer(Txt) ->
 node_status(WsName, NodeDef, Txt, Clr, Shp) ->
     {ok, NodeId} = maps:find(id, NodeDef),
     send_on_if_ws(WsName, {status, NodeId, Txt, Clr, Shp}).
+
 
 debug(WsName, Data, error) ->
     send_on_if_ws(WsName, {error_debug, Data});
