@@ -13,7 +13,7 @@
             },
             {
                 "name": "ERED_TIMEOUT",
-                "value": "5",
+                "value": "8",
                 "type": "num"
             }
         ]
