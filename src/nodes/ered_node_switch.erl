@@ -31,6 +31,9 @@
 -import(ered_message_exchange, [
     post_completed/2
 ]).
+-import(ered_msg_handling, [
+    convert_to_num/1
+]).
 
 %%
 %%
@@ -46,32 +49,8 @@ is_gt(_, _) -> false.
 is_lt(A, B) when A < B -> true;
 is_lt(_, _) -> false.
 
-int_to_float(Val) ->
-    case string:to_integer(Val) of
-        {error, _} ->
-            case is_integer(Val) of
-                true ->
-                    {Val, ok};
-                _ ->
-                    io:format("Unable to convert to num ~p\n", [Val]),
-                    {0, error}
-            end;
-        {V, R} ->
-            {V, R}
-    end.
-
-to_num(Val) ->
-    case string:to_float(Val) of
-        {error, _} ->
-            int_to_float(Val);
-        {V, R} ->
-            {V, R}
-    end.
-
 to_num(V1, V2) ->
-    {V1num, _} = to_num(V1),
-    {V2num, _} = to_num(V2),
-    {V1num, V2num}.
+    {convert_to_num(V1), convert_to_num(V2)}.
 
 %%
 %%

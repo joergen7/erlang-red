@@ -17,24 +17,15 @@
     jstr/2,
     send_msg_to_connected_nodes/2
 ]).
+-import(ered_msg_handling, [
+    convert_units_to_milliseconds/2
+]).
 
 %%
 %%
 start(NodeDef, _WsName) ->
     ered_node:start(NodeDef, ?MODULE).
 
-convert_units_to_milliseconds({ok, <<"days">>}, {ok, Val}) ->
-    {ok, element(1, string:to_integer(Val)) * 1000 * 60 * 60 * 24};
-convert_units_to_milliseconds({ok, <<"hours">>}, {ok, Val}) ->
-    {ok, element(1, string:to_integer(Val)) * 1000 * 60 * 60};
-convert_units_to_milliseconds({ok, <<"minutes">>}, {ok, Val}) ->
-    {ok, element(1, string:to_integer(Val)) * 1000 * 60};
-convert_units_to_milliseconds({ok, <<"seconds">>}, {ok, Val}) ->
-    {ok, element(1, string:to_integer(Val)) * 1000};
-convert_units_to_milliseconds({ok, <<"milliseconds">>}, {ok, Val}) ->
-    {ok, element(1, string:to_integer(Val))};
-convert_units_to_milliseconds(A, B) ->
-    {error, jstr("WARNING: Delay nomatch for ~p & ~p~n", [A, B])}.
 
 %%
 %% this must return a millisecond value.

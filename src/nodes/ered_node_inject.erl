@@ -21,6 +21,7 @@
     unsupported/3
 ]).
 -import(ered_msg_handling, [
+    convert_to_num/1,
     timestamp/0,
     decode_json/1
 ]).
@@ -71,6 +72,12 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
                         NodeDef,
                         maps:put(payload, Val, Msg)
                     );
+                <<"num">> ->
+                    parse_props(
+                        RestProps,
+                        NodeDef,
+                        maps:put(payload, convert_to_num(Val), Msg)
+                    );
                 PropType ->
                     unsupported(
                         NodeDef,
@@ -109,6 +116,14 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
                         NodeDef,
                         maps:put(
                             binary_to_atom(PropName), Val, Msg
+                        )
+                    );
+                <<"num">> ->
+                    parse_props(
+                        RestProps,
+                        NodeDef,
+                        maps:put(
+                            binary_to_atom(PropName), convert_to_num(Val), Msg
                         )
                     );
                 PropType ->

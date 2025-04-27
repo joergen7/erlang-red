@@ -24,6 +24,7 @@
     this_should_not_happen/2
 ]).
 -import(ered_msg_handling, [
+    convert_to_num/1,
     decode_json/1,
     get_prop/2
 ]).
@@ -244,27 +245,6 @@ eql_msg_op(Prop, SrcVal, <<"num">>, ReqVal, _Msg) ->
     end;
 eql_msg_op(_, _, _, _, _) ->
     unsupported.
-
-%%
-%%
-%% TODO This util and those defined in the switch node should be put
-%% TODO into a centralised utility module.
-convert_to_num(Val) when is_integer(Val) ->
-    Val;
-convert_to_num(Val) when is_float(Val) ->
-    Val;
-convert_to_num(Val) ->
-    case string:to_float(Val) of
-        {error, _} ->
-            case string:to_integer(Val) of
-                {error, _} ->
-                    {error, "no conversion possible"};
-                {V, _} ->
-                    V
-            end;
-        {V, _} ->
-            V
-    end.
 
 %%
 %%

@@ -1,6 +1,8 @@
 -module(ered_msg_handling).
 
 -export([
+    convert_to_num/1,
+    convert_units_to_milliseconds/2,
     create_outgoing_msg/1,
     get_prop/2,
     decode_json/1,
@@ -9,8 +11,59 @@
 ]).
 
 -import(ered_nodes, [
-    generate_id/0
+    generate_id/0,
+    jstr/2
 ]).
+
+
+%%
+%% convert to num - a num can be a integer or float, so to convert a string
+%% to one of these inluding the negativity that is minus.
+convert_to_num(V) when is_binary(V) ->
+    convert_to_num(binary_to_list(V));
+convert_to_num(V) when is_number(V) ->
+    V;
+convert_to_num(V) when is_integer(V) ->
+    V;
+convert_to_num(V) when is_list(V) ->
+    case string:to_float(V) of
+        {error,_} ->
+            case string:to_integer(V) of
+                {error,_} ->
+                    {error,
+                     jstr("WARNING: Value ~p cannot be convereted to num", [V])};
+                {V2,_} ->
+                    V2
+            end;
+        {V3,_} ->
+            V3
+    end.
+
+
+%%
+%% these are from the trigger node
+convert_units_to_milliseconds({ok, <<"hr">>}, {ok, Val}) ->
+    {ok, element(1, string:to_integer(Val)) * 1000 * 60 * 60};
+convert_units_to_milliseconds({ok, <<"min">>}, {ok, Val}) ->
+    {ok, element(1, string:to_integer(Val)) * 1000 * 60};
+convert_units_to_milliseconds({ok, <<"s">>}, {ok, Val}) ->
+    {ok, element(1, string:to_integer(Val)) * 1000};
+convert_units_to_milliseconds({ok, <<"ms">>}, {ok, Val}) ->
+    {ok, element(1, string:to_integer(Val))};
+%%
+%% these are from the delay node
+convert_units_to_milliseconds({ok, <<"days">>}, {ok, Val}) ->
+    {ok, element(1, string:to_integer(Val)) * 1000 * 60 * 60 * 24};
+convert_units_to_milliseconds({ok, <<"hours">>}, {ok, Val}) ->
+    {ok, element(1, string:to_integer(Val)) * 1000 * 60 * 60};
+convert_units_to_milliseconds({ok, <<"minutes">>}, {ok, Val}) ->
+    {ok, element(1, string:to_integer(Val)) * 1000 * 60};
+convert_units_to_milliseconds({ok, <<"seconds">>}, {ok, Val}) ->
+    {ok, element(1, string:to_integer(Val)) * 1000};
+convert_units_to_milliseconds({ok, <<"milliseconds">>}, {ok, Val}) ->
+    {ok, element(1, string:to_integer(Val))};
+convert_units_to_milliseconds(A, B) ->
+    {error, jstr("WARNING: convert to ms: nomatch for ~p & ~p~n", [A, B])}.
 
 %%
 %% When something is a date type, it gets this value.
