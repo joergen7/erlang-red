@@ -66,13 +66,13 @@ websocket_info({data, Msg}, State) ->
 websocket_info({debug, Data}, State) ->
     Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
     ered_ws_event_exchange:debug_msg(maps:find(wsname, State), normal, Data2),
-    Msg = json:encode([#{topic => debug, data => Data2}]),
+    Msg = encode_json([#{topic => debug, data => Data2}]),
     {reply, {text, Msg}, State};
 websocket_info({notice_debug, Data}, State) ->
     Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
     Data3 = maps:put(level, 40, Data2),
     ered_ws_event_exchange:debug_msg(maps:find(wsname, State), notice, Data3),
-    Msg = json:encode([#{topic => debug, data => Data3}]),
+    Msg = encode_json([#{topic => debug, data => Data3}]),
     {reply, {text, Msg}, State};
 websocket_info({warning_debug, Data}, State) ->
     Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
@@ -80,13 +80,13 @@ websocket_info({warning_debug, Data}, State) ->
     ered_ws_event_exchange:debug_msg(
         maps:find(wsname, State), warning, Data3
     ),
-    Msg = json:encode([#{topic => debug, data => Data3}]),
+    Msg = encode_json([#{topic => debug, data => Data3}]),
     {reply, {text, Msg}, State};
 websocket_info({error_debug, Data}, State) ->
     Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
     Data3 = maps:put(level, 20, Data2),
     ered_ws_event_exchange:debug_msg(maps:find(wsname, State), error, Data3),
-    Msg = json:encode([#{topic => debug, data => Data3}]),
+    Msg = encode_json([#{topic => debug, data => Data3}]),
     {reply, {text, Msg}, State};
 %%
 %% Clear a previous status
@@ -172,3 +172,16 @@ terminate(_Reason, _Req, State) ->
             ok
     end,
     ok.
+
+%%
+%% This is json:encode except that Pids are converted to strings.
+%%
+encoder([{_, _} | _] = Value, Encode) ->
+    json:encode_key_value_list(Value, Encode);
+encoder(Other, Encode) when is_pid(Other) ->
+    json:encode_value(list_to_binary(pid_to_list(Other)), Encode);
+encoder(Other, Encode) ->
+    json:encode_value(Other, Encode).
+
+encode_json(Value2) ->
+    json:encode(Value2, fun(Value, Encode) -> encoder(Value, Encode) end).
