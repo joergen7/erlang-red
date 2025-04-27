@@ -4,7 +4,7 @@
         "type": "tab",
         "label": "[join] manual configration with count and property name",
         "disabled": false,
-        "info": "Join node can also collect together just a single property value.",
+        "info": "Join node can also collect together just a single property value.\n\nJoin should maintain the order of the received messages.",
         "env": []
     },
     {
@@ -135,7 +135,7 @@
                 "t": "eql",
                 "p": "payload",
                 "pt": "msg",
-                "to": "[4,3,2,1]",
+                "to": "[1,2,3,4]",
                 "tot": "json"
             }
         ],

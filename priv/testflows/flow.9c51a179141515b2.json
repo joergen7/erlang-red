@@ -68,11 +68,11 @@
         "name": "",
         "rules": [
             {
-                "t": "change",
-                "p": "payload",
-                "pt": "msg",
                 "from": "world",
                 "fromt": "str",
+                "p": "payload",
+                "pt": "msg",
+                "t": "change",
                 "to": "universe",
                 "tot": "str"
             }
@@ -97,9 +97,9 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
+                "t": "eql",
                 "to": "goodbye universe",
                 "tot": "str"
             }
@@ -127,8 +127,8 @@
         "topic": "",
         "payload": "hello world hello world hello world",
         "payloadType": "str",
-        "x": 403,
-        "y": 190,
+        "x": 412,
+        "y": 186,
         "wires": [
             [
                 "93554c8940ba01a7"
@@ -142,11 +142,11 @@
         "name": "change all occurances",
         "rules": [
             {
-                "t": "change",
-                "p": "payload",
-                "pt": "msg",
                 "from": "hello",
                 "fromt": "str",
+                "p": "payload",
+                "pt": "msg",
+                "t": "change",
                 "to": "goodbye",
                 "tot": "str"
             }
@@ -171,11 +171,11 @@
         "name": "change all occurances",
         "rules": [
             {
-                "t": "change",
-                "p": "payload",
-                "pt": "msg",
                 "from": "world",
                 "fromt": "str",
+                "p": "payload",
+                "pt": "msg",
+                "t": "change",
                 "to": "universe",
                 "tot": "str"
             }
@@ -200,9 +200,9 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
+                "t": "eql",
                 "to": "goodbye universe goodbye universe goodbye universe",
                 "tot": "str"
             }

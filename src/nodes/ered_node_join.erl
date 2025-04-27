@@ -137,14 +137,18 @@ handle_incoming(NodeDef, Msg) ->
             %% because these values are sent off to the complete node,
             %% need to keep a copy of the original message.
             Lst2 = [{retrieve_prop_value(PropName, Msg), Msg} | Lst],
-            Msg2 = maps:put(payload, [V || {V, _} <- Lst2], Msg),
+            %% Need to reverse the order of the returned array - because
+            %% we've been pushing onto the head and not the tail.
+            Msg2 = maps:put(payload,
+                            [V || {V, _} <- lists:reverse(Lst2)],
+                            Msg),
 
             %% now that we are ready to send out our message, we are completed
             %% with the message that make up that message (!!) so those
             %% messages should be sent to a complete node - if there is one
             %% See this post for details:
             %%   https://discourse.nodered.org/t/complete-node-msg-before-or-after-computation/96648/5
-            [post_completed(NodeDef, M) || {_, M} <- Lst2],
+            [post_completed(NodeDef, M) || {_, M} <- lists:reverse(Lst2)],
 
             send_msg_to_connected_nodes(NodeDef, Msg2),
 
@@ -174,14 +178,17 @@ handle_incoming(NodeDef, Msg) ->
         %%
         {ok, {ok, 1, {entire_msg}, Lst}} ->
             Lst2 = [Msg | Lst],
-            Msg2 = maps:put(payload, Lst2, Msg),
+
+            %% Need to reverse the order of the returned array - because
+            %% we've been pushing onto the head and not the tail.
+            Msg2 = maps:put(payload, lists:reverse(Lst2), Msg),
 
             %% now that we are ready to send out our message, we are completed
             %% with the message that make up that message (!!) so those
             %% messages should be sent to a complete node - if there is one
             %% See this post for details:
             %%   https://discourse.nodered.org/t/complete-node-msg-before-or-after-computation/96648/5
-            [post_completed(NodeDef, M) || M <- Lst2],
+            [post_completed(NodeDef, M) || M <- lists:reverse(Lst2)],
 
             send_msg_to_connected_nodes(NodeDef, Msg2),
 

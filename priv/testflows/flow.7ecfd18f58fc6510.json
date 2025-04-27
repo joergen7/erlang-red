@@ -205,9 +205,9 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
+                "t": "eql",
                 "to": "[1,2,3,4]",
                 "tot": "json"
             }
@@ -228,7 +228,7 @@
                 "t": "eql",
                 "p": "payload",
                 "pt": "msg",
-                "to": "[4,3,2,1]",
+                "to": "[1,2,3,4]",
                 "tot": "json"
             }
         ],

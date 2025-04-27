@@ -10,6 +10,11 @@
                 "name": "ERED_PENDING",
                 "value": "false",
                 "type": "bool"
+            },
+            {
+                "name": "ERED_TIMEOUT",
+                "value": "5",
+                "type": "num"
             }
         ]
     },
@@ -253,9 +258,9 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
+                "t": "eql",
                 "to": "[\"b\", \"e\", \"b\"]",
                 "tot": "json"
             }
