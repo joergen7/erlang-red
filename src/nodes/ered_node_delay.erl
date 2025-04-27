@@ -26,7 +26,6 @@
 start(NodeDef, _WsName) ->
     ered_node:start(NodeDef, ?MODULE).
 
-
 %%
 %% this must return a millisecond value.
 compute_pause({ok, <<"delay">>}, NodeDef, Msg) ->

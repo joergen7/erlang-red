@@ -55,7 +55,6 @@ node_status(WsName, NodeDef, Txt, Clr, Shp) ->
     {ok, NodeId} = maps:find(id, NodeDef),
     send_on_if_ws(WsName, {status, NodeId, Txt, Clr, Shp}).
 
-
 debug(WsName, Data, error) ->
     send_on_if_ws(WsName, {error_debug, Data});
 debug(WsName, Data, warning) ->

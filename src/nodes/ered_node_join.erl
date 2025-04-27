@@ -139,9 +139,11 @@ handle_incoming(NodeDef, Msg) ->
             Lst2 = [{retrieve_prop_value(PropName, Msg), Msg} | Lst],
             %% Need to reverse the order of the returned array - because
             %% we've been pushing onto the head and not the tail.
-            Msg2 = maps:put(payload,
-                            [V || {V, _} <- lists:reverse(Lst2)],
-                            Msg),
+            Msg2 = maps:put(
+                payload,
+                [V || {V, _} <- lists:reverse(Lst2)],
+                Msg
+            ),
 
             %% now that we are ready to send out our message, we are completed
             %% with the message that make up that message (!!) so those

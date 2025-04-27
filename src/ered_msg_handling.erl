@@ -15,7 +15,6 @@
     jstr/2
 ]).
 
-
 %%
 %% convert to num - a num can be a integer or float, so to convert a string
 %% to one of these inluding the negativity that is minus.
@@ -27,18 +26,19 @@ convert_to_num(V) when is_integer(V) ->
     V;
 convert_to_num(V) when is_list(V) ->
     case string:to_float(V) of
-        {error,_} ->
+        {error, _} ->
             case string:to_integer(V) of
-                {error,_} ->
+                {error, _} ->
                     {error,
-                     jstr("WARNING: Value ~p cannot be convereted to num", [V])};
-                {V2,_} ->
+                        jstr("WARNING: Value ~p cannot be convereted to num", [
+                            V
+                        ])};
+                {V2, _} ->
                     V2
             end;
-        {V3,_} ->
+        {V3, _} ->
             V3
     end.
-
 
 %%
 %% these are from the trigger node
