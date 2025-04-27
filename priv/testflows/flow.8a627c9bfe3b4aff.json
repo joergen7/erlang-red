@@ -8,8 +8,8 @@
         "env": [
             {
                 "name": "ERED_TIMEOUT",
-                "value": "10",
-                "type": "num"
+                "type": "num",
+                "value": "10"
             }
         ]
     },
@@ -299,9 +299,9 @@
         "name": "",
         "rules": [
             {
-                "t": "set",
                 "p": "level4",
                 "pt": "msg",
+                "t": "set",
                 "to": "reached",
                 "tot": "str"
             }
@@ -337,9 +337,9 @@
         "name": "",
         "rules": [
             {
-                "t": "set",
                 "p": "level3",
                 "pt": "msg",
+                "t": "set",
                 "to": "reached",
                 "tot": "str"
             }
@@ -364,9 +364,9 @@
         "name": "",
         "rules": [
             {
-                "t": "set",
                 "p": "level2",
                 "pt": "msg",
+                "t": "set",
                 "to": "reached",
                 "tot": "str"
             }
@@ -391,9 +391,9 @@
         "name": "",
         "rules": [
             {
-                "t": "set",
                 "p": "level1",
                 "pt": "msg",
+                "t": "set",
                 "to": "reached",
                 "tot": "str"
             }
@@ -682,37 +682,37 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
+                "t": "eql",
                 "to": "this is the payload Wow!",
                 "tot": "str"
             },
             {
-                "t": "eql",
                 "p": "level1",
                 "pt": "msg",
+                "t": "eql",
                 "to": "reached",
                 "tot": "str"
             },
             {
-                "t": "eql",
                 "p": "level2",
                 "pt": "msg",
+                "t": "eql",
                 "to": "reached",
                 "tot": "str"
             },
             {
-                "t": "eql",
                 "p": "level3",
                 "pt": "msg",
+                "t": "eql",
                 "to": "reached",
                 "tot": "str"
             },
             {
-                "t": "eql",
                 "p": "level4",
                 "pt": "msg",
+                "t": "eql",
                 "to": "reached",
                 "tot": "str"
             }
