@@ -264,27 +264,30 @@ node_type_to_fun(Type, _) ->
 %% TODO will do pretty much the same thing! nostalgia is always a good
 %% TODO reason: this list provides the order in which I implemented the nodes
 %% erlfmt:ignore alignment.
-node_type_to_fun(<<"inject">>)    -> ered_node_inject;
-node_type_to_fun(<<"switch">>)    -> ered_node_switch;
-node_type_to_fun(<<"debug">>)     -> ered_node_debug;
-node_type_to_fun(<<"junction">>)  -> ered_node_junction;
-node_type_to_fun(<<"change">>)    -> ered_node_change;
-node_type_to_fun(<<"link out">>)  -> ered_node_link_out;
-node_type_to_fun(<<"link in">>)   -> ered_node_link_in;
-node_type_to_fun(<<"link call">>) -> ered_node_link_call;
-node_type_to_fun(<<"delay">>)     -> ered_node_delay;
-node_type_to_fun(<<"file in">>)   -> ered_node_file_in;
-node_type_to_fun(<<"json">>)      -> ered_node_json;
-node_type_to_fun(<<"template">>)  -> ered_node_template;
-node_type_to_fun(<<"join">>)      -> ered_node_join;
-node_type_to_fun(<<"split">>)     -> ered_node_split;
-node_type_to_fun(<<"catch">>)     -> ered_node_catch;
-node_type_to_fun(<<"comment">>)   -> ered_node_ignore;
-node_type_to_fun(<<"tab">>)       -> ered_node_ignore;
-node_type_to_fun(<<"complete">>)  -> ered_node_complete;
-node_type_to_fun(<<"group">>)     -> ered_node_ignore;
-node_type_to_fun(<<"status">>)    -> ered_node_status;
-node_type_to_fun(<<"trigger">>)   -> ered_node_trigger;
+node_type_to_fun(<<"inject">>)        -> ered_node_inject;
+node_type_to_fun(<<"switch">>)        -> ered_node_switch;
+node_type_to_fun(<<"debug">>)         -> ered_node_debug;
+node_type_to_fun(<<"junction">>)      -> ered_node_junction;
+node_type_to_fun(<<"change">>)        -> ered_node_change;
+node_type_to_fun(<<"link out">>)      -> ered_node_link_out;
+node_type_to_fun(<<"link in">>)       -> ered_node_link_in;
+node_type_to_fun(<<"link call">>)     -> ered_node_link_call;
+node_type_to_fun(<<"delay">>)         -> ered_node_delay;
+node_type_to_fun(<<"file in">>)       -> ered_node_file_in;
+node_type_to_fun(<<"json">>)          -> ered_node_json;
+node_type_to_fun(<<"template">>)      -> ered_node_template;
+node_type_to_fun(<<"join">>)          -> ered_node_join;
+node_type_to_fun(<<"split">>)         -> ered_node_split;
+node_type_to_fun(<<"catch">>)         -> ered_node_catch;
+node_type_to_fun(<<"comment">>)       -> ered_node_ignore;
+node_type_to_fun(<<"tab">>)           -> ered_node_ignore;
+node_type_to_fun(<<"complete">>)      -> ered_node_complete;
+node_type_to_fun(<<"group">>)         -> ered_node_ignore;
+node_type_to_fun(<<"status">>)        -> ered_node_status;
+node_type_to_fun(<<"trigger">>)       -> ered_node_trigger;
+node_type_to_fun(<<"http in">>)       -> ered_node_http_in;
+node_type_to_fun(<<"http response">>) -> ered_node_http_response;
+
 %%
 %% Assert nodes for testing functionality of the nodes
 %%
