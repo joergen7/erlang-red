@@ -18,7 +18,6 @@
     decode_json/1
 ]).
 
-
 %%
 %% return the env array on the tab or empty array.
 find_tab_env_ary([]) ->
@@ -30,7 +29,7 @@ find_tab_env_ary([NodeDef = #{type := <<"tab">>} | _T]) ->
         _ ->
             []
     end;
-find_tab_env_ary([_H|T]) ->
+find_tab_env_ary([_H | T]) ->
     find_tab_env_ary(T).
 
 %%
@@ -50,12 +49,11 @@ obtain_timeout([]) ->
     1234;
 obtain_timeout([#{value := V, name := <<"ERED_TIMEOUT">>} | _T]) ->
     element(1, string:to_integer(V)) * 1000;
-obtain_timeout([_H|T]) ->
+obtain_timeout([_H | T]) ->
     obtain_timeout(T).
 
 compute_timeout(Ary) ->
     obtain_timeout(find_tab_env_ary(Ary)).
-
 
 %%
 %%
@@ -95,7 +93,7 @@ get_pending_envvar([]) ->
     false;
 get_pending_envvar([#{value := V, name := <<"ERED_PENDING">>} | _T]) ->
     (V == <<"true">>) or (V == <<"TRUE">>);
-get_pending_envvar([_H|T]) ->
+get_pending_envvar([_H | T]) ->
     get_pending_envvar(T).
 
 is_test_case_pending(Ary) ->
@@ -107,7 +105,7 @@ keep_running([]) ->
     false;
 keep_running([#{value := V, name := <<"ERED_KEEPRUNNING">>} | _T]) ->
     (V == <<"true">>) or (V == <<"TRUE">>);
-keep_running([_H|T]) ->
+keep_running([_H | T]) ->
     keep_running(T).
 
 should_keep_flow_running(Ary) ->
@@ -123,7 +121,7 @@ not_eunit_test([]) ->
     false;
 not_eunit_test([#{value := V, name := <<"ERED_NOT_EUNIT">>} | _T]) ->
     (V == <<"true">>) or (V == <<"TRUE">>);
-not_eunit_test([_H|T]) ->
+not_eunit_test([_H | T]) ->
     not_eunit_test(T).
 
 ignore_as_eunit_test(Ary) ->
