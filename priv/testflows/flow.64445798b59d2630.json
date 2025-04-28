@@ -16,8 +16,8 @@
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 135,
-        "y": 401,
+        "x": 236,
+        "y": 582,
         "wires": [
             [
                 "07f0646063881fd4",
@@ -36,8 +36,8 @@
         "name": "",
         "statusCode": "",
         "headers": {},
-        "x": 642,
-        "y": 671,
+        "x": 743,
+        "y": 852,
         "wires": []
     },
     {
@@ -52,8 +52,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 700,
-        "y": 562,
+        "x": 801,
+        "y": 743,
         "wires": []
     },
     {
@@ -69,8 +69,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 397,
-        "y": 260,
+        "x": 498,
+        "y": 441,
         "wires": []
     },
     {
@@ -94,8 +94,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 97,
-        "y": 153,
+        "x": 222.5,
+        "y": 200,
         "wires": [
             [
                 "4311564baa38d4f0"
@@ -113,8 +113,8 @@
         "syntax": "plain",
         "template": "Hello world.\n\nAnd one more thing.\n\nThis is a test.\n\nBut should work.\n\n",
         "output": "str",
-        "x": 410,
-        "y": 563,
+        "x": 511,
+        "y": 744,
         "wires": [
             [
                 "5e4c89343875e2b8",
@@ -138,8 +138,8 @@
         "authType": "",
         "senderr": false,
         "headers": [],
-        "x": 464,
-        "y": 166,
+        "x": 589.5,
+        "y": 213,
         "wires": [
             [
                 "ebafe26f5b73eff6",
@@ -164,8 +164,8 @@
         "drop": false,
         "allowrate": false,
         "outputs": 1,
-        "x": 284.5,
-        "y": 213,
+        "x": 410,
+        "y": 260,
         "wires": [
             [
                 "2ed1a71543381782"
@@ -179,22 +179,22 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "statusCode",
                 "pt": "msg",
+                "t": "eql",
                 "to": "200",
                 "tot": "num"
             },
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
+                "t": "eql",
                 "to": "\"Hello world.\\n\\nAnd one more thing.\\n\\nThis is a test.\\n\\nBut should work.\\n\\n\"",
                 "tot": "json"
             }
         ],
-        "x": 720,
-        "y": 166.5,
+        "x": 845.5,
+        "y": 213.5,
         "wires": [
             []
         ]
@@ -211,8 +211,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 698.5,
-        "y": 88,
+        "x": 824,
+        "y": 135,
         "wires": []
     },
     {
@@ -222,15 +222,15 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "req.params.param1",
                 "pt": "msg",
+                "t": "eql",
                 "to": "val1",
                 "tot": "str"
             }
         ],
-        "x": 512,
-        "y": 457,
+        "x": 613,
+        "y": 638,
         "wires": [
             []
         ]
@@ -242,15 +242,15 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "req.params.param2",
                 "pt": "msg",
+                "t": "eql",
                 "to": "val2",
                 "tot": "str"
             }
         ],
-        "x": 584,
-        "y": 388,
+        "x": 685,
+        "y": 569,
         "wires": [
             []
         ]
@@ -262,13 +262,13 @@
         "name": "",
         "rules": [
             {
-                "t": "set",
                 "p": "req.query",
-                "pt": "msg"
+                "pt": "msg",
+                "t": "set"
             }
         ],
-        "x": 622,
-        "y": 281,
+        "x": 723,
+        "y": 462,
         "wires": [
             []
         ]
@@ -281,15 +281,15 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "req.query",
                 "pt": "msg",
+                "t": "eql",
                 "to": "[{<<\"query1\">>,<<\"val3\">>},{<<\"query1\">>,<<\"val4\">>}]",
                 "tot": "str"
             }
         ],
-        "x": 607,
-        "y": 335,
+        "x": 708,
+        "y": 516,
         "wires": [
             []
         ]
