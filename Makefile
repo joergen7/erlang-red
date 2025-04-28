@@ -13,11 +13,17 @@ enter-docker-shell:
 compile:
 	rebar3 compile
 
+compile-loop:
+	while [ 1 ] ; do make -s compile ; sleep 2 ; reset ; done
+
 shell:
 	rebar3 shell
 
 app-start:
 	rebar3 shell --apps erlang_red
+
+app-start-loop:
+	while [ 1 ] ; do make -s app-start ; done
 
 eunit-test:
 	rebar3 eunit
