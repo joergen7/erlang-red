@@ -1,10 +1,18 @@
 -module(ered_flows).
 
--export([parse_flow_file/1]).
--export([compute_timeout/1]).
--export([append_tab_name_to_filename/2]).
--export([is_test_case_pending/1]).
--export([should_keep_flow_running/1]).
+-export([
+    append_tab_name_to_filename/2,
+    compute_timeout/1,
+    ignore_as_eunit_test/1,
+    is_test_case_pending/1,
+    parse_flow_file/1,
+    should_keep_flow_running/1
+]).
+
+%%
+%% Module contains flow specific functionality. Anything that affects
+%% an entire flow should be here.
+%%
 
 -import(ered_msg_handling, [
     decode_json/1
@@ -145,4 +153,40 @@ should_keep_flow_running([NodeDef | MoreNodeDefs]) ->
             end;
         _ ->
             should_keep_flow_running(MoreNodeDefs)
+    end.
+
+%%
+%% these are test flows that are ignored as eunit tests because they are
+%% - at the time of writing - too annoying to test and secondly get tested
+%% in the flow editor whenn all tests are run.
+%%
+%% Hence these test flows are not pending, they are "flow editor only tests"
+not_eunit_test([]) ->
+    false;
+not_eunit_test([H | T]) ->
+    case maps:find(name, H) of
+        {ok, <<"ERED_NOT_EUNIT">>} ->
+            case maps:find(value, H) of
+                {ok, Val} ->
+                    (Val == <<"true">>) or (Val == <<"TRUE">>);
+                _ ->
+                    false
+            end;
+        _ ->
+            not_eunit_test(T)
+    end.
+
+ignore_as_eunit_test([]) ->
+    false;
+ignore_as_eunit_test([NodeDef | MoreNodeDefs]) ->
+    case maps:find(type, NodeDef) of
+        {ok, <<"tab">>} ->
+            case maps:find(env, NodeDef) of
+                {ok, EnvAry} ->
+                    not_eunit_test(EnvAry);
+                _ ->
+                    false
+            end;
+        _ ->
+            ignore_as_eunit_test(MoreNodeDefs)
     end.

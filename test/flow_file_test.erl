@@ -169,10 +169,24 @@ create_test_for_flow_file([FileName | MoreFileNames], Acc) ->
                 end}
             };
         false ->
-            TestCase = {
-                list_to_binary(color:yellow(TestName)),
-                {timeout, 30, fun() -> TestFunc() end}
-            }
+            case ered_flows:ignore_as_eunit_test(Ary) of
+                true ->
+                    TestCase = {
+                        list_to_binary(color:cyan(TestName)),
+                        {timeout, 5, fun() ->
+                            ?debugMsg(
+                                color:cyan(
+                                    io_lib:format("IGNORED ~s", [TestName])
+                                )
+                            )
+                        end}
+                    };
+                false ->
+                    TestCase = {
+                        list_to_binary(color:yellow(TestName)),
+                        {timeout, 30, fun() -> TestFunc() end}
+                    }
+            end
     end,
 
     create_test_for_flow_file(
