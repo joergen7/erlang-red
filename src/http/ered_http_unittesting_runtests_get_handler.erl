@@ -50,11 +50,15 @@ handle_response(Req, State) ->
                     {start_test, FlowId, WsName, TestPendingTests}
              || FlowId <- AllFlowIds
             ],
-            {json:encode(#{status => ok}), Req, State};
+
+            {json:encode(#{ status => ok,
+                            todo => length(AllFlowIds)}),
+             Req,
+             State };
         FlowId ->
             ered_unittest_engine !
                 {start_test, FlowId, WsName, TestPendingTests},
-            {json:encode(#{status => ok}), Req, State}
+            {json:encode(#{status => ok, todo => 1}), Req, State}
     end.
 
 format_error(Reason, Req) ->
