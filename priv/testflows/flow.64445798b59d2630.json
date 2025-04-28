@@ -1,0 +1,297 @@
+[
+    {
+        "id": "64445798b59d2630",
+        "type": "tab",
+        "label": "[http] have params in the path",
+        "disabled": false,
+        "info": "Http in nodes should be able to define paths that contain placeholder for parameters.",
+        "env": []
+    },
+    {
+        "id": "636e832e3c16a9e6",
+        "type": "http in",
+        "z": "64445798b59d2630",
+        "name": "",
+        "url": "/testtwo/:param1/:param2",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 135,
+        "y": 401,
+        "wires": [
+            [
+                "07f0646063881fd4",
+                "7288f0fd22652e25",
+                "58de6c031b4d0618",
+                "2b0918bcb0b55c53",
+                "c2a29d7fc0ebe85e",
+                "2ca24d1ddbfe2454"
+            ]
+        ]
+    },
+    {
+        "id": "568af6bcb1c5cf73",
+        "type": "http response",
+        "z": "64445798b59d2630",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 642,
+        "y": 671,
+        "wires": []
+    },
+    {
+        "id": "5e4c89343875e2b8",
+        "type": "debug",
+        "z": "64445798b59d2630",
+        "name": "debug 9",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 700,
+        "y": 562,
+        "wires": []
+    },
+    {
+        "id": "07f0646063881fd4",
+        "type": "debug",
+        "z": "64445798b59d2630",
+        "name": "debug 10",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 397,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "a7e3dcf48b15929a",
+        "type": "inject",
+        "z": "64445798b59d2630",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 97,
+        "y": 153,
+        "wires": [
+            [
+                "4311564baa38d4f0"
+            ]
+        ]
+    },
+    {
+        "id": "7288f0fd22652e25",
+        "type": "template",
+        "z": "64445798b59d2630",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "plain",
+        "template": "Hello world.\n\nAnd one more thing.\n\nThis is a test.\n\nBut should work.\n\n",
+        "output": "str",
+        "x": 410,
+        "y": 563,
+        "wires": [
+            [
+                "5e4c89343875e2b8",
+                "568af6bcb1c5cf73"
+            ]
+        ]
+    },
+    {
+        "id": "2ed1a71543381782",
+        "type": "http request",
+        "z": "64445798b59d2630",
+        "name": "",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://localhost:8080/testtwo/val1/val2?query1=val3&query1=val4",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 464,
+        "y": 166,
+        "wires": [
+            [
+                "ebafe26f5b73eff6",
+                "fd093691675744c8"
+            ]
+        ]
+    },
+    {
+        "id": "4311564baa38d4f0",
+        "type": "delay",
+        "z": "64445798b59d2630",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "250",
+        "timeoutUnits": "milliseconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 284.5,
+        "y": 213,
+        "wires": [
+            [
+                "2ed1a71543381782"
+            ]
+        ]
+    },
+    {
+        "id": "ebafe26f5b73eff6",
+        "type": "ut-assert-values",
+        "z": "64445798b59d2630",
+        "name": "",
+        "rules": [
+            {
+                "t": "eql",
+                "p": "statusCode",
+                "pt": "msg",
+                "to": "200",
+                "tot": "num"
+            },
+            {
+                "t": "eql",
+                "p": "payload",
+                "pt": "msg",
+                "to": "\"Hello world.\\n\\nAnd one more thing.\\n\\nThis is a test.\\n\\nBut should work.\\n\\n\"",
+                "tot": "json"
+            }
+        ],
+        "x": 720,
+        "y": 166.5,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fd093691675744c8",
+        "type": "debug",
+        "z": "64445798b59d2630",
+        "name": "debug 11",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 698.5,
+        "y": 88,
+        "wires": []
+    },
+    {
+        "id": "58de6c031b4d0618",
+        "type": "ut-assert-values",
+        "z": "64445798b59d2630",
+        "name": "",
+        "rules": [
+            {
+                "t": "eql",
+                "p": "req.params.param1",
+                "pt": "msg",
+                "to": "val1",
+                "tot": "str"
+            }
+        ],
+        "x": 512,
+        "y": 457,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "2b0918bcb0b55c53",
+        "type": "ut-assert-values",
+        "z": "64445798b59d2630",
+        "name": "",
+        "rules": [
+            {
+                "t": "eql",
+                "p": "req.params.param2",
+                "pt": "msg",
+                "to": "val2",
+                "tot": "str"
+            }
+        ],
+        "x": 584,
+        "y": 388,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "c2a29d7fc0ebe85e",
+        "type": "ut-assert-values",
+        "z": "64445798b59d2630",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "req.query",
+                "pt": "msg"
+            }
+        ],
+        "x": 622,
+        "y": 281,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "2ca24d1ddbfe2454",
+        "type": "ut-assert-values",
+        "z": "64445798b59d2630",
+        "d": true,
+        "name": "",
+        "rules": [
+            {
+                "t": "eql",
+                "p": "req.query",
+                "pt": "msg",
+                "to": "[{<<\"query1\">>,<<\"val3\">>},{<<\"query1\">>,<<\"val4\">>}]",
+                "tot": "str"
+            }
+        ],
+        "x": 607,
+        "y": 335,
+        "wires": [
+            []
+        ]
+    }
+]

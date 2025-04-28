@@ -191,9 +191,16 @@
                 "pt": "msg",
                 "to": "200",
                 "tot": "num"
+            },
+            {
+                "t": "eql",
+                "p": "payload",
+                "pt": "msg",
+                "to": "\"Hello world.\\n\\nAnd one more thing.\\n\\nThis is a test.\\n\\nBut should work.\\n\\n\"",
+                "tot": "json"
             }
         ],
-        "x": 832,
+        "x": 812,
         "y": 122.5,
         "wires": [
             []

@@ -21,14 +21,35 @@
 ]).
 
 init(Req, State) ->
+    %% TODO should check the method of the request to better distinguish
+    %% TODO between POST, GET, HEAD, PUT & DELETE
     {ok, HttpInPid} = maps:find(pid, State),
     {ok, WsName} = maps:find(wsname, State),
 
+    %% create a base Msg with _msgid and _ws as attributes
     {outgoing, Msg} = create_outgoing_msg(WsName),
+
+    %% add the this pid so that a reply can be sent to the client
     Msg2 = maps:put(reqpid, self(), Msg),
 
-    gen_server:cast(HttpInPid, {outgoing, Msg2}),
-    {cowboy_loop, Req, State, hibernate}.
+    %% add the bindings of any parameters in the path plus other stuff
+    %% into the req object
+    {ok, Body, Req2} = read_entire_body(Req),
+
+    ReqObj = #{
+       body => Body,
+       params => cowboy_req:bindings(Req),
+       cookies => cowboy_req:parse_cookies(Req),
+       query => cowboy_req:parse_qs(Req)
+    },
+    Msg3 = maps:put(req, ReqObj, Msg2),
+
+    %% add the body as payload
+    Msg4 = maps:put(payload, Body, Msg3),
+
+    gen_server:cast(HttpInPid, {outgoing, Msg4}),
+
+    {cowboy_loop, Req2, State, hibernate}.
 
 %%
 %%
@@ -42,3 +63,15 @@ info({reply, Headers, Body}, Req, State) ->
     {stop, Req2, State};
 info(_Msg, Req, State) ->
     {ok, Req, State, hibernate}.
+
+
+%%
+%%
+read_entire_body(Req) ->
+    read_body(Req, <<"">>).
+
+read_body(Req0, Acc) ->
+    case cowboy_req:read_body(Req0) of
+        {ok, Data, Req} -> {ok, << Acc/binary, Data/binary >>, Req};
+        {more, Data, Req} -> read_body(Req, << Acc/binary, Data/binary >>)
+    end.
