@@ -18,46 +18,44 @@
     decode_json/1
 ]).
 
+
+%%
+%% return the env array on the tab or empty array.
+find_tab_env_ary([]) ->
+    [];
+find_tab_env_ary([NodeDef = #{type := <<"tab">>} | _T]) ->
+    case maps:find(env, NodeDef) of
+        {ok, V} ->
+            V;
+        _ ->
+            []
+    end;
+find_tab_env_ary([_H|T]) ->
+    find_tab_env_ary(T).
+
 %%
 %% Compute a timeout for the flow test, can be set in the flows.json file.
 %% Since flows have delays or even test the delay node, it must be possible
 %% to define a timeout per flow test. This is possible by using the ENV
-%% variables for a flow tab:
+%% variables, for a flow tab:
 %%
 %%   double-click on flow tab --> properties --> env --> TIMEOUT
 %%
 %% a timeout value is always in seconds.
 %%
-%% Default timeout is 1234 which allows eunit to complete.
-compute_timeout([], get_time_in_ms) ->
+%% Default timeout is 1234ms which allows eunit to complete. The returned
+%% value of this function is milliseconds, even if the original value in
+%% the flow was seconds.
+obtain_timeout([]) ->
     1234;
-compute_timeout([H | T], get_time_in_ms) ->
-    case maps:find(name, H) of
-        {ok, <<"ERED_TIMEOUT">>} ->
-            case maps:find(value, H) of
-                {ok, Val} ->
-                    element(1, string:to_integer(Val)) * 1000;
-                _ ->
-                    1234
-            end;
-        _ ->
-            compute_timeout(T, get_time_in_ms)
-    end.
+obtain_timeout([#{value := V, name := <<"ERED_TIMEOUT">>} | _T]) ->
+    element(1, string:to_integer(V)) * 1000;
+obtain_timeout([_H|T]) ->
+    obtain_timeout(T).
 
-compute_timeout([]) ->
-    1234;
-compute_timeout([NodeDef | Ary]) ->
-    case maps:find(type, NodeDef) of
-        {ok, <<"tab">>} ->
-            case maps:find(env, NodeDef) of
-                {ok, EnvAry} ->
-                    compute_timeout(EnvAry, get_time_in_ms);
-                _ ->
-                    1234
-            end;
-        _ ->
-            compute_timeout(Ary)
-    end.
+compute_timeout(Ary) ->
+    obtain_timeout(find_tab_env_ary(Ary)).
+
 
 %%
 %%
@@ -95,65 +93,25 @@ append_tab_name_to_filename([NodeDef | MoreNodeDefs], FileName, {ok, TabId}) ->
 %%
 get_pending_envvar([]) ->
     false;
-get_pending_envvar([H | T]) ->
-    case maps:find(name, H) of
-        {ok, <<"ERED_PENDING">>} ->
-            case maps:find(value, H) of
-                {ok, Val} ->
-                    (Val == <<"true">>) or (Val == <<"TRUE">>);
-                _ ->
-                    false
-            end;
-        _ ->
-            get_pending_envvar(T)
-    end.
+get_pending_envvar([#{value := V, name := <<"ERED_PENDING">>} | _T]) ->
+    (V == <<"true">>) or (V == <<"TRUE">>);
+get_pending_envvar([_H|T]) ->
+    get_pending_envvar(T).
 
-is_test_case_pending([]) ->
-    false;
-is_test_case_pending([NodeDef | MoreNodeDefs]) ->
-    case maps:find(type, NodeDef) of
-        {ok, <<"tab">>} ->
-            case maps:find(env, NodeDef) of
-                {ok, EnvAry} ->
-                    get_pending_envvar(EnvAry);
-                _ ->
-                    false
-            end;
-        _ ->
-            is_test_case_pending(MoreNodeDefs)
-    end.
+is_test_case_pending(Ary) ->
+    get_pending_envvar(find_tab_env_ary(Ary)).
 
 %%
 %%
 keep_running([]) ->
     false;
-keep_running([H | T]) ->
-    case maps:find(name, H) of
-        {ok, <<"ERED_KEEPRUNNING">>} ->
-            case maps:find(value, H) of
-                {ok, Val} ->
-                    (Val == <<"true">>) or (Val == <<"TRUE">>);
-                _ ->
-                    false
-            end;
-        _ ->
-            keep_running(T)
-    end.
+keep_running([#{value := V, name := <<"ERED_KEEPRUNNING">>} | _T]) ->
+    (V == <<"true">>) or (V == <<"TRUE">>);
+keep_running([_H|T]) ->
+    keep_running(T).
 
-should_keep_flow_running([]) ->
-    false;
-should_keep_flow_running([NodeDef | MoreNodeDefs]) ->
-    case maps:find(type, NodeDef) of
-        {ok, <<"tab">>} ->
-            case maps:find(env, NodeDef) of
-                {ok, EnvAry} ->
-                    keep_running(EnvAry);
-                _ ->
-                    false
-            end;
-        _ ->
-            should_keep_flow_running(MoreNodeDefs)
-    end.
+should_keep_flow_running(Ary) ->
+    keep_running(find_tab_env_ary(Ary)).
 
 %%
 %% these are test flows that are ignored as eunit tests because they are
@@ -163,30 +121,10 @@ should_keep_flow_running([NodeDef | MoreNodeDefs]) ->
 %% Hence these test flows are not pending, they are "flow editor only tests"
 not_eunit_test([]) ->
     false;
-not_eunit_test([H | T]) ->
-    case maps:find(name, H) of
-        {ok, <<"ERED_NOT_EUNIT">>} ->
-            case maps:find(value, H) of
-                {ok, Val} ->
-                    (Val == <<"true">>) or (Val == <<"TRUE">>);
-                _ ->
-                    false
-            end;
-        _ ->
-            not_eunit_test(T)
-    end.
+not_eunit_test([#{value := V, name := <<"ERED_NOT_EUNIT">>} | _T]) ->
+    (V == <<"true">>) or (V == <<"TRUE">>);
+not_eunit_test([_H|T]) ->
+    not_eunit_test(T).
 
-ignore_as_eunit_test([]) ->
-    false;
-ignore_as_eunit_test([NodeDef | MoreNodeDefs]) ->
-    case maps:find(type, NodeDef) of
-        {ok, <<"tab">>} ->
-            case maps:find(env, NodeDef) of
-                {ok, EnvAry} ->
-                    not_eunit_test(EnvAry);
-                _ ->
-                    false
-            end;
-        _ ->
-            ignore_as_eunit_test(MoreNodeDefs)
-    end.
+ignore_as_eunit_test(Ary) ->
+    not_eunit_test(find_tab_env_ary(Ary)).
