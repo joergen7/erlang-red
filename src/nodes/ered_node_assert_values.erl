@@ -161,14 +161,15 @@ match_value_on_msg(_, _, _, _, _, _) ->
 %%
 %%
 eql_msg_op(Prop, SrcVal, <<"json">>, ReqVal, _Msg) ->
-    case is_same(decode_json(ReqVal), SrcVal) of
+    DecodedVal = decode_json(ReqVal),
+    case is_same(DecodedVal, SrcVal) of
         true ->
             true;
         _ ->
             {failed,
                 jstr(
                     "Prop '~p': Exp: '~p' Was: '~p'",
-                    [Prop, ReqVal, SrcVal]
+                    [Prop, DecodedVal, SrcVal]
                 )}
     end;
 eql_msg_op(Prop, SrcVal, <<"str">>, ReqVal, _Msg) ->
@@ -227,8 +228,8 @@ eql_msg_op(Prop, SrcVal, <<"num">>, ReqVal, _Msg) ->
                 {error, _} ->
                     {failed,
                         jstr(
-                            "Required val was not a num: ~p",
-                            [ReqVal]
+                            "Required val for ~p was not a num: ~p",
+                            [Prop, ReqVal]
                         )};
                 ReqNum ->
                     case ReqNum == SrcNum of
@@ -237,8 +238,8 @@ eql_msg_op(Prop, SrcVal, <<"num">>, ReqVal, _Msg) ->
                         _ ->
                             {failed,
                                 jstr(
-                                    "Values not equal Exp: [~p] != Was: [~p]",
-                                    [ReqNum, SrcNum]
+                                    "Values not equal for ~p Exp: ~p != Was: ~p",
+                                    [Prop, ReqNum, SrcNum]
                                 )}
                     end
             end
