@@ -20,6 +20,7 @@
     send_msg_to_connected_nodes/2
 ]).
 -import(ered_msg_handling, [
+    convert_to_num/1,
     decode_json/1,
     get_prop/2,
     timestamp/0
@@ -91,6 +92,8 @@ do_change_str({ok, Prop}, {ok, FromStr}, {ok, ToStr}, Msg) ->
 
 %%
 %%
+do_set_value(Prop, Value, <<"num">>, Msg, _NodeDef) ->
+    maps:put(binary_to_atom(Prop), convert_to_num(Value), Msg);
 do_set_value(Prop, _Value, <<"date">>, Msg, _NodeDef) ->
     maps:put(binary_to_atom(Prop), timestamp(), Msg);
 do_set_value(Prop, Value, <<"str">>, Msg, _NodeDef) ->
