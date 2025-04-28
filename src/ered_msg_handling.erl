@@ -4,11 +4,16 @@
     convert_to_num/1,
     convert_units_to_milliseconds/2,
     create_outgoing_msg/1,
-    get_prop/2,
     decode_json/1,
+    get_prop/2,
+    map_keys_to_binary/1,
     retrieve_prop_value/2,
     timestamp/0
 ]).
+
+%%
+%% Helper functions for dealing with messages and their electics.
+%%
 
 -import(ered_nodes, [
     generate_id/0,
@@ -147,3 +152,24 @@ retrieve_prop_value(PropName, Msg) ->
 %% Generate an empty message map with just an _msgid
 create_outgoing_msg(WsName) ->
     {outgoing, #{'_msgid' => generate_id(), '_ws' => WsName}}.
+
+%%
+%%
+key_to_binary(V) when is_binary(V) ->
+    V;
+key_to_binary(V) when is_atom(V) ->
+    erlang:atom_to_binary(V);
+key_to_binary(V) when is_list(V) ->
+    erlang:list_to_binary(V);
+key_to_binary(V) ->
+    V.
+
+%%
+%%
+map_keys_to_binary(Map) ->
+    maps:from_list(
+        lists:map(
+            fun({D, E}) -> {key_to_binary(D), E} end,
+            maps:to_list(Map)
+        )
+    ).
