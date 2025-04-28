@@ -18,6 +18,7 @@
     send_msg_to_connected_nodes/2
 ]).
 -import(ered_msg_handling, [
+    convert_to_num/1,
     convert_units_to_milliseconds/2
 ]).
 
@@ -39,6 +40,15 @@ compute_pause({ok, <<"delay">>}, NodeDef, Msg) ->
         {error, ErrMsg} ->
             unsupported(NodeDef, Msg, ErrMsg),
             0
+    end;
+compute_pause({ok, <<"delayv">>}, NodeDef, Msg) ->
+    case maps:find(delay, Msg) of
+        {ok, V} ->
+            %% msg.delay is assumed to be milliseconds --> RTFM.
+            convert_to_num(V);
+        _ ->
+            %% if the delay isn't set, then revert to the node configuration
+            compute_pause({ok, <<"delay">>}, NodeDef, Msg)
     end;
 compute_pause(PType, NodeDef, Msg) ->
     unsupported(NodeDef, Msg, jstr("PauseType: '~p'", [PType])),
