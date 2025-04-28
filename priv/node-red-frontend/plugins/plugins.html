@@ -254,6 +254,7 @@ function runTestForFlowId(flowid,dirList=undefined) {
       url: `/UnitTesting/${flowid}/runtest?${params}`
     }).done((resp) => {
       RED.notify(`Triggered test run for ${flowid}`, "success")
+      $('#node-input-unittestingpull-testresults-row').find(".todo").html(resp.todo)
     }).fail((e) => {
       RED.notify("Failed to trigger test", "error")
     });
@@ -279,7 +280,7 @@ function sendUnittestngHalt() {
 
 function resetTestResultsRow() {
   $('#node-input-unittestingpull-testresults-row').show();
-  [".pending", ".total", ".success",".failed"].forEach( d => {
+  [".todo", ".pending", ".total", ".success",".failed"].forEach( d => {
     $('#node-input-unittestingpull-testresults-row').find(d).html("0")
   })
 }
@@ -309,7 +310,8 @@ function runAllTests(dirList) {
     $.get({
       url: `/UnitTesting/all/runtest?${params}`
     }).done((resp) => {
-      RED.notify(`Tests have been triggered`, "success")
+      RED.notify(`${resp.todo} tests have been triggered`, "success")
+      $('#node-input-unittestingpull-testresults-row').find(".todo").html(resp.todo)
     }).fail((e) => {
       RED.notify("Failed to trigger tests", "error")
     });
@@ -442,7 +444,11 @@ let handleTestResult = (event, data) => {
     });
     
     // update the test results row
-    let v = parseInt($("#node-input-unittestingpull-testresults-row").find("."+data.status).html());
+    let v = parseInt($("#node-input-unittestingpull-testresults-row").find(".todo").html());
+    if ( v > 0 ) {
+      $("#node-input-unittestingpull-testresults-row").find(".todo").html(`${v - 1}`)
+    }
+    v = parseInt($("#node-input-unittestingpull-testresults-row").find("."+data.status).html());
     $("#node-input-unittestingpull-testresults-row").find("." + data.status).html(`${v+1}`)
     v = parseInt($("#node-input-unittestingpull-testresults-row").find(".total").html());
     $("#node-input-unittestingpull-testresults-row").find(".total").html(`${v + 1}`)
@@ -545,10 +551,11 @@ RED.actions.add("unittesting:run-all-tests", () => { runAllTests(dirList) } )
 
       <div id="node-input-unittestingpull-testresults-row" class="form-row" 
                 style="margin-left: 10px; margin-top: 30px; display: none;">
-         Succeed <span class="success" style="color: green">0</span>
+         Todo <span class="todo" style="color: purple">0</span>
+         / Succeed <span class="success" style="color: green">0</span>
          / Pending <span class="pending" style="color: orange">0</span>
          / Failed <span class="failed" style="color: red">0</span>
-         / Total <span class='total'>0</span> 
+         / Done <span class='total'>0</span> 
       </div>
 
       <div class="form-row" style="margin-left: 10px; margin-top: 30px;">
