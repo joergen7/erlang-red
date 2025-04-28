@@ -11,6 +11,17 @@
 %% a response to a http connection.
 %%
 
+-import(ered_nodes, [
+    jstr/2
+]).
+-import(ered_nodered_comm, [
+    unsupported/3
+]).
+-import(ered_msg_handling, [
+    convert_to_num/1,
+    map_keys_to_binary/1
+]).
+
 %%
 %%
 start(NodeDef, _WsName) ->
@@ -24,8 +35,37 @@ handle_event(_, NodeDef) ->
 %%
 %% outgoing message is triggered by the ered_http_node_http_in_handler module
 handle_msg({incoming, Msg}, NodeDef) ->
+    StatusCode = retrieve_status_code(NodeDef, Msg),
+    Headers = retrieve_headers(NodeDef, Msg),
     {ok, ReqPid} = maps:find(reqpid, Msg),
-    ReqPid ! {reply, #{}, maps:get(payload, Msg)},
+
+    ReqPid ! {reply, StatusCode, Headers, maps:get(payload, Msg)},
+
     {handled, NodeDef, Msg};
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
+
+%%
+%% Retrieve statusCode either from Msg or from NodeDef, NodeDef has preference.
+%% erlfmt:ignore alignment
+retrieve_status_code(NodeDef, Msg) ->
+    case {maps:find(statuCode, Msg), maps:find(statusCode, NodeDef)} of
+        {{ok, MsgSC}, {ok, <<>>}} -> convert_to_num(MsgSC);
+        {{ok, _},     {ok, NdSC}} -> convert_to_num(NdSC);
+        {{ok, MsgSC}, _}          -> convert_to_num(MsgSC);
+        {_, {ok, <<>>}}           -> 200;
+        {_, {ok, NdSC}}           -> convert_to_num(NdSC);
+        {_, _}                    -> 200
+    end.
+
+%%
+%% Retrieve headers from either the NodeDef or Msg, NodeDef has preference.
+%% erlfmt:ignore alignment
+retrieve_headers(NodeDef, Msg) ->
+    Hdrs = case {maps:find(headers, Msg), maps:find(headers, NodeDef)} of
+               {{ok, _}, {ok, NdHdrs}} -> NdHdrs;
+               {_,       {ok, NdHdrs}} -> NdHdrs;
+               {{ok, MsgHdrs}, _}      -> MsgHdrs;
+               {_, _}                  -> #{}
+           end,
+    map_keys_to_binary(Hdrs).

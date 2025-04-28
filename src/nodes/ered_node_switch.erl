@@ -32,7 +32,8 @@
     post_completed/2
 ]).
 -import(ered_msg_handling, [
-    convert_to_num/1
+    convert_to_num/1,
+    get_prop/2
 ]).
 
 %%
@@ -65,6 +66,8 @@ does_rule_match(<<"gt">>, _, OpVal, MsgVal) ->
 does_rule_match(<<"lt">>, _, OpVal, MsgVal) ->
     {Vop, Vmsg} = to_num(OpVal, MsgVal),
     is_lt(Vmsg, Vop);
+does_rule_match(<<"else">>, _, _, _) ->
+    true;
 does_rule_match(Op, Type, _OpVal, _MsgVal) ->
     io:format("switch: unsupported operator or type: ~p ~p\n", [Op, Type]),
     false.
@@ -72,8 +75,8 @@ does_rule_match(Op, Type, _OpVal, _MsgVal) ->
 %%
 %%
 get_value_from_msg({ok, <<"msg">>}, {ok, PropName}, Msg) ->
-    case maps:find(binary_to_atom(PropName), Msg) of
-        {ok, Val} ->
+    case get_prop({ok, PropName}, Msg) of
+        {ok, Val, _} ->
             Val;
         _ ->
             io_lib:format("switch: property not found on msg: [~p] ~p", [
@@ -92,19 +95,26 @@ handle_check_all_rules([], _, _, _, _) ->
     ok;
 handle_check_all_rules([Rule | Rules], Val, [Wires | MoreWires], NodeDef, Msg) ->
     {ok, Op} = maps:find(t, Rule),
-    {ok, Type} = maps:find(vt, Rule),
-    {ok, OpVal} = maps:find(v, Rule),
 
-    case does_rule_match(Op, Type, OpVal, Val) of
-        true ->
-            %% ?? switch node does not generate complete message for the
-            %% ?? complete node - make sense since the switch node is only
-            %% ?? control not computation, i.e. it's direct the flow of data
-            %% ?? but not directly altering data.
-            %% post_completed(NodeDef, Msg),
+    case Op of
+        %% else operator has no vt nor v values.
+        <<"else">> ->
             send_msg_on(Wires, Msg);
         _ ->
-            ok
+            {ok, Type} = maps:find(vt, Rule),
+            {ok, OpVal} = maps:find(v, Rule),
+
+            case does_rule_match(Op, Type, OpVal, Val) of
+                true ->
+                    %% ?? switch node does not generate complete message for the
+                    %% ?? complete node - make sense since the switch node is only
+                    %% ?? control not computation, i.e. it's direct the flow of data
+                    %% ?? but not directly altering data.
+                    %% post_completed(NodeDef, Msg),
+                    send_msg_on(Wires, Msg);
+                _ ->
+                    ok
+            end
     end,
     handle_check_all_rules(Rules, Val, MoreWires, NodeDef, Msg).
 
@@ -114,19 +124,26 @@ handle_stop_after_one([], _, _, _, _) ->
     ok;
 handle_stop_after_one([Rule | Rules], Val, [Wires | MoreWires], NodeDef, Msg) ->
     {ok, Op} = maps:find(t, Rule),
-    {ok, Type} = maps:find(vt, Rule),
-    {ok, OpVal} = maps:find(v, Rule),
 
-    case does_rule_match(Op, Type, OpVal, Val) of
-        true ->
-            %% ?? switch node does not generate complete message for the
-            %% ?? complete node - make sense since the switch node is only
-            %% ?? control not computation, i.e. it's direct the flow of data
-            %% ?? but not directly altering data.
-            %% post_completed(NodeDef, Msg),
+    case Op of
+        %% else operator has no vt nor v values.
+        <<"else">> ->
             send_msg_on(Wires, Msg);
         _ ->
-            handle_stop_after_one(Rules, Val, MoreWires, NodeDef, Msg)
+            {ok, Type} = maps:find(vt, Rule),
+            {ok, OpVal} = maps:find(v, Rule),
+
+            case does_rule_match(Op, Type, OpVal, Val) of
+                true ->
+                    %% ?? switch node does not generate complete message for the
+                    %% ?? complete node - make sense since the switch node is only
+                    %% ?? control not computation, i.e. it's direct the flow of data
+                    %% ?? but not directly altering data.
+                    %% post_completed(NodeDef, Msg),
+                    send_msg_on(Wires, Msg);
+                _ ->
+                    handle_stop_after_one(Rules, Val, MoreWires, NodeDef, Msg)
+            end
     end.
 
 %%

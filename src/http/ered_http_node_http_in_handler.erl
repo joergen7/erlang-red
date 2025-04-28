@@ -37,10 +37,10 @@ init(Req, State) ->
     {ok, Body, Req2} = read_entire_body(Req),
 
     ReqObj = #{
-       body => Body,
-       params => cowboy_req:bindings(Req),
-       cookies => cowboy_req:parse_cookies(Req),
-       query => cowboy_req:parse_qs(Req)
+        body => Body,
+        params => cowboy_req:bindings(Req),
+        cookies => cowboy_req:parse_cookies(Req),
+        query => cowboy_req:parse_qs(Req)
     },
     Msg3 = maps:put(req, ReqObj, Msg2),
 
@@ -53,17 +53,16 @@ init(Req, State) ->
 
 %%
 %%
-info({reply, Headers, Body}, Req, State) ->
+info({reply, StatusCode, Headers, Body}, Req, State) ->
     Req2 = cowboy_req:set_resp_cookie(
         <<"wsname">>,
         atom_to_list(maps:get(wsname, State)),
         Req
     ),
-    cowboy_req:reply(200, Headers, Body, Req2),
+    cowboy_req:reply(StatusCode, Headers, Body, Req2),
     {stop, Req2, State};
 info(_Msg, Req, State) ->
     {ok, Req, State, hibernate}.
-
 
 %%
 %%
@@ -72,6 +71,6 @@ read_entire_body(Req) ->
 
 read_body(Req0, Acc) ->
     case cowboy_req:read_body(Req0) of
-        {ok, Data, Req} -> {ok, << Acc/binary, Data/binary >>, Req};
-        {more, Data, Req} -> read_body(Req, << Acc/binary, Data/binary >>)
+        {ok, Data, Req} -> {ok, <<Acc/binary, Data/binary>>, Req};
+        {more, Data, Req} -> read_body(Req, <<Acc/binary, Data/binary>>)
     end.
