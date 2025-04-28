@@ -5,7 +5,13 @@
         "label": "[http] have params in the path",
         "disabled": false,
         "info": "Http in nodes should be able to define paths that contain placeholder for parameters.",
-        "env": []
+        "env": [
+            {
+                "name": "ERED_NOT_EUNIT",
+                "value": "true",
+                "type": "bool"
+            }
+        ]
     },
     {
         "id": "636e832e3c16a9e6",
@@ -249,8 +255,8 @@
                 "tot": "str"
             }
         ],
-        "x": 685,
-        "y": 569,
+        "x": 661,
+        "y": 579,
         "wires": [
             []
         ]
@@ -267,8 +273,8 @@
                 "t": "set"
             }
         ],
-        "x": 723,
-        "y": 462,
+        "x": 734,
+        "y": 471,
         "wires": [
             []
         ]
@@ -288,8 +294,8 @@
                 "tot": "str"
             }
         ],
-        "x": 708,
-        "y": 516,
+        "x": 695,
+        "y": 530,
         "wires": [
             []
         ]
