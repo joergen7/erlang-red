@@ -14,18 +14,17 @@
     jstr/2,
     jstr/1,
     nodeid_to_pid/2,
+
+    %% send_msg_to_connnected_nodes assues an attribute 'wires' while
+    %% send send_msg_on is given an array of node ids and triggers the
+    %% 'incoming' message to be sent
+    send_msg_on/2,
+    send_msg_to_connected_nodes/2,
+
     tabid_to_error_collector/1,
     this_should_not_happen/2,
     trigger_outgoing_messages/3,
     unpriv/1
-]).
-
-%% send_msg_to_connnected_nodes assues an attribute 'wires' while
-%% send send_msg_on is given an array of node ids and triggers the
-%% 'incoming' message to be sent
--export([
-    send_msg_on/2,
-    send_msg_to_connected_nodes/2
 ]).
 
 -import(ered_nodered_comm, [
@@ -287,6 +286,7 @@ node_type_to_fun(<<"status">>)        -> ered_node_status;
 node_type_to_fun(<<"trigger">>)       -> ered_node_trigger;
 node_type_to_fun(<<"http in">>)       -> ered_node_http_in;
 node_type_to_fun(<<"http response">>) -> ered_node_http_response;
+node_type_to_fun(<<"http request">>)  -> ered_node_http_request;
 
 %%
 %% Assert nodes for testing functionality of the nodes
@@ -303,13 +303,6 @@ node_type_to_fun(Unknown) ->
 %% A list of all nodes that support outgoing messages, this was originally
 %% only the inject node but then I realised that for testing purposes there
 %% are in fact more.
-trigger_outgoing_messages({ok, <<"http in">>}, {ok, IdStr}, WsName) ->
-    case nodeid_to_pid(WsName, IdStr) of
-        {ok, Pid} ->
-            gen_server:cast(Pid, create_outgoing_msg(WsName));
-        {error, _} ->
-            ignore
-    end;
 trigger_outgoing_messages({ok, <<"inject">>}, {ok, IdStr}, WsName) ->
     case nodeid_to_pid(WsName, IdStr) of
         {ok, Pid} ->

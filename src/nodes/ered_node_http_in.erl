@@ -42,10 +42,19 @@ start(NodeDef, _WsName) ->
 
 %%
 %%
-handle_event({registered, _WsName, Pid}, NodeDef) ->
+handle_event({registered, WsName, Pid}, NodeDef) ->
     {ok, Path} = maps:find(url, NodeDef),
     {ok, Method} = maps:find(method, NodeDef),
-    ered_webserver:register_http_in(Path, string:uppercase(Method), Pid),
+    ered_webserver:register_http_in(
+        Path,
+        string:uppercase(Method),
+        {Pid, WsName}
+    ),
+    NodeDef;
+handle_event({stop, WsName}, NodeDef) ->
+    {ok, Path} = maps:find(url, NodeDef),
+    {ok, Method} = maps:find(method, NodeDef),
+    ered_webserver:unregister_http_in(Path, string:uppercase(Method), WsName),
     NodeDef;
 handle_event(_, NodeDef) ->
     NodeDef.

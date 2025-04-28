@@ -2,12 +2,17 @@
     {
         "id": "27804627fb8f56bd",
         "type": "tab",
-        "label": "[http] nodes should be able handle requests",
+        "label": "[http] nodes should be able to handle requests",
         "disabled": false,
-        "info": "This works but only when done by hand and with the correct browser.\n\nIt remains pending because there is are a couple of issues with handling a message the contains no process id in the unit tests.",
+        "info": "The http in node setups an endpoint and from the same flow, i.e. this one, the http request node makes a request to obtain the data that is stored in the template node.",
         "env": [
             {
                 "name": "ERED_PENDING",
+                "value": "false",
+                "type": "bool"
+            },
+            {
+                "name": "ERED_NOT_EUNIT",
                 "value": "true",
                 "type": "bool"
             }
@@ -22,32 +27,12 @@
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 206,
-        "y": 329,
+        "x": 198,
+        "y": 314,
         "wires": [
             [
-                "1e3a49fdb9c9a6a1",
-                "2f6d1e07ce823658"
-            ]
-        ]
-    },
-    {
-        "id": "1e3a49fdb9c9a6a1",
-        "type": "template",
-        "z": "27804627fb8f56bd",
-        "name": "",
-        "field": "payload",
-        "fieldType": "msg",
-        "format": "handlebars",
-        "syntax": "plain",
-        "template": "Hello world\n\nAnd one more tings.\n\nthis is a test.",
-        "output": "str",
-        "x": 393,
-        "y": 436,
-        "wires": [
-            [
-                "b35819f95cd15265",
-                "f360874ff1e46fc3"
+                "2f6d1e07ce823658",
+                "1e3a49fdb9c9a6a1"
             ]
         ]
     },
@@ -58,8 +43,8 @@
         "name": "",
         "statusCode": "",
         "headers": {},
-        "x": 590,
-        "y": 526,
+        "x": 762,
+        "y": 680,
         "wires": []
     },
     {
@@ -74,8 +59,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 696,
-        "y": 445,
+        "x": 752,
+        "y": 314,
         "wires": []
     },
     {
@@ -87,20 +72,12 @@
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "false",
+        "complete": "payload",
+        "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 429,
-        "y": 297,
-        "wires": []
-    },
-    {
-        "id": "4240f1d591c027e7",
-        "type": "ut-assert-success",
-        "z": "27804627fb8f56bd",
-        "name": "",
-        "x": 448,
-        "y": 707.5,
+        "x": 498,
+        "y": 314,
         "wires": []
     },
     {
@@ -124,12 +101,118 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 184,
-        "y": 706,
+        "x": 189,
+        "y": 109,
         "wires": [
             [
-                "4240f1d591c027e7"
+                "2b8834d322efe359"
             ]
         ]
+    },
+    {
+        "id": "1e3a49fdb9c9a6a1",
+        "type": "template",
+        "z": "27804627fb8f56bd",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "plain",
+        "template": "Hello world.\n\nAnd one more thing.\n\nThis is a test.\n\nBut should work.\n\n",
+        "output": "str",
+        "x": 446,
+        "y": 520,
+        "wires": [
+            [
+                "f360874ff1e46fc3",
+                "b35819f95cd15265"
+            ]
+        ]
+    },
+    {
+        "id": "93a68f36da4a0c36",
+        "type": "http request",
+        "z": "27804627fb8f56bd",
+        "name": "",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://localhost:8080/test/url",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 560,
+        "y": 218,
+        "wires": [
+            [
+                "732ff0f8a0cdb2c9",
+                "4523a6b9eb51b72c"
+            ]
+        ]
+    },
+    {
+        "id": "2b8834d322efe359",
+        "type": "delay",
+        "z": "27804627fb8f56bd",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "250",
+        "timeoutUnits": "milliseconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 376.5,
+        "y": 169,
+        "wires": [
+            [
+                "93a68f36da4a0c36"
+            ]
+        ]
+    },
+    {
+        "id": "732ff0f8a0cdb2c9",
+        "type": "ut-assert-values",
+        "z": "27804627fb8f56bd",
+        "name": "",
+        "rules": [
+            {
+                "t": "eql",
+                "p": "statusCode",
+                "pt": "msg",
+                "to": "200",
+                "tot": "num"
+            }
+        ],
+        "x": 832,
+        "y": 122.5,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "4523a6b9eb51b72c",
+        "type": "debug",
+        "z": "27804627fb8f56bd",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 842.5,
+        "y": 219,
+        "wires": []
     }
 ]

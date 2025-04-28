@@ -7,7 +7,10 @@
 -export([stop/0]).
 -export([start/0]).
 
--export([register_http_in/3]).
+-export([
+    register_http_in/3,
+    unregister_http_in/3
+]).
 
 start() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []),
@@ -18,34 +21,44 @@ init([]) ->
 
 %%
 %%
+register_http_in(Path, Method, {Pid, WsName}) ->
+    gen_server:call(?MODULE, {add_route, Path, Method, {Pid, WsName}}).
 
-register_http_in(Path, Method, Pid) ->
-    gen_server:call(?MODULE, {add_route, Path, Method, Pid}).
+unregister_http_in(Path, Method, WsName) ->
+    gen_server:call(?MODULE, {del_route, Path, Method, WsName}).
 
 %%
 %%
-handle_call({add_route, Path, Method, Pid}, _From, State) ->
+handle_call({del_route, _Path, _Method, _WsName}, _From, State) ->
     %% TODO here check for duplication and ensure that its replaced with the
-    %% TODO current handler. I.e. Path + Method should be unique and map
-    %% TODO to exactly one pid.
+    %% TODO current handler. I.e. Path, Method, WsName should be unique and
+    %% TODO map to exactly one pid.
+    {reply, ok, State};
+handle_call({add_route, Path, Method, {Pid, WsName}}, _From, State) ->
+    %% TODO here check for duplication and ensure that its replaced with the
+    %% TODO current handler. I.e. Path, Method, WsName should be unique and
+    %% TODO map to exactly one pid.
     ExtraRoutes = [
         {Path, [{method, Method}], ered_http_node_http_in_handler, #{
-            pid => Pid
+            pid => Pid, wsname => WsName
         }}
         | maps:get(routes, State)
     ],
     Dispatch = cowboy_router:compile([{'_', ExtraRoutes ++ base_routes()}]),
     cowboy:set_env(erlang_red_listener, dispatch, Dispatch),
-    io:format("regesting http in ~p ~p ~p~n", [Path, Method, Pid]),
     {reply, ok, maps:put(routes, ExtraRoutes, State)};
 handle_call(_Msg, _From, State) ->
     {reply, State, State}.
 
+%%
+%%
 handle_cast(stop, State) ->
     {stop, normal, State};
 handle_cast(_Msg, Store) ->
     {noreply, Store}.
 
+%%
+%%
 handle_info(_Msg, ErrorStore) ->
     {noreply, ErrorStore}.
 

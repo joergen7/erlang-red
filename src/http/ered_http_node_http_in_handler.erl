@@ -21,11 +21,8 @@
 ]).
 
 init(Req, State) ->
-    %% TODO damn, this only works if the websocket value is set - this
-    %% TODO needs to change so that connections without a websocket can
-    %% TODO also connect.
     {ok, HttpInPid} = maps:find(pid, State),
-    WsName = websocket_name_from_request(Req),
+    {ok, WsName} = maps:find(wsname, State),
 
     {outgoing, Msg} = create_outgoing_msg(WsName),
     Msg2 = maps:put(reqpid, self(), Msg),
@@ -36,7 +33,12 @@ init(Req, State) ->
 %%
 %%
 info({reply, Headers, Body}, Req, State) ->
-    cowboy_req:reply(200, Headers, Body, Req),
-    {stop, Req, State};
+    Req2 = cowboy_req:set_resp_cookie(
+        <<"wsname">>,
+        atom_to_list(maps:get(wsname, State)),
+        Req
+    ),
+    cowboy_req:reply(200, Headers, Body, Req2),
+    {stop, Req2, State};
 info(_Msg, Req, State) ->
     {ok, Req, State, hibernate}.
