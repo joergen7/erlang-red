@@ -155,9 +155,9 @@ My intention is to create many small flows that represent functionality that nee
 Contributing
 ---
 
-All contributions should be printed out on sheets of A4 paper (not US-Letter), copied in triplicate, one copy should filed away and forgotten. Another can be snail mailed to me at c/o GitHub (only one copy). The other copies should be filed away in some dusty filing cabinet at the bottom of a dark basement, preferably before removing the stairs that lead to the basement.
+Contributions very much welcome in the form of Erlang code or as Node-RED test-flows, ideally with the Erlang implementation.
 
-Alternatively just create a pull request, whichever is simpler ;)
+Each test flow should test exactly one feature and use the assert nodes to check correctness of the test. Tests can also be pending to indicate that the corresponding Erlang functionality is still missing.
 
 Questions and Answers at either the [Erlang Forum](https://erlangforums.com/t/erlang-red-erlang-interpreter-for-node-red-flow-code-visual-flow-based-programming/4678) or the [Node-RED Forum](https://discourse.nodered.org/t/erlang-red-erlang-backed-node-red/96458).
 
