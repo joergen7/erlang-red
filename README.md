@@ -161,6 +161,21 @@ Each test flow should test exactly one feature and use the assert nodes to check
 
 Questions and Answers at either the [Erlang Forum](https://erlangforums.com/t/erlang-red-erlang-interpreter-for-node-red-flow-code-visual-flow-based-programming/4678) or the [Node-RED Forum](https://discourse.nodered.org/t/erlang-red-erlang-backed-node-red/96458).
 
+Branch Technology
+---
+
+To branch or not to branch, that isn't really a question. I'm currently working directly on `main` but ensure that all tests succeed before pushing, so `main` branch will always work.
+
+Versioning is completely random and has little or no meaning at the moment. I prefer to use [Milestones](MILESTONES.md) since these are arrived at and are not planned, I don't know when the next milestone will be reached.
+
+Locally I work with branches but have no desire to make those branches public since I'm working on my own.
+
+If this project becomes more collaborative or a "production ready piece of software", then more certainity will be applied to the development process.
+
+I'm more than happy to deal with conflicts if someone developed something on a branch and it doesn't merge - I understand that multiple direct pushes to `main` everyday isn't the done thing but I don't like to have code lying around for weeks on end not being merged because it's not on a release schedule.
+
+Coding is a creative process, creativity cannot be planned. Imagine Van Gogh working to a release plan.
+
 Acknowledgement
 ---
 
