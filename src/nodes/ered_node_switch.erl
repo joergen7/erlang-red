@@ -35,7 +35,9 @@
     convert_to_num/1,
     get_prop/2
 ]).
-
+-import(ered_nodered_comm, [
+    unsupported/3
+]).
 %%
 %%
 start(NodeDef, _WsName) ->
@@ -90,16 +92,31 @@ get_value_from_msg(_, _, _) ->
     io_lib:format("switch: property not found\n", []).
 
 %%
-%%
-handle_check_all_rules([], _, _, _, _) ->
+%% HasMatch is a indicated whether a match has been made. Used for the
+%% else operator.
+handle_check_all_rules([], _, _, _, _, _) ->
     ok;
-handle_check_all_rules([Rule | Rules], Val, [Wires | MoreWires], NodeDef, Msg) ->
+handle_check_all_rules(
+    [Rule | Rules], Val, [Wires | MoreWires], NodeDef, Msg, HadMatch
+) ->
     {ok, Op} = maps:find(t, Rule),
 
-    case Op of
-        %% else operator has no vt nor v values.
-        <<"else">> ->
-            send_msg_on(Wires, Msg);
+    %% else operator has no vt nor v values.
+    case {Op, HadMatch} of
+        {<<"else">>, false} ->
+            %% Interesting, interesting - the "otherwise" rule only matches
+            %% in the "check all rules" if nothing else matched - mimicing the
+            %% behaviour of the stop-after-one mode. I personally would have
+            %% thought it would match **all** the time, regardless.
+            %% But "otherwise" means something different to "always".
+            %% See test flow "ce2f98273da05245" for more details.
+            %% Turns other otherwise is context specific: if it is reached
+            %% and nothing has matched, it matches. Is it reached and something
+            %% has matched, then it doesn't match.
+            send_msg_on(Wires, Msg),
+            handle_check_all_rules(Rules, Val, MoreWires, NodeDef, Msg, true);
+        {<<"else">>, true} ->
+            handle_check_all_rules(Rules, Val, MoreWires, NodeDef, Msg, true);
         _ ->
             {ok, Type} = maps:find(vt, Rule),
             {ok, OpVal} = maps:find(v, Rule),
@@ -111,12 +128,16 @@ handle_check_all_rules([Rule | Rules], Val, [Wires | MoreWires], NodeDef, Msg) -
                     %% ?? control not computation, i.e. it's direct the flow of data
                     %% ?? but not directly altering data.
                     %% post_completed(NodeDef, Msg),
-                    send_msg_on(Wires, Msg);
+                    send_msg_on(Wires, Msg),
+                    handle_check_all_rules(
+                        Rules, Val, MoreWires, NodeDef, Msg, true
+                    );
                 _ ->
-                    ok
+                    handle_check_all_rules(
+                        Rules, Val, MoreWires, NodeDef, Msg, HadMatch
+                    )
             end
-    end,
-    handle_check_all_rules(Rules, Val, MoreWires, NodeDef, Msg).
+    end.
 
 %%
 %%
@@ -155,6 +176,14 @@ handle_event(_, NodeDef) ->
 %% Handler for incoming messages
 %%
 handle_incoming(NodeDef, Msg) ->
+    %% flag unsupported features - recreate message sequence whatever that does
+    case maps:find(repair, NodeDef) of
+        {ok, true} ->
+            unsupported(NodeDef, Msg, "recreate message sequence");
+        V ->
+            ignore
+    end,
+
     {ok, Rules} = maps:find(rules, NodeDef),
     {ok, Wires} = maps:find(wires, NodeDef),
 
@@ -166,7 +195,9 @@ handle_incoming(NodeDef, Msg) ->
 
     case maps:find(checkall, NodeDef) of
         {ok, <<"true">>} ->
-            handle_check_all_rules(Rules, Val, Wires, NodeDef, Msg);
+            %% last flag indicates that nothing has yet matched - required
+            %% for the otherwise ('else') operator.
+            handle_check_all_rules(Rules, Val, Wires, NodeDef, Msg, false);
         _ ->
             handle_stop_after_one(Rules, Val, Wires, NodeDef, Msg)
     end,
