@@ -31,9 +31,29 @@
     this_should_not_happen/2
 ]).
 
+-import(ered_msg_handling, [
+    decode_json/1,
+    map_keys_to_lists/1
+]).
+
 doit(Prop, <<"msg">>, Template, <<"plain">>, <<"str">>, Msg) ->
     Msg2 = maps:put(binary_to_atom(Prop), Template, Msg),
     {ok, Msg2};
+
+doit(Prop, <<"msg">>, Template, <<"mustache">>, <<"str">>, Msg) ->
+    MustachedRendered = bbmustache:render(Template, map_keys_to_lists(Msg)),
+    Msg2 = maps:put(binary_to_atom(Prop), MustachedRendered, Msg),
+    {ok, Msg2};
+
+doit(Prop, <<"msg">>, Template, <<"plain">>, <<"json">>, Msg) ->
+    Msg2 = maps:put(binary_to_atom(Prop), decode_json(Template), Msg),
+    {ok, Msg2};
+
+doit(Prop, <<"msg">>, Template, <<"mustache">>, <<"json">>, Msg) ->
+    MustachedRendered = bbmustache:render(Template, map_keys_to_lists(Msg)),
+    Msg2 = maps:put(binary_to_atom(Prop), decode_json(MustachedRendered), Msg),
+    {ok, Msg2};
+
 doit(_, _, _, _, _, _) ->
     unsupported.
 
@@ -63,7 +83,15 @@ handle_incoming(NodeDef, Msg) ->
         unsupported ->
             ErrMsg = jstr("Unsupported configuration: ~p", [NodeDef]),
             unsupported(NodeDef, Msg, ErrMsg),
-            send_msg_to_connected_nodes(NodeDef, Msg),
+
+            %% Ok, we push the content into the msg object but warn as
+            %% well. Not modifying the message and sending it on would
+            %% be an error but not supporting formatting is kind of ...
+            %% an error really but since I don't raise an error here, set
+            %% the content in the msg.
+            Msg2 = maps:put(binary_to_atom(Prop), Template, Msg),
+
+            send_msg_to_connected_nodes(NodeDef, Msg2),
             {NodeDef, Msg}
     end.
 

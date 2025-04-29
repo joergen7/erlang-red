@@ -1,5 +1,6 @@
 {"1.2.0",
-[{<<"cowboy">>,
+[{<<"bbmustache">>,{pkg,<<"bbmustache">>,<<"1.12.2">>},0},
+ {<<"cowboy">>,
   {git,"https://github.com/ninenines/cowboy",
        {ref,"24d32de931a0c985ff7939077463fc8be939f0e9"}},
   0},
@@ -14,7 +15,9 @@
   1}]}.
 [
 {pkg_hash,[
+ {<<"bbmustache">>, <<"0CABDCE0DB9FE6D3318131174B9F2B351328A4C0AFBEB3E6E99BB0E02E9B621D">>},
  {<<"erlydtl">>, <<"964B2DC84F8C17ACFAA69C59BA129EF26AC45D2BA898C3C6AD9B5BDC8BA13CED">>}]},
 {pkg_hash_ext,[
+ {<<"bbmustache">>, <<"688B33A4D5CC2D51F575ADF0B3683FC40A38314A2F150906EDCFC77F5B577B3B">>},
  {<<"erlydtl">>, <<"D80EC044CD8F58809C19D29AC5605BE09E955040911B644505E31E9DD8143431">>}]}
 ].

@@ -7,6 +7,7 @@
     decode_json/1,
     get_prop/2,
     map_keys_to_binary/1,
+    map_keys_to_lists/1,
     retrieve_prop_value/2,
     timestamp/0
 ]).
@@ -170,6 +171,28 @@ map_keys_to_binary(Map) ->
     maps:from_list(
         lists:map(
             fun({D, E}) -> {key_to_binary(D), E} end,
+            maps:to_list(Map)
+        )
+    ).
+
+
+%%
+%%
+key_to_list(V) when is_binary(V) ->
+    erlang:binary_to_list(V);
+key_to_list(V) when is_atom(V) ->
+    erlang:atom_to_list(V);
+key_to_list(V) when is_list(V) ->
+    V;
+key_to_list(V) ->
+    V.
+
+%%
+%%
+map_keys_to_lists(Map) ->
+    maps:from_list(
+        lists:map(
+            fun({D, E}) -> {key_to_list(D), E} end,
             maps:to_list(Map)
         )
     ).
