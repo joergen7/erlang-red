@@ -51,10 +51,14 @@ handle_response(Req, State) ->
              || FlowId <- AllFlowIds
             ],
 
-            {json:encode(#{ status => ok,
-                            todo => length(AllFlowIds)}),
-             Req,
-             State };
+            {
+                json:encode(#{
+                    status => ok,
+                    todo => length(AllFlowIds)
+                }),
+                Req,
+                State
+            };
         FlowId ->
             ered_unittest_engine !
                 {start_test, FlowId, WsName, TestPendingTests},
