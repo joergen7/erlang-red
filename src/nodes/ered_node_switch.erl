@@ -68,8 +68,6 @@ does_rule_match(<<"gt">>, _, OpVal, MsgVal) ->
 does_rule_match(<<"lt">>, _, OpVal, MsgVal) ->
     {Vop, Vmsg} = to_num(OpVal, MsgVal),
     is_lt(Vmsg, Vop);
-does_rule_match(<<"else">>, _, _, _) ->
-    true;
 does_rule_match(Op, Type, _OpVal, _MsgVal) ->
     io:format("switch: unsupported operator or type: ~p ~p\n", [Op, Type]),
     false.
@@ -180,7 +178,7 @@ handle_incoming(NodeDef, Msg) ->
     case maps:find(repair, NodeDef) of
         {ok, true} ->
             unsupported(NodeDef, Msg, "recreate message sequence");
-        V ->
+        _ ->
             ignore
     end,
 
