@@ -201,7 +201,7 @@ foreach_testflow_test_() ->
     pg:start_link(),
 
     {_Cnt, FileNames} = filelib:fold_files(
-        "priv/testflows",
+        io_lib:format("~s/testflows", [code:priv_dir(erlang_red)]),
         "",
         false,
         fun(Fname, Acc) ->
