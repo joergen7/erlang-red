@@ -175,7 +175,6 @@ map_keys_to_binary(Map) ->
         )
     ).
 
-
 %%
 %%
 key_to_list(V) when is_binary(V) ->

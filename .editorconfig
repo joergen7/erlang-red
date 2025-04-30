@@ -1,9 +1,8 @@
-[*.config]
+[*]
+charset = utf-8
+indent_style = space
 indent_size = 4
 tab_width = 4
-indent_style = space
 
 [*.erl]
-indent_size = 4
-tab_width = 4
-indent_style = space
+insert_final_newline = true

@@ -39,21 +39,17 @@
 doit(Prop, <<"msg">>, Template, <<"plain">>, <<"str">>, Msg) ->
     Msg2 = maps:put(binary_to_atom(Prop), Template, Msg),
     {ok, Msg2};
-
 doit(Prop, <<"msg">>, Template, <<"mustache">>, <<"str">>, Msg) ->
     MustachedRendered = bbmustache:render(Template, map_keys_to_lists(Msg)),
     Msg2 = maps:put(binary_to_atom(Prop), MustachedRendered, Msg),
     {ok, Msg2};
-
 doit(Prop, <<"msg">>, Template, <<"plain">>, <<"json">>, Msg) ->
     Msg2 = maps:put(binary_to_atom(Prop), decode_json(Template), Msg),
     {ok, Msg2};
-
 doit(Prop, <<"msg">>, Template, <<"mustache">>, <<"json">>, Msg) ->
     MustachedRendered = bbmustache:render(Template, map_keys_to_lists(Msg)),
     Msg2 = maps:put(binary_to_atom(Prop), decode_json(MustachedRendered), Msg),
     {ok, Msg2};
-
 doit(_, _, _, _, _, _) ->
     unsupported.
 

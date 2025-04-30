@@ -151,11 +151,7 @@ do_set_value(Prop, Value, <<"jsonata">>, Msg, NodeDef) ->
             Msg
     end;
 do_set_value(_, _, Tot, Msg, NodeDef) ->
-    unsupported(
-        NodeDef,
-        Msg,
-        jstr("set ToT: ~p", [Tot])
-    ),
+    unsupported(NodeDef, Msg, jstr("set ToT: ~p", [Tot])),
     Msg.
 
 %%
