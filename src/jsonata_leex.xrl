@@ -27,133 +27,156 @@ INT        = {D}+
 NAME       = [a-zA-Z_][a-zA-Z0-9_]*
 WHITESPACE = [\s\t\n\r]
 INPUT      = \$\$
-
+DSTRING    = \"[^\"+]\"
+SSTRING    = \'[^\'+]\'
+CHARS      = [a-z0-9A-Z_]+
 
 Rules.
-
-\/\*  : {token, {commment_start, TokenLine}}.
-\*\/  : {token, {commment_end, TokenLine}}.
-
-!=    : {token, {neq,          TokenLine}}.
-:=    : {token, {colon_eq,     TokenLine}}.
-==    : {token, {eq,           TokenLine}}.
-
-\+    : {token, {op_plus,      TokenLine}}.
-\-    : {token, {op_minus,     TokenLine}}.
-\*    : {token, {op_multiple,  TokenLine}}.
-\/    : {token, {op_divide,    TokenLine}}.
-\(    : {token, {open_bracket, TokenLine}}.
-\)    : {token, {close_backet, TokenLine}}.
-{     : {token, {open_brace,   TokenLine}}.
-}     : {token, {close_brace,  TokenLine}}.
-\[    : {token, {open_square,  TokenLine}}.
-\]    : {token, {close_sqaure, TokenLine}}.
-\:    : {token, {colon,        TokenLine}}.
-\;    : {token, {semicolon,    TokenLine}}.
-\?    : {token, {question,     TokenLine}}.
-\=    : {token, {equal,    TokenLine}}.
-\%    : {token, {percent,      TokenLine}}.
-\<    : {token, {lt,     TokenLine}}.
-\>    : {token, {gt,  TokenLine}}.
-\"    : {token, {doublequote,  TokenLine}}.
-\'    : {token, {singlequote,  TokenLine}}.
-and   : {token, {op_and,       TokenLine}}.
-or    : {token, {op_or,        TokenLine}}.
-\&    : {token, {ampersand,    TokenLine}}.
-\$    : {token, {dollar,       TokenLine}}.
-\.    : {token, {dot,          TokenLine}}.
-,     : {token, {comma,        TokenLine}}.
-!     : {token, {bang,         TokenLine}}.
-
-% Function names taken from
-%  https://github.com/jsonata-js/jsonata/blob/master/src/functions.js
-abs                : {token, {funct, TokenLine, TokenChars}}.
-append             : {token, {funct, TokenLine, TokenChars}}.
-assert             : {token, {funct, TokenLine, TokenChars}}.
-average            : {token, {funct, TokenLine, TokenChars}}.
-base64decode       : {token, {funct, TokenLine, TokenChars}}.
-base64encode       : {token, {funct, TokenLine, TokenChars}}.
-boolean            : {token, {funct, TokenLine, TokenChars}}.
-ceil               : {token, {funct, TokenLine, TokenChars}}.
-contains           : {token, {funct, TokenLine, TokenChars}}.
-count              : {token, {funct, TokenLine, TokenChars}}.
-decodeUrl          : {token, {funct, TokenLine, TokenChars}}.
-decodeUrlComponent : {token, {funct, TokenLine, TokenChars}}.
-distinct           : {token, {funct, TokenLine, TokenChars}}.
-each               : {token, {funct, TokenLine, TokenChars}}.
-encodeUrl          : {token, {funct, TokenLine, TokenChars}}.
-encodeUrlComponent : {token, {funct, TokenLine, TokenChars}}.
-error              : {token, {funct, TokenLine, TokenChars}}.
-exists             : {token, {funct, TokenLine, TokenChars}}.
-filter             : {token, {funct, TokenLine, TokenChars}}.
-floor              : {token, {funct, TokenLine, TokenChars}}.
-foldLeft           : {token, {funct, TokenLine, TokenChars}}.
-formatBase         : {token, {funct, TokenLine, TokenChars}}.
-formatNumber       : {token, {funct, TokenLine, TokenChars}}.
-join               : {token, {funct, TokenLine, TokenChars}}.
-keys               : {token, {funct, TokenLine, TokenChars}}.
-length             : {token, {funct, TokenLine, TokenChars}}.
-lookup             : {token, {funct, TokenLine, TokenChars}}.
-lowercase          : {token, {funct, TokenLine, TokenChars}}.
-map                : {token, {funct, TokenLine, TokenChars}}.
-match              : {token, {funct, TokenLine, TokenChars}}.
-max                : {token, {funct, TokenLine, TokenChars}}.
-merge              : {token, {funct, TokenLine, TokenChars}}.
-min                : {token, {funct, TokenLine, TokenChars}}.
-not                : {token, {funct, TokenLine, TokenChars}}.
-number             : {token, {funct, TokenLine, TokenChars}}.
-pad                : {token, {funct, TokenLine, TokenChars}}.
-power              : {token, {funct, TokenLine, TokenChars}}.
-random             : {token, {funct, TokenLine, TokenChars}}.
-replace            : {token, {funct, TokenLine, TokenChars}}.
-reverse            : {token, {funct, TokenLine, TokenChars}}.
-round              : {token, {funct, TokenLine, TokenChars}}.
-shuffle            : {token, {funct, TokenLine, TokenChars}}.
-sift               : {token, {funct, TokenLine, TokenChars}}.
-single             : {token, {funct, TokenLine, TokenChars}}.
-sort               : {token, {funct, TokenLine, TokenChars}}.
-split              : {token, {funct, TokenLine, TokenChars}}.
-spread             : {token, {funct, TokenLine, TokenChars}}.
-sqrt               : {token, {funct, TokenLine, TokenChars}}.
-string             : {token, {funct, TokenLine, TokenChars}}.
-substring          : {token, {funct, TokenLine, TokenChars}}.
-substringAfter     : {token, {funct, TokenLine, TokenChars}}.
-substringBefore    : {token, {funct, TokenLine, TokenChars}}.
-sum                : {token, {funct, TokenLine, TokenChars}}.
-trim               : {token, {funct, TokenLine, TokenChars}}.
-type               : {token, {funct, TokenLine, TokenChars}}.
-uppercase          : {token, {funct, TokenLine, TokenChars}}.
-zip                : {token, {funct, TokenLine, TokenChars}}.
-
-%%
-%% NodeRED specials
-clone         : {token, {funct, TokenLine, TokenChars}}.
-env           : {token, {funct, TokenLine, TokenChars}}.
-flowContext   : {token, {funct, TokenLine, TokenChars}}.
-fromMillis    : {token, {funct, TokenLine, TokenChars}}.
-globalContext : {token, {funct, TokenLine, TokenChars}}.
-millis        : {token, {funct, TokenLine, TokenChars}}.
-moment        : {token, {funct, TokenLine, TokenChars}}.
-now           : {token, {funct, TokenLine, TokenChars}}.
-parseInteger  : {token, {funct, TokenLine, TokenChars}}.
-reduce        : {token, {funct, TokenLine, TokenChars}}.
-toMillis      : {token, {funct, TokenLine, TokenChars}}.
-
-function           : {token, {funct_def, TokenLine}}.
-
-
-
-{NAME}        : {token, {name, TokenLine, TokenChars}}.
-{WHITESPACE}+ : skip_token.
-{INPUT}       : {token, {msg_obj, TokenLine}}.
 
 %% Taken from
 %%    https://github.com/alpaca-lang/alpaca/blob/main/src/alpaca_scan.xrl
 
 %% Integer
-{D}+       : {token, {int, TokenLine, list_to_integer(TokenChars)}}.
+{INT}       : {token, {int, TokenLine, list_to_integer(TokenChars)}}.
 
 %% Float
-{D}+\.{D}+ : {token, {float, TokenLine, list_to_float(TokenChars)}}.
+{INT}\.{D}+ : {token, {float, TokenLine, list_to_float(TokenChars)}}.
+
+
+\/\*  : {token, {commment_start,    TokenLine}}.
+\*\/  : {token, {commment_end,     TokenLine}}.
+
+\^\(  : {token, {order_by,      TokenLine}}.
+
+~\>   : {token, {op_chain,   TokenLine}}.
+!=    : {token, {neq,       TokenLine}}.
+:=    : {token, {assign,   TokenLine}}.
+==    : {token, {eq,      TokenLine}}.
+\>=   : {token, {gt_eq,    TokenLine}}.
+\<=   : {token, {lt_eq,     TokenLine}}.
+msg   : {token, {msg_obj,    TokenLine}}.
+and   : {token, {op_and,      TokenLine}}.
+or    : {token, {op_or,        TokenLine}}.
+in    : {token, {op_in,         TokenLine}}.
+\*\*  : {token, {op_descendant,  TokenLine}}.
+
+\+    : {token, {op_plus,      TokenLine}}.
+\-    : {token, {op_minus,     TokenLine}}.
+\*    : {token, {op_multiple,  TokenLine}}.
+\/    : {token, {op_divide,    TokenLine}}.
+\#    : {token, {op_hash,      TokenLine}}.
+\(    : {token, {'(', TokenLine}}.
+\)    : {token, {')', TokenLine}}.
+\[    : {token, {'[',  TokenLine}}.
+\]    : {token, {']', TokenLine}}.
+\:    : {token, {':',        TokenLine}}.
+\;    : {token, {';',          TokenLine}}.
+\?    : {token, {question,     TokenLine}}.
+\=    : {token, {eq,           TokenLine}}.
+\%    : {token, {percent,      TokenLine}}.
+\<    : {token, {lt,           TokenLine}}.
+\>    : {token, {gt,           TokenLine}}.
+\"    : {token, {doublequote,  TokenLine}}.
+\'    : {token, {singlequote,  TokenLine}}.
+\&    : {token, {ampersand,    TokenLine}}.
+\$    : {token, {dollar,       TokenLine}}.
+\~    : {token, {tilda,        TokenLine}}.
+\^    : {token, {karat,        TokenLine}}.
+\@    : {token, {at,           TokenLine}}.
+\.    : {token, {'.',          TokenLine}}.
+\\    : {token, {backslash,    TokenLine}}.
+\|    : {token, {'|',          TokenLine}}.
+,     : {token, {',',        TokenLine}}.
+!     : {token, {'!',         TokenLine}}.
+{     : {token, {'{',   TokenLine}}.
+}     : {token, {'}',  TokenLine}}.
+
+% Function names taken from
+%  https://github.com/jsonata-js/jsonata/blob/master/src/functions.js
+\$abs                : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$append             : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$assert             : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$average            : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$base64decode       : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$base64encode       : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$boolean            : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$ceil               : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$contains           : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$count              : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$decodeUrl          : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$decodeUrlComponent : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$distinct           : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$each               : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$encodeUrl          : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$encodeUrlComponent : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$error              : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$exists             : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$filter             : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$floor              : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$foldLeft           : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$formatBase         : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$formatNumber       : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$join               : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$keys               : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$length             : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$lookup             : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$lowercase          : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$map                : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$match              : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$max                : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$merge              : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$min                : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$not                : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$number             : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$pad                : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$power              : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$random             : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$replace            : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$reverse            : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$round              : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$shuffle            : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$sift               : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$single             : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$sort               : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$split              : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$spread             : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$sqrt               : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$string             : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$substring          : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$substringAfter     : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$substringBefore    : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$sum                : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$trim               : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$type               : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$uppercase          : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$zip                : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+
+%%
+%% NodeRED specials
+\$clone         : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$env           : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$flowContext   : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$fromMillis    : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$globalContext : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$millis        : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$moment        : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$now           : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$parseInteger  : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$reduce        : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$toMillis      : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+
+function      : {token, {funct_def, TokenLine}}.
+
+{NAME}        : {token, {name, TokenLine, TokenChars}}.
+{WHITESPACE}+ : skip_token.
+{INPUT}       : {token, {msg_obj, TokenLine}}.
+{DSTRING}     : {token, {string, TokenLine, TokenChars}}.
+{SSTRING}     : {token, {string, TokenLine, TokenChars}}.
+{CHARS}       : {token, {chars, TokenLine, TokenChars}}.
+
+. : {error, "Unexpected token: " ++ TokenChars}.
 
 Erlang code.
+
+remove_dollars([$$|Chars]) ->
+    list_to_atom(Chars).

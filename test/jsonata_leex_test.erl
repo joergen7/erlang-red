@@ -2,8 +2,8 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-did_it_final({{error, _}, _}) ->
-    true;
+did_it_final(T) ->
+    element(1, element(1, T)) == error;
 did_it_final(_) ->
     false.
 
