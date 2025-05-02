@@ -2,12 +2,157 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-parser_test() ->
-    {ok, Tokens, _} = jsonata_leex:string("$count($$.payload)"),
+%%
+%% These tests really only test the use cases I have from JSONata. There
+%% basically three usecase for me:
+%%
+%%   - function calls with msg values as parameters
+%%   - creation of JSON objects using msg values
+%%   - string concatenation using ampersand operator.
+%%
+%% therefore these tests cover those use cases.
+%%
+%% Other uses for JSONata aren't - at time of writing - covered and remain
+%% as an exercise for the reader.
+%%
 
-    {ok, Result} = jsonata_parser:parse(Tokens),
+foreach_parser_test_() ->
+    Tests = [
+      {
+       map_one_key_and_value_test,
+       "{ \"key\": $$.payload.key2 }",
+       "fun (Msg) -> #{ \
+          key => maps:get(key2, maps:get(payload, Msg))
+        } end."
+      },
+      {
+       funct_simple_key_using_msg_test,
+       "$count(msg.payload)",
+       "fun (Msg) -> erlang:length(maps:get(payload, Msg)) end."
+      },
+      {
+       funct_simple_key_test,
+       "$count($$.payload)",
+       "fun (Msg) -> erlang:length(maps:get(payload, Msg)) end."
+      },
+      {
+       map_handle_underscore_as_key_value,
+       "{ \"val\": $$._payload._key }",
+       "fun (Msg) ->
+           #{ val => maps:get('_key', maps:get('_payload', Msg)) }
+        end."
+      },
+      {
+       funct_three_arguments,
+       "$replace( $$.context._datafile, \".json\", \".csv\")",
+       "fun (Msg) ->
+            lists:flatten(string:replace(maps:get('_datafile',
+                          maps:get(context, Msg)),
+                           \".json\", \".csv\", all))
+        end."
+      },
+      {
+       funct_replace_with_four_args,
+       "$replace( $$.context._datafile, \".json\", \".csv\", 20)",
+       "fun (Msg) ->
+            lists:flatten(string:replace(maps:get('_datafile',
+                             maps:get(context, Msg)),
+                           \".json\", \".csv\"))
+        end."
+      },
+      {
+       funct_with_nested_keys_test,
+       "$count($$.payload.key1.key2.key3.key4)",
+       "fun (Msg) -> \
+            erlang:length(maps:get(key4, maps:get(key3,
+                             maps:get(key2, maps:get(key1,
+                                maps:get(payload, Msg))))))
+        end."
+      },
+      {
+       %% 'msg' and '$$' are interchangeable but '$$' is preferred and should
+       %% be used in JSONata expressions.
+       parser_map_multiple_key_values_test,
+       "{ \"key\": msg.payload.key2,
+          \"key2\": $$.map.key1.val3,
+          \"key3\": msg.map.key2 }",
+       "fun (Msg) -> #{ \
+            key => maps:get(key2, maps:get(payload, Msg)),
+            key2 => maps:get(val3, maps:get(key1, maps:get(map, Msg))),
+            key3 => maps:get(key2, maps:get(map, Msg))
+          } end."
+      },
+      {
+       %% 'msg' and '$$' are interchangeable but '$$' is preferred and should
+       %% be used in JSONata expressions.
+       parser_map_one_key_and_value_with_msg_test,
+       "{ \"key\": msg.payload.key2 }",
+       "fun (Msg) -> #{
+           key => maps:get(key2, maps:get(payload, Msg))
+        } end."
+      },
+      {
+       single_expr_of_various_forms,
+       "$$.payload ; \"string\" ; 123 ; 321.123 ; $$._underscore",
+       "fun (Msg) ->
+            maps:get(payload, Msg),
+            \"string\",
+            123, 3.21122999999999990450e+02, maps:get('_underscore', Msg)
+        end."
+      },
+      {
+       %% comments have to be statements
+       ignore_comments_but_include_expressions,
+       "/* comment asd asd */ ; $$.payload ; /* comment asd asd 12 sdsa */",
+       "fun (Msg) ->
+          maps:get(payload, Msg)
+        end."
+      },
+      {
+       %% comments have to be statements
+       ignore_comments_but_include_expressions_2,
+       "/* comment asd asd */ ; $$.payload ; /* comment asd asd 12 sdsa */ ;
+            $$.fubar",
+       "fun (Msg) ->
+          maps:get(payload, Msg), maps:get(fubar, Msg)
+        end."
+      },
+      {
+       %% comments have to be statements
+       ignore_comments,
+       "/* comment asd asd */",
+       "fun (Msg) ->
+          Msg
+        end."
+      },
+      {
+       string_concatenation,
+       "\"one\" & \"two\" & $$.payload",
+       "fun (Msg) ->
+          \"one\" ++ \"two\" ++ maps:get(payload, Msg)
+        end."
+      }
+      %% {
+      %%  string_concatenation_2,
+      %%  "\"- [\" & $$.payload.done & \"] [\" & $replace($$.payload.path,\"datasets/\",\"\") & \"](https://raw.githubusercontent.com/opensanctions/opensanctions/main/\" &  $$.payload.path & \") [@](https://github.com/opensanctions/opensanctions/tree/main/\" & $replace($$.payload.path,/\\/[^\\/]+$/,\"\") & \")\\n\"",
+      %%  "fun (Msg) ->
+      %%   end."
+      %% }
+     ],
 
-    ?assertEqual(
-        <<"fun (Msg) -> erlang:length(maps:get(payload,Msg)) end">>,
-        Result
-    ).
+    [{
+      atom_to_binary(TestCaseName),
+      timeout,5, fun() ->
+                         {ok, Tokens, _} = jsonata_leex:string(SrcString),
+
+                         {ok, Result} = jsonata_parser:parse(Tokens),
+
+                         ResultStringRmSpace = list_to_binary(
+                                                 re:replace(ResultString,
+                                                            "\\s+", " ",
+                                                            [global])
+                                                ),
+
+                         ?assertEqual(ResultStringRmSpace, Result)
+                 end
+     } || {TestCaseName, SrcString, ResultString} <- Tests].

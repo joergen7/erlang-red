@@ -2,10 +2,8 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-did_it_final(T) ->
-    element(1, element(1, T)) == error;
-did_it_final(_) ->
-    false.
+did_it_fail(T) ->
+    element(1, element(1, T)) == error.
 
 lexical_test() ->
     {ok, FileData} = file:read_file(
@@ -19,5 +17,5 @@ lexical_test() ->
     ),
     Lst = [{jsonata_leex:string(T), T} || T <- TestCases],
 
-    FinalResult = lists:filter(fun(A) -> did_it_final(A) end, Lst),
+    FinalResult = lists:filter(fun(A) -> did_it_fail(A) end, Lst),
     ?assertEqual([], FinalResult).
