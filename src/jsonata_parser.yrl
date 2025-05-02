@@ -69,13 +69,33 @@ statements -> statement : ['$1'].
 statements -> statement ';' statements : ['$1'|'$3'].
 
 statement -> '{' key_value_pairs '}' : convert_to_map('$2').
+statement -> '{' key_value_pairs '}' comments : convert_to_map('$2').
+statement -> comments '{' key_value_pairs '}' comments : convert_to_map('$3').
+
 statement -> expr : convert_expr('$1').
-statement -> expr ampersands : convert_string_concatenation(['$1' | '$2']).
+statement -> expr comments : convert_expr('$1').
+statement -> comments expr : convert_expr('$2').
+statement -> comments expr comments : convert_expr('$2').
+
+statement -> expr ampersands : convert_string_concat(['$1' | '$2']).
+statement ->
+    comments expr ampersands : convert_string_concat(['$2' | '$3']).
+statement ->
+    expr comments ampersands : convert_string_concat(['$1' | '$3']).
+statement ->
+    expr comments ampersands comments : convert_string_concat(['$1'|'$3']).
+statement ->
+    expr ampersands comments : convert_string_concat(['$1' | '$2']).
+
+
 statement -> comments : comment.
 
 function_call -> funct '(' args ')' : convert_funct('$1', '$3').
 
 key_value_pair -> string ':' expr : {remove_quotes('$1'), '$3'}.
+key_value_pair ->
+    string ':' expr ampersands : {remove_quotes('$1'),
+                                  convert_string_concat(['$3' | '$4'])}.
 
 key_value_pairs -> key_value_pair : ['$1'].
 key_value_pairs -> key_value_pair ',' key_value_pairs : ['$1' | '$3'].
@@ -176,18 +196,41 @@ convert_to_map([{KeyName,Value}|T], PrevValues) ->
     convert_to_map(T,
                    io_lib:format("~s, ~s => ~s", [PrevValues, KeyName, Value])).
 
-convert_string_concatenation([{string, _LineNo, V}|T]) ->
-    convert_string_concatenation(T,io_lib:format("~s",[V]));
-convert_string_concatenation([V|T]) ->
-    convert_string_concatenation(T,io_lib:format("~s",[V])).
-
-convert_string_concatenation([], Acc) ->
+%% convert_string_concat is representative of all the larger functions here:
+%%  - take the initial array of stuff
+%%  - create an accumulator and iterator through the rest
+%%  - once empty, return the accumulator.
+%%
+%% any_to_list is defined by the jsonata_evaluator code.
+%% Step 1: take the array of expressions and create a accumulator string
+convert_string_concat([{int,_LineNo, V}|T]) ->
+    convert_string_concat(T, io_lib:format("\"~s\"", [integer_to_list(V)]));
+convert_string_concat([{float,_LineNo, V}|T]) ->
+    convert_string_concat(T, io_lib:format("\"~s\"", [float_to_list(V)]));
+convert_string_concat([{name,_LineNo, V}|T]) ->
+    convert_string_concat(T, io_lib:format("any_to_list(~s)", [V]));
+convert_string_concat([{string, _LineNo, V}|T]) ->
+    convert_string_concat(T,io_lib:format("~s",[V]));
+convert_string_concat([V|T]) ->
+    convert_string_concat(T,io_lib:format("any_to_list(~s)",[V])).
+%% Step 3: empty list of expressions, we're done return the accumulator.
+convert_string_concat([], Acc) ->
     Acc;
-convert_string_concatenation([{string,_LineNo, V}|T], Acc) ->
-    convert_string_concatenation(T, io_lib:format("~s ++ ~s", [Acc, V]));
-convert_string_concatenation([V|T], Acc) ->
-    convert_string_concatenation(T, io_lib:format("~s ++ ~s", [Acc, V])).
+%% Step 2: add each new expr to the accumulator string
+convert_string_concat([{name,_LineNo, V}|T], Acc) ->
+    convert_string_concat(T, io_lib:format("~s ++ any_to_list(~s)", [Acc, V]));
+convert_string_concat([{int,_LineNo, V}|T], Acc) ->
+    convert_string_concat(T, io_lib:format("~s ++ \"~s\"", [Acc, integer_to_list(V)]));
+convert_string_concat([{float,_LineNo, V}|T], Acc) ->
+    convert_string_concat(T, io_lib:format("~s ++ \"~s\"", [Acc, float_to_list(V)]));
+convert_string_concat([{string,_LineNo, V}|T], Acc) ->
+    convert_string_concat(T, io_lib:format("~s ++ ~s", [Acc, V]));
+convert_string_concat([V|T], Acc) ->
+    convert_string_concat(T, io_lib:format("~s ++ any_to_list(~s)", [Acc, V])).
 
+
+%%
+%%
 args_to_string([{string, _LineNaume, String}|T]) ->
     args_to_string(T, io_lib:format("~s", [String]));
 args_to_string([H|T]) ->
@@ -204,6 +247,9 @@ convert_funct({funct,_LineNo,FunctName}, Expr) ->
     case FunctName of
         count ->
             list_to_binary(io_lib:format("erlang:length(~s)",
+                                         [args_to_string(Expr)]));
+        toString ->
+            list_to_binary(io_lib:format("to_string(~s)",
                                          [args_to_string(Expr)]));
         replace ->
             case Expr of

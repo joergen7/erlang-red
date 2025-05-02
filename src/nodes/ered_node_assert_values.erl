@@ -34,8 +34,14 @@
 start(NodeDef, _WsName) ->
     ered_node:start(NodeDef, ?MODULE).
 
-is_same(Same, Same) -> true;
-is_same(_, _) -> false.
+is_same(Same, Diff) when is_list(Same) and is_binary(Diff) ->
+    is_same(Same, binary_to_list(Diff));
+is_same(Same, Diff) when is_binary(Same) and is_list(Diff) ->
+    is_same(binary_to_list(Same), Diff);
+is_same(Same, Same) ->
+    true;
+is_same(_, _) ->
+    false.
 
 %% erlfmt:ignore equals and arrows should line up here.
 debug_data(NodeDef, ErrMsg) ->
@@ -166,6 +172,10 @@ eql_msg_op(Prop, SrcVal, <<"json">>, ReqVal, _Msg) ->
         true ->
             true;
         _ ->
+            %% TODO this can and will happend as decode_json uses
+            %% TODO binary values and jsonata uses string/list values.
+            %% TODO best to refer to specific values and do a string compare
+            %% TODO is_same(..) converts binaries to lists for comparison.
             {failed,
                 jstr(
                     "Prop '~p': Exp: '~p' Was: '~p'",

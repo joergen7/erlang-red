@@ -164,6 +164,10 @@ in    : {token, {op_in,         TokenLine}}.
 \$reduce        : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
 \$toMillis      : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
 
+%%
+%% Erlang-RED specials
+\$toString      : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+
 function      : {token, {funct_def, TokenLine}}.
 
 {NAME}        : {token, {name, TokenLine, TokenChars}}.

@@ -1,3 +1,5 @@
+%%% % @noformat
+
 -module(jsonata_parser_test).
 
 -include_lib("eunit/include/eunit.hrl").
@@ -129,9 +131,36 @@ foreach_parser_test_() ->
        string_concatenation,
        "\"one\" & \"two\" & $$.payload",
        "fun (Msg) ->
-          \"one\" ++ \"two\" ++ maps:get(payload, Msg)
+          \"one\" ++ \"two\" ++ any_to_list(maps:get(payload, Msg))
+        end."
+      },
+      {
+       string_concatenation_as_key_value_in_map,
+       "/* comment to be ignored */ { \"key\" : \"fubar \" & $$.payload }
+          /* ignore this comment too */",
+       "fun (Msg) ->
+          #{ key => \"fubar \" ++ any_to_list(maps:get(payload, Msg)) }
+        end."
+      },
+      {
+        string_concat_with_int_and_name,
+         "\"hello \" & \" world \" & \" 1234 \" & 10
+                & \" goodbye \" & \" cruel \" & world",
+       "fun (Msg) ->
+            \"hello \" ++ \" world \" ++ \" 1234 \" ++ \"10\" ++
+                     \" goodbye \" ++ \" cruel \" ++ any_to_list(world)
+        end."
+      },
+      {
+        to_string_functionality,
+         "$toString($$.payload)",
+       "fun (Msg) ->
+           to_string(maps:get(payload, Msg))
         end."
       }
+
+
+      %% reg-expression are supported in the parser.
       %% {
       %%  string_concatenation_2,
       %%  "\"- [\" & $$.payload.done & \"] [\" & $replace($$.payload.path,\"datasets/\",\"\") & \"](https://raw.githubusercontent.com/opensanctions/opensanctions/main/\" &  $$.payload.path & \") [@](https://github.com/opensanctions/opensanctions/tree/main/\" & $replace($$.payload.path,/\\/[^\\/]+$/,\"\") & \")\\n\"",
@@ -140,7 +169,7 @@ foreach_parser_test_() ->
       %% }
      ],
 
-    [{
+    TestList = [{
       atom_to_binary(TestCaseName),
       timeout,5, fun() ->
                          {ok, Tokens, _} = jsonata_leex:string(SrcString),
@@ -155,4 +184,6 @@ foreach_parser_test_() ->
 
                          ?assertEqual(ResultStringRmSpace, Result)
                  end
-     } || {TestCaseName, SrcString, ResultString} <- Tests].
+                } || {TestCaseName, SrcString, ResultString} <- Tests],
+
+    {inparallel, TestList}.

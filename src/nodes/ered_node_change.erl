@@ -115,38 +115,14 @@ do_set_value(Prop, Value, <<"jsonata">>, Msg, NodeDef) ->
     %% "pt": "msg",
     %% "to": "$count($$.payload)",
     %% "tot": "jsonata"
-    case Value == <<"$count($$.payload)">> of
-        true ->
-            case maps:find(payload, Msg) of
-                {ok, Val} ->
-                    case erlang:is_list(Val) of
-                        true ->
-                            maps:put(
-                                binary_to_atom(Prop),
-                                erlang:length(Val),
-                                Msg
-                            );
-                        _ ->
-                            unsupported(
-                                NodeDef,
-                                Msg,
-                                jstr("Payload was not a list: ~p", [Val])
-                            ),
-                            Msg
-                    end;
-                _ ->
-                    unsupported(
-                        NodeDef,
-                        Msg,
-                        "Payload not set on Msg"
-                    ),
-                    Msg
-            end;
-        _ ->
+    case jsonata_evaluator:execute(Value, Msg) of
+        {ok, Result} ->
+            maps:put(binary_to_atom(Prop), Result, Msg);
+        {error, Error} ->
             unsupported(
                 NodeDef,
                 Msg,
-                jstr("jsonata term: ~p", [Value])
+                jstr("jsonata term: ~p", [Error])
             ),
             Msg
     end;
@@ -190,7 +166,6 @@ handle_rule(<<"delete">>, Rule, Msg, _NodeDef) ->
             Msg
     end;
 handle_rule(<<"move">>, Rule, Msg, NodeDef) ->
-    io:format("Rule ~p~n", [Rule]),
     do_move(
         maps:find(pt, Rule),
         maps:find(tot, Rule),
