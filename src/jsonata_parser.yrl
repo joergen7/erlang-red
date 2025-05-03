@@ -72,20 +72,24 @@ Rootsymbol
    root
 .
 
+%% root is a bunch of different statements separated by semi-colons
 root -> statements : wrap_with_func(ignore_comments('$1')).
 
 statements -> statement : ['$1'].
 statements -> statement ';' statements : ['$1'|'$3'].
 
+%% key-value pair statements, i.e., map creation statements
 statement -> '{' key_value_pairs '}' : convert_to_map('$2').
 statement -> '{' key_value_pairs '}' comments : convert_to_map('$2').
 statement -> comments '{' key_value_pairs '}' comments : convert_to_map('$3').
 
+%% expression statements, i.e. retrieving values from msg object
 statement -> expr : convert_expr('$1').
 statement -> expr comments : convert_expr('$1').
 statement -> comments expr : convert_expr('$2').
 statement -> comments expr comments : convert_expr('$2').
 
+%% string concatenation statements, i.e. ampersand and his friends
 statement ->
     expr ampersands : convert_string_concat(['$1' | '$2']).
 statement ->
@@ -97,13 +101,21 @@ statement ->
 statement ->
     expr ampersands comments : convert_string_concat(['$1' | '$2']).
 
+%% arithmetic statements, i.e. $$.payload + 1 increment statements
 statement -> comments expr_alg comments : convert_expr_alg('$2').
 statement -> expr_alg comments : convert_expr_alg('$1').
 statement -> expr_alg : convert_expr_alg('$1').
 
+%% comments have rights to be statements as well.
 statement -> comments : comment.
 
+%%%%%%%%%%%%%%%% the actual definitions of stuff
 function_call -> funct '(' args ')' : convert_funct('$1', '$3').
+
+%% function call assumes the result should be a string, for a num
+%% we need a number as result, hence num_function_call that just reduces
+%% to the plain function call.
+num_function_call -> funct '(' args ')' : {funct, convert_funct('$1', '$3')}.
 
 key_name -> string : remove_quotes('$1').
 key_name -> sqstring : remove_quotes('$1').
@@ -128,11 +140,6 @@ expr -> float : '$1'.
 expr -> name : '$1'.
 expr -> function_call : '$1'.
 
-%% function call assumes the result should be a string, for a num
-%% we need a number as result, hence num_function_call that just reduces
-%% to the plain function call.
-num_function_call -> funct '(' args ')' : {funct, convert_funct('$1', '$3')}.
-
 num -> msg_obj dot_names : to_map_get('$2').
 num -> int : '$1'.
 num -> float : '$1'.
@@ -154,6 +161,7 @@ ampersand -> '&' expr : '$2'.
 ampersands -> ampersand : ['$1'].
 ampersands -> ampersand ampersands : ['$1' | '$2'].
 
+%% the definition of comments
 cmt_content -> name.
 cmt_content -> chars.
 cmt_content -> string.

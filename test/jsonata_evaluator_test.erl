@@ -279,6 +279,7 @@ tostring_from_anything_test() ->
 
 %%
 %% algorithmic is purposefully misspelled here. Why? Dunno.
+%% erlfmt:ignore
 algorithimc_test() ->
     ?assertEqual(
         {ok, 2},
@@ -307,8 +308,8 @@ algorithimc_test() ->
     ?assertEqual(
         {ok, 38.743},
         jsonata_evaluator:execute(
-            "$$.payload.fuba.dad + 1.2 + 2.3 + $$.payload.name.name\n"
-            "                                                         + 3.243 + 4 * 6",
+            "$$.payload.fuba.dad + 1.2 + 2.3 + $$.payload.name.name
+                                                            + 3.243 + 4 * 6",
             #{payload => #{fuba => #{dad => 4}, name => #{name => 4}}}
         )
     ).
@@ -322,6 +323,7 @@ single_quote_string_test() ->
         )
     ).
 
+%% erlfmt:ignore
 name_as_funct_argument_test() ->
     ?assertEqual(
         {ok, #{
@@ -331,8 +333,8 @@ name_as_funct_argument_test() ->
             banaint => 4
         }},
         jsonata_evaluator:execute(
-            "{ \"key\": $toString('single quote strings'), banaint: 4,\n"
-            "                            float: 1.23, key2: $toString(value) }",
+            "{ \"key\": $toString('single quote strings'), banaint: 4,
+                                   float: 1.23, key2: $toString(value) }",
             #{}
         )
     ).

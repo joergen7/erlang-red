@@ -13,7 +13,7 @@
 -module(jsonata_parser).
 -file("/code/src/jsonata_parser.erl", 14).
 -export([parse/1, parse_and_scan/1, format_error/1]).
--file("/code/src/jsonata_parser.yrl", 174).
+-file("/code/src/jsonata_parser.yrl", 182).
 
 ignore_comments(Ary) ->
     lists:filter(fun (C) -> C =/= comment end, Ary).
@@ -1747,7 +1747,7 @@ yeccgoto_statements(100=_S, Cat, Ss, Stack, T, Ts, Tzr) ->
 -compile({inline,yeccpars2_1_/1}).
 -dialyzer({nowarn_function, yeccpars2_1_/1}).
 -compile({nowarn_unused_function,  yeccpars2_1_/1}).
--file("/code/src/jsonata_parser.yrl", 71).
+-file("/code/src/jsonata_parser.yrl", 72).
 yeccpars2_1_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1757,7 +1757,7 @@ yeccpars2_1_(__Stack0) ->
 -compile({inline,yeccpars2_2_/1}).
 -dialyzer({nowarn_function, yeccpars2_2_/1}).
 -compile({nowarn_unused_function,  yeccpars2_2_/1}).
--file("/code/src/jsonata_parser.yrl", 73).
+-file("/code/src/jsonata_parser.yrl", 74).
 yeccpars2_2_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1767,7 +1767,7 @@ yeccpars2_2_(__Stack0) ->
 -compile({inline,yeccpars2_4_/1}).
 -dialyzer({nowarn_function, yeccpars2_4_/1}).
 -compile({nowarn_unused_function,  yeccpars2_4_/1}).
--file("/code/src/jsonata_parser.yrl", 135).
+-file("/code/src/jsonata_parser.yrl", 142).
 yeccpars2_4_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1777,7 +1777,7 @@ yeccpars2_4_(__Stack0) ->
 -compile({inline,yeccpars2_6_/1}).
 -dialyzer({nowarn_function, yeccpars2_6_/1}).
 -compile({nowarn_unused_function,  yeccpars2_6_/1}).
--file("/code/src/jsonata_parser.yrl", 125).
+-file("/code/src/jsonata_parser.yrl", 137).
 yeccpars2_6_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1787,7 +1787,7 @@ yeccpars2_6_(__Stack0) ->
 -compile({inline,'yeccpars2_7_$end'/1}).
 -dialyzer({nowarn_function, 'yeccpars2_7_$end'/1}).
 -compile({nowarn_unused_function,  'yeccpars2_7_$end'/1}).
--file("/code/src/jsonata_parser.yrl", 98).
+-file("/code/src/jsonata_parser.yrl", 103).
 'yeccpars2_7_$end'(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1797,7 +1797,7 @@ yeccpars2_6_(__Stack0) ->
 -compile({inline,'yeccpars2_7_;'/1}).
 -dialyzer({nowarn_function, 'yeccpars2_7_;'/1}).
 -compile({nowarn_unused_function,  'yeccpars2_7_;'/1}).
--file("/code/src/jsonata_parser.yrl", 98).
+-file("/code/src/jsonata_parser.yrl", 103).
 'yeccpars2_7_;'(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1807,7 +1807,7 @@ yeccpars2_6_(__Stack0) ->
 -compile({inline,yeccpars2_7_/1}).
 -dialyzer({nowarn_function, yeccpars2_7_/1}).
 -compile({nowarn_unused_function,  yeccpars2_7_/1}).
--file("/code/src/jsonata_parser.yrl", 136).
+-file("/code/src/jsonata_parser.yrl", 143).
 yeccpars2_7_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1817,7 +1817,7 @@ yeccpars2_7_(__Stack0) ->
 -compile({inline,yeccpars2_8_/1}).
 -dialyzer({nowarn_function, yeccpars2_8_/1}).
 -compile({nowarn_unused_function,  yeccpars2_8_/1}).
--file("/code/src/jsonata_parser.yrl", 80).
+-file("/code/src/jsonata_parser.yrl", 83).
 yeccpars2_8_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1827,7 +1827,7 @@ yeccpars2_8_(__Stack0) ->
 -compile({inline,yeccpars2_9_/1}).
 -dialyzer({nowarn_function, yeccpars2_9_/1}).
 -compile({nowarn_unused_function,  yeccpars2_9_/1}).
--file("/code/src/jsonata_parser.yrl", 100).
+-file("/code/src/jsonata_parser.yrl", 106).
 yeccpars2_9_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1847,7 +1847,7 @@ yeccpars2_10_(__Stack0) ->
 -compile({inline,yeccpars2_11_/1}).
 -dialyzer({nowarn_function, yeccpars2_11_/1}).
 -compile({nowarn_unused_function,  yeccpars2_11_/1}).
--file("/code/src/jsonata_parser.yrl", 121).
+-file("/code/src/jsonata_parser.yrl", 133).
 yeccpars2_11_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1857,7 +1857,7 @@ yeccpars2_11_(__Stack0) ->
 -compile({inline,'yeccpars2_13_$end'/1}).
 -dialyzer({nowarn_function, 'yeccpars2_13_$end'/1}).
 -compile({nowarn_unused_function,  'yeccpars2_13_$end'/1}).
--file("/code/src/jsonata_parser.yrl", 123).
+-file("/code/src/jsonata_parser.yrl", 135).
 'yeccpars2_13_$end'(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1867,7 +1867,7 @@ yeccpars2_11_(__Stack0) ->
 -compile({inline,'yeccpars2_13_&'/1}).
 -dialyzer({nowarn_function, 'yeccpars2_13_&'/1}).
 -compile({nowarn_unused_function,  'yeccpars2_13_&'/1}).
--file("/code/src/jsonata_parser.yrl", 123).
+-file("/code/src/jsonata_parser.yrl", 135).
 'yeccpars2_13_&'(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1877,7 +1877,7 @@ yeccpars2_11_(__Stack0) ->
 -compile({inline,'yeccpars2_13_;'/1}).
 -dialyzer({nowarn_function, 'yeccpars2_13_;'/1}).
 -compile({nowarn_unused_function,  'yeccpars2_13_;'/1}).
--file("/code/src/jsonata_parser.yrl", 123).
+-file("/code/src/jsonata_parser.yrl", 135).
 'yeccpars2_13_;'(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1887,7 +1887,7 @@ yeccpars2_11_(__Stack0) ->
 -compile({inline,yeccpars2_13_comment_start/1}).
 -dialyzer({nowarn_function, yeccpars2_13_comment_start/1}).
 -compile({nowarn_unused_function,  yeccpars2_13_comment_start/1}).
--file("/code/src/jsonata_parser.yrl", 123).
+-file("/code/src/jsonata_parser.yrl", 135).
 yeccpars2_13_comment_start(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1897,7 +1897,7 @@ yeccpars2_13_comment_start(__Stack0) ->
 -compile({inline,yeccpars2_13_/1}).
 -dialyzer({nowarn_function, yeccpars2_13_/1}).
 -compile({nowarn_unused_function,  yeccpars2_13_/1}).
--file("/code/src/jsonata_parser.yrl", 134).
+-file("/code/src/jsonata_parser.yrl", 141).
 yeccpars2_13_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1907,7 +1907,7 @@ yeccpars2_13_(__Stack0) ->
 -compile({inline,'yeccpars2_15_$end'/1}).
 -dialyzer({nowarn_function, 'yeccpars2_15_$end'/1}).
 -compile({nowarn_unused_function,  'yeccpars2_15_$end'/1}).
--file("/code/src/jsonata_parser.yrl", 122).
+-file("/code/src/jsonata_parser.yrl", 134).
 'yeccpars2_15_$end'(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1917,7 +1917,7 @@ yeccpars2_13_(__Stack0) ->
 -compile({inline,'yeccpars2_15_&'/1}).
 -dialyzer({nowarn_function, 'yeccpars2_15_&'/1}).
 -compile({nowarn_unused_function,  'yeccpars2_15_&'/1}).
--file("/code/src/jsonata_parser.yrl", 122).
+-file("/code/src/jsonata_parser.yrl", 134).
 'yeccpars2_15_&'(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1927,7 +1927,7 @@ yeccpars2_13_(__Stack0) ->
 -compile({inline,'yeccpars2_15_;'/1}).
 -dialyzer({nowarn_function, 'yeccpars2_15_;'/1}).
 -compile({nowarn_unused_function,  'yeccpars2_15_;'/1}).
--file("/code/src/jsonata_parser.yrl", 122).
+-file("/code/src/jsonata_parser.yrl", 134).
 'yeccpars2_15_;'(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1937,7 +1937,7 @@ yeccpars2_13_(__Stack0) ->
 -compile({inline,yeccpars2_15_comment_start/1}).
 -dialyzer({nowarn_function, yeccpars2_15_comment_start/1}).
 -compile({nowarn_unused_function,  yeccpars2_15_comment_start/1}).
--file("/code/src/jsonata_parser.yrl", 122).
+-file("/code/src/jsonata_parser.yrl", 134).
 yeccpars2_15_comment_start(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1947,7 +1947,7 @@ yeccpars2_15_comment_start(__Stack0) ->
 -compile({inline,yeccpars2_15_/1}).
 -dialyzer({nowarn_function, yeccpars2_15_/1}).
 -compile({nowarn_unused_function,  yeccpars2_15_/1}).
--file("/code/src/jsonata_parser.yrl", 133).
+-file("/code/src/jsonata_parser.yrl", 140).
 yeccpars2_15_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1957,7 +1957,7 @@ yeccpars2_15_(__Stack0) ->
 -compile({inline,yeccpars2_17_/1}).
 -dialyzer({nowarn_function, yeccpars2_17_/1}).
 -compile({nowarn_unused_function,  yeccpars2_17_/1}).
--file("/code/src/jsonata_parser.yrl", 124).
+-file("/code/src/jsonata_parser.yrl", 136).
 yeccpars2_17_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1967,7 +1967,7 @@ yeccpars2_17_(__Stack0) ->
 -compile({inline,yeccpars2_18_/1}).
 -dialyzer({nowarn_function, yeccpars2_18_/1}).
 -compile({nowarn_unused_function,  yeccpars2_18_/1}).
--file("/code/src/jsonata_parser.yrl", 120).
+-file("/code/src/jsonata_parser.yrl", 132).
 yeccpars2_18_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1977,7 +1977,7 @@ yeccpars2_18_(__Stack0) ->
 -compile({inline,yeccpars2_19_/1}).
 -dialyzer({nowarn_function, yeccpars2_19_/1}).
 -compile({nowarn_unused_function,  yeccpars2_19_/1}).
--file("/code/src/jsonata_parser.yrl", 119).
+-file("/code/src/jsonata_parser.yrl", 131).
 yeccpars2_19_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1987,7 +1987,7 @@ yeccpars2_19_(__Stack0) ->
 -compile({inline,yeccpars2_22_/1}).
 -dialyzer({nowarn_function, yeccpars2_22_/1}).
 -compile({nowarn_unused_function,  yeccpars2_22_/1}).
--file("/code/src/jsonata_parser.yrl", 112).
+-file("/code/src/jsonata_parser.yrl", 124).
 yeccpars2_22_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -1997,7 +1997,7 @@ yeccpars2_22_(__Stack0) ->
 -compile({inline,yeccpars2_24_/1}).
 -dialyzer({nowarn_function, yeccpars2_24_/1}).
 -compile({nowarn_unused_function,  yeccpars2_24_/1}).
--file("/code/src/jsonata_parser.yrl", 106).
+-file("/code/src/jsonata_parser.yrl", 118).
 yeccpars2_24_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -2007,7 +2007,7 @@ yeccpars2_24_(__Stack0) ->
 -compile({inline,yeccpars2_25_/1}).
 -dialyzer({nowarn_function, yeccpars2_25_/1}).
 -compile({nowarn_unused_function,  yeccpars2_25_/1}).
--file("/code/src/jsonata_parser.yrl", 105).
+-file("/code/src/jsonata_parser.yrl", 117).
 yeccpars2_25_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -2017,7 +2017,7 @@ yeccpars2_25_(__Stack0) ->
 -compile({inline,yeccpars2_26_/1}).
 -dialyzer({nowarn_function, yeccpars2_26_/1}).
 -compile({nowarn_unused_function,  yeccpars2_26_/1}).
--file("/code/src/jsonata_parser.yrl", 104).
+-file("/code/src/jsonata_parser.yrl", 116).
 yeccpars2_26_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -2027,7 +2027,7 @@ yeccpars2_26_(__Stack0) ->
 -compile({inline,yeccpars2_28_/1}).
 -dialyzer({nowarn_function, yeccpars2_28_/1}).
 -compile({nowarn_unused_function,  yeccpars2_28_/1}).
--file("/code/src/jsonata_parser.yrl", 108).
+-file("/code/src/jsonata_parser.yrl", 120).
 yeccpars2_28_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2037,7 +2037,7 @@ yeccpars2_28_(__Stack0) ->
 -compile({inline,yeccpars2_29_/1}).
 -dialyzer({nowarn_function, yeccpars2_29_/1}).
 -compile({nowarn_unused_function,  yeccpars2_29_/1}).
--file("/code/src/jsonata_parser.yrl", 123).
+-file("/code/src/jsonata_parser.yrl", 135).
 yeccpars2_29_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -2047,7 +2047,7 @@ yeccpars2_29_(__Stack0) ->
 -compile({inline,yeccpars2_31_/1}).
 -dialyzer({nowarn_function, yeccpars2_31_/1}).
 -compile({nowarn_unused_function,  yeccpars2_31_/1}).
--file("/code/src/jsonata_parser.yrl", 122).
+-file("/code/src/jsonata_parser.yrl", 134).
 yeccpars2_31_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -2057,7 +2057,7 @@ yeccpars2_31_(__Stack0) ->
 -compile({inline,yeccpars2_33_/1}).
 -dialyzer({nowarn_function, yeccpars2_33_/1}).
 -compile({nowarn_unused_function,  yeccpars2_33_/1}).
--file("/code/src/jsonata_parser.yrl", 118).
+-file("/code/src/jsonata_parser.yrl", 130).
 yeccpars2_33_(__Stack0) ->
  [___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2067,7 +2067,7 @@ yeccpars2_33_(__Stack0) ->
 -compile({inline,yeccpars2_34_/1}).
 -dialyzer({nowarn_function, yeccpars2_34_/1}).
 -compile({nowarn_unused_function,  yeccpars2_34_/1}).
--file("/code/src/jsonata_parser.yrl", 145).
+-file("/code/src/jsonata_parser.yrl", 152).
 yeccpars2_34_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -2077,7 +2077,7 @@ yeccpars2_34_(__Stack0) ->
 -compile({inline,yeccpars2_36_/1}).
 -dialyzer({nowarn_function, yeccpars2_36_/1}).
 -compile({nowarn_unused_function,  yeccpars2_36_/1}).
--file("/code/src/jsonata_parser.yrl", 143).
+-file("/code/src/jsonata_parser.yrl", 150).
 yeccpars2_36_(__Stack0) ->
  [___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2087,7 +2087,7 @@ yeccpars2_36_(__Stack0) ->
 -compile({inline,yeccpars2_37_/1}).
 -dialyzer({nowarn_function, yeccpars2_37_/1}).
 -compile({nowarn_unused_function,  yeccpars2_37_/1}).
--file("/code/src/jsonata_parser.yrl", 146).
+-file("/code/src/jsonata_parser.yrl", 153).
 yeccpars2_37_(__Stack0) ->
  [___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2097,7 +2097,7 @@ yeccpars2_37_(__Stack0) ->
 -compile({inline,yeccpars2_39_/1}).
 -dialyzer({nowarn_function, yeccpars2_39_/1}).
 -compile({nowarn_unused_function,  yeccpars2_39_/1}).
--file("/code/src/jsonata_parser.yrl", 115).
+-file("/code/src/jsonata_parser.yrl", 127).
 yeccpars2_39_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -2107,7 +2107,7 @@ yeccpars2_39_(__Stack0) ->
 -compile({inline,yeccpars2_41_/1}).
 -dialyzer({nowarn_function, yeccpars2_41_/1}).
 -compile({nowarn_unused_function,  yeccpars2_41_/1}).
--file("/code/src/jsonata_parser.yrl", 102).
+-file("/code/src/jsonata_parser.yrl", 109).
 yeccpars2_41_(__Stack0) ->
  [___4,___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2117,7 +2117,7 @@ yeccpars2_41_(__Stack0) ->
 -compile({inline,yeccpars2_43_/1}).
 -dialyzer({nowarn_function, yeccpars2_43_/1}).
 -compile({nowarn_unused_function,  yeccpars2_43_/1}).
--file("/code/src/jsonata_parser.yrl", 116).
+-file("/code/src/jsonata_parser.yrl", 128).
 yeccpars2_43_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2127,7 +2127,7 @@ yeccpars2_43_(__Stack0) ->
 -compile({inline,yeccpars2_44_/1}).
 -dialyzer({nowarn_function, yeccpars2_44_/1}).
 -compile({nowarn_unused_function,  yeccpars2_44_/1}).
--file("/code/src/jsonata_parser.yrl", 110).
+-file("/code/src/jsonata_parser.yrl", 122).
 yeccpars2_44_(__Stack0) ->
  [___4,___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2137,7 +2137,7 @@ yeccpars2_44_(__Stack0) ->
 -compile({inline,yeccpars2_45_/1}).
 -dialyzer({nowarn_function, yeccpars2_45_/1}).
 -compile({nowarn_unused_function,  yeccpars2_45_/1}).
--file("/code/src/jsonata_parser.yrl", 150).
+-file("/code/src/jsonata_parser.yrl", 157).
 yeccpars2_45_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -2147,7 +2147,7 @@ yeccpars2_45_(__Stack0) ->
 -compile({inline,yeccpars2_47_/1}).
 -dialyzer({nowarn_function, yeccpars2_47_/1}).
 -compile({nowarn_unused_function,  yeccpars2_47_/1}).
--file("/code/src/jsonata_parser.yrl", 148).
+-file("/code/src/jsonata_parser.yrl", 155).
 yeccpars2_47_(__Stack0) ->
  [___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2157,7 +2157,7 @@ yeccpars2_47_(__Stack0) ->
 -compile({inline,yeccpars2_48_/1}).
 -dialyzer({nowarn_function, yeccpars2_48_/1}).
 -compile({nowarn_unused_function,  yeccpars2_48_/1}).
--file("/code/src/jsonata_parser.yrl", 151).
+-file("/code/src/jsonata_parser.yrl", 158).
 yeccpars2_48_(__Stack0) ->
  [___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2167,7 +2167,7 @@ yeccpars2_48_(__Stack0) ->
 -compile({inline,yeccpars2_50_/1}).
 -dialyzer({nowarn_function, yeccpars2_50_/1}).
 -compile({nowarn_unused_function,  yeccpars2_50_/1}).
--file("/code/src/jsonata_parser.yrl", 113).
+-file("/code/src/jsonata_parser.yrl", 125).
 yeccpars2_50_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2177,7 +2177,7 @@ yeccpars2_50_(__Stack0) ->
 -compile({inline,yeccpars2_51_/1}).
 -dialyzer({nowarn_function, yeccpars2_51_/1}).
 -compile({nowarn_unused_function,  yeccpars2_51_/1}).
--file("/code/src/jsonata_parser.yrl", 76).
+-file("/code/src/jsonata_parser.yrl", 78).
 yeccpars2_51_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2187,7 +2187,7 @@ yeccpars2_51_(__Stack0) ->
 -compile({inline,yeccpars2_52_/1}).
 -dialyzer({nowarn_function, yeccpars2_52_/1}).
 -compile({nowarn_unused_function,  yeccpars2_52_/1}).
--file("/code/src/jsonata_parser.yrl", 77).
+-file("/code/src/jsonata_parser.yrl", 79).
 yeccpars2_52_(__Stack0) ->
  [___4,___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2197,7 +2197,7 @@ yeccpars2_52_(__Stack0) ->
 -compile({inline,'yeccpars2_53_$end'/1}).
 -dialyzer({nowarn_function, 'yeccpars2_53_$end'/1}).
 -compile({nowarn_unused_function,  'yeccpars2_53_$end'/1}).
--file("/code/src/jsonata_parser.yrl", 118).
+-file("/code/src/jsonata_parser.yrl", 130).
 'yeccpars2_53_$end'(__Stack0) ->
  [___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2207,7 +2207,7 @@ yeccpars2_52_(__Stack0) ->
 -compile({inline,'yeccpars2_53_&'/1}).
 -dialyzer({nowarn_function, 'yeccpars2_53_&'/1}).
 -compile({nowarn_unused_function,  'yeccpars2_53_&'/1}).
--file("/code/src/jsonata_parser.yrl", 118).
+-file("/code/src/jsonata_parser.yrl", 130).
 'yeccpars2_53_&'(__Stack0) ->
  [___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2217,7 +2217,7 @@ yeccpars2_52_(__Stack0) ->
 -compile({inline,'yeccpars2_53_;'/1}).
 -dialyzer({nowarn_function, 'yeccpars2_53_;'/1}).
 -compile({nowarn_unused_function,  'yeccpars2_53_;'/1}).
--file("/code/src/jsonata_parser.yrl", 118).
+-file("/code/src/jsonata_parser.yrl", 130).
 'yeccpars2_53_;'(__Stack0) ->
  [___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2227,7 +2227,7 @@ yeccpars2_52_(__Stack0) ->
 -compile({inline,yeccpars2_53_comment_start/1}).
 -dialyzer({nowarn_function, yeccpars2_53_comment_start/1}).
 -compile({nowarn_unused_function,  yeccpars2_53_comment_start/1}).
--file("/code/src/jsonata_parser.yrl", 118).
+-file("/code/src/jsonata_parser.yrl", 130).
 yeccpars2_53_comment_start(__Stack0) ->
  [___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2237,7 +2237,7 @@ yeccpars2_53_comment_start(__Stack0) ->
 -compile({inline,yeccpars2_53_/1}).
 -dialyzer({nowarn_function, yeccpars2_53_/1}).
 -compile({nowarn_unused_function,  yeccpars2_53_/1}).
--file("/code/src/jsonata_parser.yrl", 132).
+-file("/code/src/jsonata_parser.yrl", 139).
 yeccpars2_53_(__Stack0) ->
  [___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2247,7 +2247,7 @@ yeccpars2_53_(__Stack0) ->
 -compile({inline,'yeccpars2_56_$end'/1}).
 -dialyzer({nowarn_function, 'yeccpars2_56_$end'/1}).
 -compile({nowarn_unused_function,  'yeccpars2_56_$end'/1}).
--file("/code/src/jsonata_parser.yrl", 102).
+-file("/code/src/jsonata_parser.yrl", 109).
 'yeccpars2_56_$end'(__Stack0) ->
  [___4,___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2257,7 +2257,7 @@ yeccpars2_53_(__Stack0) ->
 -compile({inline,'yeccpars2_56_&'/1}).
 -dialyzer({nowarn_function, 'yeccpars2_56_&'/1}).
 -compile({nowarn_unused_function,  'yeccpars2_56_&'/1}).
--file("/code/src/jsonata_parser.yrl", 102).
+-file("/code/src/jsonata_parser.yrl", 109).
 'yeccpars2_56_&'(__Stack0) ->
  [___4,___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2267,7 +2267,7 @@ yeccpars2_53_(__Stack0) ->
 -compile({inline,'yeccpars2_56_;'/1}).
 -dialyzer({nowarn_function, 'yeccpars2_56_;'/1}).
 -compile({nowarn_unused_function,  'yeccpars2_56_;'/1}).
--file("/code/src/jsonata_parser.yrl", 102).
+-file("/code/src/jsonata_parser.yrl", 109).
 'yeccpars2_56_;'(__Stack0) ->
  [___4,___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2277,7 +2277,7 @@ yeccpars2_53_(__Stack0) ->
 -compile({inline,yeccpars2_56_comment_start/1}).
 -dialyzer({nowarn_function, yeccpars2_56_comment_start/1}).
 -compile({nowarn_unused_function,  yeccpars2_56_comment_start/1}).
--file("/code/src/jsonata_parser.yrl", 102).
+-file("/code/src/jsonata_parser.yrl", 109).
 yeccpars2_56_comment_start(__Stack0) ->
  [___4,___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2287,7 +2287,7 @@ yeccpars2_56_comment_start(__Stack0) ->
 -compile({inline,yeccpars2_56_/1}).
 -dialyzer({nowarn_function, yeccpars2_56_/1}).
 -compile({nowarn_unused_function,  yeccpars2_56_/1}).
--file("/code/src/jsonata_parser.yrl", 130).
+-file("/code/src/jsonata_parser.yrl", 114).
 yeccpars2_56_(__Stack0) ->
  [___4,___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2397,7 +2397,7 @@ yeccpars2_67_(__Stack0) ->
 -compile({inline,yeccpars2_68_/1}).
 -dialyzer({nowarn_function, yeccpars2_68_/1}).
 -compile({nowarn_unused_function,  yeccpars2_68_/1}).
--file("/code/src/jsonata_parser.yrl", 136).
+-file("/code/src/jsonata_parser.yrl", 143).
 yeccpars2_68_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -2407,7 +2407,7 @@ yeccpars2_68_(__Stack0) ->
 -compile({inline,yeccpars2_69_/1}).
 -dialyzer({nowarn_function, yeccpars2_69_/1}).
 -compile({nowarn_unused_function,  yeccpars2_69_/1}).
--file("/code/src/jsonata_parser.yrl", 82).
+-file("/code/src/jsonata_parser.yrl", 85).
 yeccpars2_69_(__Stack0) ->
  [___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2417,7 +2417,7 @@ yeccpars2_69_(__Stack0) ->
 -compile({inline,yeccpars2_73_/1}).
 -dialyzer({nowarn_function, yeccpars2_73_/1}).
 -compile({nowarn_unused_function,  yeccpars2_73_/1}).
--file("/code/src/jsonata_parser.yrl", 78).
+-file("/code/src/jsonata_parser.yrl", 80).
 yeccpars2_73_(__Stack0) ->
  [___5,___4,___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2427,7 +2427,7 @@ yeccpars2_73_(__Stack0) ->
 -compile({inline,yeccpars2_74_/1}).
 -dialyzer({nowarn_function, yeccpars2_74_/1}).
 -compile({nowarn_unused_function,  yeccpars2_74_/1}).
--file("/code/src/jsonata_parser.yrl", 83).
+-file("/code/src/jsonata_parser.yrl", 86).
 yeccpars2_74_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2437,7 +2437,7 @@ yeccpars2_74_(__Stack0) ->
 -compile({inline,yeccpars2_75_/1}).
 -dialyzer({nowarn_function, yeccpars2_75_/1}).
 -compile({nowarn_unused_function,  yeccpars2_75_/1}).
--file("/code/src/jsonata_parser.yrl", 88).
+-file("/code/src/jsonata_parser.yrl", 92).
 yeccpars2_75_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2447,7 +2447,7 @@ yeccpars2_75_(__Stack0) ->
 -compile({inline,yeccpars2_76_/1}).
 -dialyzer({nowarn_function, yeccpars2_76_/1}).
 -compile({nowarn_unused_function,  yeccpars2_76_/1}).
--file("/code/src/jsonata_parser.yrl", 96).
+-file("/code/src/jsonata_parser.yrl", 101).
 yeccpars2_76_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2457,7 +2457,7 @@ yeccpars2_76_(__Stack0) ->
 -compile({inline,yeccpars2_77_/1}).
 -dialyzer({nowarn_function, yeccpars2_77_/1}).
 -compile({nowarn_unused_function,  yeccpars2_77_/1}).
--file("/code/src/jsonata_parser.yrl", 81).
+-file("/code/src/jsonata_parser.yrl", 84).
 yeccpars2_77_(__Stack0) ->
  [___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2467,7 +2467,7 @@ yeccpars2_77_(__Stack0) ->
 -compile({inline,yeccpars2_78_/1}).
 -dialyzer({nowarn_function, yeccpars2_78_/1}).
 -compile({nowarn_unused_function,  yeccpars2_78_/1}).
--file("/code/src/jsonata_parser.yrl", 86).
+-file("/code/src/jsonata_parser.yrl", 90).
 yeccpars2_78_(__Stack0) ->
  [___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2477,7 +2477,7 @@ yeccpars2_78_(__Stack0) ->
 -compile({inline,yeccpars2_79_/1}).
 -dialyzer({nowarn_function, yeccpars2_79_/1}).
 -compile({nowarn_unused_function,  yeccpars2_79_/1}).
--file("/code/src/jsonata_parser.yrl", 94).
+-file("/code/src/jsonata_parser.yrl", 98).
 yeccpars2_79_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2487,7 +2487,7 @@ yeccpars2_79_(__Stack0) ->
 -compile({inline,yeccpars2_80_/1}).
 -dialyzer({nowarn_function, yeccpars2_80_/1}).
 -compile({nowarn_unused_function,  yeccpars2_80_/1}).
--file("/code/src/jsonata_parser.yrl", 90).
+-file("/code/src/jsonata_parser.yrl", 94).
 yeccpars2_80_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2497,7 +2497,7 @@ yeccpars2_80_(__Stack0) ->
 -compile({inline,yeccpars2_81_/1}).
 -dialyzer({nowarn_function, yeccpars2_81_/1}).
 -compile({nowarn_unused_function,  yeccpars2_81_/1}).
--file("/code/src/jsonata_parser.yrl", 92).
+-file("/code/src/jsonata_parser.yrl", 96).
 yeccpars2_81_(__Stack0) ->
  [___4,___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2507,7 +2507,7 @@ yeccpars2_81_(__Stack0) ->
 -compile({inline,yeccpars2_82_/1}).
 -dialyzer({nowarn_function, yeccpars2_82_/1}).
 -compile({nowarn_unused_function,  yeccpars2_82_/1}).
--file("/code/src/jsonata_parser.yrl", 97).
+-file("/code/src/jsonata_parser.yrl", 102).
 yeccpars2_82_(__Stack0) ->
  [___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2517,7 +2517,7 @@ yeccpars2_82_(__Stack0) ->
 -compile({inline,yeccpars2_87_/1}).
 -dialyzer({nowarn_function, yeccpars2_87_/1}).
 -compile({nowarn_unused_function,  yeccpars2_87_/1}).
--file("/code/src/jsonata_parser.yrl", 140).
+-file("/code/src/jsonata_parser.yrl", 147).
 yeccpars2_87_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2527,7 +2527,7 @@ yeccpars2_87_(__Stack0) ->
 -compile({inline,yeccpars2_88_/1}).
 -dialyzer({nowarn_function, yeccpars2_88_/1}).
 -compile({nowarn_unused_function,  yeccpars2_88_/1}).
--file("/code/src/jsonata_parser.yrl", 136).
+-file("/code/src/jsonata_parser.yrl", 143).
 yeccpars2_88_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -2537,7 +2537,7 @@ yeccpars2_88_(__Stack0) ->
 -compile({inline,yeccpars2_89_/1}).
 -dialyzer({nowarn_function, yeccpars2_89_/1}).
 -compile({nowarn_unused_function,  yeccpars2_89_/1}).
--file("/code/src/jsonata_parser.yrl", 134).
+-file("/code/src/jsonata_parser.yrl", 141).
 yeccpars2_89_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -2547,7 +2547,7 @@ yeccpars2_89_(__Stack0) ->
 -compile({inline,yeccpars2_91_/1}).
 -dialyzer({nowarn_function, yeccpars2_91_/1}).
 -compile({nowarn_unused_function,  yeccpars2_91_/1}).
--file("/code/src/jsonata_parser.yrl", 133).
+-file("/code/src/jsonata_parser.yrl", 140).
 yeccpars2_91_(__Stack0) ->
  [___1 | __Stack] = __Stack0,
  [begin
@@ -2557,7 +2557,7 @@ yeccpars2_91_(__Stack0) ->
 -compile({inline,yeccpars2_93_/1}).
 -dialyzer({nowarn_function, yeccpars2_93_/1}).
 -compile({nowarn_unused_function,  yeccpars2_93_/1}).
--file("/code/src/jsonata_parser.yrl", 132).
+-file("/code/src/jsonata_parser.yrl", 139).
 yeccpars2_93_(__Stack0) ->
  [___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2567,7 +2567,7 @@ yeccpars2_93_(__Stack0) ->
 -compile({inline,yeccpars2_96_/1}).
 -dialyzer({nowarn_function, yeccpars2_96_/1}).
 -compile({nowarn_unused_function,  yeccpars2_96_/1}).
--file("/code/src/jsonata_parser.yrl", 130).
+-file("/code/src/jsonata_parser.yrl", 114).
 yeccpars2_96_(__Stack0) ->
  [___4,___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2577,7 +2577,7 @@ yeccpars2_96_(__Stack0) ->
 -compile({inline,yeccpars2_97_/1}).
 -dialyzer({nowarn_function, yeccpars2_97_/1}).
 -compile({nowarn_unused_function,  yeccpars2_97_/1}).
--file("/code/src/jsonata_parser.yrl", 141).
+-file("/code/src/jsonata_parser.yrl", 148).
 yeccpars2_97_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2587,7 +2587,7 @@ yeccpars2_97_(__Stack0) ->
 -compile({inline,yeccpars2_98_/1}).
 -dialyzer({nowarn_function, yeccpars2_98_/1}).
 -compile({nowarn_unused_function,  yeccpars2_98_/1}).
--file("/code/src/jsonata_parser.yrl", 139).
+-file("/code/src/jsonata_parser.yrl", 146).
 yeccpars2_98_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2597,7 +2597,7 @@ yeccpars2_98_(__Stack0) ->
 -compile({inline,yeccpars2_99_/1}).
 -dialyzer({nowarn_function, yeccpars2_99_/1}).
 -compile({nowarn_unused_function,  yeccpars2_99_/1}).
--file("/code/src/jsonata_parser.yrl", 138).
+-file("/code/src/jsonata_parser.yrl", 145).
 yeccpars2_99_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2607,7 +2607,7 @@ yeccpars2_99_(__Stack0) ->
 -compile({inline,yeccpars2_101_/1}).
 -dialyzer({nowarn_function, yeccpars2_101_/1}).
 -compile({nowarn_unused_function,  yeccpars2_101_/1}).
--file("/code/src/jsonata_parser.yrl", 74).
+-file("/code/src/jsonata_parser.yrl", 75).
 yeccpars2_101_(__Stack0) ->
  [___3,___2,___1 | __Stack] = __Stack0,
  [begin
@@ -2615,4 +2615,4 @@ yeccpars2_101_(__Stack0) ->
   end | __Stack].
 
 
--file("/code/src/jsonata_parser.yrl", 420).
+-file("/code/src/jsonata_parser.yrl", 428).

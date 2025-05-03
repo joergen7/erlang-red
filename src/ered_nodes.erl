@@ -252,7 +252,6 @@ send_msg_on([NodeId | Wires], Msg) ->
 %%
 
 node_type_to_fun(_Type, true) ->
-    io:format("node disabled, ignoring\n"),
     ered_node_disabled;
 node_type_to_fun(Type, _) ->
     node_type_to_fun(Type).
