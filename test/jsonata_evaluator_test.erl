@@ -8,7 +8,6 @@ count_test() ->
         jsonata_evaluator:execute(
             "$count($$.payload)",
             #{payload => [1, 2, 3, 4]}
-
         )
     ),
     ?assertEqual(
@@ -278,7 +277,6 @@ tostring_from_anything_test() ->
         )
     ).
 
-
 %%
 %% algorithmic is purposefully misspelled here. Why? Dunno.
 algorithimc_test() ->
@@ -288,32 +286,32 @@ algorithimc_test() ->
             "1 + 1",
             #{}
         )
-      ),
+    ),
     ?assertEqual(
         {ok, 40},
         jsonata_evaluator:execute(
             "$count($$.payload) * 5",
-            #{ payload => [one,two,three,four,five,six,'and',seven]}
+            #{payload => [one, two, three, four, five, six, 'and', seven]}
         )
-      ),
+    ),
     ?assertEqual(
         {ok, 440},
         jsonata_evaluator:execute(
             "$count($$.payload) * 5 * $length($$.str)",
             #{
-               payload => [one,two,three,four,five,six,'and',seven],
-               str => "onetwothree"
-             }
+                payload => [one, two, three, four, five, six, 'and', seven],
+                str => "onetwothree"
+            }
         )
-      ),
+    ),
     ?assertEqual(
         {ok, 38.743},
         jsonata_evaluator:execute(
-            "$$.payload.fuba.dad + 1.2 + 2.3 + $$.payload.name.name
-                                                         + 3.243 + 4 * 6",
-            #{ payload => #{ fuba => #{ dad => 4 }, name => #{ name => 4 }}}
+            "$$.payload.fuba.dad + 1.2 + 2.3 + $$.payload.name.name\n"
+            "                                                         + 3.243 + 4 * 6",
+            #{payload => #{fuba => #{dad => 4}, name => #{name => 4}}}
         )
-      ).
+    ).
 
 single_quote_string_test() ->
     ?assertEqual(
@@ -322,15 +320,19 @@ single_quote_string_test() ->
             "'hello' & ' ' & 'world'",
             #{}
         )
-      ).
+    ).
 
 name_as_funct_argument_test() ->
     ?assertEqual(
-        {ok, #{float => 1.23,key => <<"single quote strings">>,
-                       key2 => <<"value">>,banaint => 4}},
+        {ok, #{
+            float => 1.23,
+            key => <<"single quote strings">>,
+            key2 => <<"value">>,
+            banaint => 4
+        }},
         jsonata_evaluator:execute(
-             "{ \"key\": $toString('single quote strings'), banaint: 4,
-                            float: 1.23, key2: $toString(value) }",
+            "{ \"key\": $toString('single quote strings'), banaint: 4,\n"
+            "                            float: 1.23, key2: $toString(value) }",
             #{}
         )
-      ).
+    ).
