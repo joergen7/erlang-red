@@ -39,7 +39,7 @@ execute(JSONata, Msg) ->
 handle_local_function(FunctionName, [Arg]) ->
     case FunctionName of
         any_to_list when is_float(Arg) ->
-            float_to_list(Arg);
+            float_to_list(Arg, [short]);
         any_to_list when is_integer(Arg) ->
             integer_to_list(Arg);
         any_to_list when is_binary(Arg) ->
@@ -59,6 +59,8 @@ handle_local_function(FunctionName, [Arg]) ->
             atom_to_binary(Arg);
         to_string when is_integer(Arg) ->
             integer_to_binary(Arg);
+        to_string when is_float(Arg) ->
+            list_to_binary(float_to_list(Arg, [short]));
         to_string ->
             list_to_binary(io_lib:format("~p", [Arg]))
     end.

@@ -15,21 +15,26 @@ Header
 %%
 %%
 Nonterminals
+  ampersand
+  ampersands
+  args
+  cmt_content
+  comment
+  comment_content
+  comments
+  dot_name
+  dot_names
+  expr
+  expr_alg
+  function_call
+  key_value_pair
+  key_value_pairs
+  key_name
+  num
+  num_function_call
   root
   statement
   statements
-  args
-  expr
-  comments
-  comment
-  key_value_pair
-  key_value_pairs
-  dot_name
-  dot_names
-  ampersand
-  ampersands
-  comment_content
-  function_call
 .
 
 %%
@@ -45,16 +50,20 @@ Terminals
   ':'
   ','
   '&'
-  comment_start
-  comment_end
-  name
-  msg_obj
-  funct
-  string
+  '*'
+  '+'
+  '-'
+  '/'
   chars
-  name
-  int
+  comment_end
+  comment_start
   float
+  funct
+  int
+  msg_obj
+  name
+  string
+  sqstring
 .
 
 %%
@@ -77,7 +86,8 @@ statement -> expr comments : convert_expr('$1').
 statement -> comments expr : convert_expr('$2').
 statement -> comments expr comments : convert_expr('$2').
 
-statement -> expr ampersands : convert_string_concat(['$1' | '$2']).
+statement ->
+    expr ampersands : convert_string_concat(['$1' | '$2']).
 statement ->
     comments expr ampersands : convert_string_concat(['$2' | '$3']).
 statement ->
@@ -87,15 +97,21 @@ statement ->
 statement ->
     expr ampersands comments : convert_string_concat(['$1' | '$2']).
 
+statement -> comments expr_alg comments : convert_expr_alg('$2').
+statement -> expr_alg comments : convert_expr_alg('$1').
+statement -> expr_alg : convert_expr_alg('$1').
 
 statement -> comments : comment.
 
 function_call -> funct '(' args ')' : convert_funct('$1', '$3').
 
-key_value_pair -> string ':' expr : {remove_quotes('$1'), '$3'}.
+key_name -> string : remove_quotes('$1').
+key_name -> sqstring : remove_quotes('$1').
+key_name -> name : name_to_atom('$1').
+
+key_value_pair -> key_name ':' expr : {'$1', '$3'}.
 key_value_pair ->
-    string ':' expr ampersands : {remove_quotes('$1'),
-                                  convert_string_concat(['$3' | '$4'])}.
+    key_name ':' expr ampersands : {'$1', convert_string_concat(['$3' | '$4'])}.
 
 key_value_pairs -> key_value_pair : ['$1'].
 key_value_pairs -> key_value_pair ',' key_value_pairs : ['$1' | '$3'].
@@ -105,11 +121,28 @@ args -> expr ',' args : ['$1' | '$3'].
 
 expr -> msg_obj dot_names : to_map_get('$2').
 expr -> string : '$1'.
+expr -> sqstring : replace_single_quotes('$1').
 expr -> chars : '$1'.
 expr -> int : '$1'.
 expr -> float : '$1'.
 expr -> name : '$1'.
 expr -> function_call : '$1'.
+
+%% function call assumes the result should be a string, for a num
+%% we need a number as result, hence num_function_call that just reduces
+%% to the plain function call.
+num_function_call -> funct '(' args ')' : {funct, convert_funct('$1', '$3')}.
+
+num -> msg_obj dot_names : to_map_get('$2').
+num -> int : '$1'.
+num -> float : '$1'.
+num -> num_function_call : '$1'.
+num -> expr_alg : '$1'.
+
+expr_alg -> num '*' num : {op, '$2', '$1', '$3' }.
+expr_alg -> num '+' num : {op, '$2', '$1', '$3' }.
+expr_alg -> num '/' num : {op, '$2', '$1', '$3' }.
+expr_alg -> num '-' num : {op, '$2', '$1', '$3' }.
 
 dot_name -> '.' name : just_name('$2').
 
@@ -121,24 +154,20 @@ ampersand -> '&' expr : '$2'.
 ampersands -> ampersand : ['$1'].
 ampersands -> ampersand ampersands : ['$1' | '$2'].
 
-comment_content -> name.
-comment_content -> name comment_content.
-comment_content -> chars.
-comment_content -> chars comment_content.
-comment_content -> string.
-comment_content -> string comment_content.
-comment_content -> int.
-comment_content -> int comment_content.
-comment_content -> float.
-comment_content -> float comment_content.
+cmt_content -> name.
+cmt_content -> chars.
+cmt_content -> string.
+cmt_content -> int.
+cmt_content -> float.
+
+comment_content -> cmt_content.
+comment_content -> cmt_content comment_content.
 
 comment -> comment_start comment_end.
 comment -> comment_start comment_content comment_end.
 
 comments -> comment.
 comments -> comment comments.
-
-
 
 %%
 %%
@@ -170,19 +199,55 @@ just_name({name, _LineNo, Name}) ->
             {name, 1, Name}
     end.
 
-convert_expr({float,_LineNo, V}) ->
-    float_to_list(V);
-convert_expr({int,_LineNo, V}) ->
+
+convert_expr_alg({op, OpStr, Expr1, Expr2}) ->
+    OpFun = fun (Expr) ->
+                    case Expr of
+                        Lst when is_list(Lst) ->
+                            Lst;
+                        Tuple when element(1, Tuple) == op  ->
+                            convert_expr_alg(Expr);
+                        Tuple when element(1, Tuple) == int ->
+                            integer_to_list(element(3, Tuple));
+                        Tuple when element(1, Tuple) == float ->
+                            float_to_list(element(3, Tuple),[short]);
+                        Tuple when element(1, Tuple) == funct ->
+                            element(2, Tuple);
+                        _ ->
+                            convert_string_concat([Expr])
+
+                    end
+            end,
+
+    io_lib:format("~s ~s ~s",
+                  [OpFun(Expr1), atom_to_list(element(1,OpStr)), OpFun(Expr2)]).
+
+
+convert_expr({float, _LineNo, V}) ->
+    float_to_list(V, [short]);
+convert_expr({int, _LineNo, V}) ->
     integer_to_list(V);
-convert_expr({string,_LineNo, V}) ->
+convert_expr({string, _LineNo, V}) ->
     V;
-convert_expr({name,_LineNo, V}) ->
+convert_expr({name, _LineNo, V}) ->
     V;
 convert_expr(V) ->
     V.
 
+%%
+%%
 convert_to_map([{KeyName,{Value}}|T]) ->
     convert_to_map(T, io_lib:format("~s => ~s", [KeyName, Value]));
+convert_to_map([{KeyName, {string, _LineNo, Value}}|T]) ->
+    convert_to_map(T, io_lib:format("~s => ~s", [KeyName, Value]));
+convert_to_map([{KeyName, {name, _LineNo, Value}}|T]) ->
+    convert_to_map(T, io_lib:format("~s => ~s", [KeyName, Value]));
+convert_to_map([{KeyName, {int, _LineNo, Value}}|T]) ->
+    convert_to_map(T, io_lib:format("~s => ~s",
+                                    [KeyName, integer_to_list(Value)]));
+convert_to_map([{KeyName, {float, _LineNo, Value}}|T]) ->
+    convert_to_map(T, io_lib:format("~s => ~s",
+                                    [KeyName, float_to_list(Value,[short])]));
 convert_to_map([{KeyName,Value}|T]) ->
     convert_to_map(T, io_lib:format("~s => ~s", [KeyName, Value])).
 
@@ -192,6 +257,22 @@ convert_to_map([], Values) ->
 convert_to_map([{KeyName,{Value}}|T], PrevValues) ->
     convert_to_map(T,
                    io_lib:format("~s, ~s => ~s", [PrevValues, KeyName, Value]));
+convert_to_map([{KeyName,{string, _LineNo, Value}}|T], PrevValues) ->
+    convert_to_map(T,
+                   io_lib:format("~s, ~s => ~s", [PrevValues, KeyName, Value]));
+convert_to_map([{KeyName,{name, _LineNo, Value}}|T], PrevValues) ->
+    convert_to_map(T,
+                   io_lib:format("~s, ~s => ~s", [PrevValues, KeyName, Value]));
+convert_to_map([{KeyName,{int, _LineNo, Value}}|T], PrevValues) ->
+    convert_to_map(T,
+                   io_lib:format("~s, ~s => ~s",
+                                 [PrevValues, KeyName, integer_to_list(Value)]));
+convert_to_map([{KeyName,{float, _LineNo, Value}}|T], PrevValues) ->
+    convert_to_map(T,
+                   io_lib:format("~s, ~s => ~s",
+                                 [PrevValues,
+                                  KeyName,
+                                  float_to_list(Value,[short])]));
 convert_to_map([{KeyName,Value}|T], PrevValues) ->
     convert_to_map(T,
                    io_lib:format("~s, ~s => ~s", [PrevValues, KeyName, Value])).
@@ -206,7 +287,8 @@ convert_to_map([{KeyName,Value}|T], PrevValues) ->
 convert_string_concat([{int,_LineNo, V}|T]) ->
     convert_string_concat(T, io_lib:format("\"~s\"", [integer_to_list(V)]));
 convert_string_concat([{float,_LineNo, V}|T]) ->
-    convert_string_concat(T, io_lib:format("\"~s\"", [float_to_list(V)]));
+    convert_string_concat(T, io_lib:format("\"~s\"",
+                                           [float_to_list(V, [short])]));
 convert_string_concat([{name,_LineNo, V}|T]) ->
     convert_string_concat(T, io_lib:format("any_to_list(~s)", [V]));
 convert_string_concat([{string, _LineNo, V}|T]) ->
@@ -222,7 +304,8 @@ convert_string_concat([{name,_LineNo, V}|T], Acc) ->
 convert_string_concat([{int,_LineNo, V}|T], Acc) ->
     convert_string_concat(T, io_lib:format("~s ++ \"~s\"", [Acc, integer_to_list(V)]));
 convert_string_concat([{float,_LineNo, V}|T], Acc) ->
-    convert_string_concat(T, io_lib:format("~s ++ \"~s\"", [Acc, float_to_list(V)]));
+    convert_string_concat(T, io_lib:format("~s ++ \"~s\"",
+                                           [Acc, float_to_list(V, [short])]));
 convert_string_concat([{string,_LineNo, V}|T], Acc) ->
     convert_string_concat(T, io_lib:format("~s ++ ~s", [Acc, V]));
 convert_string_concat([V|T], Acc) ->
@@ -231,6 +314,8 @@ convert_string_concat([V|T], Acc) ->
 
 %%
 %%
+args_to_string([{name, _LineNaume, String}|T]) ->
+    args_to_string(T, io_lib:format("~s", [String]));
 args_to_string([{string, _LineNaume, String}|T]) ->
     args_to_string(T, io_lib:format("~s", [String]));
 args_to_string([H|T]) ->
@@ -240,16 +325,38 @@ args_to_string([], Acc) ->
     Acc;
 args_to_string([{string, _LineNo, String}|T], Acc) ->
     args_to_string(T, io_lib:format("~s, ~s", [Acc, String]));
+args_to_string([{name, _LineNo, String}|T], Acc) ->
+    args_to_string(T, io_lib:format("~s, ~s", [Acc, String]));
 args_to_string([H|T], Acc) ->
     args_to_string(T, io_lib:format("~s, ~s", [Acc, to_list(H)])).
 
+%%
+%% This converts the list of inbuilt functions -
+%%   --> https://github.com/jsonata-js/jsonata/blob/09dba374ce9475e5fb08eee4d99de59bd72a2c8b/src/functions.js
+%%   --> https://github.com/jsonata-js/jsonata/blob/09dba374ce9475e5fb08eee4d99de59bd72a2c8b/src/datetime.js
+%% Docu on those functions:
+%%   --> https://docs.jsonata.org/date-time-functions
+%% and those defined by NodeRED -
+%%   --> https://github.com/node-red/node-red/blob/0f653ed7b2640feba8885e48b9448df7d42acaf0/packages/node_modules/%40node-red/util/lib/util.js#L705-L734
+%% plus any specials for ErlangRED
+%%   --> https://github.com/gorenje/erlang-red/blob/e283d8a8a1716fffe3991b67c2cdf2cdc52b4a0a/src/jsonata_leex.xrl#L167-L169
+%% - to their Erlang equivalent.
+%%
+%% This function should just return the "bare" function without doing any
+%% type conversion - because this function is used by the string concat code
+%% and also the algorithmic expressions code.
+%%
+%% Any functions that become too long for simple oneliners, can be defined
+%% in the evaluator (https://github.com/gorenje/erlang-red/blob/e283d8a8a1716fffe3991b67c2cdf2cdc52b4a0a/src/jsonata/jsonata_evaluator.erl#L35-L64)
+%% and then referenced here.
+%%
 convert_funct({funct,_LineNo,FunctName}, Expr) ->
     case FunctName of
         count ->
             list_to_binary(io_lib:format("erlang:length(~s)",
                                          [args_to_string(Expr)]));
-        toString ->
-            list_to_binary(io_lib:format("to_string(~s)",
+        length ->
+            list_to_binary(io_lib:format("erlang:length(~s)",
                                          [args_to_string(Expr)]));
         replace ->
             case Expr of
@@ -263,22 +370,45 @@ convert_funct({funct,_LineNo,FunctName}, Expr) ->
                                      "lists:flatten(string:replace(~s))",
                                      [args_to_string([A1,A2,A3])]))
             end;
+        string ->
+            %% $string is slightly different in JSONata, converting everything
+            %% to their JSON representation except for strings. So we convert
+            %% things to string and forget about the JSON.
+            %% --> https://docs.jsonata.org/string-functions
+            list_to_binary(io_lib:format("to_string(~s)",
+                                         [args_to_string(Expr)]));
+        toString ->
+            %% to_string is implemented by the evaluator - this can be done
+            %% with any function that gets too large.
+            list_to_binary(io_lib:format("to_string(~s)",
+                                         [args_to_string(Expr)]));
         Unknown ->
             list_to_binary(io_lib:format("~s(~s)",
                                          [Unknown, args_to_string(Expr)]))
     end.
 
+%%
+%%
+name_to_atom({name, _LineNo, V}) ->
+    list_to_atom(V).
+%%
+%%
+replace_single_quotes({sqstring, LineNo, Value}) ->
+    {string, LineNo, lists:flatten(string:replace(Value, "'", "\"", all))}.
+%%
+%%
 remove_quotes({string,_LineNo,[$"|Str]}) ->
     case lists:reverse(Str) of
         [$"|StrD] ->
             list_to_atom(lists:reverse(StrD))
     end;
-remove_quotes({string,_LineNo,[$'|Str]}) ->
+remove_quotes({sqstring,_LineNo,[$'|Str]}) ->
     case lists:reverse(Str) of
         [$'|StrD] ->
             list_to_atom(lists:reverse(StrD))
     end.
-
+%%
+%%
 wrap_with_func([]) ->
     list_to_binary(io_lib:format("fun (Msg) -> Msg end.",[]));
 wrap_with_func([V|T]) ->

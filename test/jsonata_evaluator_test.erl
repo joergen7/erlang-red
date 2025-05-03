@@ -2,7 +2,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-jsonata_evaluator_count_test() ->
+count_test() ->
     ?assertEqual(
         {ok, 4},
         jsonata_evaluator:execute(
@@ -19,7 +19,7 @@ jsonata_evaluator_count_test() ->
         )
     ).
 
-jsonata_evaluator_parse_error_test() ->
+parse_error_test() ->
     ?assertEqual(
         {error, {error, {1, jsonata_parser, ["syntax error before: ", []]}}},
         jsonata_evaluator:execute(
@@ -28,7 +28,7 @@ jsonata_evaluator_parse_error_test() ->
         )
     ).
 
-jsonata_evaluator_replace_test() ->
+replace_test() ->
     ?assertEqual(
         {ok, "ggkkggkkgg"},
         jsonata_evaluator:execute(
@@ -48,7 +48,7 @@ jsonata_evaluator_replace_test() ->
     ).
 
 %% erlfmt:ignore
-jsonata_evaluator_multistatement_test() ->
+multistatement_test() ->
     ?assertEqual(
        {ok, '_underscore'},
        jsonata_evaluator:execute(
@@ -60,7 +60,7 @@ jsonata_evaluator_multistatement_test() ->
         )
     ).
 
-jsonata_evaluator_single_expr_test() ->
+single_expr_test() ->
     ?assertEqual(
         {ok, 4},
         jsonata_evaluator:execute(
@@ -90,7 +90,7 @@ jsonata_evaluator_single_expr_test() ->
         )
     ).
 
-jsonata_evaluator_string_concat_test() ->
+string_concat_test() ->
     Msg = #{
         payload => "world"
     },
@@ -103,11 +103,51 @@ jsonata_evaluator_string_concat_test() ->
     ).
 
 %% erlfmt:ignore strings are mismanaged by erlfmt
-jsonata_evaluator_map_test() ->
+map_test() ->
+    ?assertEqual(
+        {ok, #{key => "hello world"}},
+        jsonata_evaluator:execute(
+            "{ \"key\": \"hello world\" }",
+            #{}
+        )
+    ),
+
+    ?assertEqual(
+        {ok, #{key => value}},
+        jsonata_evaluator:execute(
+            "{ key: value }",
+            #{}
+        )
+    ),
+
+    ?assertEqual(
+        {ok, #{key => "hello world"}},
+        jsonata_evaluator:execute(
+            "{ 'key': 'hello world' }",
+            #{}
+        )
+    ),
+
     ?assertEqual(
         {ok, #{key => 4}},
         jsonata_evaluator:execute(
             "{ \"key\": $$.payload }",
+            #{payload => 4}
+        )
+    ),
+
+    ?assertEqual(
+        {ok, #{integer => 4, float => 12.32}},
+        jsonata_evaluator:execute(
+            "{ 'integer': 4, 'float': 12.32 }",
+            #{}
+        )
+    ),
+
+    ?assertEqual(
+        {ok, #{key => 4, key2 => "value two"}},
+        jsonata_evaluator:execute(
+            "{ \"key\": $$.payload, 'key2': 'value two' }",
             #{payload => 4}
         )
     ),
@@ -136,7 +176,7 @@ jsonata_evaluator_map_test() ->
     ).
 
 %% erlfmt:ignore strings are mismanaged by erlfmt
-jsonata_evaluator_map_with_string_concat_test() ->
+map_with_string_concat_test() ->
     Msg = #{
         payload => #{
             key => "4",
@@ -160,7 +200,7 @@ jsonata_evaluator_map_with_string_concat_test() ->
     ).
 
 %% erlfmt:ignore strings are mismanaged by erlfmt
-jsonata_evaluator_map_with_string_binary_concat_test() ->
+map_with_string_binary_concat_test() ->
     Msg = #{
         payload => #{
             key => <<"4">>,
@@ -184,7 +224,7 @@ jsonata_evaluator_map_with_string_binary_concat_test() ->
     ).
 
 %% erlfmt:ignore strings are mismanaged by erlfmt
-jsonata_evaluator_map_string_concat_with_int_test() ->
+map_string_concat_with_int_test() ->
     ?assertEqual(
         {ok, "hello  world  1234 10 goodbye  cruel world"},
         jsonata_evaluator:execute(
@@ -203,7 +243,12 @@ jsonata_evaluator_map_string_concat_with_int_test() ->
         )
     ).
 
-jsonata_tostring_from_anything_test() ->
+%%
+%% $toString is a ErlangRED special function from converting anything to
+%% a binary - a string for all intense purposes in the flow editor. For
+%% Erlang a binary for the flow editor a string, hence the name toString
+%% which is what the user (of the flow editor) will be using.
+tostring_from_anything_test() ->
     ?assertEqual(
         {ok, <<"what">>},
         jsonata_evaluator:execute(
@@ -224,4 +269,68 @@ jsonata_tostring_from_anything_test() ->
             "$toString($$.payload)",
             #{payload => 12131312}
         )
+    ),
+    ?assertEqual(
+        {ok, <<"12131312.123">>},
+        jsonata_evaluator:execute(
+            "$toString($$.payload)",
+            #{payload => 12131312.123}
+        )
     ).
+
+
+%%
+%% algorithmic is purposefully misspelled here. Why? Dunno.
+algorithimc_test() ->
+    ?assertEqual(
+        {ok, 2},
+        jsonata_evaluator:execute(
+            "1 + 1",
+            #{}
+        )
+      ),
+    ?assertEqual(
+        {ok, 40},
+        jsonata_evaluator:execute(
+            "$count($$.payload) * 5",
+            #{ payload => [one,two,three,four,five,six,'and',seven]}
+        )
+      ),
+    ?assertEqual(
+        {ok, 440},
+        jsonata_evaluator:execute(
+            "$count($$.payload) * 5 * $length($$.str)",
+            #{
+               payload => [one,two,three,four,five,six,'and',seven],
+               str => "onetwothree"
+             }
+        )
+      ),
+    ?assertEqual(
+        {ok, 38.743},
+        jsonata_evaluator:execute(
+            "$$.payload.fuba.dad + 1.2 + 2.3 + $$.payload.name.name
+                                                         + 3.243 + 4 * 6",
+            #{ payload => #{ fuba => #{ dad => 4 }, name => #{ name => 4 }}}
+        )
+      ).
+
+single_quote_string_test() ->
+    ?assertEqual(
+        {ok, "hello world"},
+        jsonata_evaluator:execute(
+            "'hello' & ' ' & 'world'",
+            #{}
+        )
+      ).
+
+name_as_funct_argument_test() ->
+    ?assertEqual(
+        {ok, #{float => 1.23,key => <<"single quote strings">>,
+                       key2 => <<"value">>,banaint => 4}},
+        jsonata_evaluator:execute(
+             "{ \"key\": $toString('single quote strings'), banaint: 4,
+                            float: 1.23, key2: $toString(value) }",
+            #{}
+        )
+      ).

@@ -12,7 +12,7 @@
 -export([format_error/1]).
 
 %% User code. This is placed here to allow extra attributes.
--file("/code/src/jsonata_leex.xrl", 182).
+-file("/code/src/jsonata_leex.xrl", 185).
 
 remove_dollars([$$|Chars]) ->
     list_to_atom(Chars).
@@ -397,7 +397,7 @@ yystate(432, Ics, Line, Col, Tlen, Action, Alen) ->
 yystate(431, Ics, Line, Col, Tlen, _, _) ->
     {122,Tlen,Ics,Line,Col};
 yystate(430, Ics, Line, Col, Tlen, _, _) ->
-    {76,Tlen,Ics,Line,Col};
+    {77,Tlen,Ics,Line,Col};
 yystate(429, [126|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(425, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(429, [125|Ics], Line, Col, Tlen, Action, Alen) ->
@@ -525,15 +525,15 @@ yystate(425, [62|Ics], Line, Col, Tlen, _, _) ->
 yystate(425, Ics, Line, Col, Tlen, _, _) ->
     {36,Tlen,Ics,Line,Col,425};
 yystate(424, Ics, Line, Col, Tlen, _, _) ->
-    {75,Tlen,Ics,Line,Col};
+    {76,Tlen,Ics,Line,Col};
 yystate(423, Ics, Line, Col, Tlen, _, _) ->
     {6,Tlen,Ics,Line,Col};
 yystate(422, Ics, Line, Col, Tlen, _, _) ->
-    {77,Tlen,Ics,Line,Col};
+    {78,Tlen,Ics,Line,Col};
 yystate(421, Ics, Line, Col, Tlen, _, _) ->
     {5,Tlen,Ics,Line,Col};
 yystate(420, Ics, Line, Col, Tlen, _, _) ->
-    {74,Tlen,Ics,Line,Col};
+    {75,Tlen,Ics,Line,Col};
 yystate(419, [61|Ics], Line, Col, Tlen, _, _) ->
     yystate(423, Ics, Line, Col, Tlen+1, 43, Tlen);
 yystate(419, Ics, Line, Col, Tlen, _, _) ->
@@ -599,7 +599,7 @@ yystate(407, [C|Ics], Line, Col, Tlen, _, _) when C >= 35 ->
 yystate(407, Ics, Line, Col, Tlen, _, _) ->
     {32,Tlen,Ics,Line,Col,407};
 yystate(406, Ics, Line, Col, Tlen, _, _) ->
-    {108,Tlen,Ics,Line,Col};
+    {79,Tlen,Ics,Line,Col};
 yystate(405, [114|Ics], Line, Col, Tlen, _, _) ->
     yystate(401, Ics, Line, Col, Tlen+1, 116, Tlen);
 yystate(405, [95|Ics], Line, Col, Tlen, _, _) ->
@@ -687,7 +687,7 @@ yystate(391, [115|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(391, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,391};
 yystate(390, Ics, Line, Col, Tlen, _, _) ->
-    {78,Tlen,Ics,Line,Col};
+    {80,Tlen,Ics,Line,Col};
 yystate(389, [103|Ics], Line, Col, Tlen, _, _) ->
     yystate(385, Ics, Line, Col, Tlen+1, 116, Tlen);
 yystate(389, [95|Ics], Line, Col, Tlen, _, _) ->
@@ -725,13 +725,13 @@ yystate(385, [C|Ics], Line, Col, Tlen, _, _) when C >= 97, C =< 122 ->
 yystate(385, Ics, Line, Col, Tlen, _, _) ->
     {11,Tlen,Ics,Line,Col,385};
 yystate(384, Ics, Line, Col, Tlen, _, _) ->
-    {73,Tlen,Ics,Line,Col};
+    {74,Tlen,Ics,Line,Col};
 yystate(383, [100|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(387, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(383, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,383};
 yystate(382, Ics, Line, Col, Tlen, _, _) ->
-    {109,Tlen,Ics,Line,Col};
+    {113,Tlen,Ics,Line,Col};
 yystate(381, [110|Ics], Line, Col, Tlen, _, _) ->
     yystate(377, Ics, Line, Col, Tlen+1, 116, Tlen);
 yystate(381, [95|Ics], Line, Col, Tlen, _, _) ->
@@ -821,7 +821,7 @@ yystate(369, [C|Ics], Line, Col, Tlen, _, _) when C >= 111, C =< 122 ->
 yystate(369, Ics, Line, Col, Tlen, _, _) ->
     {116,Tlen,Ics,Line,Col,369};
 yystate(368, Ics, Line, Col, Tlen, _, _) ->
-    {72,Tlen,Ics,Line,Col};
+    {73,Tlen,Ics,Line,Col};
 yystate(367, Ics, Line, Col, Tlen, _, _) ->
     {48,Tlen,Ics,Line,Col};
 yystate(366, [109|Ics], Line, Col, Tlen, Action, Alen) ->
@@ -885,7 +885,7 @@ yystate(359, [114|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(359, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,359};
 yystate(358, Ics, Line, Col, Tlen, _, _) ->
-    {79,Tlen,Ics,Line,Col};
+    {81,Tlen,Ics,Line,Col};
 yystate(357, [105|Ics], Line, Col, Tlen, _, _) ->
     yystate(353, Ics, Line, Col, Tlen+1, 116, Tlen);
 yystate(357, [95|Ics], Line, Col, Tlen, _, _) ->
@@ -909,7 +909,7 @@ yystate(355, [101|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(355, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,355};
 yystate(354, Ics, Line, Col, Tlen, _, _) ->
-    {110,Tlen,Ics,Line,Col};
+    {82,Tlen,Ics,Line,Col};
 yystate(353, [111|Ics], Line, Col, Tlen, _, _) ->
     yystate(349, Ics, Line, Col, Tlen+1, 116, Tlen);
 yystate(353, [95|Ics], Line, Col, Tlen, _, _) ->
@@ -953,11 +953,11 @@ yystate(349, [C|Ics], Line, Col, Tlen, _, _) when C >= 111, C =< 122 ->
 yystate(349, Ics, Line, Col, Tlen, _, _) ->
     {116,Tlen,Ics,Line,Col,349};
 yystate(348, Ics, Line, Col, Tlen, _, _) ->
-    {71,Tlen,Ics,Line,Col};
+    {72,Tlen,Ics,Line,Col};
 yystate(347, Ics, Line, Col, Tlen, _, _) ->
     {49,Tlen,Ics,Line,Col};
 yystate(346, Ics, Line, Col, Tlen, _, _) ->
-    {80,Tlen,Ics,Line,Col};
+    {83,Tlen,Ics,Line,Col};
 yystate(345, [95|Ics], Line, Col, Tlen, _, _) ->
     yystate(397, Ics, Line, Col, Tlen+1, 115, Tlen);
 yystate(345, [C|Ics], Line, Col, Tlen, _, _) when C >= 48, C =< 57 ->
@@ -1043,7 +1043,7 @@ yystate(333, [C|Ics], Line, Col, Tlen, _, _) when C >= 97, C =< 122 ->
 yystate(333, Ics, Line, Col, Tlen, _, _) ->
     {12,Tlen,Ics,Line,Col,333};
 yystate(332, Ics, Line, Col, Tlen, _, _) ->
-    {70,Tlen,Ics,Line,Col};
+    {71,Tlen,Ics,Line,Col};
 yystate(331, [114|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(335, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(331, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -1087,7 +1087,7 @@ yystate(323, [98|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(323, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,323};
 yystate(322, Ics, Line, Col, Tlen, _, _) ->
-    {81,Tlen,Ics,Line,Col};
+    {84,Tlen,Ics,Line,Col};
 yystate(321, Ics, Line, Col, Tlen, _, _) ->
     {24,Tlen,Ics,Line,Col};
 yystate(320, [110|Ics], Line, Col, Tlen, Action, Alen) ->
@@ -1097,11 +1097,11 @@ yystate(320, Ics, Line, Col, Tlen, Action, Alen) ->
 yystate(319, Ics, Line, Col, Tlen, _, _) ->
     {50,Tlen,Ics,Line,Col};
 yystate(318, Ics, Line, Col, Tlen, _, _) ->
-    {111,Tlen,Ics,Line,Col};
+    {85,Tlen,Ics,Line,Col};
 yystate(317, Ics, Line, Col, Tlen, _, _) ->
     {40,Tlen,Ics,Line,Col};
 yystate(316, Ics, Line, Col, Tlen, _, _) ->
-    {69,Tlen,Ics,Line,Col};
+    {70,Tlen,Ics,Line,Col};
 yystate(315, [101|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(319, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(315, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -1253,7 +1253,7 @@ yystate(275, [110|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(275, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,275};
 yystate(274, Ics, Line, Col, Tlen, _, _) ->
-    {82,Tlen,Ics,Line,Col};
+    {86,Tlen,Ics,Line,Col};
 yystate(273, [61|Ics], Line, Col, Tlen, _, _) ->
     yystate(269, Ics, Line, Col, Tlen+1, 25, Tlen);
 yystate(273, Ics, Line, Col, Tlen, _, _) ->
@@ -1299,7 +1299,7 @@ yystate(265, [C|Ics], Line, Col, Tlen, _, _) when C >= 97, C =< 122 ->
 yystate(265, Ics, Line, Col, Tlen, _, _) ->
     {0,Tlen,Ics,Line,Col,265};
 yystate(264, Ics, Line, Col, Tlen, _, _) ->
-    {107,Tlen,Ics,Line,Col};
+    {112,Tlen,Ics,Line,Col};
 yystate(263, [54|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(267, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(263, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -1351,7 +1351,7 @@ yystate(255, [115|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(255, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,255};
 yystate(254, Ics, Line, Col, Tlen, _, _) ->
-    {83,Tlen,Ics,Line,Col};
+    {87,Tlen,Ics,Line,Col};
 yystate(253, [C|Ics], Line, Col, Tlen, _, _) when C >= 48, C =< 57 ->
     yystate(253, Ics, Line, Col, Tlen+1, 1, Tlen);
 yystate(253, Ics, Line, Col, Tlen, _, _) ->
@@ -1421,7 +1421,7 @@ yystate(235, [108|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(235, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,235};
 yystate(234, Ics, Line, Col, Tlen, _, _) ->
-    {112,Tlen,Ics,Line,Col};
+    {88,Tlen,Ics,Line,Col};
 yystate(233, Ics, Line, Col, Tlen, _, _) ->
     {42,Tlen,Ics,Line,Col};
 yystate(232, [105|Ics], Line, Col, Tlen, Action, Alen) ->
@@ -1459,7 +1459,7 @@ yystate(225, [42|Ics], Line, Col, Tlen, _, _) ->
 yystate(225, Ics, Line, Col, Tlen, _, _) ->
     {18,Tlen,Ics,Line,Col,225};
 yystate(224, Ics, Line, Col, Tlen, _, _) ->
-    {106,Tlen,Ics,Line,Col};
+    {69,Tlen,Ics,Line,Col};
 yystate(223, Ics, Line, Col, Tlen, _, _) ->
     {53,Tlen,Ics,Line,Col};
 yystate(222, [117|Ics], Line, Col, Tlen, Action, Alen) ->
@@ -1479,7 +1479,7 @@ yystate(219, [108|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(219, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,219};
 yystate(218, Ics, Line, Col, Tlen, _, _) ->
-    {84,Tlen,Ics,Line,Col};
+    {89,Tlen,Ics,Line,Col};
 yystate(217, Ics, Line, Col, Tlen, _, _) ->
     {15,Tlen,Ics,Line,Col};
 yystate(216, [109|Ics], Line, Col, Tlen, Action, Alen) ->
@@ -1501,7 +1501,7 @@ yystate(212, [97|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(212, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,212};
 yystate(211, Ics, Line, Col, Tlen, _, _) ->
-    {103,Tlen,Ics,Line,Col};
+    {109,Tlen,Ics,Line,Col};
 yystate(210, [99|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(214, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(210, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -1565,7 +1565,7 @@ yystate(199, [111|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(199, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,199};
 yystate(198, Ics, Line, Col, Tlen, _, _) ->
-    {85,Tlen,Ics,Line,Col};
+    {90,Tlen,Ics,Line,Col};
 yystate(197, Ics, Line, Col, Tlen, _, _) ->
     {120,Tlen,Ics,Line,Col};
 yystate(196, [109|Ics], Line, Col, Tlen, Action, Alen) ->
@@ -1689,9 +1689,9 @@ yystate(175, [116|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(175, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,175};
 yystate(174, Ics, Line, Col, Tlen, _, _) ->
-    {86,Tlen,Ics,Line,Col};
+    {91,Tlen,Ics,Line,Col};
 yystate(173, Ics, Line, Col, Tlen, _, _) ->
-    {102,Tlen,Ics,Line,Col};
+    {108,Tlen,Ics,Line,Col};
 yystate(172, [115|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(168, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(172, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -1771,7 +1771,7 @@ yystate(155, [101|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(155, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,155};
 yystate(154, Ics, Line, Col, Tlen, _, _) ->
-    {87,Tlen,Ics,Line,Col};
+    {92,Tlen,Ics,Line,Col};
 yystate(153, [99|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(149, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(153, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -1833,7 +1833,7 @@ yystate(138, [102|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(138, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,138};
 yystate(137, Ics, Line, Col, Tlen, _, _) ->
-    {101,Tlen,Ics,Line,Col};
+    {107,Tlen,Ics,Line,Col};
 yystate(136, [111|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(132, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(136, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -1865,7 +1865,7 @@ yystate(131, [111|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(131, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,131};
 yystate(130, Ics, Line, Col, Tlen, _, _) ->
-    {88,Tlen,Ics,Line,Col};
+    {93,Tlen,Ics,Line,Col};
 yystate(129, [112|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(125, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(129, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -1895,9 +1895,9 @@ yystate(123, [109|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(123, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,123};
 yystate(122, Ics, Line, Col, Tlen, _, _) ->
-    {89,Tlen,Ics,Line,Col};
+    {94,Tlen,Ics,Line,Col};
 yystate(121, Ics, Line, Col, Tlen, _, _) ->
-    {100,Tlen,Ics,Line,Col};
+    {106,Tlen,Ics,Line,Col};
 yystate(120, [110|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(116, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(120, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -1943,7 +1943,7 @@ yystate(110, [103|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(110, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,110};
 yystate(109, Ics, Line, Col, Tlen, _, _) ->
-    {99,Tlen,Ics,Line,Col};
+    {105,Tlen,Ics,Line,Col};
 yystate(108, [120|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(104, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(108, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -1973,13 +1973,13 @@ yystate(103, [85|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(103, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,103};
 yystate(102, Ics, Line, Col, Tlen, _, _) ->
-    {90,Tlen,Ics,Line,Col};
+    {95,Tlen,Ics,Line,Col};
 yystate(101, [116|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(97, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(101, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,101};
 yystate(100, Ics, Line, Col, Tlen, _, _) ->
-    {105,Tlen,Ics,Line,Col};
+    {111,Tlen,Ics,Line,Col};
 yystate(99, [101|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(103, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(99, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -2015,7 +2015,7 @@ yystate(91, [111|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(91, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,91};
 yystate(90, Ics, Line, Col, Tlen, _, _) ->
-    {91,Tlen,Ics,Line,Col};
+    {96,Tlen,Ics,Line,Col};
 yystate(89, [110|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(85, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(89, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -2057,7 +2057,7 @@ yystate(79, [116|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(79, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,79};
 yystate(78, Ics, Line, Col, Tlen, _, _) ->
-    {92,Tlen,Ics,Line,Col};
+    {97,Tlen,Ics,Line,Col};
 yystate(77, [105|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(73, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(77, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -2141,9 +2141,9 @@ yystate(59, [115|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(59, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,59};
 yystate(58, Ics, Line, Col, Tlen, _, _) ->
-    {93,Tlen,Ics,Line,Col};
+    {98,Tlen,Ics,Line,Col};
 yystate(57, Ics, Line, Col, Tlen, _, _) ->
-    {113,Tlen,Ics,Line,Col};
+    {104,Tlen,Ics,Line,Col};
 yystate(56, [116|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(52, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(56, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -2197,9 +2197,9 @@ yystate(47, [104|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(47, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,47};
 yystate(46, Ics, Line, Col, Tlen, _, _) ->
-    {94,Tlen,Ics,Line,Col};
+    {99,Tlen,Ics,Line,Col};
 yystate(45, Ics, Line, Col, Tlen, _, _) ->
-    {98,Tlen,Ics,Line,Col};
+    {103,Tlen,Ics,Line,Col};
 yystate(44, [114|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(40, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(44, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -2271,13 +2271,13 @@ yystate(27, [101|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(27, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,27};
 yystate(26, Ics, Line, Col, Tlen, _, _) ->
-    {96,Tlen,Ics,Line,Col};
+    {101,Tlen,Ics,Line,Col};
 yystate(25, [110|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(21, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(25, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,25};
 yystate(24, Ics, Line, Col, Tlen, _, _) ->
-    {104,Tlen,Ics,Line,Col};
+    {110,Tlen,Ics,Line,Col};
 yystate(23, [110|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(27, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(23, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -2303,11 +2303,11 @@ yystate(18, [101|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(18, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,18};
 yystate(17, [66|Ics], Line, Col, Tlen, _, _) ->
-    yystate(13, Ics, Line, Col, Tlen+1, 95, Tlen);
+    yystate(13, Ics, Line, Col, Tlen+1, 100, Tlen);
 yystate(17, [65|Ics], Line, Col, Tlen, _, _) ->
-    yystate(10, Ics, Line, Col, Tlen+1, 95, Tlen);
+    yystate(10, Ics, Line, Col, Tlen+1, 100, Tlen);
 yystate(17, Ics, Line, Col, Tlen, _, _) ->
-    {95,Tlen,Ics,Line,Col,17};
+    {100,Tlen,Ics,Line,Col,17};
 yystate(16, [100|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(12, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(16, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -2349,7 +2349,7 @@ yystate(7, [111|Ics], Line, Col, Tlen, Action, Alen) ->
 yystate(7, Ics, Line, Col, Tlen, Action, Alen) ->
     {Action,Alen,Tlen,Ics,Line,Col,7};
 yystate(6, Ics, Line, Col, Tlen, _, _) ->
-    {97,Tlen,Ics,Line,Col};
+    {102,Tlen,Ics,Line,Col};
 yystate(5, [111|Ics], Line, Col, Tlen, Action, Alen) ->
     yystate(1, Ics, Line, Col, Tlen+1, Action, Alen);
 yystate(5, Ics, Line, Col, Tlen, Action, Alen) ->
@@ -2788,22 +2788,22 @@ yyaction_15(TokenLine) ->
 -compile({inline,yyaction_16/1}).
 -file("/code/src/jsonata_leex.xrl", 60).
 yyaction_16(TokenLine) ->
-     { token, { op_plus, TokenLine } } .
+     { token, { '+', TokenLine } } .
 
 -compile({inline,yyaction_17/1}).
 -file("/code/src/jsonata_leex.xrl", 61).
 yyaction_17(TokenLine) ->
-     { token, { op_minus, TokenLine } } .
+     { token, { '-', TokenLine } } .
 
 -compile({inline,yyaction_18/1}).
 -file("/code/src/jsonata_leex.xrl", 62).
 yyaction_18(TokenLine) ->
-     { token, { op_multiple, TokenLine } } .
+     { token, { '*', TokenLine } } .
 
 -compile({inline,yyaction_19/1}).
 -file("/code/src/jsonata_leex.xrl", 63).
 yyaction_19(TokenLine) ->
-     { token, { op_divide, TokenLine } } .
+     { token, { '/', TokenLine } } .
 
 -compile({inline,yyaction_20/1}).
 -file("/code/src/jsonata_leex.xrl", 64).
@@ -2936,387 +2936,387 @@ yyaction_45(TokenLine) ->
      { token, { '}', TokenLine } } .
 
 -compile({inline,yyaction_46/2}).
--file("/code/src/jsonata_leex.xrl", 93).
+-file("/code/src/jsonata_leex.xrl", 94).
 yyaction_46(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_47/2}).
--file("/code/src/jsonata_leex.xrl", 94).
+-file("/code/src/jsonata_leex.xrl", 95).
 yyaction_47(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_48/2}).
--file("/code/src/jsonata_leex.xrl", 95).
+-file("/code/src/jsonata_leex.xrl", 96).
 yyaction_48(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_49/2}).
--file("/code/src/jsonata_leex.xrl", 96).
+-file("/code/src/jsonata_leex.xrl", 97).
 yyaction_49(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_50/2}).
--file("/code/src/jsonata_leex.xrl", 97).
+-file("/code/src/jsonata_leex.xrl", 98).
 yyaction_50(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_51/2}).
--file("/code/src/jsonata_leex.xrl", 98).
+-file("/code/src/jsonata_leex.xrl", 99).
 yyaction_51(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_52/2}).
--file("/code/src/jsonata_leex.xrl", 99).
+-file("/code/src/jsonata_leex.xrl", 100).
 yyaction_52(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_53/2}).
--file("/code/src/jsonata_leex.xrl", 100).
+-file("/code/src/jsonata_leex.xrl", 101).
 yyaction_53(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_54/2}).
--file("/code/src/jsonata_leex.xrl", 101).
+-file("/code/src/jsonata_leex.xrl", 102).
 yyaction_54(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_55/2}).
--file("/code/src/jsonata_leex.xrl", 102).
+-file("/code/src/jsonata_leex.xrl", 103).
 yyaction_55(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_56/2}).
--file("/code/src/jsonata_leex.xrl", 103).
+-file("/code/src/jsonata_leex.xrl", 104).
 yyaction_56(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_57/2}).
--file("/code/src/jsonata_leex.xrl", 104).
+-file("/code/src/jsonata_leex.xrl", 105).
 yyaction_57(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_58/2}).
--file("/code/src/jsonata_leex.xrl", 105).
+-file("/code/src/jsonata_leex.xrl", 106).
 yyaction_58(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_59/2}).
--file("/code/src/jsonata_leex.xrl", 106).
+-file("/code/src/jsonata_leex.xrl", 107).
 yyaction_59(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_60/2}).
--file("/code/src/jsonata_leex.xrl", 107).
+-file("/code/src/jsonata_leex.xrl", 108).
 yyaction_60(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_61/2}).
--file("/code/src/jsonata_leex.xrl", 108).
+-file("/code/src/jsonata_leex.xrl", 109).
 yyaction_61(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_62/2}).
--file("/code/src/jsonata_leex.xrl", 109).
+-file("/code/src/jsonata_leex.xrl", 110).
 yyaction_62(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_63/2}).
--file("/code/src/jsonata_leex.xrl", 110).
+-file("/code/src/jsonata_leex.xrl", 111).
 yyaction_63(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_64/2}).
--file("/code/src/jsonata_leex.xrl", 111).
+-file("/code/src/jsonata_leex.xrl", 112).
 yyaction_64(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_65/2}).
--file("/code/src/jsonata_leex.xrl", 112).
+-file("/code/src/jsonata_leex.xrl", 113).
 yyaction_65(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_66/2}).
--file("/code/src/jsonata_leex.xrl", 113).
+-file("/code/src/jsonata_leex.xrl", 114).
 yyaction_66(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_67/2}).
--file("/code/src/jsonata_leex.xrl", 114).
+-file("/code/src/jsonata_leex.xrl", 115).
 yyaction_67(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_68/2}).
--file("/code/src/jsonata_leex.xrl", 115).
+-file("/code/src/jsonata_leex.xrl", 116).
 yyaction_68(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_69/2}).
--file("/code/src/jsonata_leex.xrl", 116).
+-file("/code/src/jsonata_leex.xrl", 117).
 yyaction_69(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_70/2}).
--file("/code/src/jsonata_leex.xrl", 117).
+-file("/code/src/jsonata_leex.xrl", 118).
 yyaction_70(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_71/2}).
--file("/code/src/jsonata_leex.xrl", 118).
+-file("/code/src/jsonata_leex.xrl", 119).
 yyaction_71(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_72/2}).
--file("/code/src/jsonata_leex.xrl", 119).
+-file("/code/src/jsonata_leex.xrl", 120).
 yyaction_72(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_73/2}).
--file("/code/src/jsonata_leex.xrl", 120).
+-file("/code/src/jsonata_leex.xrl", 121).
 yyaction_73(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_74/2}).
--file("/code/src/jsonata_leex.xrl", 121).
+-file("/code/src/jsonata_leex.xrl", 122).
 yyaction_74(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_75/2}).
--file("/code/src/jsonata_leex.xrl", 122).
+-file("/code/src/jsonata_leex.xrl", 123).
 yyaction_75(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_76/2}).
--file("/code/src/jsonata_leex.xrl", 123).
+-file("/code/src/jsonata_leex.xrl", 124).
 yyaction_76(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_77/2}).
--file("/code/src/jsonata_leex.xrl", 124).
+-file("/code/src/jsonata_leex.xrl", 125).
 yyaction_77(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_78/2}).
--file("/code/src/jsonata_leex.xrl", 125).
+-file("/code/src/jsonata_leex.xrl", 126).
 yyaction_78(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_79/2}).
--file("/code/src/jsonata_leex.xrl", 126).
+-file("/code/src/jsonata_leex.xrl", 127).
 yyaction_79(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_80/2}).
--file("/code/src/jsonata_leex.xrl", 127).
+-file("/code/src/jsonata_leex.xrl", 128).
 yyaction_80(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_81/2}).
--file("/code/src/jsonata_leex.xrl", 128).
+-file("/code/src/jsonata_leex.xrl", 129).
 yyaction_81(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_82/2}).
--file("/code/src/jsonata_leex.xrl", 129).
+-file("/code/src/jsonata_leex.xrl", 130).
 yyaction_82(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_83/2}).
--file("/code/src/jsonata_leex.xrl", 130).
+-file("/code/src/jsonata_leex.xrl", 131).
 yyaction_83(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_84/2}).
--file("/code/src/jsonata_leex.xrl", 131).
+-file("/code/src/jsonata_leex.xrl", 132).
 yyaction_84(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_85/2}).
--file("/code/src/jsonata_leex.xrl", 132).
+-file("/code/src/jsonata_leex.xrl", 133).
 yyaction_85(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_86/2}).
--file("/code/src/jsonata_leex.xrl", 133).
+-file("/code/src/jsonata_leex.xrl", 134).
 yyaction_86(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_87/2}).
--file("/code/src/jsonata_leex.xrl", 134).
+-file("/code/src/jsonata_leex.xrl", 135).
 yyaction_87(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_88/2}).
--file("/code/src/jsonata_leex.xrl", 135).
+-file("/code/src/jsonata_leex.xrl", 136).
 yyaction_88(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_89/2}).
--file("/code/src/jsonata_leex.xrl", 136).
+-file("/code/src/jsonata_leex.xrl", 137).
 yyaction_89(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_90/2}).
--file("/code/src/jsonata_leex.xrl", 137).
+-file("/code/src/jsonata_leex.xrl", 138).
 yyaction_90(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_91/2}).
--file("/code/src/jsonata_leex.xrl", 138).
+-file("/code/src/jsonata_leex.xrl", 139).
 yyaction_91(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_92/2}).
--file("/code/src/jsonata_leex.xrl", 139).
+-file("/code/src/jsonata_leex.xrl", 140).
 yyaction_92(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_93/2}).
--file("/code/src/jsonata_leex.xrl", 140).
+-file("/code/src/jsonata_leex.xrl", 141).
 yyaction_93(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_94/2}).
--file("/code/src/jsonata_leex.xrl", 141).
+-file("/code/src/jsonata_leex.xrl", 142).
 yyaction_94(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_95/2}).
--file("/code/src/jsonata_leex.xrl", 142).
+-file("/code/src/jsonata_leex.xrl", 143).
 yyaction_95(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_96/2}).
--file("/code/src/jsonata_leex.xrl", 143).
+-file("/code/src/jsonata_leex.xrl", 144).
 yyaction_96(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_97/2}).
--file("/code/src/jsonata_leex.xrl", 144).
+-file("/code/src/jsonata_leex.xrl", 145).
 yyaction_97(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_98/2}).
--file("/code/src/jsonata_leex.xrl", 145).
+-file("/code/src/jsonata_leex.xrl", 146).
 yyaction_98(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_99/2}).
--file("/code/src/jsonata_leex.xrl", 146).
+-file("/code/src/jsonata_leex.xrl", 147).
 yyaction_99(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_100/2}).
--file("/code/src/jsonata_leex.xrl", 147).
+-file("/code/src/jsonata_leex.xrl", 148).
 yyaction_100(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_101/2}).
--file("/code/src/jsonata_leex.xrl", 148).
+-file("/code/src/jsonata_leex.xrl", 149).
 yyaction_101(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_102/2}).
--file("/code/src/jsonata_leex.xrl", 149).
+-file("/code/src/jsonata_leex.xrl", 150).
 yyaction_102(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_103/2}).
--file("/code/src/jsonata_leex.xrl", 153).
+-file("/code/src/jsonata_leex.xrl", 151).
 yyaction_103(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_104/2}).
--file("/code/src/jsonata_leex.xrl", 154).
+-file("/code/src/jsonata_leex.xrl", 152).
 yyaction_104(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_105/2}).
--file("/code/src/jsonata_leex.xrl", 155).
+-file("/code/src/jsonata_leex.xrl", 153).
 yyaction_105(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_106/2}).
--file("/code/src/jsonata_leex.xrl", 156).
+-file("/code/src/jsonata_leex.xrl", 154).
 yyaction_106(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_107/2}).
--file("/code/src/jsonata_leex.xrl", 157).
+-file("/code/src/jsonata_leex.xrl", 155).
 yyaction_107(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_108/2}).
--file("/code/src/jsonata_leex.xrl", 158).
+-file("/code/src/jsonata_leex.xrl", 156).
 yyaction_108(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_109/2}).
--file("/code/src/jsonata_leex.xrl", 159).
+-file("/code/src/jsonata_leex.xrl", 160).
 yyaction_109(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_110/2}).
--file("/code/src/jsonata_leex.xrl", 160).
+-file("/code/src/jsonata_leex.xrl", 161).
 yyaction_110(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_111/2}).
--file("/code/src/jsonata_leex.xrl", 161).
+-file("/code/src/jsonata_leex.xrl", 162).
 yyaction_111(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_112/2}).
--file("/code/src/jsonata_leex.xrl", 162).
+-file("/code/src/jsonata_leex.xrl", 163).
 yyaction_112(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_113/2}).
--file("/code/src/jsonata_leex.xrl", 163).
+-file("/code/src/jsonata_leex.xrl", 164).
 yyaction_113(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_114/2}).
--file("/code/src/jsonata_leex.xrl", 167).
+-file("/code/src/jsonata_leex.xrl", 168).
 yyaction_114(TokenChars, TokenLine) ->
      { token, { funct, TokenLine, remove_dollars (TokenChars) } } .
 
 -compile({inline,yyaction_115/1}).
--file("/code/src/jsonata_leex.xrl", 169).
+-file("/code/src/jsonata_leex.xrl", 172).
 yyaction_115(TokenLine) ->
      { token, { funct_def, TokenLine } } .
 
 -compile({inline,yyaction_116/2}).
--file("/code/src/jsonata_leex.xrl", 171).
+-file("/code/src/jsonata_leex.xrl", 174).
 yyaction_116(TokenChars, TokenLine) ->
      { token, { name, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_117/0}).
--file("/code/src/jsonata_leex.xrl", 172).
+-file("/code/src/jsonata_leex.xrl", 175).
 yyaction_117() ->
      skip_token .
 
 -compile({inline,yyaction_118/1}).
--file("/code/src/jsonata_leex.xrl", 173).
+-file("/code/src/jsonata_leex.xrl", 176).
 yyaction_118(TokenLine) ->
      { token, { msg_obj, TokenLine } } .
 
 -compile({inline,yyaction_119/2}).
--file("/code/src/jsonata_leex.xrl", 174).
+-file("/code/src/jsonata_leex.xrl", 177).
 yyaction_119(TokenChars, TokenLine) ->
      { token, { string, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_120/2}).
--file("/code/src/jsonata_leex.xrl", 175).
+-file("/code/src/jsonata_leex.xrl", 178).
 yyaction_120(TokenChars, TokenLine) ->
-     { token, { string, TokenLine, TokenChars } } .
+     { token, { sqstring, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_121/2}).
--file("/code/src/jsonata_leex.xrl", 176).
+-file("/code/src/jsonata_leex.xrl", 179).
 yyaction_121(TokenChars, TokenLine) ->
      { token, { chars, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_122/1}).
--file("/code/src/jsonata_leex.xrl", 178).
+-file("/code/src/jsonata_leex.xrl", 181).
 yyaction_122(TokenChars) ->
      { error, "Unexpected token: " ++ TokenChars } .
 -file("/usr/local/lib/erlang/lib/parsetools-2.6/include/leexinc.hrl", 344).

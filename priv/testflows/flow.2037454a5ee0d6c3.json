@@ -4,7 +4,7 @@
         "type": "tab",
         "label": "[.jsonata] basic support for JSONata",
         "disabled": false,
-        "info": "[JSONata](https://jsonata.org/) is very heaviliy embedded in Node-RED and provides a good service for minor manipulations of the Msg object.\n\nIts usage is mainly to avoid adding a function node with one line of code - because that is often all that is needed.\n\nIn a visual, low-code environment, the use of the function node is actually a code smell.\n\nJSONata is feature reach and far to complex to implement in two days. So the current implementation - at the time of writing - provides a very minor subset of what JSONata can do.\n\n",
+        "info": "[JSONata](https://jsonata.org/) is very heaviliy embedded in Node-RED and provides a good service for minor manipulations of the Msg object.\n\nIts usage is mainly to avoid adding a function node with one line of code - because that is often all that is needed.\n\nIn a visual, low-code environment, the use of the function node is actually a code smell.\n\nJSONata is feature reach and far to complex to implement in two days. So the current implementation - at the time of writing - provides a very minor subset of what JSONata can do.\n\n**Note**: This test should succeed on any good Node-RED installation. The JSONata found here is conform to NodeRED. ",
         "env": []
     },
     {
@@ -20,10 +20,10 @@
             "28b0c3032848539f",
             "e3e1beeda4a654d4"
         ],
-        "x": 51,
-        "y": 1002,
-        "w": 404,
-        "h": 124
+        "x": 59,
+        "y": 1292,
+        "w": 900,
+        "h": 82
     },
     {
         "id": "16c6db7364c11bd1",
@@ -46,17 +46,18 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 84,
-        "y": 399,
+        "x": 178,
+        "y": 435,
         "wires": [
             [
                 "b10c774a078c8d82",
-                "3895c01857450267",
                 "ecda6b9ee4d85f55",
                 "322f657814dce9a8",
                 "b33602daf0e3cd49",
                 "6bef0f3799844495",
-                "f0ed8b486d73e527"
+                "f0ed8b486d73e527",
+                "c1a3e98c8f2f0d74",
+                "bffd63842f46fad3"
             ]
         ]
     },
@@ -67,16 +68,16 @@
         "name": "map creation with comments ",
         "rules": [
             {
-                "t": "set",
                 "p": "payload",
                 "pt": "msg",
+                "t": "set",
                 "to": "world",
                 "tot": "str"
             },
             {
-                "t": "set",
                 "p": "map",
                 "pt": "msg",
+                "t": "set",
                 "to": "/* comment one */ \t{\t    \"key\": \"hello \" & $$.payload\t}  \t/* comment two */",
                 "tot": "jsonata"
             }
@@ -86,8 +87,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 361.5,
-        "y": 136,
+        "x": 445.5,
+        "y": 206,
         "wires": [
             [
                 "5ce29a3137ffb466"
@@ -101,44 +102,17 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "map.key",
                 "pt": "msg",
+                "t": "eql",
                 "to": "hello world",
                 "tot": "str"
             }
         ],
-        "x": 948,
-        "y": 136,
+        "x": 1032,
+        "y": 206,
         "wires": [
             []
-        ]
-    },
-    {
-        "id": "3895c01857450267",
-        "type": "change",
-        "z": "2037454a5ee0d6c3",
-        "name": "string concatenation",
-        "rules": [
-            {
-                "t": "set",
-                "p": "payload",
-                "pt": "msg",
-                "to": "\"hrllo \" & \" world \" & \" 1234 \" & 10 & \" goodbye \" & \" cruel \" & world",
-                "tot": "jsonata"
-            }
-        ],
-        "action": "",
-        "property": "",
-        "from": "",
-        "to": "",
-        "reg": false,
-        "x": 361.5,
-        "y": 209,
-        "wires": [
-            [
-                "509fc0408688ce05"
-            ]
         ]
     },
     {
@@ -148,9 +122,9 @@
         "name": "simple string",
         "rules": [
             {
-                "t": "set",
                 "p": "payload",
                 "pt": "msg",
+                "t": "set",
                 "to": "\"hello world\"",
                 "tot": "jsonata"
             }
@@ -160,32 +134,12 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 361.5,
-        "y": 305,
+        "x": 447.5,
+        "y": 279,
         "wires": [
             [
                 "4a3ee103aa7083ab"
             ]
-        ]
-    },
-    {
-        "id": "863c67f21d0ca4cb",
-        "type": "ut-assert-values",
-        "z": "2037454a5ee0d6c3",
-        "name": "",
-        "rules": [
-            {
-                "t": "eql",
-                "p": "payload",
-                "pt": "msg",
-                "to": "hrllo  world  1234 10 goodbye  cruel world",
-                "tot": "str"
-            }
-        ],
-        "x": 948,
-        "y": 209,
-        "wires": [
-            []
         ]
     },
     {
@@ -195,15 +149,15 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
+                "t": "eql",
                 "to": "hello world",
                 "tot": "str"
             }
         ],
-        "x": 948,
-        "y": 305,
+        "x": 1034,
+        "y": 279,
         "wires": [
             []
         ]
@@ -215,16 +169,16 @@
         "name": "replace stuff",
         "rules": [
             {
-                "t": "set",
                 "p": "payload",
                 "pt": "msg",
+                "t": "set",
                 "to": "\"hello world\"",
                 "tot": "jsonata"
             },
             {
-                "t": "set",
                 "p": "payload",
                 "pt": "msg",
+                "t": "set",
                 "to": "$replace($$.payload, \"hello\", \"goodbye cruel\")",
                 "tot": "jsonata"
             }
@@ -234,8 +188,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 361.5,
-        "y": 403,
+        "x": 447.5,
+        "y": 377,
         "wires": [
             [
                 "d9bd2d0f0f9d1de9"
@@ -252,8 +206,8 @@
         ],
         "linkType": "static",
         "timeout": "30",
-        "x": 665,
-        "y": 403,
+        "x": 751,
+        "y": 377,
         "wires": [
             [
                 "9b73d830d29d1c7b"
@@ -267,8 +221,8 @@
         "g": "17cbd1a244fbf2ac",
         "name": "convert payload to string",
         "links": [],
-        "x": 92,
-        "y": 1085,
+        "x": 100,
+        "y": 1333,
         "wires": [
             [
                 "28b0c3032848539f"
@@ -280,13 +234,13 @@
         "type": "change",
         "z": "2037454a5ee0d6c3",
         "g": "17cbd1a244fbf2ac",
-        "name": "$toString($$.payload)",
+        "name": "$string($$.payload) - convert lists to binary that are represented as strings in the flow editor",
         "rules": [
             {
                 "t": "set",
                 "p": "payload",
                 "pt": "msg",
-                "to": "$toString($$.payload)",
+                "to": "$string($$.payload)",
                 "tot": "jsonata"
             }
         ],
@@ -295,8 +249,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 266,
-        "y": 1043,
+        "x": 492,
+        "y": 1333,
         "wires": [
             [
                 "e3e1beeda4a654d4"
@@ -312,8 +266,8 @@
         "name": "link out 1",
         "mode": "return",
         "links": [],
-        "x": 414,
-        "y": 1085,
+        "x": 918,
+        "y": 1333,
         "wires": []
     },
     {
@@ -323,15 +277,15 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
+                "t": "eql",
                 "to": "goodbye cruel world",
                 "tot": "str"
             }
         ],
-        "x": 948,
-        "y": 403,
+        "x": 1034,
+        "y": 377,
         "wires": [
             []
         ]
@@ -346,29 +300,11 @@
         ],
         "linkType": "static",
         "timeout": "30",
-        "x": 665,
-        "y": 305,
+        "x": 751,
+        "y": 279,
         "wires": [
             [
                 "99e6d72cb8c633a9"
-            ]
-        ]
-    },
-    {
-        "id": "509fc0408688ce05",
-        "type": "link call",
-        "z": "2037454a5ee0d6c3",
-        "name": "",
-        "links": [
-            "4568c7342aebcd4e"
-        ],
-        "linkType": "static",
-        "timeout": "30",
-        "x": 665,
-        "y": 209,
-        "wires": [
-            [
-                "863c67f21d0ca4cb"
             ]
         ]
     },
@@ -379,16 +315,16 @@
         "name": "count array lengths",
         "rules": [
             {
-                "t": "set",
                 "p": "payload",
                 "pt": "msg",
+                "t": "set",
                 "to": "[1,2,3,4,5,6,7,8,9,10,11,12,13,14]",
                 "tot": "json"
             },
             {
-                "t": "set",
                 "p": "payload",
                 "pt": "msg",
+                "t": "set",
                 "to": "$count($$.payload)",
                 "tot": "jsonata"
             }
@@ -398,8 +334,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 361.5,
-        "y": 506,
+        "x": 447.5,
+        "y": 480,
         "wires": [
             [
                 "0bcaf5273f0c6c65"
@@ -413,15 +349,15 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
+                "t": "eql",
                 "to": "14",
                 "tot": "num"
             }
         ],
-        "x": 948,
-        "y": 506,
+        "x": 1034,
+        "y": 480,
         "wires": [
             []
         ]
@@ -452,8 +388,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 361.5,
-        "y": 602,
+        "x": 447.5,
+        "y": 576,
         "wires": [
             [
                 "35836bbc4bc5bc5f"
@@ -470,8 +406,8 @@
         ],
         "linkType": "static",
         "timeout": "30",
-        "x": 665,
-        "y": 602,
+        "x": 751,
+        "y": 576,
         "wires": [
             [
                 "5cb1c21b7ea453dc"
@@ -488,12 +424,12 @@
                 "t": "eql",
                 "p": "payload",
                 "pt": "msg",
-                "to": "1.23120999999999995111e+02sdsadsa310",
+                "to": "123.121sdsadsa310",
                 "tot": "str"
             }
         ],
-        "x": 948,
-        "y": 602,
+        "x": 1034,
+        "y": 576,
         "wires": [
             []
         ]
@@ -505,16 +441,16 @@
         "name": "underscored key names",
         "rules": [
             {
-                "t": "set",
                 "p": "payload",
                 "pt": "msg",
+                "t": "set",
                 "to": "{\"_key\":{\"_key2\":{\"_key3\":3}}}",
                 "tot": "json"
             },
             {
-                "t": "set",
                 "p": "payload",
                 "pt": "msg",
+                "t": "set",
                 "to": "$$.payload._key._key2._key3",
                 "tot": "jsonata"
             }
@@ -524,8 +460,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 361.5,
-        "y": 681,
+        "x": 447.5,
+        "y": 655,
         "wires": [
             [
                 "ba768d4eec826516"
@@ -539,17 +475,176 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
+                "t": "eql",
                 "to": "3",
                 "tot": "num"
             }
         ],
-        "x": 948,
-        "y": 681,
+        "x": 1034,
+        "y": 655,
         "wires": [
             []
+        ]
+    },
+    {
+        "id": "c1a3e98c8f2f0d74",
+        "type": "change",
+        "z": "2037454a5ee0d6c3",
+        "name": "algorithmic",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "8",
+                "tot": "json"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "$$.payload * 5",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 414,
+        "y": 732,
+        "wires": [
+            [
+                "56eebfb308528a48"
+            ]
+        ]
+    },
+    {
+        "id": "56eebfb308528a48",
+        "type": "ut-assert-values",
+        "z": "2037454a5ee0d6c3",
+        "name": "",
+        "rules": [
+            {
+                "t": "eql",
+                "p": "payload",
+                "pt": "msg",
+                "to": "40",
+                "tot": "num"
+            }
+        ],
+        "x": 1038,
+        "y": 732,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "7c4296694d030e62",
+        "type": "change",
+        "z": "2037454a5ee0d6c3",
+        "name": "increment",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "$$.payload + 1",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 719,
+        "y": 770,
+        "wires": [
+            [
+                "722187872e77aaf0"
+            ]
+        ]
+    },
+    {
+        "id": "722187872e77aaf0",
+        "type": "switch",
+        "z": "2037454a5ee0d6c3",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "lt",
+                "v": "100",
+                "vt": "num"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 725,
+        "y": 913,
+        "wires": [
+            [
+                "7c4296694d030e62"
+            ],
+            [
+                "42c649e5e087759b"
+            ]
+        ]
+    },
+    {
+        "id": "42c649e5e087759b",
+        "type": "ut-assert-values",
+        "z": "2037454a5ee0d6c3",
+        "name": "",
+        "rules": [
+            {
+                "t": "eql",
+                "p": "payload",
+                "pt": "msg",
+                "to": "100",
+                "tot": "num"
+            }
+        ],
+        "x": 1043,
+        "y": 842.5,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "bffd63842f46fad3",
+        "type": "change",
+        "z": "2037454a5ee0d6c3",
+        "name": "start value",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "8",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 426,
+        "y": 842.5,
+        "wires": [
+            [
+                "7c4296694d030e62"
+            ]
         ]
     }
 ]
