@@ -89,7 +89,6 @@ decode_json(Val) ->
     {Obj, _, _} = json:decode(Val, ok, #{object_push => AtomizeKeys}),
     Obj.
 
-
 any_to_atom(V) when is_atom(V) ->
     V;
 any_to_atom(V) when is_binary(V) ->
@@ -99,7 +98,7 @@ any_to_atom(V) when is_list(V) ->
 any_to_atom(V) when is_integer(V) ->
     list_to_atom(integer_to_list(V));
 any_to_atom(V) when is_float(V) ->
-    list_to_atom(float_to_list(V,[short]));
+    list_to_atom(float_to_list(V, [short]));
 any_to_atom(V) ->
     V.
 
@@ -122,7 +121,7 @@ any_to_atom(V) ->
 %%    {undefined, Prop}
 %%
 get_prop({ok, Prop}, Msg) ->
-    KeyNames = lists:map( fun any_to_atom/1, string:split(Prop, ".", all)),
+    KeyNames = lists:map(fun any_to_atom/1, string:split(Prop, ".", all)),
     case mapz:deep_find(KeyNames, Msg) of
         {ok, V} ->
             {ok, V, Prop};
@@ -130,10 +129,9 @@ get_prop({ok, Prop}, Msg) ->
             {undefined, Prop}
     end.
 
-
 %%
 %% Retrieve a nested parameters from the Msg map.
--spec retrieve_prop_value( PropName :: string(), Msg :: map() ) -> any().
+-spec retrieve_prop_value(PropName :: string(), Msg :: map()) -> any().
 retrieve_prop_value(PropName, Msg) ->
     case get_prop({ok, PropName}, Msg) of
         {ok, V, _} ->
@@ -144,19 +142,23 @@ retrieve_prop_value(PropName, Msg) ->
 
 %% Set a value in a nested map. This supports using nesting parameters to
 %% set a value somewhere in a map.
--spec set_prop_value( PropName :: string(), Msg :: map(), Value :: any() ) -> map().
+-spec set_prop_value(PropName :: string(), Msg :: map(), Value :: any()) ->
+    map().
 set_prop_value(PropName, Msg, Value) ->
     KeyNames = lists:map(fun any_to_atom/1, string:split(PropName, ".", all)),
     %% silently ignore any key that isn't available
     try
         mapz:deep_put(KeyNames, Value, Msg)
-    catch error:_Error ->
-        Msg
+    catch
+        error:_Error ->
+            Msg
     end.
 
 %%
 %% remove an property that happens to match the nested path provided.
--spec delete_prop( PropName :: string() | {ok, PropName :: string()}, Msg :: map() ) -> map().
+-spec delete_prop(
+    PropName :: string() | {ok, PropName :: string()}, Msg :: map()
+) -> map().
 delete_prop({ok, PropName}, Msg) ->
     delete_prop(PropName, Msg);
 delete_prop(PropName, Msg) ->
@@ -167,17 +169,17 @@ delete_prop(PropName, Msg) ->
     %% pre-check ensures there is a value
     %% see: https://github.com/eproxus/mapz/issues/1
     %% TODO remove this if deep_remove is fixed
-    case mapz:deep_find(KeyNames,Msg) of
-        {ok,_} ->
+    case mapz:deep_find(KeyNames, Msg) of
+        {ok, _} ->
             try
                 mapz:deep_remove(KeyNames, Msg)
-            catch error:_Error ->
+            catch
+                error:_Error ->
                     Msg
             end;
         _ ->
             Msg
     end.
-
 
 %%
 %% Generate an empty message map with just an _msgid
