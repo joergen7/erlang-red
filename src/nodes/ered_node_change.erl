@@ -24,6 +24,7 @@
     decode_json/1,
     delete_prop/2,
     get_prop/2,
+    set_prop_value/3,
     timestamp/0
 ]).
 
@@ -94,21 +95,21 @@ do_change_str({ok, Prop}, {ok, FromStr}, {ok, ToStr}, Msg) ->
 %%
 %%
 do_set_value(Prop, Value, <<"num">>, Msg, _NodeDef) ->
-    maps:put(binary_to_atom(Prop), convert_to_num(Value), Msg);
+    set_prop_value(Prop, Msg, convert_to_num(Value));
 do_set_value(Prop, _Value, <<"date">>, Msg, _NodeDef) ->
-    maps:put(binary_to_atom(Prop), timestamp(), Msg);
+    set_prop_value(Prop, Msg, timestamp());
 do_set_value(Prop, Value, <<"str">>, Msg, _NodeDef) ->
-    maps:put(binary_to_atom(Prop), Value, Msg);
+    set_prop_value(Prop, Msg, Value);
 do_set_value(Prop, Value, <<"json">>, Msg, _NodeDef) ->
-    maps:put(binary_to_atom(Prop), decode_json(Value), Msg);
+    set_prop_value(Prop, Msg, decode_json(Value));
 do_set_value(Prop, Value, <<"msg">>, Msg, _NodeDef) ->
     %% set a propery on the message to the value of another
     %% property on the message
     case get_prop({ok, Value}, Msg) of
         {ok, Val, _} ->
-            maps:put(binary_to_atom(Prop), Val, Msg);
+            set_prop_value(Prop, Msg, Val);
         _ ->
-            maps:put(binary_to_atom(Prop), <<>>, Msg)
+            set_prop_value(Prop, Msg, <<>>)
     end;
 do_set_value(Prop, Value, <<"jsonata">>, Msg, NodeDef) ->
     %% "t": "set",
@@ -118,7 +119,7 @@ do_set_value(Prop, Value, <<"jsonata">>, Msg, NodeDef) ->
     %% "tot": "jsonata"
     case jsonata_evaluator:execute(Value, Msg) of
         {ok, Result} ->
-            maps:put(binary_to_atom(Prop), Result, Msg);
+            set_prop_value(Prop, Msg, Result);
         {error, Error} ->
             unsupported(
                 NodeDef,
@@ -154,7 +155,12 @@ handle_rule(<<"set">>, Rule, Msg, NodeDef) ->
             {ok, Value} = maps:find(to, Rule),
             {ok, ToType} = maps:find(tot, Rule),
             do_set_value(Prop, Value, ToType, Msg, NodeDef);
-        _ ->
+        PropType ->
+            unsupported(
+                NodeDef,
+                Msg,
+                jstr("delete proptype: ~p", [PropType])
+            ),
             Msg
     end;
 handle_rule(<<"delete">>, Rule, Msg, NodeDef) ->
@@ -163,10 +169,10 @@ handle_rule(<<"delete">>, Rule, Msg, NodeDef) ->
             delete_prop(maps:find(p, Rule), Msg);
         PropType ->
             unsupported(
-              NodeDef,
-              Msg,
-              jstr("delete proptype: ~p", [PropType])
-             ),
+                NodeDef,
+                Msg,
+                jstr("delete proptype: ~p", [PropType])
+            ),
             Msg
     end;
 handle_rule(<<"move">>, Rule, Msg, NodeDef) ->
