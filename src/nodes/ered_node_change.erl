@@ -22,6 +22,7 @@
 -import(ered_msg_handling, [
     convert_to_num/1,
     decode_json/1,
+    delete_prop/2,
     get_prop/2,
     timestamp/0
 ]).
@@ -156,13 +157,16 @@ handle_rule(<<"set">>, Rule, Msg, NodeDef) ->
         _ ->
             Msg
     end;
-handle_rule(<<"delete">>, Rule, Msg, _NodeDef) ->
+handle_rule(<<"delete">>, Rule, Msg, NodeDef) ->
     case maps:find(pt, Rule) of
         {ok, <<"msg">>} ->
-            {ok, Prop} = maps:find(p, Rule),
-            io:format("Removing ~p from Msg\n", [Prop]),
-            maps:remove(binary_to_atom(Prop), Msg);
-        _ ->
+            delete_prop(maps:find(p, Rule), Msg);
+        PropType ->
+            unsupported(
+              NodeDef,
+              Msg,
+              jstr("delete proptype: ~p", [PropType])
+             ),
             Msg
     end;
 handle_rule(<<"move">>, Rule, Msg, NodeDef) ->
