@@ -5,10 +5,12 @@
     convert_units_to_milliseconds/2,
     create_outgoing_msg/1,
     decode_json/1,
+    delete_prop/2,
     get_prop/2,
     map_keys_to_binary/1,
     map_keys_to_lists/1,
     retrieve_prop_value/2,
+    set_prop_value/3,
     timestamp/0
 ]).
 
@@ -87,31 +89,19 @@ decode_json(Val) ->
     {Obj, _, _} = json:decode(Val, ok, #{object_push => AtomizeKeys}),
     Obj.
 
-%%
-%% Helper for getting values for properties of the form:
-%%    payload.key1.key2.key3
-%% from maps of the form
-%%    #{ payload => #{ key1 => #{ key2 => #{ key3 => "final value" }}}}
-%% So a call to get nested value would return
-%%    final value
-%% The array argument is ["payload", "key1", "key2", "key3"], i.e. a split
-%% by dot on the original string.
-%%
-get_nested_value(V, []) ->
-    {ok, V};
-get_nested_value(Map, [H | T]) when is_map(Map) and is_binary(H) ->
-    get_nested_value(Map, [binary_to_atom(H) | T]);
-get_nested_value(Map, [H | T]) when is_map(Map) and is_list(H) ->
-    get_nested_value(Map, [list_to_atom(H) | T]);
-get_nested_value(Map, [H | T]) when is_map(Map) and is_atom(H) ->
-    case maps:find(H, Map) of
-        {ok, Val} ->
-            get_nested_value(Val, T);
-        _ ->
-            undefined
-    end;
-get_nested_value(_, _) ->
-    undefined.
+
+any_to_atom(V) when is_atom(V) ->
+    V;
+any_to_atom(V) when is_binary(V) ->
+    binary_to_atom(V);
+any_to_atom(V) when is_list(V) ->
+    list_to_atom(V);
+any_to_atom(V) when is_integer(V) ->
+    list_to_atom(integer_to_list(V));
+any_to_atom(V) when is_float(V) ->
+    list_to_atom(float_to_list(V,[short]));
+any_to_atom(V) ->
+    V.
 
 %%
 %% get prop can used to retrieve a nestd value from the Msg map, i.e.,
@@ -132,15 +122,18 @@ get_nested_value(_, _) ->
 %%    {undefined, Prop}
 %%
 get_prop({ok, Prop}, Msg) ->
-    case get_nested_value(Msg, string:split(Prop, ".", all)) of
+    KeyNames = lists:map( fun any_to_atom/1, string:split(Prop, ".", all)),
+    case mapz:deep_find(KeyNames, Msg) of
         {ok, V} ->
             {ok, V, Prop};
-        undefined ->
+        error ->
             {undefined, Prop}
     end.
 
+
 %%
-%% slightly simpler API, without the {ok, ...}
+%% Retrieve a nested parameters from the Msg map.
+-spec retrieve_prop_value( PropName :: string(), Msg :: map() ) -> any().
 retrieve_prop_value(PropName, Msg) ->
     case get_prop({ok, PropName}, Msg) of
         {ok, V, _} ->
@@ -148,6 +141,43 @@ retrieve_prop_value(PropName, Msg) ->
         _ ->
             ""
     end.
+
+%% Set a value in a nested map. This supports using nesting parameters to
+%% set a value somewhere in a map.
+-spec set_prop_value( PropName :: string(), Msg :: map(), Value :: any() ) -> map().
+set_prop_value(PropName, Msg, Value) ->
+    KeyNames = lists:map(fun any_to_atom/1, string:split(PropName, ".", all)),
+    %% silently ignore any key that isn't available
+    try
+        mapz:deep_put(KeyNames, Value, Msg)
+    catch error:_Error ->
+        Msg
+    end.
+
+%%
+%% remove an property that happens to match the nested path provided.
+-spec delete_prop( PropName :: string() | {ok, PropName :: string()}, Msg :: map() ) -> map().
+delete_prop({ok, PropName}, Msg) ->
+    delete_prop(PropName, Msg);
+delete_prop(PropName, Msg) ->
+    KeyNames = lists:map(fun any_to_atom/1, string:split(PropName, ".", all)),
+    %% silently ignore any key that isn't available
+
+    %% deep_remove seems to delete keeps if other keys don't exist, so this
+    %% pre-check ensures there is a value
+    %% see: https://github.com/eproxus/mapz/issues/1
+    %% TODO remove this if deep_remove is fixed
+    case mapz:deep_find(KeyNames,Msg) of
+        {ok,_} ->
+            try
+                mapz:deep_remove(KeyNames, Msg)
+            catch error:_Error ->
+                    Msg
+            end;
+        _ ->
+            Msg
+    end.
+
 
 %%
 %% Generate an empty message map with just an _msgid
