@@ -8,7 +8,7 @@
         "env": [
             {
                 "name": "ERED_PENDING",
-                "value": "true",
+                "value": "false",
                 "type": "bool"
             }
         ]
@@ -19,6 +19,11 @@
         "z": "61847d719e50f83f",
         "name": "",
         "props": [
+            {
+                "p": "string",
+                "v": "to a string value",
+                "vt": "str"
+            },
             {
                 "p": "payload"
             },
@@ -35,30 +40,13 @@
         "topic": "",
         "payload": "\"hello \" & \"world: \" & $$.string",
         "payloadType": "jsonata",
-        "x": 301,
-        "y": 342,
+        "x": 358,
+        "y": 289,
         "wires": [
             [
-                "5d9aef287149f8eb",
                 "6cda249a2ed28311"
             ]
         ]
-    },
-    {
-        "id": "5d9aef287149f8eb",
-        "type": "debug",
-        "z": "61847d719e50f83f",
-        "name": "debug 4",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 657,
-        "y": 343,
-        "wires": []
     },
     {
         "id": "6cda249a2ed28311",
@@ -70,19 +58,19 @@
                 "t": "eql",
                 "p": "jsonata",
                 "pt": "msg",
-                "to": "hello world one",
+                "to": "hello world: to a string value",
                 "tot": "str"
             },
             {
                 "t": "eql",
                 "p": "payload",
                 "pt": "msg",
-                "to": "hello world one",
+                "to": "hello world: to a string value",
                 "tot": "str"
             }
         ],
-        "x": 561,
-        "y": 203,
+        "x": 579,
+        "y": 405,
         "wires": [
             []
         ]

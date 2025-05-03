@@ -78,6 +78,23 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
                         NodeDef,
                         maps:put(payload, convert_to_num(Val), Msg)
                     );
+                <<"jsonata">> ->
+                    case jsonata_evaluator:execute(Val, Msg) of
+                        {ok, Result} ->
+                            parse_props(
+                              RestProps,
+                              NodeDef,
+                              maps:put(payload, Result, Msg)
+                             );
+                        {error, Error} ->
+                            unsupported(
+                              NodeDef,
+                              Msg,
+                              jstr("jsonata term: ~p", [Error])
+                             ),
+                            Msg
+                    end;
+
                 PropType ->
                     unsupported(
                         NodeDef,
@@ -126,6 +143,23 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
                             binary_to_atom(PropName), convert_to_num(Val), Msg
                         )
                     );
+                <<"jsonata">> ->
+                    case jsonata_evaluator:execute(Val, Msg) of
+                        {ok, Result} ->
+                            parse_props(
+                              RestProps,
+                              NodeDef,
+                              maps:put(binary_to_atom(PropName), Result, Msg)
+                             );
+                        {error, Error} ->
+                            unsupported(
+                              NodeDef,
+                              Msg,
+                              jstr("jsonata term: ~p", [Error])
+                             ),
+                            Msg
+                    end;
+
                 PropType ->
                     unsupported(
                         NodeDef,
