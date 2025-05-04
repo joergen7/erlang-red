@@ -7,6 +7,7 @@
     decode_json/1,
     delete_prop/2,
     get_prop/2,
+    is_same/2,
     map_keys_to_binary/1,
     map_keys_to_lists/1,
     retrieve_prop_value/2,
@@ -22,6 +23,17 @@
     generate_id/0,
     jstr/2
 ]).
+
+%%
+%% Used by switch and assert values nodes.
+is_same(Same, Diff) when is_list(Same) and is_binary(Diff) ->
+    is_same(Same, binary_to_list(Diff));
+is_same(Same, Diff) when is_binary(Same) and is_list(Diff) ->
+    is_same(binary_to_list(Same), Diff);
+is_same(Same, Same) ->
+    true;
+is_same(_, _) ->
+    false.
 
 %%
 %% convert to num - a num can be a integer or float, so to convert a string

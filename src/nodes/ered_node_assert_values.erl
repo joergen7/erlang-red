@@ -26,22 +26,14 @@
 -import(ered_msg_handling, [
     convert_to_num/1,
     decode_json/1,
-    get_prop/2
+    get_prop/2,
+    is_same/2
 ]).
 
 %%
 %%
 start(NodeDef, _WsName) ->
     ered_node:start(NodeDef, ?MODULE).
-
-is_same(Same, Diff) when is_list(Same) and is_binary(Diff) ->
-    is_same(Same, binary_to_list(Diff));
-is_same(Same, Diff) when is_binary(Same) and is_list(Diff) ->
-    is_same(binary_to_list(Same), Diff);
-is_same(Same, Same) ->
-    true;
-is_same(_, _) ->
-    false.
 
 %% erlfmt:ignore equals and arrows should line up here.
 debug_data(NodeDef, ErrMsg) ->
