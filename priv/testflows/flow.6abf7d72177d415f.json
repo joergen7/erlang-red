@@ -32,9 +32,9 @@
         "name": "map: single quote strings, floats and integer ",
         "rules": [
             {
+                "t": "set",
                 "p": "payload",
                 "pt": "msg",
-                "t": "set",
                 "to": "{ \"key\": $toString('single quote strings'), banaint: 4, float: 1.23, key2: value }",
                 "tot": "jsonata"
             }
@@ -91,9 +91,9 @@
         "name": "string concatenation",
         "rules": [
             {
+                "t": "set",
                 "p": "payload",
                 "pt": "msg",
-                "t": "set",
                 "to": "\"hrllo \" & \" world \" & \" 1234 \" & 10 & \" goodbye \" & \" cruel \" & world",
                 "tot": "jsonata"
             }
@@ -212,9 +212,9 @@
         "name": "",
         "rules": [
             {
+                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
-                "t": "eql",
                 "to": "{\"float\":1.23,\"key\":\"single quote strings\",\"banaint\":4 }",
                 "tot": "json"
             }
@@ -232,9 +232,9 @@
         "name": "can't test for atoms",
         "rules": [
             {
+                "t": "delete",
                 "p": "payload.key2",
-                "pt": "msg",
-                "t": "delete"
+                "pt": "msg"
             }
         ],
         "action": "",
@@ -257,23 +257,23 @@
         "name": "map: single quote strings, floats and integer ",
         "rules": [
             {
+                "t": "set",
                 "p": "payload",
                 "pt": "msg",
-                "t": "set",
                 "to": "{ \"key\": 'single quote strings', banaint: 4, float: 1.23, key2: value }",
                 "tot": "jsonata"
             },
             {
+                "t": "set",
                 "p": "payload.key",
                 "pt": "msg",
-                "t": "set",
                 "to": "$string($$.payload.key)",
                 "tot": "jsonata"
             },
             {
+                "t": "set",
                 "p": "payload.key2",
                 "pt": "msg",
-                "t": "set",
                 "to": "$string($$.payload.key2)",
                 "tot": "jsonata"
             }
@@ -298,9 +298,9 @@
         "name": "map: single quote strings, floats and integer ",
         "rules": [
             {
+                "t": "set",
                 "p": "payload",
                 "pt": "msg",
-                "t": "set",
                 "to": "{ \"key\": $string('single quote strings'), banaint: 4, float: 1.23, key2: $string(value) }",
                 "tot": "jsonata"
             }
@@ -325,9 +325,9 @@
         "name": "",
         "rules": [
             {
+                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
-                "t": "eql",
                 "to": "{\"float\":1.23,\"key\":\"single quote strings\",\"banaint\":4, \"key2\": \"value\" }",
                 "tot": "json"
             }
@@ -345,9 +345,9 @@
         "name": "",
         "rules": [
             {
+                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
-                "t": "eql",
                 "to": "{\"float\":1.23,\"key\":\"single quote strings\",\"banaint\":4, \"key2\": \"value\" }",
                 "tot": "json"
             }

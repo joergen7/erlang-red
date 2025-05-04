@@ -22,6 +22,7 @@
 ]).
 -import(ered_msg_handling, [
     convert_to_num/1,
+    set_prop_value/3,
     timestamp/0,
     decode_json/1
 ]).
@@ -34,146 +35,80 @@
 start(NodeDef, _WsName) ->
     ered_node:start(NodeDef, ?MODULE).
 
-handle_topic_value(NodeDef, _Prop, {ok, <<"str">>}) ->
+%%
+%%
+value_for_proptype(<<"date">>, _Val, Prop, _NodeDef, Msg) ->
+    set_prop_value(Prop, Msg, timestamp());
+value_for_proptype(<<"json">>, Val, Prop, _NodeDef, Msg) ->
+    set_prop_value(Prop, Msg, decode_json(Val));
+value_for_proptype(<<"str">>, Val, Prop, _NodeDef, Msg) ->
+    set_prop_value(Prop, Msg, Val);
+value_for_proptype(<<"num">>, Val, Prop, _NodeDef, Msg) ->
+    set_prop_value(Prop, Msg, convert_to_num(Val));
+value_for_proptype(<<"jsonata">>, Val, Prop, NodeDef, Msg) ->
+    case jsonata_evaluator:execute(Val, Msg) of
+        {ok, Result} ->
+            set_prop_value(Prop, Msg, Result);
+        {error, Error} ->
+            unsupported(
+                NodeDef,
+                Msg,
+                jstr("jsonata term: ~p", [Error])
+            ),
+            Msg
+    end;
+value_for_proptype(PropType, _Val, PropName, NodeDef, Msg) ->
+    unsupported(
+        NodeDef,
+        Msg,
+        jstr(
+            "proptype ~p for ~p, handling as string type",
+            [PropType, PropName]
+        )
+    ),
+    Msg.
+
+%%
+%% topic property has a topic attribute of the NodeDef containing the
+%% string value iff the type is "str" otherwise the value is set on
+%% the property defintion, i.e. 'v'.
+obtain_topic_value(NodeDef, _Prop, <<"str">>) ->
     get_prop_value_from_map(topic, NodeDef);
-handle_topic_value(_NodeDef, Prop, _) ->
+obtain_topic_value(_NodeDef, Prop, _) ->
     get_prop_value_from_map(v, Prop).
 
+%%
+%%
 parse_props([], _, Msg) ->
     Msg;
 parse_props([Prop | RestProps], NodeDef, Msg) ->
-    %%
-    %% TODO ignoring type definitions here - so be it. Type is defined by the
-    %% TODO 'vt' attribute of the Prop map except in the case of payload.
-    %% TODO payload has payloadType on the NodeDef.
-    %%
     case maps:find(p, Prop) of
         {ok, <<"payload">>} ->
             Val = get_prop_value_from_map(payload, NodeDef),
-            PType = get_prop_value_from_map(payloadType, NodeDef),
-            io:format("Prop: Payload: ~p of type ~p\n", [Val, PType]),
+            PropType = get_prop_value_from_map(payloadType, NodeDef),
 
-            case PType of
-                <<"date">> ->
-                    parse_props(
-                        RestProps,
-                        NodeDef,
-                        maps:put(payload, timestamp(), Msg)
-                    );
-                <<"json">> ->
-                    parse_props(
-                        RestProps,
-                        NodeDef,
-                        maps:put(payload, decode_json(Val), Msg)
-                    );
-                <<"str">> ->
-                    parse_props(
-                        RestProps,
-                        NodeDef,
-                        maps:put(payload, Val, Msg)
-                    );
-                <<"num">> ->
-                    parse_props(
-                        RestProps,
-                        NodeDef,
-                        maps:put(payload, convert_to_num(Val), Msg)
-                    );
-                <<"jsonata">> ->
-                    case jsonata_evaluator:execute(Val, Msg) of
-                        {ok, Result} ->
-                            parse_props(
-                              RestProps,
-                              NodeDef,
-                              maps:put(payload, Result, Msg)
-                             );
-                        {error, Error} ->
-                            unsupported(
-                              NodeDef,
-                              Msg,
-                              jstr("jsonata term: ~p", [Error])
-                             ),
-                            Msg
-                    end;
-
-                PropType ->
-                    unsupported(
-                        NodeDef,
-                        Msg,
-                        jstr("proptype ~p for ~p, handling as string type", [
-                            PropType, Prop
-                        ])
-                    ),
-                    parse_props(RestProps, NodeDef, maps:put(payload, Val, Msg))
-            end;
+            parse_props(
+                RestProps,
+                NodeDef,
+                value_for_proptype(PropType, Val, <<"payload">>, NodeDef, Msg)
+            );
         {ok, <<"topic">>} ->
-            Val = handle_topic_value(NodeDef, Prop, maps:find(vt, Prop)),
-            io:format("Prop: Topic: ~p\n", [Val]),
-            parse_props(RestProps, NodeDef, maps:put(topic, Val, Msg));
+            PropType = get_prop_value_from_map(vt, Prop),
+            Val = obtain_topic_value(NodeDef, Prop, PropType),
+
+            parse_props(
+                RestProps,
+                NodeDef,
+                value_for_proptype(PropType, Val, <<"topic">>, NodeDef, Msg)
+            );
         {ok, PropName} ->
             Val = get_prop_value_from_map(v, Prop),
             PropType = get_prop_value_from_map(vt, Prop),
-            case PropType of
-                <<"date">> ->
-                    parse_props(
-                        RestProps,
-                        NodeDef,
-                        maps:put(binary_to_atom(PropName), timestamp(), Msg)
-                    );
-                <<"json">> ->
-                    parse_props(
-                        RestProps,
-                        NodeDef,
-                        maps:put(
-                            binary_to_atom(PropName), decode_json(Val), Msg
-                        )
-                    );
-                <<"str">> ->
-                    parse_props(
-                        RestProps,
-                        NodeDef,
-                        maps:put(
-                            binary_to_atom(PropName), Val, Msg
-                        )
-                    );
-                <<"num">> ->
-                    parse_props(
-                        RestProps,
-                        NodeDef,
-                        maps:put(
-                            binary_to_atom(PropName), convert_to_num(Val), Msg
-                        )
-                    );
-                <<"jsonata">> ->
-                    case jsonata_evaluator:execute(Val, Msg) of
-                        {ok, Result} ->
-                            parse_props(
-                              RestProps,
-                              NodeDef,
-                              maps:put(binary_to_atom(PropName), Result, Msg)
-                             );
-                        {error, Error} ->
-                            unsupported(
-                              NodeDef,
-                              Msg,
-                              jstr("jsonata term: ~p", [Error])
-                             ),
-                            Msg
-                    end;
-
-                PropType ->
-                    unsupported(
-                        NodeDef,
-                        Msg,
-                        jstr("proptype ~p for ~p, handling as string type", [
-                            PropType, Prop
-                        ])
-                    ),
-                    parse_props(
-                        RestProps,
-                        NodeDef,
-                        maps:put(binary_to_atom(PropName), Val, Msg)
-                    )
-            end;
+            parse_props(
+                RestProps,
+                NodeDef,
+                value_for_proptype(PropType, Val, PropName, NodeDef, Msg)
+            );
         _ ->
             unsupported(NodeDef, Msg, jstr("Prop: NoMATCH: ~p\n", [Prop])),
             parse_props(RestProps, NodeDef, Msg)

@@ -102,9 +102,9 @@
         "name": "",
         "rules": [
             {
-                "t": "set",
                 "p": "fubar",
                 "pt": "msg",
+                "t": "set",
                 "to": "snafu",
                 "tot": "msg"
             }
@@ -155,16 +155,16 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "fubar",
                 "pt": "msg",
+                "t": "eql",
                 "to": "the value of snafu",
                 "tot": "str"
             },
             {
-                "t": "eql",
                 "p": "snafu",
                 "pt": "msg",
+                "t": "eql",
                 "to": "the value of snafu",
                 "tot": "str"
             }
@@ -217,9 +217,9 @@
         "name": "",
         "rules": [
             {
-                "t": "set",
                 "p": "fubar",
                 "pt": "msg",
+                "t": "set",
                 "to": "snafu",
                 "tot": "msg"
             }
@@ -245,16 +245,16 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "fubar",
                 "pt": "msg",
+                "t": "eql",
                 "to": "",
                 "tot": "str"
             },
             {
-                "t": "notset",
                 "p": "snafu",
-                "pt": "msg"
+                "pt": "msg",
+                "t": "notset"
             }
         ],
         "x": 879,
