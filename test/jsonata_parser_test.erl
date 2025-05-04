@@ -169,7 +169,9 @@ foreach_parser_test_() ->
         algorithmic_expressions_integer_only,
         "$$.payload.fuba.dad + 1 + 2 + $$.payload.name.name + 3 + 4 * 6",
         "fun (Msg) ->
-           maps:get(dad, maps:get(fuba, maps:get(payload, Msg))) + 1 + 2 + maps:get(name, maps:get(name, maps:get(payload, Msg))) + 3 + 4 * 6
+           maps:get(dad, maps:get(fuba, maps:get(payload, Msg))) + 1 +
+                   2 + maps:get(name, maps:get(name, maps:get(payload, Msg)))
+                         + 3 + 4 * 6
         end."
       },
       {
@@ -239,6 +241,14 @@ foreach_parser_test_() ->
         "$$.payload.key.key[0]",
         "fun (Msg) ->
             lists:nth(1, maps:get(key, maps:get(key, maps:get(payload, Msg))))
+        end."
+      },
+      {
+        array_index_access_negative_based_from_the_back,
+        "$$.payload.key.key[-1]",
+        "fun (Msg) ->
+            lists:nth(1, lists:reverse(maps:get(key,
+                                  maps:get(key, maps:get(payload, Msg)))))
         end."
       },
       {

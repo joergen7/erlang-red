@@ -148,6 +148,8 @@ array -> '[' args ']' : array_handler('$2').
 %% function parameters and standalone expressions (such as strings and
 %% function execution or propery accessing calls).
 expr -> msg_obj dot_names : to_map_get('$2').
+expr -> msg_obj dot_names '[' '-' int ']' :
+            to_map_get_with_neg_index('$2', '$5').
 expr -> msg_obj dot_names '[' int ']' : to_map_get_with_index('$2', '$4').
 expr -> string : '$1'.
 expr -> sqstring : replace_single_quotes('$1').
@@ -216,6 +218,9 @@ to_list(Expr) when is_binary(Expr) ->
 to_list(Expr) ->
     Expr.
 
+to_map_get_with_neg_index(Ary, {int, _LineNo, V}) ->
+    io_lib:format("lists:nth(~s, lists:reverse(~s))",
+                  [integer_to_list(V), to_map_get(Ary)]).
 
 to_map_get_with_index(Ary, {int, _LineNo, V}) ->
     io_lib:format("lists:nth(~s, ~s)", [integer_to_list(V+1), to_map_get(Ary)]).
