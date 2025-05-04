@@ -22,6 +22,7 @@
 ]).
 -import(ered_msg_handling, [
     convert_to_num/1,
+    get_prop/2,
     set_prop_value/3,
     timestamp/0,
     decode_json/1
@@ -45,6 +46,13 @@ value_for_proptype(<<"str">>, Val, Prop, _NodeDef, Msg) ->
     set_prop_value(Prop, Msg, Val);
 value_for_proptype(<<"num">>, Val, Prop, _NodeDef, Msg) ->
     set_prop_value(Prop, Msg, convert_to_num(Val));
+value_for_proptype(<<"msg">>, Val, Prop, _NodeDef, Msg) ->
+    case get_prop({ok, Val}, Msg) of
+        {ok, Value, _} ->
+            set_prop_value(Prop, Msg, Value);
+        _ ->
+            set_prop_value(Prop, Msg, <<>>)
+    end;
 value_for_proptype(<<"jsonata">>, Val, Prop, NodeDef, Msg) ->
     case jsonata_evaluator:execute(Val, Msg) of
         {ok, Result} ->
