@@ -17,6 +17,7 @@
 ]).
 -import(ered_nodes, [
     jstr/2,
+    post_exception_or_debug/3,
     send_msg_to_connected_nodes/2
 ]).
 -import(ered_msg_handling, [
@@ -126,7 +127,10 @@ do_set_value(Prop, Value, <<"jsonata">>, Msg, NodeDef) ->
                 Msg,
                 jstr("jsonata term: ~p", [Error])
             ),
-            Msg
+            Msg;
+        {exception, ErrMsg} ->
+            post_exception_or_debug(NodeDef, Msg, ErrMsg),
+            throw(dont_send_message)
     end;
 do_set_value(_, _, Tot, Msg, NodeDef) ->
     unsupported(NodeDef, Msg, jstr("set ToT: ~p", [Tot])),
@@ -202,16 +206,17 @@ handle_rule(_, Rule, Msg, NodeDef) ->
 handle_event(_, NodeDef) ->
     NodeDef.
 
-handle_incoming(NodeDef, Msg) ->
-    {ok, Rules} = maps:find(rules, NodeDef),
-    Msg2 = handle_rules(Rules, Msg, NodeDef),
-    send_msg_to_connected_nodes(NodeDef, Msg2),
-    {NodeDef, Msg2}.
-
 %%
 %%
 handle_msg({incoming, Msg}, NodeDef) ->
-    {NodeDef2, Msg2} = handle_incoming(NodeDef, Msg),
-    {handled, NodeDef2, Msg2};
+    {ok, Rules} = maps:find(rules, NodeDef),
+    try
+        Msg2 = handle_rules(Rules, Msg, NodeDef),
+        send_msg_to_connected_nodes(NodeDef, Msg2),
+        {handled, NodeDef, Msg2}
+    catch
+        throw:dont_send_message ->
+            {handled, NodeDef, dont_send_complete_msg}
+    end;
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.

@@ -7,12 +7,6 @@
 -export([handle_event/2]).
 
 %%
-%% TODO needs refactoring to use the unsupported/3 function to send off
-%% TODO a notification of something missing - currently it just fails
-%% TODO silently - not really helping anyone.
-%%
-
-%%
 %% representation of a switch node.
 %%
 %% Switch nodes represent control flow within Node-RED and are central to
@@ -27,6 +21,7 @@
 
 -import(ered_nodes, [
     jstr/2,
+    post_exception_or_debug/3,
     send_msg_on/2
 ]).
 -import(ered_message_exchange, [
@@ -35,9 +30,9 @@
 -import(ered_msg_handling, [
     convert_to_num/1,
     get_prop/2,
-    is_same/2,
-    post_exception/3
+    is_same/2
 ]).
+
 -import(ered_nodered_comm, [
     unsupported/3
 ]).
@@ -53,7 +48,9 @@ obtain_operator_value(<<"jsonata">>, OpVal, Msg) ->
         {ok, Result} ->
             {ok, Result};
         {error, Error} ->
-            {error, jstr("jsonata term: ~p", [Error])}
+            {error, jstr("jsonata term: ~p", [Error])};
+        {exception, ErrMsg} ->
+            {exception, ErrMsg}
     end;
 obtain_operator_value(<<"num">>, OpVal, _Msg) ->
     {ok, convert_to_num(OpVal)};
@@ -83,10 +80,13 @@ does_rule_match(Op, Type, OpVal, MsgVal, NodeDef, Msg) ->
                     V
             end;
         {error, ErrMsg} ->
-            post_exception(NodeDef, Msg, ErrMsg),
+            post_exception_or_debug(NodeDef, Msg, ErrMsg),
             false;
         {unsupported, ErrMsg} ->
             unsupported(NodeDef, Msg, ErrMsg),
+            false;
+        {exception, ErrMsg} ->
+            post_exception_or_debug(NodeDef, Msg, ErrMsg),
             false
     end.
 
@@ -183,7 +183,9 @@ obtain_compare_to_value({ok, <<"jsonata">>}, {ok, PropName}, Msg) ->
         {ok, Result} ->
             {ok, Result};
         {error, Error} ->
-            {error, jstr("jsonata term: ~p", [Error])}
+            {error, jstr("jsonata term: ~p", [Error])};
+        {exception, ErrMsg} ->
+            {exception, ErrMsg}
     end;
 obtain_compare_to_value({ok, PropType}, {ok, PropName}, _Msg) ->
     {unsupported,
@@ -199,7 +201,7 @@ handle_event(_, NodeDef) ->
 %%
 %% Handler for incoming messages
 %%
-handle_incoming(NodeDef, Msg) ->
+handle_msg({incoming, Msg}, NodeDef) ->
     %% flag unsupported features - recreate message sequence whatever that does
     case maps:find(repair, NodeDef) of
         {ok, true} ->
@@ -235,16 +237,15 @@ handle_incoming(NodeDef, Msg) ->
                     handle_stop_after_one(Rules, Val, Wires, NodeDef, Msg)
             end;
         {error, ErrMsg} ->
-            post_exception(NodeDef, Msg, ErrMsg);
+            post_exception_or_debug(NodeDef, Msg, ErrMsg);
         {unsupported, ErrMsg} ->
-            unsupported(NodeDef, Msg, ErrMsg)
+            unsupported(NodeDef, Msg, ErrMsg);
+        {exception, ErrMsg} ->
+            post_exception_or_debug(NodeDef, Msg, ErrMsg)
     end,
 
-    {handled, NodeDef, dont_send_complete_msg}.
-
+    {handled, NodeDef, dont_send_complete_msg};
 %%
 %%
-handle_msg({incoming, Msg}, NodeDef) ->
-    handle_incoming(NodeDef, Msg);
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.

@@ -15,16 +15,13 @@
     get_prop_value_from_map/3,
     jstr/1,
     jstr/2,
+    post_exception_or_debug/3,
     send_msg_to_connected_nodes/2
 ]).
 
 -import(ered_nodered_comm, [
     send_out_debug_msg/4,
     unsupported/3
-]).
-
--import(ered_message_exchange, [
-    post_exception/3
 ]).
 
 %%
@@ -68,12 +65,7 @@ handle_msg({incoming, Msg}, NodeDef) ->
                     {handled, NodeDef, Msg3};
                 {error, Reason} ->
                     ErrMsg = jstr("Http request failed: ~p", [Reason]),
-                    case post_exception(NodeDef, Msg, ErrMsg) of
-                        dealt_with ->
-                            ok;
-                        _ ->
-                            send_out_debug_msg(NodeDef, Msg, ErrMsg, error)
-                    end,
+                    post_exception_or_debug(NodeDef, Msg, ErrMsg),
                     {handled, NodeDef, Msg}
             end
     end;

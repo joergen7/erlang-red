@@ -135,7 +135,7 @@ handle_event(_, NodeDef) ->
 %%
 %% outgoing messages are triggered by button presses on the UI
 %%
-handle_outgoing(NodeDef, Msg) ->
+handle_msg({outgoing, Msg}, NodeDef) ->
     case maps:find(props, NodeDef) of
         {ok, Val} ->
             Props = Val;
@@ -150,16 +150,10 @@ handle_outgoing(NodeDef, Msg) ->
         %% outgoing messages to generated completed messages, so do this
         %% here directly.
         post_completed(NodeDef, Msg2),
-        {NodeDef, Msg2}
+        {handled, NodeDef, Msg2}
     catch
         throw:dont_send_message ->
-            {NodeDef, Msg}
-    end.
-
-%%
-%%
-handle_msg({outgoing, Msg}, NodeDef) ->
-    {NodeDef2, Msg2} = handle_outgoing(NodeDef, Msg),
-    {handled, NodeDef2, Msg2};
+            {handled, NodeDef, Msg}
+    end;
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.

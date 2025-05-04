@@ -16,6 +16,7 @@
     get_prop_value_from_map/3,
     jstr/1,
     jstr/2,
+    post_exception_or_debug/3,
     send_msg_to_connected_nodes/2,
     this_should_not_happen/2,
     unpriv/1
@@ -24,9 +25,6 @@
     debug/3,
     send_out_debug_msg/4,
     ws_from/1
-]).
--import(ered_message_exchange, [
-    post_exception/3
 ]).
 
 %%
@@ -39,9 +37,6 @@ debug_msg(NodeDef, Msg, {filename_type_not_supported, FileNameType}) ->
         "File name type not supported: ~p",
         [FileNameType]
     ),
-    send_out_debug_msg(NodeDef, Msg, ErrMsg, error);
-debug_msg(NodeDef, Msg, {file_not_found, FileName}) ->
-    ErrMsg = jstr("File Not Found: ~p", [FileName]),
     send_out_debug_msg(NodeDef, Msg, ErrMsg, error);
 debug_msg(NodeDef, Msg, {no_file_specified}) ->
     ErrMsg = jstr("No file specified"),
@@ -85,12 +80,7 @@ handle_incoming(NodeDef, Msg) ->
                     {NodeDef, Msg2};
                 _ ->
                     ErrMsg = jstr("File Not Found: ~p", [FileName]),
-                    case post_exception(NodeDef, Msg, ErrMsg) of
-                        dealt_with ->
-                            ok;
-                        _ ->
-                            debug_msg(NodeDef, Msg, {file_not_found, FileName})
-                    end,
+                    post_exception_or_debug(NodeDef, Msg, ErrMsg),
                     {NodeDef, Msg}
             end;
         failed ->
