@@ -374,3 +374,26 @@ unsupport_function_test() ->
             #{}
         )
     ).
+
+array_with_index_test() ->
+    ?assertEqual(
+        {ok, 1},
+        jsonata_evaluator:execute(
+            "$$.payload.key.key[0]",
+            #{payload => #{key => #{key => [1, "hello world", 3]}}}
+        )
+    ),
+    ?assertEqual(
+        {ok, "hello world"},
+        jsonata_evaluator:execute(
+            "$$.payload.key.key[1]",
+            #{payload => #{key => #{key => [1, "hello world", 3]}}}
+        )
+    ),
+    ?assertEqual(
+        {ok, 3},
+        jsonata_evaluator:execute(
+            "$$.payload.key.key[2]",
+            #{payload => #{key => #{key => [1, "hello world", 3]}}}
+        )
+    ).

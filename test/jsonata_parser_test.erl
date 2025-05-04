@@ -228,6 +228,20 @@ foreach_parser_test_() ->
         end."
       },
       {
+        array_index_access,
+        "$$.payload.key.key[2]",
+        "fun (Msg) ->
+            lists:nth(3, maps:get(key, maps:get(key, maps:get(payload, Msg))))
+        end."
+      },
+      {
+        array_index_access_zero_based_converted,
+        "$$.payload.key.key[0]",
+        "fun (Msg) ->
+            lists:nth(1, maps:get(key, maps:get(key, maps:get(payload, Msg))))
+        end."
+      },
+      {
         array_with_content,
         "[1, 2, \"asdasd\", $$.payload]",
         "fun (Msg) ->
