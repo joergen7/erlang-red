@@ -14,7 +14,9 @@
 -import(ered_nodes, [
     get_prop_value_from_map/2,
     get_prop_value_from_map/3,
+    jstr/1,
     jstr/2,
+    post_exception_or_debug/3,
     send_msg_to_connected_nodes/2
 ]).
 -import(ered_nodered_comm, [
@@ -63,7 +65,10 @@ value_for_proptype(<<"jsonata">>, Val, Prop, NodeDef, Msg) ->
                 Msg,
                 jstr("jsonata term: ~p", [Error])
             ),
-            Msg
+            Msg;
+        {exception, ErrMsg} ->
+            post_exception_or_debug(NodeDef, Msg, ErrMsg),
+            throw(dont_send_message)
     end;
 value_for_proptype(PropType, _Val, PropName, NodeDef, Msg) ->
     unsupported(
@@ -138,13 +143,18 @@ handle_outgoing(NodeDef, Msg) ->
             Props = []
     end,
 
-    Msg2 = parse_props(Props, NodeDef, Msg),
-    send_msg_to_connected_nodes(NodeDef, Msg2),
-    %% this should be done by the behaviour but it does not allow
-    %% outgoing messages to generated completed messages, so do this
-    %% here directly.
-    post_completed(NodeDef, Msg2),
-    {NodeDef, Msg2}.
+    try
+        Msg2 = parse_props(Props, NodeDef, Msg),
+        send_msg_to_connected_nodes(NodeDef, Msg2),
+        %% this should be done by the behaviour but it does not allow
+        %% outgoing messages to generated completed messages, so do this
+        %% here directly.
+        post_completed(NodeDef, Msg2),
+        {NodeDef, Msg2}
+    catch
+        throw:dont_send_message ->
+            {NodeDef, Msg}
+    end.
 
 %%
 %%

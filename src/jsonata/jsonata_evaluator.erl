@@ -16,54 +16,89 @@
 execute(JSONata, Msg) when is_binary(JSONata) ->
     execute(binary_to_list(JSONata), Msg);
 execute(JSONata, Msg) ->
-    case jsonata_to_erlang(JSONata) of
-        {ok, ErlangCode} ->
-            case evaluate_erlang(binary_to_list(ErlangCode)) of
-                {ok, Func} ->
-                    {ok, Func(Msg)};
-                Error ->
-                    ErrMsg = io_lib:format(
-                        "Stanza: {{{ ~p }}} Error: ~p",
-                        [ErlangCode, Error]
-                    ),
-                    {error, ErrMsg}
-            end;
-        Error ->
-            {error, Error}
+    try
+        case jsonata_to_erlang(JSONata) of
+            {ok, ErlangCode} ->
+                case evaluate_erlang(binary_to_list(ErlangCode)) of
+                    {ok, Func} ->
+                        {ok, Func(Msg)};
+                    Error ->
+                        ErrMsg = io_lib:format(
+                            "Stanza: {{{ ~p }}} Error: ~p",
+                            [ErlangCode, Error]
+                        ),
+                        {error, ErrMsg}
+                end;
+            Error ->
+                {error, Error}
+        end
+    catch
+        error:jsonata_unsupported:Stacktrace ->
+            [H | _] = Stacktrace,
+            {exception,
+                list_to_binary(
+                    io_lib:format(
+                        "jsonata unsupported function: ~p", element(3, H)
+                    )
+                )}
     end.
 
 %%
 %% Inspired by this blog post:
 %% https://grantwinney.com/how-to-evaluate-a-string-of-code-in-erlang-at-runtime/
 %%
-handle_local_function(FunctionName, [Arg]) ->
-    case FunctionName of
-        any_to_list when is_float(Arg) ->
+handle_local_function(split, Args) ->
+    case Args of
+        [Str] ->
+            [<<>> | T] = lists:reverse(re:split(Str, "")),
+            lists:reverse(T);
+        [Str, ""] ->
+            [<<>> | T] = lists:reverse(re:split(Str, "")),
+            lists:reverse(T);
+        [Str, Pat] ->
+            string:split(Str, Pat, all);
+        [Str, Pat, Lmt] ->
+            All = string:split(Str, Pat, all),
+            lists:sublist(All, Lmt)
+    end;
+handle_local_function(any_to_list, [Arg]) ->
+    %% some truths are truer than others.
+    case true of
+        true when is_float(Arg) ->
             float_to_list(Arg, [short]);
-        any_to_list when is_integer(Arg) ->
+        true when is_integer(Arg) ->
             integer_to_list(Arg);
-        any_to_list when is_binary(Arg) ->
+        true when is_binary(Arg) ->
             binary_to_list(Arg);
-        any_to_list when is_atom(Arg) ->
+        true when is_atom(Arg) ->
             atom_to_list(Arg);
-        any_to_list ->
-            Arg;
+        true ->
+            Arg
+    end;
+handle_local_function(to_string, [Arg]) ->
+    case true of
         %%
         %% misnomer - converts the value to a binary that is displayed as
         %% a string in the flow editor.
-        to_string when is_binary(Arg) ->
+        true when is_binary(Arg) ->
             Arg;
-        to_string when is_list(Arg) ->
+        true when is_list(Arg) ->
             list_to_binary(Arg);
-        to_string when is_atom(Arg) ->
+        true when is_atom(Arg) ->
             atom_to_binary(Arg);
-        to_string when is_integer(Arg) ->
+        true when is_integer(Arg) ->
             integer_to_binary(Arg);
-        to_string when is_float(Arg) ->
+        true when is_float(Arg) ->
             list_to_binary(float_to_list(Arg, [short]));
-        to_string ->
+        true ->
             list_to_binary(io_lib:format("~p", [Arg]))
-    end.
+    end;
+handle_local_function(ered_millis, [Arg]) ->
+    %% Arg contains the milliseconds for this evaluation, just
+    %% return it - done.
+    Arg;
+handle_local_function(FunctionName, Args) ->
+    erlang:error(jsonata_unsupported, [{FunctionName, Args}]).
 
 evaluate_erlang(Expression) ->
     case erl_scan:string(Expression) of

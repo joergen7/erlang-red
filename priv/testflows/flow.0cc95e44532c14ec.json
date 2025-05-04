@@ -1,0 +1,70 @@
+[
+    {
+        "id": "0cc95e44532c14ec",
+        "type": "tab",
+        "label": "[.jsonata] unsupported function",
+        "disabled": false,
+        "info": "Ensure that unsupported functions don't crash the process and are instead pushed out to the debug log.",
+        "env": []
+    },
+    {
+        "id": "1bf09e3d2cebe0d7",
+        "type": "inject",
+        "z": "0cc95e44532c14ec",
+        "name": "",
+        "props": [
+            {
+                "p": "topic",
+                "v": "1 - $fromMillis()",
+                "vt": "jsonata"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 219,
+        "y": 365,
+        "wires": [
+            [
+                "8a7407c5a476617f"
+            ]
+        ]
+    },
+    {
+        "id": "8a7407c5a476617f",
+        "type": "ut-assert-failure",
+        "z": "0cc95e44532c14ec",
+        "name": "",
+        "x": 621,
+        "y": 365.5,
+        "wires": []
+    },
+    {
+        "id": "3e849ab6c6bee761",
+        "type": "catch",
+        "z": "0cc95e44532c14ec",
+        "name": "",
+        "scope": [
+            "1bf09e3d2cebe0d7"
+        ],
+        "uncaught": false,
+        "x": 256,
+        "y": 281,
+        "wires": [
+            [
+                "d02e47bf421d74ac"
+            ]
+        ]
+    },
+    {
+        "id": "d02e47bf421d74ac",
+        "type": "ut-assert-success",
+        "z": "0cc95e44532c14ec",
+        "name": "",
+        "x": 552,
+        "y": 179.5,
+        "wires": []
+    }
+]

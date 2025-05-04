@@ -194,7 +194,7 @@ foreach_parser_test_() ->
         functions_with_no_arguments,
         "$millis()",
         "fun (Msg) ->
-          erlang:system_time(millisecond)
+          EREDMillis = erlang:system_time(millisecond), ered_millis(EREDMillis)
         end."
       },
       {
@@ -208,8 +208,8 @@ foreach_parser_test_() ->
         arithmetic_expressions_as_key_value,
         "{ key: $millis() - $millis() }",
         "fun (Msg) ->
-          #{ key => erlang:system_time(millisecond) -
-                                 erlang:system_time(millisecond) }
+          EREDMillis = erlang:system_time(millisecond),
+            #{ key => ered_millis(EREDMillis) - ered_millis(EREDMillis) }
         end."
       },
       {

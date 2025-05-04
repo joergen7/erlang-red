@@ -14,6 +14,7 @@
     jstr/2,
     jstr/1,
     nodeid_to_pid/2,
+    post_exception_or_debug/3,
 
     %% send_msg_to_connnected_nodes assues an attribute 'wires' while
     %% send send_msg_on is given an array of node ids and triggers the
@@ -28,14 +29,27 @@
 ]).
 
 -import(ered_nodered_comm, [
+    send_out_debug_msg/4,
     ws_from/1
 ]).
 -import(ered_msg_handling, [
     create_outgoing_msg/1
 ]).
 -import(ered_message_exchange, [
-    clear_pg_group/1
+    clear_pg_group/1,
+    post_exception/3
 ]).
+
+%%
+%% Since exceptions are either handled by a catch node or posted in the
+%% debug panel if they don't get caught.
+post_exception_or_debug(NodeDef, Msg, ErrMsg) ->
+    case post_exception(NodeDef, Msg, jstr(ErrMsg)) of
+        dealt_with ->
+            ok;
+        _ ->
+            send_out_debug_msg(NodeDef, Msg, jstr(ErrMsg), error)
+    end.
 
 %%
 %% Map priv directory in file names

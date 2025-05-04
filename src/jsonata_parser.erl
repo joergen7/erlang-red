@@ -230,7 +230,7 @@ convert_funct({funct,_LineNo,FunctName}, Expr) ->
             %%   > All invocations of $millis() within an evaluation of
             %%   > an expression will all return the same value.
             %% See test id: eb447048178f6e16
-            list_to_binary(io_lib:format("erlang:system_time(millisecond)", []));
+            list_to_binary(io_lib:format("ered_millis(EREDMillis)", []));
         pauseMillis ->
             %% this is a ErlangRED special to make the test for millis work
             list_to_binary(io_lib:format("timer:sleep(~s)",
@@ -279,7 +279,12 @@ wrap_with_func([]) ->
 wrap_with_func([V|T]) ->
     wrap_with_func(T, io_lib:format("~s", [to_list(V)])).
 wrap_with_func([], Acc) ->
-    list_to_binary(io_lib:format("fun (Msg) -> ~s end.",[Acc]));
+    case string:find(Acc, "EREDMillis") of
+        nomatch ->
+            list_to_binary(io_lib:format("fun (Msg) -> ~s end.",[Acc]));
+        _ ->
+            list_to_binary(io_lib:format("fun (Msg) -> EREDMillis = erlang:system_time(millisecond), ~s end.",[Acc]))
+    end;
 wrap_with_func([V|T], Acc) ->
     wrap_with_func(T, io_lib:format("~s, ~s", [Acc, V])).
 
@@ -471,7 +476,7 @@ yecctoken2string1(Other) ->
 
 
 
--file("/code/src/jsonata_parser.erl", 474).
+-file("/code/src/jsonata_parser.erl", 479).
 
 -dialyzer({nowarn_function, yeccpars2/7}).
 -compile({nowarn_unused_function,  yeccpars2/7}).
@@ -3101,4 +3106,4 @@ yeccpars2_110_(__Stack0) ->
   end | __Stack].
 
 
--file("/code/src/jsonata_parser.yrl", 472).
+-file("/code/src/jsonata_parser.yrl", 477).

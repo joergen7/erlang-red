@@ -365,3 +365,12 @@ empty_funct_arguments_in_expr_test() ->
             #{}
         )
     ).
+
+unsupport_function_test() ->
+    ?assertEqual(
+        {exception, <<"jsonata unsupported function: {fromMillis,[]}">>},
+        jsonata_evaluator:execute(
+            "1 + $fromMillis()",
+            #{}
+        )
+    ).
