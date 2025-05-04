@@ -338,3 +338,30 @@ name_as_funct_argument_test() ->
             #{}
         )
     ).
+
+empty_funct_arguments_test() ->
+    ?assertEqual(
+        {ok, <<"ok">>},
+        jsonata_evaluator:execute(
+            "$millis() - $millis(); $string($pauseMillis(1))",
+            #{}
+        )
+    ).
+
+arithmetic_expressions_with_functions_test() ->
+    ?assertEqual(
+        {ok, 0},
+        jsonata_evaluator:execute(
+            "$millis() - $millis()",
+            #{}
+        )
+    ).
+
+empty_funct_arguments_in_expr_test() ->
+    ?assertEqual(
+        {ok, #{key => 0}},
+        jsonata_evaluator:execute(
+            "{ key: $millis() - $millis() }",
+            #{}
+        )
+    ).

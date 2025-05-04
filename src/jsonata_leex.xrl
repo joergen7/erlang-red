@@ -166,8 +166,9 @@ in    : {token, {op_in,         TokenLine}}.
 \$moment        : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
 
 %%
-%% Erlang-RED specials
+%% Erlang-RED specials (pauseMillis makes test work, not usable in production)
 \$toString      : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
+\$pauseMillis   : {token, {funct, TokenLine, remove_dollars(TokenChars)}}.
 
 %%
 %% function to define a user defined function

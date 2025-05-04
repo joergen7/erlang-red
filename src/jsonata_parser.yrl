@@ -18,6 +18,7 @@ Nonterminals
   ampersand
   ampersands
   args
+  array
   cmt_content
   comment
   comment_content
@@ -40,20 +41,22 @@ Nonterminals
 %%
 %%
 Terminals
-  ';'
+  '&'
   '('
   ')'
-  '{'
-  '}'
-  '.'
-  ','
-  ':'
-  ','
-  '&'
   '*'
   '+'
+  ','
+  ','
   '-'
+  '.'
   '/'
+  ':'
+  ';'
+  '['
+  ']'
+  '{'
+  '}'
   chars
   comment_end
   comment_start
@@ -111,17 +114,20 @@ statement -> comments : comment.
 
 %%%%%%%%%%%%%%%% the actual definitions of stuff
 function_call -> funct '(' args ')' : convert_funct('$1', '$3').
+function_call -> funct '(' ')' : convert_funct('$1', {no_args}).
 
 %% function call assumes the result should be a string, for a num
 %% we need a number as result, hence num_function_call that just reduces
 %% to the plain function call.
 num_function_call -> funct '(' args ')' : {funct, convert_funct('$1', '$3')}.
+num_function_call -> funct '(' ')' : {funct, convert_funct('$1', {no_args})}.
 
 key_name -> string : remove_quotes('$1').
 key_name -> sqstring : remove_quotes('$1').
 key_name -> name : name_to_atom('$1').
 
 key_value_pair -> key_name ':' expr : {'$1', '$3'}.
+key_value_pair -> key_name ':' expr_alg : {'$1', convert_expr_alg('$3')}.
 key_value_pair ->
     key_name ':' expr ampersands : {'$1', convert_string_concat(['$3' | '$4'])}.
 
@@ -131,6 +137,13 @@ key_value_pairs -> key_value_pair ',' key_value_pairs : ['$1' | '$3'].
 args -> expr : ['$1'].
 args -> expr ',' args : ['$1' | '$3'].
 
+array -> '[' ']' : array_handler({array, empty}).
+array -> '[' args ']' : array_handler('$2').
+
+%% expressions are all things to all people - function call to the one,
+%% property names for accessing hashes to the other. Expr is used as
+%% function parameters and standalone expressions (such as strings and
+%% function execution or propery accessing calls).
 expr -> msg_obj dot_names : to_map_get('$2').
 expr -> string : '$1'.
 expr -> sqstring : replace_single_quotes('$1').
@@ -140,12 +153,17 @@ expr -> float : '$1'.
 expr -> name : '$1'.
 expr -> function_call : '$1'.
 
+%% num are used in arithmetic expressions, these are explicitly not the
+%% same as expr because strings cannot be added together - at least in
+%% JSONata.
 num -> msg_obj dot_names : to_map_get('$2').
 num -> int : '$1'.
 num -> float : '$1'.
 num -> num_function_call : '$1'.
 num -> expr_alg : '$1'.
 
+%% algorithmic v. arithmetic - arithmetic is more appropriate but now its too
+%% late.
 expr_alg -> num '*' num : {op, '$2', '$1', '$3' }.
 expr_alg -> num '+' num : {op, '$2', '$1', '$3' }.
 expr_alg -> num '/' num : {op, '$2', '$1', '$3' }.
@@ -322,6 +340,12 @@ convert_string_concat([V|T], Acc) ->
 
 %%
 %%
+args_to_string({no_args}) ->
+    io_lib:format("", []);
+args_to_string([{float, _LineNaume, V}|T]) ->
+    args_to_string(T, io_lib:format("~s", [float_to_list(V, [short])]));
+args_to_string([{int, _LineNaume, V}|T]) ->
+    args_to_string(T, io_lib:format("~s", [integer_to_list(V)]));
 args_to_string([{name, _LineNaume, String}|T]) ->
     args_to_string(T, io_lib:format("~s", [String]));
 args_to_string([{string, _LineNaume, String}|T]) ->
@@ -331,6 +355,10 @@ args_to_string([H|T]) ->
 
 args_to_string([], Acc) ->
     Acc;
+args_to_string([{float, _LineNo, V}|T], Acc) ->
+    args_to_string(T, io_lib:format("~s, ~s", [Acc, float_to_list(V, [short])]));
+args_to_string([{int, _LineNo, V}|T], Acc) ->
+    args_to_string(T, io_lib:format("~s, ~s", [Acc, integer_to_list(V)]));
 args_to_string([{string, _LineNo, String}|T], Acc) ->
     args_to_string(T, io_lib:format("~s, ~s", [Acc, String]));
 args_to_string([{name, _LineNo, String}|T], Acc) ->
@@ -378,6 +406,16 @@ convert_funct({funct,_LineNo,FunctName}, Expr) ->
                                      "lists:flatten(string:replace(~s))",
                                      [args_to_string([A1,A2,A3])]))
             end;
+        millis ->
+            %% TODO this needs more work because:
+            %%   > All invocations of $millis() within an evaluation of
+            %%   > an expression will all return the same value.
+            %% See test id: eb447048178f6e16
+            list_to_binary(io_lib:format("erlang:system_time(millisecond)", []));
+        pauseMillis ->
+            %% this is a ErlangRED special to make the test for millis work
+            list_to_binary(io_lib:format("timer:sleep(~s)",
+                                         [args_to_string(Expr)]));
         string ->
             %% $string is slightly different in JSONata, converting everything
             %% to their JSON representation except for strings. So we convert

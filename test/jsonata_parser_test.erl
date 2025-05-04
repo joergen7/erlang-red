@@ -189,6 +189,28 @@ foreach_parser_test_() ->
             #{ key => \"single quote strings\", banaint => 4,
                                                float => 1.23, key2 => value }
         end."
+      },
+      {
+        functions_with_no_arguments,
+        "$millis()",
+        "fun (Msg) ->
+          erlang:system_time(millisecond)
+        end."
+      },
+      {
+        pause_millis_function,
+        "$pauseMillis(1000)",
+        "fun (Msg) ->
+          timer:sleep(1000)
+        end."
+      },
+      {
+        arithmetic_expressions_as_key_value,
+        "{ key: $millis() - $millis() }",
+        "fun (Msg) ->
+          #{ key => erlang:system_time(millisecond) -
+                                 erlang:system_time(millisecond) }
+        end."
       }
 
       %% reg-expression are supported in the parser.
