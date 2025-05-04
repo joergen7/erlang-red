@@ -211,7 +211,31 @@ foreach_parser_test_() ->
           #{ key => erlang:system_time(millisecond) -
                                  erlang:system_time(millisecond) }
         end."
+      },
+      {
+        empty_array,
+        "[]",
+        "fun (Msg) ->
+           []
+        end."
+      },
+      {
+        array_with_funct_calls,
+        "[ $toString($$.ary), $toString($$.ary2), \"four\"]",
+        "fun (Msg) ->
+           [to_string(maps:get(ary, Msg)),
+                                to_string(maps:get(ary2, Msg)), \"four\"]
+        end."
+      },
+      {
+        array_with_content,
+        "[1, 2, \"asdasd\", $$.payload]",
+        "fun (Msg) ->
+           [1, 2, \"asdasd\", maps:get(payload, Msg)]
+        end."
       }
+
+
 
       %% reg-expression are supported in the parser.
       %% {

@@ -109,6 +109,9 @@ statement -> comments expr_alg comments : convert_expr_alg('$2').
 statement -> expr_alg comments : convert_expr_alg('$1').
 statement -> expr_alg : convert_expr_alg('$1').
 
+%% arrays need supporting
+statement -> array : '$1'.
+
 %% comments have rights to be statements as well.
 statement -> comments : comment.
 
@@ -137,7 +140,7 @@ key_value_pairs -> key_value_pair ',' key_value_pairs : ['$1' | '$3'].
 args -> expr : ['$1'].
 args -> expr ',' args : ['$1' | '$3'].
 
-array -> '[' ']' : array_handler({array, empty}).
+array -> '[' ']' : array_handler({no_args}).
 array -> '[' args ']' : array_handler('$2').
 
 %% expressions are all things to all people - function call to the one,
@@ -198,6 +201,9 @@ comments -> comment comments.
 %%
 %%
 Erlang code.
+
+array_handler(V) ->
+    io_lib:format("[~s]", [args_to_string(V)]).
 
 ignore_comments(Ary) ->
     lists:filter(fun (C) -> C =/= comment end, Ary).
