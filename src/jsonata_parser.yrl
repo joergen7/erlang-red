@@ -26,7 +26,7 @@ Nonterminals
   dot_name
   dot_names
   expr
-  expr_alg
+  arith_expr
   function_call
   key_value_pair
   key_value_pairs
@@ -105,9 +105,9 @@ statement ->
     expr ampersands comments : convert_string_concat(['$1' | '$2']).
 
 %% arithmetic statements, i.e. $$.payload + 1 increment statements
-statement -> comments expr_alg comments : convert_expr_alg('$2').
-statement -> expr_alg comments : convert_expr_alg('$1').
-statement -> expr_alg : convert_expr_alg('$1').
+statement -> comments arith_expr comments : convert_arith_expr('$2').
+statement -> arith_expr comments : convert_arith_expr('$1').
+statement -> arith_expr : convert_arith_expr('$1').
 
 %% arrays need supporting
 statement -> array : '$1'.
@@ -130,7 +130,7 @@ key_name -> sqstring : remove_quotes('$1').
 key_name -> name : name_to_atom('$1').
 
 key_value_pair -> key_name ':' expr : {'$1', '$3'}.
-key_value_pair -> key_name ':' expr_alg : {'$1', convert_expr_alg('$3')}.
+key_value_pair -> key_name ':' arith_expr : {'$1', convert_arith_expr('$3')}.
 key_value_pair ->
     key_name ':' expr ampersands : {'$1', convert_string_concat(['$3' | '$4'])}.
 
@@ -166,14 +166,13 @@ num -> msg_obj dot_names : to_map_get('$2').
 num -> int : '$1'.
 num -> float : '$1'.
 num -> num_function_call : '$1'.
-num -> expr_alg : '$1'.
+num -> arith_expr : '$1'.
 
-%% algorithmic v. arithmetic - arithmetic is more appropriate but now its too
-%% late.
-expr_alg -> num '*' num : {op, '$2', '$1', '$3' }.
-expr_alg -> num '+' num : {op, '$2', '$1', '$3' }.
-expr_alg -> num '/' num : {op, '$2', '$1', '$3' }.
-expr_alg -> num '-' num : {op, '$2', '$1', '$3' }.
+%% arithmetic expressions
+arith_expr -> num '*' num : {op, '$2', '$1', '$3' }.
+arith_expr -> num '+' num : {op, '$2', '$1', '$3' }.
+arith_expr -> num '/' num : {op, '$2', '$1', '$3' }.
+arith_expr -> num '-' num : {op, '$2', '$1', '$3' }.
 
 dot_name -> '.' name : just_name('$2').
 
@@ -242,13 +241,13 @@ just_name({name, _LineNo, Name}) ->
     end.
 
 
-convert_expr_alg({op, OpStr, Expr1, Expr2}) ->
+convert_arith_expr({op, OpStr, Expr1, Expr2}) ->
     OpFun = fun (Expr) ->
                     case Expr of
                         Lst when is_list(Lst) ->
                             Lst;
                         Tuple when element(1, Tuple) == op  ->
-                            convert_expr_alg(Expr);
+                            convert_arith_expr(Expr);
                         Tuple when element(1, Tuple) == int ->
                             integer_to_list(element(3, Tuple));
                         Tuple when element(1, Tuple) == float ->
