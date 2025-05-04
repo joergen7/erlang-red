@@ -180,6 +180,14 @@ run_the_test(FlowId, WsName, Ary) ->
             clear_completed_group(FlowId, WsName),
             clear_exception_group(FlowId, WsName),
 
+            %% there are exception groups for nodes aswell, remove those
+            %% too.
+            Cleaner = fun(NodeDef) ->
+                {ok, NodeId} = maps:find(id, NodeDef),
+                clear_exception_group(NodeId, WsName)
+            end,
+            [Cleaner(NodeDef) || NodeDef <- Ary],
+
             Pids = create_pid_for_node(Ary, WsName),
 
             [

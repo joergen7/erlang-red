@@ -28,7 +28,8 @@
     send_msg_to_connected_nodes/2
 ]).
 -import(ered_message_exchange, [
-    subscribe_to_exception/3
+    subscribe_to_exception_entire_flow/3,
+    subscribe_to_exception_from_node/3
 ]).
 
 start(NodeDef, _WsName) ->
@@ -37,7 +38,17 @@ start(NodeDef, _WsName) ->
 %%
 %%
 handle_event({registered, WsName, Pid}, NodeDef) ->
-    subscribe_to_exception(NodeDef, WsName, Pid),
+    case maps:find(scope, NodeDef) of
+        {ok, null} ->
+            subscribe_to_exception_entire_flow(NodeDef, WsName, Pid);
+        {ok, NodeIds} ->
+            [
+                subscribe_to_exception_from_node(NodeId, WsName, Pid)
+             || NodeId <- NodeIds
+            ];
+        _ ->
+            ignore
+    end,
     NodeDef;
 handle_event(_, NodeDef) ->
     NodeDef.
