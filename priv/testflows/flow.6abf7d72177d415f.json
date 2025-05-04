@@ -29,13 +29,12 @@
         "id": "d62704d597342a0c",
         "type": "change",
         "z": "6abf7d72177d415f",
-        "d": true,
         "name": "map: single quote strings, floats and integer ",
         "rules": [
             {
-                "t": "set",
                 "p": "payload",
                 "pt": "msg",
+                "t": "set",
                 "to": "{ \"key\": $toString('single quote strings'), banaint: 4, float: 1.23, key2: value }",
                 "tot": "jsonata"
             }
@@ -45,11 +44,10 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 577,
-        "y": 366,
+        "x": 526,
+        "y": 327,
         "wires": [
             [
-                "4ef0a952bb58ae76",
                 "8eca1fae63ff6c3c"
             ]
         ]
@@ -75,8 +73,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 176,
-        "y": 460,
+        "x": 226,
+        "y": 401,
         "wires": [
             [
                 "d62704d597342a0c",
@@ -87,32 +85,15 @@
         ]
     },
     {
-        "id": "4ef0a952bb58ae76",
-        "type": "debug",
-        "z": "6abf7d72177d415f",
-        "d": true,
-        "name": "debug 1",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 872,
-        "y": 335,
-        "wires": []
-    },
-    {
         "id": "3895c01857450267",
         "type": "change",
         "z": "6abf7d72177d415f",
         "name": "string concatenation",
         "rules": [
             {
-                "t": "set",
                 "p": "payload",
                 "pt": "msg",
+                "t": "set",
                 "to": "\"hrllo \" & \" world \" & \" 1234 \" & 10 & \" goodbye \" & \" cruel \" & world",
                 "tot": "jsonata"
             }
@@ -228,19 +209,18 @@
         "id": "37fbda10cdc1ab05",
         "type": "ut-assert-values",
         "z": "6abf7d72177d415f",
-        "d": true,
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
+                "t": "eql",
                 "to": "{\"float\":1.23,\"key\":\"single quote strings\",\"banaint\":4 }",
                 "tot": "json"
             }
         ],
-        "x": 931,
-        "y": 438,
+        "x": 927,
+        "y": 259,
         "wires": [
             []
         ]
@@ -249,13 +229,12 @@
         "id": "8eca1fae63ff6c3c",
         "type": "change",
         "z": "6abf7d72177d415f",
-        "d": true,
         "name": "can't test for atoms",
         "rules": [
             {
-                "t": "delete",
                 "p": "payload.key2",
-                "pt": "msg"
+                "pt": "msg",
+                "t": "delete"
             }
         ],
         "action": "",
@@ -263,51 +242,39 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 674,
-        "y": 423,
+        "x": 776,
+        "y": 383,
         "wires": [
             [
-                "37fbda10cdc1ab05",
-                "0dfc63cfc2d5c5f0"
+                "37fbda10cdc1ab05"
             ]
         ]
-    },
-    {
-        "id": "0dfc63cfc2d5c5f0",
-        "type": "debug",
-        "z": "6abf7d72177d415f",
-        "d": true,
-        "name": "debug 2",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 877,
-        "y": 382,
-        "wires": []
     },
     {
         "id": "d4a94c82fd1dd3f6",
         "type": "change",
         "z": "6abf7d72177d415f",
-        "d": true,
         "name": "map: single quote strings, floats and integer ",
         "rules": [
             {
-                "t": "set",
                 "p": "payload",
                 "pt": "msg",
+                "t": "set",
                 "to": "{ \"key\": 'single quote strings', banaint: 4, float: 1.23, key2: value }",
                 "tot": "jsonata"
             },
             {
-                "t": "set",
                 "p": "payload.key",
                 "pt": "msg",
-                "to": "$toString($$.payload.key)",
+                "t": "set",
+                "to": "$string($$.payload.key)",
+                "tot": "jsonata"
+            },
+            {
+                "p": "payload.key2",
+                "pt": "msg",
+                "t": "set",
+                "to": "$string($$.payload.key2)",
                 "tot": "jsonata"
             }
         ],
@@ -319,7 +286,9 @@
         "x": 529,
         "y": 488,
         "wires": [
-            []
+            [
+                "fa9fea0855e16bae"
+            ]
         ]
     },
     {
@@ -329,10 +298,10 @@
         "name": "map: single quote strings, floats and integer ",
         "rules": [
             {
-                "t": "set",
                 "p": "payload",
                 "pt": "msg",
-                "to": "{ \"key\": $toString('single quote strings'), banaint: 4, float: 1.23, key2: $toString(value) }",
+                "t": "set",
+                "to": "{ \"key\": $string('single quote strings'), banaint: 4, float: 1.23, key2: $string(value) }",
                 "tot": "jsonata"
             }
         ],
@@ -356,15 +325,35 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
+                "t": "eql",
                 "to": "{\"float\":1.23,\"key\":\"single quote strings\",\"banaint\":4, \"key2\": \"value\" }",
                 "tot": "json"
             }
         ],
         "x": 762,
         "y": 125,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fa9fea0855e16bae",
+        "type": "ut-assert-values",
+        "z": "6abf7d72177d415f",
+        "name": "",
+        "rules": [
+            {
+                "p": "payload",
+                "pt": "msg",
+                "t": "eql",
+                "to": "{\"float\":1.23,\"key\":\"single quote strings\",\"banaint\":4, \"key2\": \"value\" }",
+                "tot": "json"
+            }
+        ],
+        "x": 1009,
+        "y": 430,
         "wires": [
             []
         ]
