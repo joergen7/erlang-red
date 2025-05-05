@@ -1142,8 +1142,8 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
 
                     // If it has one id, that is a top level flow or config node/global
                     // each subsequent id is the instance id of a subflow node
-                    //
-                    pathParts = o.path.split("/");
+                                                                  //
+                    try { pathParts = o.path.split("/"); } catch (e) { pathParts = [o.path] }
                     if (pathParts.length === 1) {
                         // The source node is on a flow or is a global/config - so can use its id to find
                         sourceNode = RED.nodes.node(o.id);
