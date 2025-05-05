@@ -268,7 +268,6 @@ send_msg_on_by_pids([Pid | Wires], Msg) ->
     gen_server:cast(Pid, {incoming, Msg}),
     send_msg_on_by_pids(Wires, Msg).
 
-
 %%
 %% Lookup table for mapping node type to function. Also here we respect the
 %% disabled flag: if node is disabled, give it a noop node else continue
