@@ -60,6 +60,10 @@ init({Module, NodeDef}) ->
 
 %%
 %% Sync calls to the node.
+handle_call({registered, WsName, Pid}, _From, {Module, NodeDef}) ->
+    NodeDef2 = Module:handle_event({registered, WsName, Pid}, NodeDef),
+    {reply, NodeDef2, {Module, NodeDef2}};
+
 handle_call(_Msg, _From, {Module, NodeDef}) ->
     {reply, NodeDef, {Module, NodeDef}}.
 

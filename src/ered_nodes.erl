@@ -20,6 +20,7 @@
     %% send send_msg_on is given an array of node ids and triggers the
     %% 'incoming' message to be sent
     send_msg_on/2,
+    send_msg_on_by_pids/2,
     send_msg_to_connected_nodes/2,
 
     tabid_to_error_collector/1,
@@ -186,7 +187,7 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
     %% for examples. This is done after the spawn because to register
     %% with the various servers, a Pid is needed and that is not known
     %% when a node is initialised via the spawn.
-    Pid ! {registered, WsName, Pid},
+    gen_server:call( Pid, {registered, WsName, Pid} ),
 
     create_pid_for_node(MoreNodeDefs, [Pid | Pids], WsName).
 
@@ -258,6 +259,15 @@ send_msg_on([NodeId | Wires], Msg) ->
             gen_server:cast(Pid, {incoming, Msg})
     end,
     send_msg_on(Wires, Msg).
+
+%%
+%%
+send_msg_on_by_pids([], _) ->
+    ok;
+send_msg_on_by_pids([Pid | Wires], Msg) ->
+    gen_server:cast(Pid, {incoming, Msg}),
+    send_msg_on_by_pids(Wires, Msg).
+
 
 %%
 %% Lookup table for mapping node type to function. Also here we respect the
