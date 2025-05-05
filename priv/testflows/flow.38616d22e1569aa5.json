@@ -4,7 +4,7 @@
         "type": "tab",
         "label": "[link nodes] link call to a dynamic link in node - by name",
         "disabled": false,
-        "info": "From the docu:\n\n```\nWhen the option Link Type is set to \"Dynamic target\" msg.target can be used to call a link in by name or id.\n\n    1. If there is a link in nodes with the same id, it will be called\n    2. If there are two or more link in nodes with the same name, an error will be raised\n    3. A link call cannot call a link in node inside a subflow\n```",
+        "info": "From the docu:\n\n```\nWhen the option Link Type is set to \"Dynamic target\" msg.target can be used to call a link in by name or id.\n\n    1. If there is a link in nodes with the same id, it will be called\n    2. If there are two or more link in nodes with the same name, an error will be raised\n    3. A link call cannot call a link in node inside a subflow\n```\n\n**NOTE** this test sometimes fails for reasons unknown. Coordination between a global pg table and many link in nodes registering. Thought I fixed this by deregistering link in nodes when they stop but it seems not to work 100% of the time.\n\nThe problem might be having the flow open in the flow editor and then running the tests. That's because the flow tabs are also initialised in the backend and that could remove test registrations when the flow tab is stopped.",
         "env": [
             {
                 "name": "ERED_PENDING",

@@ -2,14 +2,14 @@
     {
         "id": "f346d45c81f595e5",
         "type": "tab",
-        "label": "[.examples] http routing",
+        "label": "[.examples] http static routing",
         "disabled": false,
         "info": "Simple example of how to do http routing visuallying in the flow editor.\n\nThis can be started in Erlang-RED by deploying to the server and then can be accessed by another browser.",
         "env": [
             {
                 "name": "ERED_NOT_EUNIT",
-                "value": "true",
-                "type": "bool"
+                "type": "bool",
+                "value": "true"
             }
         ]
     },
@@ -146,11 +146,13 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 134,
-        "y": 131,
+        "x": 250,
+        "y": 198,
         "wires": [
             [
-                "9e0ae81fd8784a18"
+                "0455e52d6481298a",
+                "fb940a9af3e05b41",
+                "e5324341bc9a0a54"
             ]
         ]
     },
@@ -174,52 +176,9 @@
         "y": 200,
         "wires": [
             [
-                "abde99eab733c627"
+                "052939ee49dc884f"
             ]
         ]
-    },
-    {
-        "id": "9e0ae81fd8784a18",
-        "type": "delay",
-        "z": "f346d45c81f595e5",
-        "name": "let http in node register itself",
-        "pauseType": "delay",
-        "timeout": "250",
-        "timeoutUnits": "milliseconds",
-        "rate": "1",
-        "nbRateUnits": "1",
-        "rateUnits": "second",
-        "randomFirst": "1",
-        "randomLast": "5",
-        "randomUnits": "seconds",
-        "drop": false,
-        "allowrate": false,
-        "outputs": 1,
-        "x": 238.5,
-        "y": 200,
-        "wires": [
-            [
-                "0455e52d6481298a",
-                "fb940a9af3e05b41",
-                "e5324341bc9a0a54"
-            ]
-        ]
-    },
-    {
-        "id": "abde99eab733c627",
-        "type": "debug",
-        "z": "f346d45c81f595e5",
-        "name": "debug 14",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 938.5,
-        "y": 200,
-        "wires": []
     },
     {
         "id": "3d8825286adab940",
@@ -273,26 +232,9 @@
         "y": 259,
         "wires": [
             [
-                "3efb2da708ee6062"
+                "5cb9be50d953ec61"
             ]
         ]
-    },
-    {
-        "id": "3efb2da708ee6062",
-        "type": "debug",
-        "z": "f346d45c81f595e5",
-        "name": "status code",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "statusCode",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 948.5,
-        "y": 259,
-        "wires": []
     },
     {
         "id": "e5324341bc9a0a54",
@@ -314,25 +256,9 @@
         "y": 138,
         "wires": [
             [
-                "64f56662d184496f"
+                "1be51f04e59403bc"
             ]
         ]
-    },
-    {
-        "id": "64f56662d184496f",
-        "type": "debug",
-        "z": "f346d45c81f595e5",
-        "name": "debug 1",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 940.5,
-        "y": 138,
-        "wires": []
     },
     {
         "id": "a89f0c5387dccd4e",
@@ -462,5 +388,79 @@
         "x": 1172,
         "y": 568.25,
         "wires": []
+    },
+    {
+        "id": "5cb9be50d953ec61",
+        "type": "ut-assert-values",
+        "z": "f346d45c81f595e5",
+        "name": "",
+        "rules": [
+            {
+                "p": "statusCode",
+                "pt": "msg",
+                "t": "eql",
+                "to": "404",
+                "tot": "num"
+            }
+        ],
+        "x": 980,
+        "y": 294.5,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "1be51f04e59403bc",
+        "type": "ut-assert-values",
+        "z": "f346d45c81f595e5",
+        "name": "",
+        "rules": [
+            {
+                "p": "statusCode",
+                "pt": "msg",
+                "t": "eql",
+                "to": "200",
+                "tot": "num"
+            },
+            {
+                "p": "payload",
+                "pt": "msg",
+                "t": "mth",
+                "to": "Page two is far more interesting",
+                "tot": "str"
+            }
+        ],
+        "x": 960,
+        "y": 105,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "052939ee49dc884f",
+        "type": "ut-assert-values",
+        "z": "f346d45c81f595e5",
+        "name": "",
+        "rules": [
+            {
+                "p": "statusCode",
+                "pt": "msg",
+                "t": "eql",
+                "to": "200",
+                "tot": "num"
+            },
+            {
+                "p": "payload",
+                "pt": "msg",
+                "t": "mth",
+                "to": "This is page number one",
+                "tot": "str"
+            }
+        ],
+        "x": 960,
+        "y": 199.75,
+        "wires": [
+            []
+        ]
     }
 ]
