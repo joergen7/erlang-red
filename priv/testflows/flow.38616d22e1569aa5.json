@@ -2,13 +2,13 @@
     {
         "id": "38616d22e1569aa5",
         "type": "tab",
-        "label": "[link nodes] (F) link call to a dynamic link in node - by name",
+        "label": "[link nodes] link call to a dynamic link in node - by name",
         "disabled": false,
-        "info": "From the doco:\n\n```\nWhen the option Link Type is set to \"Dynamic target\" msg.target can be used to call a link in by name or id.\n\n    1. If there is a link in nodes with the same id, it will be called\n    2. If there are two or more link in nodes with the same name, an error will be raised\n    3. A link call cannot call a link in node inside a subflow\n```",
+        "info": "From the docu:\n\n```\nWhen the option Link Type is set to \"Dynamic target\" msg.target can be used to call a link in by name or id.\n\n    1. If there is a link in nodes with the same id, it will be called\n    2. If there are two or more link in nodes with the same name, an error will be raised\n    3. A link call cannot call a link in node inside a subflow\n```",
         "env": [
             {
                 "name": "ERED_PENDING",
-                "value": "true",
+                "value": "false",
                 "type": "bool"
             }
         ]
@@ -24,7 +24,7 @@
             },
             {
                 "p": "target",
-                "v": "link-in-node-23",
+                "v": "link-in-node-24",
                 "vt": "str"
             }
         ],
@@ -47,7 +47,7 @@
         "id": "750a9cb4493347ce",
         "type": "link in",
         "z": "38616d22e1569aa5",
-        "name": "link-in-node-23",
+        "name": "link-in-node-24",
         "links": [],
         "x": 110,
         "y": 591,
@@ -64,10 +64,10 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
-                "to": "",
+                "t": "eql",
+                "to": "this is the payload",
                 "tot": "str"
             }
         ],
@@ -116,10 +116,10 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
-                "to": "",
+                "t": "eql",
+                "to": "this is the payload really",
                 "tot": "str"
             }
         ],
@@ -145,9 +145,9 @@
         "name": "",
         "rules": [
             {
-                "t": "set",
                 "p": "payload",
                 "pt": "msg",
+                "t": "set",
                 "to": "this is the payload really",
                 "tot": "str"
             }

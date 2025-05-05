@@ -2,13 +2,13 @@
     {
         "id": "5433b57035d597f9",
         "type": "tab",
-        "label": "[link nodes] (F) link call to a dynamic link in node - by node id",
+        "label": "[link nodes] link call to a dynamic link in node - by node id",
         "disabled": false,
         "info": "From the doco:\n\n```\nWhen the option Link Type is set to \"Dynamic target\" msg.target can be used to call a link in by name or id.\n\n    1. If there is a link in nodes with the same id, it will be called\n    2. If there are two or more link in nodes with the same name, an error will be raised\n    3. A link call cannot call a link in node inside a subflow\n```",
         "env": [
             {
                 "name": "ERED_PENDING",
-                "value": "true",
+                "value": "false",
                 "type": "bool"
             }
         ]
@@ -67,7 +67,7 @@
                 "t": "eql",
                 "p": "payload",
                 "pt": "msg",
-                "to": "",
+                "to": "this is the payload",
                 "tot": "str"
             }
         ],
@@ -119,7 +119,7 @@
                 "t": "eql",
                 "p": "payload",
                 "pt": "msg",
-                "to": "",
+                "to": "this is the payload really",
                 "tot": "str"
             }
         ],

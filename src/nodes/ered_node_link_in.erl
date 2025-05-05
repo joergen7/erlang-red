@@ -17,6 +17,10 @@
 -import(ered_nodes, [
     send_msg_to_connected_nodes/2
 ]).
+-import(ered_link_node_exchange, [
+    register_link_in/3,
+    unregister_link_in/2
+]).
 
 %%
 %%
@@ -25,6 +29,12 @@ start(NodeDef, _WsName) ->
 
 %%
 %%
+handle_event({registered, WsName, Pid}, NodeDef) ->
+    register_link_in(NodeDef, WsName, Pid),
+    NodeDef;
+handle_event({stop, WsName}, NodeDef) ->
+    unregister_link_in(NodeDef, WsName),
+    NodeDef;
 handle_event(_, NodeDef) ->
     NodeDef.
 
