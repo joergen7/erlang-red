@@ -53,37 +53,35 @@ handle_event(_, NodeDef) ->
     NodeDef.
 
 %%
-%% send message to the link in node that this is linked to provided the node
-%% isn't in dynamic mode.
-%%
 %%
 handle_msg({incoming, Msg}, NodeDef) ->
     case maps:find(linkType, NodeDef) of
         {ok, <<"dynamic">>} ->
             case maps:find(target, Msg) of
                 {ok, Target} ->
-                    {ok, FlowId} = maps:find(z, NodeDef),
-                    WsName = ws_from(Msg),
-                    io:format("LinkCall Target[~s,~s]: ~p~n",[FlowId, WsName, Target]),
                     case obtain_link_node_pid(Target, ws_from(Msg)) of
                         [] ->
-                            io:format("LinkCall Target[~s,~s]: ~p [NONE FOUND]~n",[FlowId, WsName, Target]),
-                            ignore;
+                            ErrMsg = jstr(
+                                "Error: target link-in node '~s' not found",
+                                [Target]
+                            ),
+                            post_exception_or_debug(NodeDef, Msg, ErrMsg);
                         [Pid] ->
                             %% Exactly one Pid, perfect - everything else is
                             %% is an error
-                            io:format("LinkCall Target[~s,~s]: ~p [ONE FOUND] ~p~n",[FlowId,WsName,Target,Pid]),
-                            send_msg_on_by_pids([Pid],
-                                                update_linksource(NodeDef, Msg));
-                        Pids ->
-                            io:format("LinkCall Target[~s,~s]: ~p [TOO MANY FOUND] ~p~n",[FlowId,WsName,Target,Pids]),
+                            send_msg_on_by_pids(
+                                [Pid],
+                                update_linksource(NodeDef, Msg)
+                            );
+                        _Pids ->
                             ErrMsg = jstr(
-                                "multiple nodes found for msg.target", []
+                                "multiple nodes found for msg.target '~s'",
+                                [Target]
                             ),
                             post_exception_or_debug(NodeDef, Msg, ErrMsg)
                     end;
                 _ ->
-                    ErrMsg = jstr("not target set on message",[]),
+                    ErrMsg = jstr("not target set on message", []),
                     post_exception_or_debug(NodeDef, Msg, ErrMsg)
             end;
         {ok, <<"static">>} ->
