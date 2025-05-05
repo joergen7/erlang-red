@@ -47,14 +47,21 @@ init([]) ->
                     module => [ered_unittest_engine]
                 },
                 #{
-                    id => ered_ch6_compute_engine,
+                    id => ered_ch6_config_store,
+                    start => {ered_config_store, start, []},
+                    restart => permanent,
+                    type => worker,
+                    module => [ered_config_store]
+                },
+                #{
+                    id => ered_ch7_compute_engine,
                     start => {ered_compute_engine, start, []},
                     restart => permanent,
                     type => worker,
                     module => [ered_compute_engine]
                 },
                 #{
-                    id => ered_ch7_red_web,
+                    id => ered_ch8_red_web,
                     start => {ered_webserver, start, []},
                     restart => permanent,
                     type => worker,
