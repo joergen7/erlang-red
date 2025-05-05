@@ -49,7 +49,7 @@ handle_msg(_, NodeDef) ->
 %% Retrieve statusCode either from Msg or from NodeDef, NodeDef has preference.
 %% erlfmt:ignore alignment
 retrieve_status_code(NodeDef, Msg) ->
-    case {maps:find(statuCode, Msg), maps:find(statusCode, NodeDef)} of
+    case {maps:find(statusCode, Msg), maps:find(statusCode, NodeDef)} of
         {{ok, MsgSC}, {ok, <<>>}} -> convert_to_num(MsgSC);
         {{ok, _},     {ok, NdSC}} -> convert_to_num(NdSC);
         {{ok, MsgSC}, _}          -> convert_to_num(MsgSC);
