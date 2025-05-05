@@ -8,20 +8,38 @@
   {git,"https://github.com/ninenines/cowlib",
        {ref,"d0ab49ed797e5bb48209825428d26947d74aabd5"}},
   1},
+ {<<"emqtt">>,
+  {git,"https://github.com/emqx/emqtt",
+       {ref,"dd6bfc0614c995d62354e3ecbf731ef83e4054ca"}},
+  0},
  {<<"erlydtl">>,{pkg,<<"erlydtl">>,<<"0.14.0">>},0},
+ {<<"getopt">>,{pkg,<<"getopt">>,<<"1.0.3">>},1},
+ {<<"gun">>,{pkg,<<"gun">>,<<"2.1.0">>},1},
  {<<"mapz">>,
   {git,"https://github.com/eproxus/mapz",
        {ref,"99fc33d39faad05bb536d20e3580908929869627"}},
   0},
+ {<<"quicer">>,
+  {git,"https://github.com/emqx/quic.git",
+       {ref,"fc5946302e01148ce4dbd3aebe16ec3446caf31c"}},
+  1},
  {<<"ranch">>,
   {git,"https://github.com/ninenines/ranch",
        {ref,"10b51304b26062e0dbfd5e74824324e9a911e269"}},
-  1}]}.
+  1},
+ {<<"snabbkaffe">>,
+  {git,"https://github.com/kafka4beam/snabbkaffe.git",
+       {ref,"b59298334ed349556f63405d1353184c63c66534"}},
+  2}]}.
 [
 {pkg_hash,[
  {<<"bbmustache">>, <<"0CABDCE0DB9FE6D3318131174B9F2B351328A4C0AFBEB3E6E99BB0E02E9B621D">>},
- {<<"erlydtl">>, <<"964B2DC84F8C17ACFAA69C59BA129EF26AC45D2BA898C3C6AD9B5BDC8BA13CED">>}]},
+ {<<"erlydtl">>, <<"964B2DC84F8C17ACFAA69C59BA129EF26AC45D2BA898C3C6AD9B5BDC8BA13CED">>},
+ {<<"getopt">>, <<"4F3320C1F6F26B2BEC0F6C6446B943EB927A1E6428EA279A1C6C534906EE79F1">>},
+ {<<"gun">>, <<"B4E4CBBF3026D21981C447E9E7CA856766046EFF693720BA43114D7F5DE36E87">>}]},
 {pkg_hash_ext,[
  {<<"bbmustache">>, <<"688B33A4D5CC2D51F575ADF0B3683FC40A38314A2F150906EDCFC77F5B577B3B">>},
- {<<"erlydtl">>, <<"D80EC044CD8F58809C19D29AC5605BE09E955040911B644505E31E9DD8143431">>}]}
+ {<<"erlydtl">>, <<"D80EC044CD8F58809C19D29AC5605BE09E955040911B644505E31E9DD8143431">>},
+ {<<"getopt">>, <<"7E01DE90AC540F21494FF72792B1E3162D399966EBBFC674B4CE52CB8F49324F">>},
+ {<<"gun">>, <<"52FC7FC246BFC3B00E01AEA1C2854C70A366348574AB50C57DFE796D24A0101D">>}]}
 ].
