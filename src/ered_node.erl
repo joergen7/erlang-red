@@ -63,7 +63,8 @@ init({Module, NodeDef}) ->
 handle_call({registered, WsName, Pid}, _From, {Module, NodeDef}) ->
     NodeDef2 = Module:handle_event({registered, WsName, Pid}, NodeDef),
     {reply, NodeDef2, {Module, NodeDef2}};
-handle_call(_Msg, _From, {Module, NodeDef}) ->
+handle_call(Msg, _From, {Module, NodeDef}) ->
+    io:format("Unknown call: ~p~n", [Msg]),
     {reply, NodeDef, {Module, NodeDef}}.
 
 %%
@@ -110,6 +111,7 @@ handle_cast({MsgType = ws_event, Details}, {Module, NodeDef}) ->
 %% This function signature can match the following messages:
 %%    - {incoming, Msg}
 %%    - {link_return, Msg},
+%%    - {mqtt_incoming, Msg},
 %% These post_completed messages, hence they differ from the more general
 %% use case.
 handle_cast({MsgType, Msg}, {Module, NodeDef}) ->
@@ -128,6 +130,11 @@ handle_info({reload}, {Module, NodeDef}) ->
     {ok, NodePid} = maps:find('_node_pid_', NodeDef),
     NodeDef2 = Module:handle_event(deploy, add_state(NodeDef, NodePid)),
     {noreply, {Module, NodeDef2}};
+handle_info({mqtt_disconnected, ReasonCode, Properties}, {Module, NodeDef}) ->
+    NodeDef2 = Module:handle_event(
+        {mqtt_disconnected, ReasonCode, Properties}, NodeDef
+    ),
+    {noreply, {Module, NodeDef2}};
 handle_info({deploy, NewNodeDef}, {Module, NodeDef}) ->
     {ok, NodePid} = maps:find('_node_pid_', NodeDef),
     NodeDef2 = Module:handle_event(deploy, add_state(NewNodeDef, NodePid)),
@@ -137,6 +144,7 @@ handle_info({stop, WsName}, {Module, NodeDef}) ->
     {stop, normal, {Module, NodeDef}};
 handle_info(Event, {Module, NodeDef}) ->
     unsupported(NodeDef, Event, <<"Unsupported Event Received">>),
+    io:format("Node Received unsupported event {{{ ~p }}}~n", [Event]),
     {noreply, {Module, NodeDef}}.
 
 %%
@@ -145,12 +153,17 @@ code_change(_OldVersion, State, _Extra) ->
     {ok, State}.
 
 terminate(normal, _State) ->
+    ok;
+terminate(Event, _State) ->
+    io:format("Node Terminate called with {{{ ~p }}}~n", [Event]),
     ok.
 
 %%
 %%
 handle_msg_responder(MsgType, Msg, Module, Results, post_completed) ->
     case Results of
+        {handled, NodeDef2, dont_send_complete_msg} ->
+            {noreply, {Module, NodeDef2}};
         {handled, NodeDef2, Msg2} ->
             post_completed(NodeDef2, Msg2),
             {noreply, {Module, NodeDef2}};

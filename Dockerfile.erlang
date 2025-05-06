@@ -5,7 +5,8 @@ RUN apt-get update && apt-get -y install \
     bash-completion \
     git \
     inotify-tools \
-    cmake
+    cmake \
+    mosquitto
 
 # promt> make c-tab-tab-ompile
 RUN echo ". /etc/bash_completion" >> /root/.bashrc

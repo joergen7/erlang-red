@@ -116,4 +116,7 @@ stop() ->
     gen_server:cast(?MODULE, stop).
 
 terminate(normal, _State) ->
+    ok;
+terminate(Event, _State) ->
+    io:format("Compute Engine Terminated with {{{ ~p }}}~n", [Event]),
     ok.

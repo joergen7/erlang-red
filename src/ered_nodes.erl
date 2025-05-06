@@ -161,6 +161,7 @@ add_state(NodeDef, NodePid) ->
 %% TODO: flag but this is called 'disabled'. If it is set, then the entire
 %% TODO: flow should be ignoreed --> this is not handled at the moment.
 create_pid_for_node(Ary, WsName) ->
+    store_config_nodes(Ary, WsName),
     create_pid_for_node(Ary, [], WsName).
 
 %% erlfmt:ignore equals and arrows should line up here.
@@ -190,6 +191,23 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
     gen_server:call( Pid, {registered, WsName, Pid} ),
 
     create_pid_for_node(MoreNodeDefs, [Pid | Pids], WsName).
+
+%%
+%% Squirrel away all config nodes to the config store for later retrieval
+%% by nodes that use the config nodes.
+store_config_nodes([], _WsName) ->
+    ok;
+store_config_nodes([NodeDef | OtherNodeDefs], WsName) ->
+    case is_config_node(maps:get(type, NodeDef)) of
+        true ->
+            ered_config_store:store_config_node(
+                maps:get(id, NodeDef),
+                NodeDef
+            );
+        _ ->
+            ignore
+    end,
+    store_config_nodes(OtherNodeDefs, WsName).
 
 %%
 %% tab node usses 'disabled', everything else 'd'.
@@ -280,10 +298,9 @@ node_type_to_fun(Type, _) ->
     node_type_to_fun(Type).
 
 %%
-%% TODO it's questionable whether this lookup is needed since
-%% TODO    binary_to_atom( io_lib:format("ered_node_~s",[Type]))
-%% TODO will do pretty much the same thing! nostalgia is always a good
-%% TODO reason: this list provides the order in which I implemented the nodes
+%% Mapping more Node-RED Node Type to Erlang node module. Required because
+%% some node types map to the same module, i.e. ered_node_ignore.
+%%
 %% erlfmt:ignore alignment.
 node_type_to_fun(<<"inject">>)        -> ered_node_inject;
 node_type_to_fun(<<"switch">>)        -> ered_node_switch;
@@ -309,9 +326,13 @@ node_type_to_fun(<<"trigger">>)       -> ered_node_trigger;
 node_type_to_fun(<<"http in">>)       -> ered_node_http_in;
 node_type_to_fun(<<"http response">>) -> ered_node_http_response;
 node_type_to_fun(<<"http request">>)  -> ered_node_http_request;
+node_type_to_fun(<<"mqtt in">>)       -> ered_node_mqtt_in;
+node_type_to_fun(<<"mqtt out">>)      -> ered_node_mqtt_out;
 
 %%
-%% Assert nodes for testing functionality of the nodes
+%% Assert nodes for testing functionality of the nodes. These are the first
+%% Node-RED and Erlang-RED nodes - they have implmentations for both because
+%% they confirm the compatiability between Node-RED and ErlangRED.
 %%
 node_type_to_fun(<<"ut-assert-values">>)  -> ered_node_assert_values;
 node_type_to_fun(<<"ut-assert-failure">>) -> ered_node_assert_failure;
@@ -319,8 +340,13 @@ node_type_to_fun(<<"ut-assert-success">>) -> ered_node_assert_success;
 node_type_to_fun(<<"ut-assert-status">>)  -> ered_node_assert_status;
 node_type_to_fun(<<"ut-assert-debug">>)   -> ered_node_assert_debug;
 node_type_to_fun(Unknown) ->
-    io:format("noop node initiated for unknown type: ~p\n", [Unknown]),
-    ered_node_noop.
+    case is_config_node(Unknown) of
+        false ->
+            io:format("noop node initiated for unknown type: ~p\n", [Unknown]),
+            ered_node_noop;
+        _ ->
+            ered_node_ignore
+    end.
 
 %% A list of all nodes that support outgoing messages, this was originally
 %% only the inject node but then I realised that for testing purposes there
@@ -334,3 +360,12 @@ trigger_outgoing_messages({ok, <<"inject">>}, {ok, IdStr}, WsName) ->
     end;
 trigger_outgoing_messages(_, _, _) ->
     ok.
+
+%%
+%% List of all known config nodes that need to be stored away before
+%% a flow is executed
+%% erlfmt:ignore alignment
+is_config_node(<<"mqtt-broker">>)        -> true;
+is_config_node(<<"FlowCompareCfg">>)     -> true;
+is_config_node(<<"websocket-listener">>) -> true;
+is_config_node(_)                        -> false.

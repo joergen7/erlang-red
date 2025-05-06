@@ -1,0 +1,131 @@
+[
+    {
+        "id": "486c1412721bb241",
+        "type": "tab",
+        "label": "[mqtt] example usage",
+        "disabled": false,
+        "info": "",
+        "env": [
+            {
+                "name": "ERED_PENDING",
+                "value": "true",
+                "type": "bool"
+            }
+        ]
+    },
+    {
+        "id": "40e104d4cdec19d8",
+        "type": "mqtt out",
+        "z": "486c1412721bb241",
+        "name": "",
+        "topic": "topic",
+        "qos": "0",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "97960d98b2837fa0",
+        "x": 678,
+        "y": 596,
+        "wires": []
+    },
+    {
+        "id": "8751e693b7e1f809",
+        "type": "mqtt in",
+        "z": "486c1412721bb241",
+        "name": "",
+        "topic": "topic",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "97960d98b2837fa0",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 301,
+        "y": 351,
+        "wires": [
+            [
+                "63ecc7e7ca015bc3"
+            ]
+        ]
+    },
+    {
+        "id": "63ecc7e7ca015bc3",
+        "type": "debug",
+        "z": "486c1412721bb241",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 586,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "9c8933a963124dba",
+        "type": "inject",
+        "z": "486c1412721bb241",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "fubar",
+        "payloadType": "str",
+        "x": 316,
+        "y": 493,
+        "wires": [
+            [
+                "40e104d4cdec19d8"
+            ]
+        ]
+    },
+    {
+        "id": "97960d98b2837fa0",
+        "type": "mqtt-broker",
+        "name": "asdasdasd",
+        "broker": "renderbox",
+        "port": 1883,
+        "clientid": "ClientId",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    }
+]
