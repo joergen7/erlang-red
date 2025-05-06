@@ -112,6 +112,7 @@ handle_cast({MsgType = ws_event, Details}, {Module, NodeDef}) ->
 %%    - {incoming, Msg}
 %%    - {link_return, Msg},
 %%    - {mqtt_incoming, Msg},
+%%    - {delay_push_out, Msg},
 %% These post_completed messages, hence they differ from the more general
 %% use case.
 handle_cast({MsgType, Msg}, {Module, NodeDef}) ->

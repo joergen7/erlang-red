@@ -11,7 +11,9 @@
 %%
 
 -import(ered_nodered_comm, [
-    unsupported/3
+    node_status/5,
+    unsupported/3,
+    ws_from/1
 ]).
 -import(ered_nodes, [
     jstr/2,
@@ -21,6 +23,8 @@
     convert_to_num/1,
     convert_units_to_milliseconds/2
 ]).
+
+-define(CNTSTATUS(CNT), node_status(ws_from(Msg), NodeDef, CNT, "blue", "dot")).
 
 %%
 %%
@@ -56,19 +60,32 @@ compute_pause(PType, NodeDef, Msg) ->
 
 %%
 %%
+handle_event({registered, _WsName, _Pid}, NodeDef) ->
+    maps:put('_delay_counter', 0, NodeDef);
 handle_event(_, NodeDef) ->
     NodeDef.
-%%
-%%
-handle_incoming(NodeDef, Msg) ->
-    timer:sleep(compute_pause(maps:find(pauseType, NodeDef), NodeDef, Msg)),
-    send_msg_to_connected_nodes(NodeDef, Msg),
-    {NodeDef, Msg}.
 
 %%
 %%
+handle_msg({delay_push_out, Msg}, NodeDef) ->
+    send_msg_to_connected_nodes(NodeDef, Msg),
+    DelayCnt = maps:get('_delay_counter', NodeDef) - 1,
+    ?CNTSTATUS(integer_to_binary(DelayCnt)),
+    {handled, maps:put('_delay_counter', DelayCnt, NodeDef), Msg};
 handle_msg({incoming, Msg}, NodeDef) ->
-    {NodeDef2, Msg2} = handle_incoming(NodeDef, Msg),
-    {handled, NodeDef2, Msg2};
+    DelayCnt = maps:get('_delay_counter', NodeDef) + 1,
+    PauseFor = compute_pause(maps:find(pauseType, NodeDef), NodeDef, Msg),
+    NodePid = self(),
+    spawn(fun() -> delay_sending(Msg, PauseFor, NodePid) end),
+    ?CNTSTATUS(integer_to_binary(DelayCnt)),
+
+    {handled, maps:put('_delay_counter', DelayCnt, NodeDef),
+        dont_send_complete_msg};
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
+
+%%
+%%
+delay_sending(Msg, PauseFor, NodePid) ->
+    timer:sleep(PauseFor),
+    gen_server:cast(NodePid, {delay_push_out, Msg}).
