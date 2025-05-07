@@ -7,7 +7,8 @@ ARG RUNNER_IMAGE="alpine:${ALPINE_VERSION}"
 
 FROM ${BUILDER_IMAGE} AS builder
 
-RUN apk update && apk add git  && \
+RUN apk update && apk add alpine-sdk bash curl \
+                          cmake perl linux-headers && \
 	rm -rf /var/cache/apk/*
 
 WORKDIR /builder
