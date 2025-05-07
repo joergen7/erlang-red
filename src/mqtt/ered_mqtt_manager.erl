@@ -32,7 +32,7 @@
 %%
 %% TODO there should really only be one of these for a collection of MQTT
 %% TODO nodes. In fact, there should be one per config node. This would
-%% TODO require more work so leave it for later!
+%% TODO require more work so LIFL - leave it for later!
 %%
 start(NodePid, MqttOptions) ->
     gen_server:start(?MODULE, [NodePid, MqttOptions], []).
@@ -76,19 +76,26 @@ handle_call(Msg, _From, State) ->
 
 %%
 %%
-handle_cast({publish_payload, Payload, Topic, QoS, Retain}, State) ->
+handle_cast(Msg = {publish_payload, Payload, Topic, QoS, Retain}, State) ->
     %% this is an MQTT out node sending out a message to MQTT broker.
     %% publish is perhaps a misnomer here since there is already a
     %% publish event
-    EmqttClientId = maps:get(emqtt_client_id, State),
-    emqtt:publish(
-        EmqttClientId,
-        Topic,
-        #{},
-        Payload,
-        [{qos, QoS}, {retain, Retain}]
-    ),
-    {noreply, State};
+    case maps:find(emqtt_client_id, State) of
+        {ok, EmqttClientId} ->
+            emqtt:publish(
+              EmqttClientId,
+              Topic,
+              #{},
+              Payload,
+              [{qos, QoS}, {retain, Retain}]
+             ),
+            {noreply, State};
+        _ ->
+            %% Return to sender - message could not be sent.
+            NodePid = maps:get(nodepid, State),
+            gen_server:cast(NodePid, {mqtt_not_sent, #{orig => Msg}}),
+            {noreply, State}
+    end;
 handle_cast(stop, State) ->
     io:format("MQTT Manager stop casted~n", []),
     {stop, normal, State};
@@ -121,7 +128,6 @@ stop() ->
     gen_server:cast(?MODULE, stop).
 
 terminate(normal, _State) ->
-    io:format("MQTT manager terminated with {{{ ~p }}}~n", [normal]),
     ok;
 terminate(Event, _State) ->
     io:format("MQTT manager terminated with {{{ ~p }}}~n", [Event]),
