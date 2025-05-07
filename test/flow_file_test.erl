@@ -199,6 +199,7 @@ create_test_for_flow_file([FileName | MoreFileNames], Acc) ->
 foreach_testflow_test_() ->
     %% pg is required for the catch nodes
     pg:start_link(),
+    ered_config_store:start(),
 
     {_Cnt, FileNames} = filelib:fold_files(
         io_lib:format("~s/testflows", [code:priv_dir(erlang_red)]),
