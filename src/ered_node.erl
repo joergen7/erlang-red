@@ -144,8 +144,8 @@ handle_info({stop, WsName}, {Module, NodeDef}) ->
     Module:handle_event({stop, WsName}, NodeDef),
     {stop, normal, {Module, NodeDef}};
 handle_info(Event, {Module, NodeDef}) ->
-    unsupported(NodeDef, Event, <<"Unsupported Event Received">>),
     io:format("Node Received unsupported event {{{ ~p }}}~n", [Event]),
+    % unsupported(NodeDef, Event, <<"Unsupported Event Received">>),
     {noreply, {Module, NodeDef}}.
 
 %%
