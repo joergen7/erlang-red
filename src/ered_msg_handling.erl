@@ -8,11 +8,13 @@
     delete_prop/2,
     get_prop/2,
     is_same/2,
+    is_not_same/2,
     map_keys_to_binary/1,
     map_keys_to_lists/1,
     retrieve_prop_value/2,
     set_prop_value/3,
-    timestamp/0
+    timestamp/0,
+    to_bool/1
 ]).
 
 %%
@@ -34,6 +36,15 @@ is_same(Same, Same) ->
     true;
 is_same(_, _) ->
     false.
+
+is_not_same(Same, Diff) when is_list(Same) and is_binary(Diff) ->
+    is_not_same(Same, binary_to_list(Diff));
+is_not_same(Same, Diff) when is_binary(Same) and is_list(Diff) ->
+    is_not_same(binary_to_list(Same), Diff);
+is_not_same(Same, Same) ->
+    false;
+is_not_same(_, _) ->
+    true.
 
 %%
 %% convert to num - a num can be a integer or float, so to convert a string
@@ -239,3 +250,13 @@ map_keys_to_lists(Map) ->
             maps:to_list(Map)
         )
     ).
+
+%%
+%%
+%% erlfmt:ignore alignment
+to_bool(<<"">>)      -> false;
+to_bool("")          -> false;
+to_bool(<<"false">>) -> false;
+to_bool(false)       -> false;
+to_bool("false")     -> false;
+to_bool(_) -> true.

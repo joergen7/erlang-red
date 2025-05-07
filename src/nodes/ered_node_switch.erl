@@ -30,6 +30,7 @@
 -import(ered_msg_handling, [
     convert_to_num/1,
     get_prop/2,
+    is_not_same/2,
     is_same/2
 ]).
 
@@ -61,6 +62,8 @@ obtain_operator_value(OpType, _OpVal, _Msg) ->
 
 %%
 %%
+does_rule_match(<<"neq">>, OpCompVal, MsgVal) ->
+    is_not_same(OpCompVal, MsgVal);
 does_rule_match(<<"eq">>, OpCompVal, MsgVal) ->
     is_same(OpCompVal, MsgVal);
 does_rule_match(<<"gt">>, OpCompVal, MsgVal) ->
