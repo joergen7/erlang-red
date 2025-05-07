@@ -77,6 +77,9 @@ handle_call(Msg, _From, State) ->
 %%
 %%
 handle_cast({publish_payload, Payload, Topic, QoS, Retain}, State) ->
+    %% this is an MQTT out node sending out a message to MQTT broker.
+    %% publish is perhaps a misnomer here since there is already a
+    %% publish event
     EmqttClientId = maps:get(emqtt_client_id, State),
     emqtt:publish(
         EmqttClientId,
@@ -100,6 +103,8 @@ handle_info({disconnected, ReasonCode, Properties}, State) ->
     gen_server:info(RecPid, {mqtt_disconnected, ReasonCode, Properties}),
     {noreply, State};
 handle_info({publish, MqttDataPacket}, State) ->
+    %% this is a message the came into MQTT broker and is being sent
+    %% to a subscriber
     RecPid = maps:get(nodepid, State),
     gen_server:cast(RecPid, {mqtt_incoming, MqttDataPacket}),
     {noreply, State};
