@@ -4,7 +4,7 @@
         "type": "tab",
         "label": "[exec] support timeout specification",
         "disabled": false,
-        "info": "the timeout on an exec node be used to stop daemon from running longer than a test case.",
+        "info": "the timeout on an exec node be used to stop daemon from running longer than a test case.\n\nIf the message isn't sent by the time the test case is killed, then the test case fails.",
         "env": [
             {
                 "name": "ERED_TIMEOUT",
