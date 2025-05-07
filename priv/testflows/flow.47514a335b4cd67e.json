@@ -8,13 +8,13 @@
         "env": [
             {
                 "name": "ERED_PENDING",
-                "value": "false",
-                "type": "bool"
+                "type": "bool",
+                "value": "false"
             },
             {
                 "name": "ERED_TIMEOUT",
-                "value": "12",
-                "type": "num"
+                "type": "num",
+                "value": "12"
             }
         ]
     },
@@ -99,23 +99,23 @@
         "name": "",
         "rules": [
             {
-                "t": "set",
                 "p": "pid",
                 "pt": "msg",
+                "t": "set",
                 "to": "$split($$.status.text, \":\")",
                 "tot": "jsonata"
             },
             {
-                "t": "set",
                 "p": "pid",
                 "pt": "msg",
+                "t": "set",
                 "to": "$$.pid[1]",
                 "tot": "jsonata"
             },
             {
-                "t": "set",
                 "p": "kill",
                 "pt": "msg",
+                "t": "set",
                 "to": "SIGTERM",
                 "tot": "str"
             }

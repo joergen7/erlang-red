@@ -31,6 +31,7 @@
 -define(MSG, element(6, State)).
 -define(CMD, element(5, State)).
 -define(MACHPID, element(9, State)).
+-define(TIMEOUT, maps:get(timeout, element(7, State))).
 
 start(NodePid, Wires, Cmd, Msg, Opts) ->
     %% root user here is because I run this code in a docker container
@@ -58,15 +59,11 @@ init([State]) ->
 %%
 %%
 handle_call({kill_command, Signal}, _From, State) ->
-    case sig_to_num(binary_to_atom(Signal)) of
-        0 ->
-            silent_ignore;
-        SigNum ->
-            exec:kill(?MACHPID, SigNum)
-    end,
+    exec:kill(?MACHPID, sig_to_num(binary_to_atom(Signal))),
     {reply, ok, State};
 handle_call(run_command, _From, State) ->
     {ok, Pid, MachPid} = exec:run(?CMD, [stdout, stderr, monitor]),
+    ?TIMEOUT > 0 andalso erlang:start_timer(?TIMEOUT * 1000, self(), 'TIMEOUT'),
     State2 = setelement(9, setelement(8, State, Pid), MachPid),
     {reply, MachPid, State2};
 
@@ -76,12 +73,25 @@ handle_call(Msg, _From, State) ->
 
 %%
 %%
+handle_cast(stop, State) ->
+    {stop, normal, State};
+
 handle_cast(Msg, State) ->
     io:format("Exec Manager Unknown Cast: ~p~n", [Msg]),
     {noreply, State}.
 
 %%
 %%
+handle_info({timeout, _, 'TIMEOUT'}, State) ->
+    exec:kill(?MACHPID, sig_to_num('SIGTERM')),
+    %% give the process 1 second to die else kill it.
+    erlang:start_timer(1000, self(), 'TIMEOUT-KILL'),
+    {noreply, State};
+
+handle_info({timeout, _, 'TIMEOUT-KILL'}, State) ->
+    exec:kill(?MACHPID, sig_to_num('SIGKILL')),
+    {noreply, State};
+
 handle_info({'DOWN', MachPid, process, _ErlangPid, Status}, State) ->
     Status2 = case Status of
                   normal ->
@@ -95,7 +105,7 @@ handle_info({'DOWN', MachPid, process, _ErlangPid, Status}, State) ->
     gen_server:cast(?NODEPID, {exec_process_died,
                                maps:put(payload, Status2, ?MSG)}),
     send_msg_on(?DONEWIRES, maps:put(payload, Status2, ?MSG)),
-    {noreply, State};
+    {stop, normal, State};
 
 handle_info({stdout, _Pid, Payload}, State) ->
     send_msg_on(?STDOUTWIRES, maps:put(payload, Payload, ?MSG)),
@@ -120,7 +130,6 @@ stop() ->
 %%
 %%
 terminate(normal, _State) ->
-    io:format("Exec manager terminated with {{{ ~p }}}~n", [normal]),
     ok;
 terminate(Event, _State) ->
     io:format("Exec manager terminated with {{{ ~p }}}~n", [Event]),
@@ -191,4 +200,5 @@ sig_to_num('SIGRTMAX-3') -> 61;
 sig_to_num('SIGRTMAX-2') -> 62;
 sig_to_num('SIGRTMAX-1') -> 63;
 sig_to_num('SIGRTMAX') -> 64;
-sig_to_num(_) -> 0.
+%% Default is SIGTERM
+sig_to_num(_) -> sig_to_num('SIGTERM').

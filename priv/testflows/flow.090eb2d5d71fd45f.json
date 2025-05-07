@@ -8,8 +8,8 @@
         "env": [
             {
                 "name": "ERED_TIMEOUT",
-                "value": "5",
-                "type": "num"
+                "type": "num",
+                "value": "5"
             }
         ]
     },
@@ -101,9 +101,9 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
+                "t": "eql",
                 "to": "hello world",
                 "tot": "str"
             }
@@ -121,9 +121,9 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload",
                 "pt": "msg",
+                "t": "eql",
                 "to": "good, by cruel world",
                 "tot": "str"
             }
@@ -141,9 +141,9 @@
         "name": "",
         "rules": [
             {
-                "t": "eql",
                 "p": "payload.code",
                 "pt": "msg",
+                "t": "eql",
                 "to": "0",
                 "tot": "num"
             }

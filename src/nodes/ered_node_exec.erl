@@ -42,6 +42,7 @@
     ws_from/1
 ]).
 -import(ered_nodes, [
+    get_prop_value_from_map/3,
     jstr/2,
     send_msg_to_connected_nodes/2
 ]).
@@ -98,14 +99,17 @@ handle_msg({incoming, Msg}, NodeDef) ->
             Tuple =
                 case maps:find(pid, Msg) of
                     {ok, MachPid} ->
+                        %% this returns false if key is not found.
                         lists:keyfind(
                             convert_to_num(MachPid),
                             1,
                             maps:get('_process_list', NodeDef)
                         );
                     _ ->
+                        %% If Pid is not specified and there is more than
+                        %% one process running, then ignore the kill request.
                         case maps:get('_process_list', NodeDef) of
-                            [H | _] ->
+                            [H | []] ->
                                 H;
                             _ ->
                                 false
@@ -114,7 +118,7 @@ handle_msg({incoming, Msg}, NodeDef) ->
             case Tuple of
                 false ->
                     {handled, NodeDef, Msg};
-                {_, ExecPid} ->
+                {_MachPid, ExecPid} ->
                     gen_server:call(ExecPid, {kill_command, Signal}),
                     {handled, NodeDef, Msg}
             end;
@@ -141,16 +145,11 @@ start_command_running(Msg, NodeDef) ->
     Opts = #{
         spawn => to_bool(maps:get(useSpawn, NodeDef)),
         append => maps:get(append, NodeDef),
-        timeout => maps:get(timer, NodeDef),
+        timeout => convert_to_num(
+            get_prop_value_from_map(timer, NodeDef, <<"-1">>)
+        ),
         addpayload => maps:get(addpay, NodeDef)
     },
-
-    case maps:get(timer, NodeDef) of
-        <<"">> ->
-            ok;
-        _ ->
-            unsupported(NodeDef, Msg, "timeout value, will be ignored")
-    end,
 
     case maps:get(append, NodeDef) of
         <<"">> ->
