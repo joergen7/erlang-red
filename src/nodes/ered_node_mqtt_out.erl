@@ -21,7 +21,8 @@
     ws_from/1
 ]).
 -import(ered_msg_handling, [
-    convert_to_num/1
+    convert_to_num/1,
+    to_bool/1
 ]).
 -import(ered_nodes, [
     jstr/1,
@@ -137,12 +138,6 @@ handle_msg(_, NodeDef) ->
 
 %%
 %%
-to_bool(<<"">>) -> false;
-to_bool("") -> false;
-to_bool(<<"false">>) -> false;
-to_bool(false) -> false;
-to_bool("false") -> false;
-to_bool(_) -> true.
 
 add_to_nodedef(NodeDef, EmqttPid, WsName) ->
     maps:put(emqtt_client_id, EmqttPid, maps:put('_ws', WsName, NodeDef)).

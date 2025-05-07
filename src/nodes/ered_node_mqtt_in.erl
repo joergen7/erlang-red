@@ -52,7 +52,8 @@
 ]).
 -import(ered_msg_handling, [
     create_outgoing_msg/1,
-    convert_to_num/1
+    convert_to_num/1,
+    to_bool/1
 ]).
 -import(ered_nodes, [
     send_msg_to_connected_nodes/2
@@ -153,12 +154,6 @@ handle_msg(_, NodeDef) ->
 
 %%
 %%
-to_bool(<<"">>) -> false;
-to_bool("") -> false;
-to_bool(<<"false">>) -> false;
-to_bool(false) -> false;
-to_bool("false") -> false;
-to_bool(_) -> true.
 
 copy_attributes([], Msg, _MqttDataPacket) ->
     Msg;
