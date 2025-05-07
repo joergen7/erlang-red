@@ -328,6 +328,7 @@ node_type_to_fun(<<"http response">>) -> ered_node_http_response;
 node_type_to_fun(<<"http request">>)  -> ered_node_http_request;
 node_type_to_fun(<<"mqtt in">>)       -> ered_node_mqtt_in;
 node_type_to_fun(<<"mqtt out">>)      -> ered_node_mqtt_out;
+node_type_to_fun(<<"exec">>)          -> ered_node_exec;
 
 %%
 %% Assert nodes for testing functionality of the nodes. These are the first
