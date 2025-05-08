@@ -113,9 +113,7 @@ evaluate_erlang(Expression) ->
                         )
                     of
                         {value, Result, _} ->
-                            {ok, Result};
-                        Error ->
-                            {error, Error}
+                            {ok, Result}
                     end;
                 Error ->
                     {error, Error}
@@ -134,12 +132,8 @@ jsonata_to_erlang(JSONataString) ->
                 {ok, Result} ->
                     {ok, Result};
                 {error, Error} ->
-                    {error, Error};
-                Error ->
                     {error, Error}
             end;
-        {error, Error} ->
-            {error, Error};
-        Error ->
-            {error, Error}
+        R ->
+            R
     end.

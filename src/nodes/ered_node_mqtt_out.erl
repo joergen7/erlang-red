@@ -62,7 +62,6 @@ handle_event({mqtt_disconnected, _Reason, _Properties}, NodeDef) ->
         _ ->
             setup_mqtt_manager(NodeDef, ws_from(NodeDef))
     end;
-
 handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
     WsName = ws_from(NodeDef),
 
@@ -107,8 +106,6 @@ handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
         _ ->
             NodeDef
     end;
-
-
 handle_event({stop, _WsName}, NodeDef) ->
     case maps:find('_timer', NodeDef) of
         {ok, TRef} ->
@@ -159,14 +156,12 @@ handle_msg({incoming, Msg}, NodeDef) ->
             post_exception_or_debug(NodeDef, Msg, ErrMsg),
             {handled, NodeDef, dont_send_complete_msg}
     end;
-
 handle_msg({mqtt_not_sent, Msg}, NodeDef) ->
     %% TODO these are messages that were sent out using the publish_payload
     %% TODO but because the broker went away, the message has come back
     %% TODO so it needs to be pushed further up the chain.
-    io:format( "MQTT out, message was not sent ~p~n", [Msg]),
+    io:format("MQTT out, message was not sent ~p~n", [Msg]),
     {handled, NodeDef, dont_send_complete_msg};
-
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
 

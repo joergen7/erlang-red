@@ -233,9 +233,13 @@ convert_funct({funct,_LineNo,FunctName}, Expr) ->
                                      [args_to_string([A1,A2,A3])]))
             end;
         millis ->
-            %% TODO this needs more work because:
+            %% Because of:
             %%   > All invocations of $millis() within an evaluation of
             %%   > an expression will all return the same value.
+            %%
+            %% This call takes a variable and returns its value each
+            %% time. This ensures the same timestamp.
+            %%
             %% See test id: eb447048178f6e16
             list_to_binary(io_lib:format("ered_millis(EREDMillis)", []));
         pauseMillis ->
@@ -483,7 +487,7 @@ yecctoken2string1(Other) ->
 
 
 
--file("/code/src/jsonata_parser.erl", 486).
+-file("/code/src/jsonata_parser.erl", 490).
 
 -dialyzer({nowarn_function, yeccpars2/7}).
 -compile({nowarn_unused_function,  yeccpars2/7}).
@@ -3194,4 +3198,4 @@ yeccpars2_116_(__Stack0) ->
   end | __Stack].
 
 
--file("/code/src/jsonata_parser.yrl", 486).
+-file("/code/src/jsonata_parser.yrl", 490).

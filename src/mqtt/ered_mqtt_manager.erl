@@ -83,12 +83,12 @@ handle_cast(Msg = {publish_payload, Payload, Topic, QoS, Retain}, State) ->
     case maps:find(emqtt_client_id, State) of
         {ok, EmqttClientId} ->
             emqtt:publish(
-              EmqttClientId,
-              Topic,
-              #{},
-              Payload,
-              [{qos, QoS}, {retain, Retain}]
-             ),
+                EmqttClientId,
+                Topic,
+                #{},
+                Payload,
+                [{qos, QoS}, {retain, Retain}]
+            ),
             {noreply, State};
         _ ->
             %% Return to sender - message could not be sent.
@@ -106,8 +106,7 @@ handle_cast(Msg, State) ->
 %%
 %%
 handle_info({disconnected, ReasonCode, Properties}, State) ->
-    RecPid = maps:get(nodepid, State),
-    gen_server:info(RecPid, {mqtt_disconnected, ReasonCode, Properties}),
+    maps:get(nodepid, State) ! {mqtt_disconnected, ReasonCode, Properties},
     {noreply, State};
 handle_info({publish, MqttDataPacket}, State) ->
     %% this is a message the came into MQTT broker and is being sent

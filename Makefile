@@ -28,6 +28,9 @@ app-start-loop:
 eunit-test:
 	rebar3 eunit
 
+# This helps understanding dialyzser
+#  --> https://grantwinney.com/common-dialyzer-errors-and-solutions-in-erlang/
+#  --> https://erlangforums.com/t/unknown-type-ranch-ref-0-dialyzer-warning-in-cowboy-req-on-erlang-otp-26/2760 - discussion "unknown functions"
 dialyzer:
 	rebar3 dialyzer
 

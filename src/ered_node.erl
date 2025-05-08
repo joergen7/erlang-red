@@ -19,13 +19,16 @@
 
 %%
 %% Behaviour definition
--callback start(NodeDef :: term(), WsName :: atom()) -> {ok, Pid :: pid()}.
+-callback start(NodeDef :: map(), WsName :: atom()) ->
+    {ok, Pid :: pid()}.
 
--callback handle_msg(Msg :: tuple(), NodeDef :: term()) ->
-    {Resp :: atom(), NodeDef2 :: term(), Msg2 :: map()}.
+-callback handle_msg(Msg :: tuple(), NodeDef :: map()) ->
+    {unhandled, NodeDef2 :: map()}
+    | {handled, NodeDef2 :: map(), Msg2 :: map()}
+    | {handled, NodeDef2 :: map(), dont_send_complete_msg}.
 
--callback handle_event(Event :: tuple(), NodeDef :: term()) ->
-    NodeDef2 :: term().
+-callback handle_event(Event :: tuple(), NodeDef :: map()) ->
+    NodeDef2 :: map().
 
 %%
 %%
@@ -114,9 +117,10 @@ handle_cast({MsgType = ws_event, Details}, {Module, NodeDef}) ->
     );
 %% This function signature can match the following messages:
 %%    - {incoming, Msg}
-%%    - {link_return, Msg},
-%%    - {mqtt_incoming, Msg},
-%%    - {delay_push_out, Msg},
+%%    - {link_return, Msg}
+%%    - {mqtt_incoming, Msg}
+%%    - {delay_push_out, Msg}
+%%    - {mqtt_not_sent, Msg}
 %% These post_completed messages, hence they differ from the more general
 %% use case.
 handle_cast({MsgType, Msg}, {Module, NodeDef}) ->
