@@ -13,11 +13,20 @@
 ]).
 
 start() ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []),
-    herd_up_the_cattle().
+    InitialState =
+        case os:getenv("DISABLE_FLOWEDITOR") of
+            false ->
+                #{floweditor_routes => base_routes()};
+            _ ->
+                io:format("Disabling FlowEditor Frontend~n", []),
+                #{floweditor_routes => []}
+        end,
+    State = maps:put(http_in_routes, [], InitialState),
+    herd_up_the_cattle(State),
+    gen_server:start_link({local, ?MODULE}, ?MODULE, State, []).
 
-init([]) ->
-    {ok, #{routes => []}}.
+init(State) ->
+    {ok, State}.
 
 %%
 %%
@@ -42,11 +51,15 @@ handle_call({add_route, Path, Method, {Pid, WsName}}, _From, State) ->
         {Path, [{method, Method}], ered_http_node_http_in_handler, #{
             pid => Pid, wsname => WsName
         }}
-        | maps:get(routes, State)
+        | maps:get(http_in_routes, State)
     ],
-    Dispatch = cowboy_router:compile([{'_', ExtraRoutes ++ base_routes()}]),
+
+    Dispatch = cowboy_router:compile(
+        [{'_', ExtraRoutes ++ maps:get(floweditor_routes, State)}]
+    ),
+
     cowboy:set_env(erlang_red_listener, dispatch, Dispatch),
-    {reply, ok, maps:put(routes, ExtraRoutes, State)};
+    {reply, ok, maps:put(http_in_routes, ExtraRoutes, State)};
 handle_call(_Msg, _From, State) ->
     {reply, State, State}.
 
@@ -74,11 +87,28 @@ terminate(normal, _State) ->
 %%
 %%
 
-herd_up_the_cattle() ->
-    Dispatch = cowboy_router:compile([{'_', base_routes()}]),
+herd_up_the_cattle(State) ->
+    %% heroku likes to provide port numbers to docker images running
+    %% on its platform - so support that
+    Port =
+        case os:getenv("PORT") of
+            false ->
+                8080;
+            PortNum ->
+                list_to_integer(PortNum)
+        end,
+
+    Dispatch =
+        cowboy_router:compile([
+            {'_',
+                maps:get(floweditor_routes, State) ++
+                    maps:get(http_in_routes, State)}
+        ]),
+
+    %% setup cowboy.
     {ok, _} = cowboy:start_clear(
         erlang_red_listener,
-        [{port, 8080}],
+        [{port, Port}],
         #{
             env => #{dispatch => Dispatch},
             middlewares => [ered_http_auth, cowboy_router, cowboy_handler]
