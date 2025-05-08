@@ -31,6 +31,19 @@
 ]).
 
 start() ->
+    %% trigger the loading of an initial flow file. This can be used in
+    %% conjunction with DISABLE_FLOWEDITOR to have just a single flow running
+    %% on the ErlangRED compute engine, i.e. a headless deployment.
+    case os:getenv("COMPUTEFLOW") of
+        false ->
+            ignore;
+        FlowId ->
+            erlang:start_timer(
+                750,
+                ered_compute_engine,
+                {load_flowid, FlowId}
+            )
+    end,
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 %%
@@ -103,7 +116,23 @@ handle_cast(_Msg, State) ->
     {noreply, State}.
 
 %%
-%%
+%% This should only be called once at the beginning of the app load
+%% it is used in conjunection with a headless deployment to have a Erlang
+%% setup running based on a single flow file.
+handle_info({timeout, _From, {load_flowid, FlowId}}, State) ->
+    io:format("Loading initial flow id ~p~n", [FlowId]),
+    case ered_flow_store_server:get_filename(FlowId) of
+        error ->
+            io:format(
+                "WARNING: FlowId '~s' not found, doing nothing.~n",
+                [FlowId]
+            ),
+            ignore;
+        FileName ->
+            Ary = ered_flows:parse_flow_file(FileName),
+            ered_nodes:create_pid_for_node(Ary, no_ws)
+    end,
+    {noreply, State};
 handle_info(_, State) ->
     {noreply, State}.
 
