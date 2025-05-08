@@ -1,0 +1,82 @@
+[
+    {
+        "id": "499288ab4007ac6a",
+        "type": "tab",
+        "label": "[.heroku] flow for static red-erik.org website",
+        "disabled": false,
+        "info": "This flow is executed when ErlangRED is deployed to heroku.\n\n",
+        "env": [
+            {
+                "name": "ERED_PENDING",
+                "value": "true",
+                "type": "bool"
+            }
+        ]
+    },
+    {
+        "id": "3b61bc24635656f5",
+        "type": "http in",
+        "z": "499288ab4007ac6a",
+        "name": "",
+        "url": "/",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 178,
+        "y": 100,
+        "wires": [
+            [
+                "3e4711cebb640a86"
+            ]
+        ]
+    },
+    {
+        "id": "3e4711cebb640a86",
+        "type": "template",
+        "z": "499288ab4007ac6a",
+        "name": "index page content",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "plain",
+        "template": "Hi There,\n\n<p>\n    \nand Hello World!\n\n<p>\n\nTest pattern page for testing <a href=\"https://github.com/gorenje/erlang-red\">Erlang-RED</a>: visual low coding for Erlang inspired by <a href=\"https://nodered.org\">NodeRED</a>.",
+        "output": "str",
+        "x": 397,
+        "y": 322,
+        "wires": [
+            [
+                "2b36b7ed187aaf0a"
+            ]
+        ]
+    },
+    {
+        "id": "2b36b7ed187aaf0a",
+        "type": "template",
+        "z": "499288ab4007ac6a",
+        "name": "HTML Layout",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "<!DOCTYPE html>\n<html lang=\"{{ page.lang | default: site.lang | default: \"en\" }}\">\n  <head>\n    <meta charset=\"UTF-8\">\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n    <!-- <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> -->\n    \n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\n    <title>Red Erik</title>\n\n    <meta name=\"generator\" content=\"Erlang-RED v.0.0.0-beta0\" />\n    <meta property=\"og:title\" content=\"{{{ page.title }}} | {{ blogdetails.title }}\" />\n    <meta property=\"og:description\" content=\"{{{ page.summary }}}\" />\n    <meta property=\"og:locale\" content=\"en_AU\" />\n    <meta property=\"og:url\" content=\"{{{ blogdetails.url }}}{{{ blogdetails.path_prefix }}}/{{ page.path }}\" />\n    <meta property=\"og:site_name\" content=\"{{{ blogdetails.url }}}\" />\n    <meta name=\"giscus:backlink\" content=\"{{{ blogdetails.url }}}{{{ blogdetails.path_prefix }}}/{{ page.path }}\">\n\n    {{#page.image}}\n    <meta property=\"og:image\" content=\"{{{ blogdetails.cdn_url }}}/content/{{{ page.image }}}\" />\n    {{/page.image}}\n\n    <link rel=\"canonical\" href=\"{{{ blogdetails.url }}}{{{ blogdetails.path_prefix }}}/{{ page.path }}\" />\n    <meta name=\"twitter:card\" content=\"{{{ blogdetails.url }}}{{{ blogdetails.path_prefix }}}/{{ page.path }}\" />\n    <meta property=\"twitter:title\" content=\"{{ page.title }}\" />\n\n    <link rel=\"alternate\" type=\"application/rss+xml\" href=\"/feed.xml\" title=\"Subscribe to Blog Open Mind Map Org\">\n    <link rel=\"sitemap\" type=\"application/xml\" title=\"Sitemap\" href=\"/sitemap.xml\">\n\n    <link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"{{{ blogdetails.cdn_url }}}/content/apple-touch-icon.png\">\n    <link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"{{{ blogdetails.cdn_url }}}/content/favicon-32x32.png\">\n    <link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" href=\"{{{ blogdetails.cdn_url }}}/content/favicon-16x16.png\">\n\n    <link rel=\"stylesheet\" href=\"/f/style.css\">\n    <link rel=\"manifest\" href=\"/f/site.webmanifest\">\n    <link rel=\"author\" href=\"/humans.txt\" />\n\n    <link rel=\"stylesheet\" href=\"https://cdn.openmindmap.org/thirdparty/a11y-light.min.css\">\n\n\n  </head>\n\n  <body>\n    <center style=\"margin-top: 100px; \">\n          {{{ payload }}}\n    </center>\n  </body>\n</html>\n",
+        "output": "str",
+        "x": 674,
+        "y": 179,
+        "wires": [
+            [
+                "37bb607de230a96e"
+            ]
+        ]
+    },
+    {
+        "id": "37bb607de230a96e",
+        "type": "http response",
+        "z": "499288ab4007ac6a",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 879,
+        "y": 307,
+        "wires": []
+    }
+]
