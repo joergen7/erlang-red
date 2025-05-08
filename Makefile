@@ -8,6 +8,15 @@ enter-docker-shell:
 	docker exec -it $$(docker ps -f ancestor=erlang-shell -q) bash
 
 ##
+## Heroku docker image
+heroku-build:
+	docker build -f Dockerfile.heroku -t heroku-red-erik .
+heroku-run:
+	docker run -it -p 7070:8080 -t heroku-red-erik
+heroku-enter:
+	docker exec -it $$(docker ps -f ancestor=heroku-red-erik -q) bash
+
+##
 ## The following are done inside the docker container
 ##
 compile:
