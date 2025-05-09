@@ -78,5 +78,52 @@
         "x": 879,
         "y": 307,
         "wires": []
+    },
+    {
+        "id": "50f81794b996e90d",
+        "type": "http in",
+        "z": "499288ab4007ac6a",
+        "name": "",
+        "url": "/:path",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 233,
+        "y": 539,
+        "wires": [
+            [
+                "bf2288d1d9116c8c"
+            ]
+        ]
+    },
+    {
+        "id": "bf2288d1d9116c8c",
+        "type": "http response",
+        "z": "499288ab4007ac6a",
+        "name": "redirect to /",
+        "statusCode": "301",
+        "headers": {
+            "location": "/"
+        },
+        "x": 564,
+        "y": 539,
+        "wires": []
+    },
+    {
+        "id": "81adf48f235c6f16",
+        "type": "http in",
+        "z": "499288ab4007ac6a",
+        "name": "",
+        "url": "/:path/[...]",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 255,
+        "y": 615,
+        "wires": [
+            [
+                "bf2288d1d9116c8c"
+            ]
+        ]
     }
 ]
