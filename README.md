@@ -47,6 +47,41 @@ While the [exception node](https://github.com/gorenje/erlang-red/blob/e2bd2f324d
 
 So an architectural diagram of this interconnectedness would be probably be just as confusing the code itself.
 
+Supported Nodes
+---
+
+This is a non-complete list of nodes that partially or completely work:
+
+| Node | Comment |
+| ------------- | ------------ |
+| [catch](src/nodes/erl_node_catch.erl) | catches exception of selected nodes and of entire flows but not groups |
+| [change](src/nodes/erl_node_change.erl) | supports many operators but not all. JSONata in basic form is also supported. |
+| [complete](src/nodes/erl_node_complete.erl) | is available and can be used on certain nodes, not all |
+| [debug](src/nodes/erl_node_debug.erl) | only debugs the entire message, individal msg properties aren't supported. msg count as status is supported. |
+| [delay](src/nodes/erl_node_delay.erl) | supported static delay not dynamic delay set via `msg.delay` |
+| [exec](src/nodes/erl_node_exec.erl) | working |
+| [file_in](src/nodes/erl_node_file_in.erl) | working for files located in `/priv` |
+| [http_in](src/nodes/erl_node_http_in.erl) | working for GET, not tested for POST,PUT,DELETE etc |
+| [http_request](src/nodes/erl_node_http_request.erl) | basic support for doing rrequests, anything complex probably won't work |
+| [http_response](src/nodes/erl_node_http_response.erl) | working |
+| [inject](src/nodes/erl_node_inject.erl) | working for most types except for flow, global ... |
+| [join](src/nodes/erl_node_join.erl) | *manual arrays of count X* is working, `parts` isn't supported  |
+| [json](src/nodes/erl_node_json.erl) | working |
+| [junction](src/nodes/erl_node_junction.erl) | working |
+| [link_call](src/nodes/erl_node_link_call.erl) | working - dynamic calls also |
+| [link_in](src/nodes/erl_node_link_in.erl) | working |
+| [link_out](src/nodes/erl_node_link_out.erl) | working |
+| [mqtt_in](src/nodes/erl_node_mqtt_in.erl) | should be working |
+| [mqtt_out](src/nodes/erl_node_mqtt_out.erl) | should be working |
+| [noop](src/nodes/erl_node_noop.erl) | doing nothing is very much supported |
+| [split](src/nodes/erl_node_split.erl) | splitting arrays into individual messages is supported, string, buffers and objects aren't. |
+| [status](src/nodes/erl_node_status.erl) | working |
+| [switch](src/nodes/erl_node_switch.erl) | most operators work along with basic JSONata expressions  |
+| [template](src/nodes/erl_node_template.erl) | mustache templating is working but parsing into JSON or YAML isn't supported |
+| [trigger](src/nodes/erl_node_trigger.erl) | the default settings should work |
+
+Contexts are not supported, so there is no setting things on `flow`, `node` or `global`.
+
 Build
 -----
 
@@ -92,12 +127,31 @@ All static frontend code (for the Node-RED flow editor) and the test flow files 
 
 Cowboy server will listen on port 8080.
 
-Fly.io
+Fly.io Deployment
 ---
 
 A sample Dockerfile `Dockerfile.fly` is provided to allow for easy launching of an instance as a fly application.
 The provided shell script (`fly_er.sh`) sets some common expected parameters for the launch.
 Advanced users may wish to examine the `fly launch` line therein and adjust for their requirements.
+
+Heroku Deployment
+---
+
+Using the container stack at heroku, deployment becomes a `git push heroku` after the usual heroku setup:
+
+- `heroku login` --> `heroku git:remote -a <app name>` --> `heroku stack:set container` --> `git push heroku`
+
+However the [Dockerfile.heroku](Dockerfile.heroku) does not start the flow editor, the image is designed to run a single flow, in this case (at time of writing) a simple website with a single page. Basically this [flow](https://github.com/gorenje/erlang-red/blob/main/priv/testflows/flow.499288ab4007ac6a.json) is the [red-erik.org](https://red-erik.org) site.
+
+The image does this by setting the following ENV variables:
+
+- `COMPUTEFLOW`=`499288ab4007ac6a` - flow to be used
+- `DISABLE_FLOWEDITOR`=`YES` - any value will do, if set then floweditor is disabled.
+
+Also be aware that Erlang-RED supports a `PORT` env variable to specifying the port upon which Cowboy will listen on for connections. The default is 8080.
+
+Heroku uses this to specify the port to connect for a docker image so that its load balancer can get it right.
+
 
 Example
 ---
@@ -191,3 +245,5 @@ Disclaimer
 ---
 
 No Artificial Intelligence was harmed in the creation of this codebase. This codebase is old skool search engine (ddg), stackoverflow, blog posts and RTFM technology.
+
+Also be aware that this project partly uses the *Don't do Evil* un-enforceable license. The point of the license is not to be enforceable but to make the reader think about what is evil. After all, Pope Leo (the new one) did say ["evil will not prevail"](https://eu.usatoday.com/story/news/world/2025/05/08/pope-leo-xiv-first-speech-message-text/83519162007/) - what does that *even* mean?
