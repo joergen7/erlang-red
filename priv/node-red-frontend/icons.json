@@ -1,6 +1,12 @@
 {
-    "@gorenje/erlang-red-unittest": [],
     "@gorenje/node-red-contrib-flowcompare": [],
+    "@gregoriusrippenstein/erlang-red-unittest": [],
+    "@gregoriusrippenstein/node-red-contrib-flowhub": [
+        "flowhubdiff.svg",
+        "flowhublogo.svg",
+        "flowhubpull.svg",
+        "flowhubpush.svg"
+    ],
     "node-red": [
         "alert.svg",
         "arduino.svg",
@@ -50,5 +56,8 @@
         "trigger.svg",
         "watch.svg",
         "white-globe.svg"
+    ],
+    "node-red-node-markdown": [
+        "parser-markdown.png"
     ]
 }

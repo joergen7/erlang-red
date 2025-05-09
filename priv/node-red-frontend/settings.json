@@ -1,6 +1,7 @@
 {
   "httpNodeRoot": "/",
   "version": "4.0.9",
+    "dynamicServer": "https://deadred.flowhub.org/",
   "context": {
     "default": "memory",
     "stores": [

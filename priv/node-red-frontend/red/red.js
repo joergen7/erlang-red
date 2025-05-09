@@ -963,6 +963,164 @@ var RED = (function() {
         $.ajaxPrefilter(function( options, originalOptions, jqXHR ) {
             let mth = undefined;
 
+
+            if ( options.url == "FlowHubDiff" ) {
+                jqXHR.abort()
+
+                let cfgNode = undefined
+
+                RED.nodes.eachConfig( nd => {
+                    if ( nd.type == "FlowHubCfg" ) {
+                        cfgNode = nd
+                    }
+                })
+
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    contentType: "application/json",
+                    headers: {
+                        "FlowHub-API-Version": "brownbear",
+                        "X-FHB-TOKEN": cfgNode.apiToken
+                    },
+                    url: RED.settings.get("dynamicServer", "") + "v1/diff",
+                    data: options.data,
+                    success: options.success
+                });
+            }
+
+
+            if ( options.url == "FlowHubPush" ) {
+                options.success({})
+                jqXHR.abort()
+
+                let cfgNode = undefined
+
+                RED.nodes.eachConfig( nd => {
+                    if ( nd.type == "FlowHubCfg" ) {
+                        cfgNode = nd
+                    }
+                })
+
+                if ( cfgNode && cfgNode.apiToken != "" ) {
+                    let data = JSON.parse(options.data)
+
+                    let postData = {
+                        flowid:       data.flowid,
+                        flowdata:     data.flowdata,
+                        flowlabel:    data.flowlabel,
+                        svgdata:      data.svgdata,
+                        nodedetails:  data.nodedetails,
+                        flowrevision: (cfgNode.flowrevisions || {})[data.flowid] || "",
+                        pushcomment:  cfgNode.pushcomment,
+                        pushnewflows: JSON.parse(cfgNode.pushnewflows),
+                        forcepush:    JSON.parse(cfgNode.forcepush),
+                    }
+
+                    $.ajax({
+                        type: "POST",
+                        dataType: "json",
+                        contentType: "application/json",
+                        headers: {
+                            "Authorization": "Bearer " + cfgNode.apiToken
+                        },
+                        url: RED.settings.get("dynamicServer", "") + "v1/flows",
+                        data: JSON.stringify(postData),
+                        success: (resp) => {
+                            // update the revision of the flow locally if it has changed
+                            // remotely
+                            if ( resp.status == "nochange"
+                              && cfgNode.flowrevisions
+                              && cfgNode.flowrevisions[resp.flowid] != resp.revision
+                              && resp.revision != "") {
+                                cfgNode.flowrevisions[resp.flowid] = resp.revision
+                            }
+
+                            // update of flow was made,
+                            if ( resp.status == "ok" ) {
+                                cfgNode.flowrevisions[resp.flowid] = resp.revision
+                            }
+
+                            RED.comms.emit([
+                                {
+                                    topic: "flowhub:submission-result",
+                                    data: {
+                                        status: resp.msg,
+                                        statusType: resp.status == "failed" ? "error" : "success",
+                                    }
+                                }
+                            ])
+                        },
+                    });
+                } else {
+                    setTimeout( () => {
+                        RED.comms.emit([
+                            {
+                                topic: "flowhub:submission-result",
+                                data: {
+                                    status: "No FlowHub.org token set - <a target=_blank href='https://flowhub.org/integration'>Get your token <i class='fa fa-external-link'></i></a>.",
+                                    statustype: "error"
+                                }
+                            }
+                        ])
+                    }, 1234)
+                }
+
+                return
+            }
+
+
+            // Token retrieval
+            mth = options.url.match(/^FlowHubToken/i)
+            if ( mth ) {
+                let cfgNode = undefined
+
+                RED.nodes.eachConfig( nd => {
+                    if ( nd.type == "FlowHubCfg" ) {
+                        cfgNode = nd
+                    }
+                })
+
+                options.success({
+                    "token": (cfgNode ? cfgNode.apiToken : "xxx"),
+                })
+
+                jqXHR.abort();
+            }
+
+            // handle the FlowCompare functionality locally since we store
+            // the flow data on deploy - extract what is being compared from there.
+            mth = options.url.match(/^FlowCompareCfg/i)
+            if ( mth ) {
+                var data = JSON.parse( options.data )
+                var lcl = JSON.parse( RED.settings.getLocal("flowdata"))
+
+                var lclnodes = []
+                lcl.flows.forEach( nde => {
+                    if ( nde.id == data.flowid || nde.z == data.flowid ) {
+                        lclnodes.push(nde)
+                    }
+                })
+
+                options.success({
+                    "status": "ok",
+                    "flowid": data.flowid,
+                    "nodes": lclnodes,
+                    "changes": compareFlows({
+                        payload: lclnodes,
+                        new_flowdata: data.flowdata
+                    })
+                })
+
+                jqXHR.abort();
+            }
+
+            // This is for FlowHub push, it requires a list of installed nodes
+            // for package dependency tracking.
+            if ( options.url == "nodes" ) {
+                options.url = "nodes/nodes.json"
+            }
+
             // locales and messages - convert parameter to be part of the file
             // name - differentiate between languages on a _static_ server.
 

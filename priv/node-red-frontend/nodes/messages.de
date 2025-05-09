@@ -1,8 +1,11 @@
 {
-    "@gorenje/erlang-red-unittest/ut-assert-debug": {},
-    "@gorenje/erlang-red-unittest/ut-assert-failure": {},
-    "@gorenje/erlang-red-unittest/ut-assert-status": {},
-    "@gorenje/erlang-red-unittest/ut-assert-success": {},
-    "@gorenje/erlang-red-unittest/ut-assert-values": {},
-    "@gorenje/node-red-contrib-flowcompare/flowcompare": {}
+    "@gorenje/node-red-contrib-flowcompare/flowcompare": {},
+    "@gregoriusrippenstein/erlang-red-unittest/ut-assert-debug": {},
+    "@gregoriusrippenstein/erlang-red-unittest/ut-assert-failure": {},
+    "@gregoriusrippenstein/erlang-red-unittest/ut-assert-status": {},
+    "@gregoriusrippenstein/erlang-red-unittest/ut-assert-success": {},
+    "@gregoriusrippenstein/erlang-red-unittest/ut-assert-values": {},
+    "@gregoriusrippenstein/node-red-contrib-flowhub/flowhubcfg": {},
+    "@gregoriusrippenstein/node-red-contrib-flowhub/flowhubpull": {},
+    "node-red-node-markdown/markdown": {}
 }

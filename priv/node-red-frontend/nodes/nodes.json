@@ -458,66 +458,6 @@
     },
     {
         "enabled": true,
-        "id": "@gorenje/erlang-red-unittest/ut-assert-failure",
-        "local": true,
-        "module": "@gorenje/erlang-red-unittest",
-        "name": "ut-assert-failure",
-        "types": [
-            "ut-assert-failure"
-        ],
-        "user": false,
-        "version": "0.8.8"
-    },
-    {
-        "enabled": true,
-        "id": "@gorenje/erlang-red-unittest/ut-assert-values",
-        "local": true,
-        "module": "@gorenje/erlang-red-unittest",
-        "name": "ut-assert-values",
-        "types": [
-            "ut-assert-values"
-        ],
-        "user": false,
-        "version": "0.8.8"
-    },
-    {
-        "enabled": true,
-        "id": "@gorenje/erlang-red-unittest/ut-assert-success",
-        "local": true,
-        "module": "@gorenje/erlang-red-unittest",
-        "name": "ut-assert-success",
-        "types": [
-            "ut-assert-success"
-        ],
-        "user": false,
-        "version": "0.8.8"
-    },
-    {
-        "enabled": true,
-        "id": "@gorenje/erlang-red-unittest/ut-assert-status",
-        "local": true,
-        "module": "@gorenje/erlang-red-unittest",
-        "name": "ut-assert-status",
-        "types": [
-            "ut-assert-status"
-        ],
-        "user": false,
-        "version": "0.8.8"
-    },
-    {
-        "enabled": true,
-        "id": "@gorenje/erlang-red-unittest/ut-assert-debug",
-        "local": true,
-        "module": "@gorenje/erlang-red-unittest",
-        "name": "ut-assert-debug",
-        "types": [
-            "ut-assert-debug"
-        ],
-        "user": false,
-        "version": "0.8.8"
-    },
-    {
-        "enabled": true,
         "id": "@gorenje/node-red-contrib-flowcompare/flowcompare",
         "local": true,
         "module": "@gorenje/node-red-contrib-flowcompare",
@@ -527,5 +467,101 @@
         ],
         "user": false,
         "version": "0.2.2"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/erlang-red-unittest/ut-assert-failure",
+        "local": true,
+        "module": "@gregoriusrippenstein/erlang-red-unittest",
+        "name": "ut-assert-failure",
+        "types": [
+            "ut-assert-failure"
+        ],
+        "user": false,
+        "version": "0.9.3"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/erlang-red-unittest/ut-assert-values",
+        "local": true,
+        "module": "@gregoriusrippenstein/erlang-red-unittest",
+        "name": "ut-assert-values",
+        "types": [
+            "ut-assert-values"
+        ],
+        "user": false,
+        "version": "0.9.3"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/erlang-red-unittest/ut-assert-success",
+        "local": true,
+        "module": "@gregoriusrippenstein/erlang-red-unittest",
+        "name": "ut-assert-success",
+        "types": [
+            "ut-assert-success"
+        ],
+        "user": false,
+        "version": "0.9.3"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/erlang-red-unittest/ut-assert-status",
+        "local": true,
+        "module": "@gregoriusrippenstein/erlang-red-unittest",
+        "name": "ut-assert-status",
+        "types": [
+            "ut-assert-status"
+        ],
+        "user": false,
+        "version": "0.9.3"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/erlang-red-unittest/ut-assert-debug",
+        "local": true,
+        "module": "@gregoriusrippenstein/erlang-red-unittest",
+        "name": "ut-assert-debug",
+        "types": [
+            "ut-assert-debug"
+        ],
+        "user": false,
+        "version": "0.9.3"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/node-red-contrib-flowhub/flowhubpull",
+        "local": true,
+        "module": "@gregoriusrippenstein/node-red-contrib-flowhub",
+        "name": "flowhubpull",
+        "types": [
+            "FlowHubPull"
+        ],
+        "user": false,
+        "version": "0.8.9"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/node-red-contrib-flowhub/flowhubcfg",
+        "local": true,
+        "module": "@gregoriusrippenstein/node-red-contrib-flowhub",
+        "name": "flowhubcfg",
+        "types": [
+            "FlowHubCfg"
+        ],
+        "user": false,
+        "version": "0.8.9"
+    },
+    {
+        "enabled": true,
+        "id": "node-red-node-markdown/markdown",
+        "local": true,
+        "module": "node-red-node-markdown",
+        "name": "markdown",
+        "types": [
+            "markdown"
+        ],
+        "user": false,
+        "version": "0.1.4"
     }
 ]
