@@ -18,20 +18,25 @@ COPY src src/
 COPY include include/
 COPY priv priv/
 COPY rebar.config .
-RUN rebar3 as fly_er release
+RUN rebar3 as prod release -n erlang_red
 
 
 FROM ${RUNNER_IMAGE}
 
 WORKDIR "/erlang-red"
-RUN apk update && apk add libncursesw libstdc++ openssl && \
+RUN apk update && apk add libncursesw libstdc++ openssl mosquitto && \
 	rm -rf /var/cache/apk/*
 RUN chown nobody /
 
 # Only copy the final release from the build stage
-COPY --from=builder --chown=nobody:root /builder/_build/fly_er/rel/fly_er ./
+COPY --from=builder --chown=nobody:root /builder/_build/prod/rel/erlang_red ./
+
+## needed for erlexec
+ENV SHELL=/bin/sh
 
 USER nobody
-EXPOSE 8080
-CMD ["/erlang-red/bin/fly_er", "foreground"]
 
+## PORT is now respected by cowboy
+ENV PORT=8080
+EXPOSE 8080
+CMD ["/erlang-red/bin/erlang_red", "foreground"]

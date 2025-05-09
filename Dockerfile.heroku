@@ -7,8 +7,7 @@ RUN apt-get update && apt-get -y install \
     git \
     inotify-tools \
     cmake \
-    mosquitto \
-    sudo
+    mosquitto
 
 ## get the dependencies and build them
 FROM builder as builder2
@@ -30,7 +29,7 @@ COPY src src/
 COPY include include/
 COPY priv priv/
 
-RUN rebar3 as red_erik release
+RUN rebar3 as prod release -n erlang_red
 
 ##
 ## Finally the docker image that gets run
@@ -38,7 +37,7 @@ FROM erlang:27.3.0.0
 
 WORKDIR "/erlang-red"
 
-COPY --from=builder3 --chown=nobody:root /builder/_build/red_erik/rel/red_erik ./
+COPY --from=builder3 --chown=nobody:root /builder/_build/prod/rel/erlang_red ./
 
 ## needed for erlexec
 ENV SHELL=/bin/bash
@@ -48,4 +47,4 @@ ENV DISABLE_FLOWEDITOR=YES
 USER nobody
 EXPOSE 8080
 
-CMD ["bin/red_erik", "foreground"]
+CMD ["/erlang-red/bin/erlang_red", "foreground"]
