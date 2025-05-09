@@ -173,6 +173,9 @@ base_routes() ->
         {"/FlowCompare/jslib/diff.min.js", [{method, <<"GET">>}], cowboy_static,
             {priv_file, erlang_red, "vendor/diff.min.js"}},
 
+        {"/FlowHubLib/jslib/diff.min.js", [{method, <<"GET">>}], cowboy_static,
+            {priv_file, erlang_red, "vendor/flowhub.diff.min.js"}},
+
         {"/FlowCompare/jslib/flowviewer.min.js", [{method, <<"GET">>}],
             cowboy_static, {priv_file, erlang_red, "vendor/flowviewer.min.js"}},
 
