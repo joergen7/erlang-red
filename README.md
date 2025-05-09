@@ -54,31 +54,31 @@ This is a non-complete list of nodes that partially or completely work:
 
 | Node | Comment |
 | ------------- | ------------ |
-| [catch](src/nodes/erl_node_catch.erl) | catches exception of selected nodes and of entire flows but not groups |
-| [change](src/nodes/erl_node_change.erl) | supports many operators but not all. JSONata in basic form is also supported. |
-| [complete](src/nodes/erl_node_complete.erl) | is available and can be used on certain nodes, not all |
-| [debug](src/nodes/erl_node_debug.erl) | only debugs the entire message, individal msg properties aren't supported. msg count as status is supported. |
-| [delay](src/nodes/erl_node_delay.erl) | supported static delay not dynamic delay set via `msg.delay` |
-| [exec](src/nodes/erl_node_exec.erl) | working |
-| [file_in](src/nodes/erl_node_file_in.erl) | working for files located in `/priv` |
-| [http_in](src/nodes/erl_node_http_in.erl) | working for GET, not tested for POST,PUT,DELETE etc |
-| [http_request](src/nodes/erl_node_http_request.erl) | basic support for doing rrequests, anything complex probably won't work |
-| [http_response](src/nodes/erl_node_http_response.erl) | working |
-| [inject](src/nodes/erl_node_inject.erl) | working for most types except for flow, global ... |
-| [join](src/nodes/erl_node_join.erl) | *manual arrays of count X* is working, `parts` isn't supported  |
-| [json](src/nodes/erl_node_json.erl) | working |
-| [junction](src/nodes/erl_node_junction.erl) | working |
-| [link_call](src/nodes/erl_node_link_call.erl) | working - dynamic calls also |
-| [link_in](src/nodes/erl_node_link_in.erl) | working |
-| [link_out](src/nodes/erl_node_link_out.erl) | working |
-| [mqtt_in](src/nodes/erl_node_mqtt_in.erl) | should be working |
-| [mqtt_out](src/nodes/erl_node_mqtt_out.erl) | should be working |
-| [noop](src/nodes/erl_node_noop.erl) | doing nothing is very much supported |
-| [split](src/nodes/erl_node_split.erl) | splitting arrays into individual messages is supported, string, buffers and objects aren't. |
-| [status](src/nodes/erl_node_status.erl) | working |
-| [switch](src/nodes/erl_node_switch.erl) | most operators work along with basic JSONata expressions  |
-| [template](src/nodes/erl_node_template.erl) | mustache templating is working but parsing into JSON or YAML isn't supported |
-| [trigger](src/nodes/erl_node_trigger.erl) | the default settings should work |
+| [catch](src/nodes/ered_node_catch.erl) | catches exception of selected nodes and of entire flows but not groups |
+| [change](src/nodes/ered_node_change.erl) | supports many operators but not all. JSONata in basic form is also supported. |
+| [complete](src/nodes/ered_node_complete.erl) | is available and can be used on certain nodes, not all |
+| [debug](src/nodes/ered_node_debug.erl) | only debugs the entire message, individal msg properties aren't supported. msg count as status is supported. |
+| [delay](src/nodes/ered_node_delay.erl) | supported static delay not dynamic delay set via `msg.delay` |
+| [exec](src/nodes/ered_node_exec.erl) | working |
+| [file_in](src/nodes/ered_node_file_in.erl) | working for files located in `/priv` |
+| [http_in](src/nodes/ered_node_http_in.erl) | working for GET, not tested for POST,PUT,DELETE etc |
+| [http_request](src/nodes/ered_node_http_request.erl) | basic support for doing rrequests, anything complex probably won't work |
+| [http_response](src/nodes/ered_node_http_response.erl) | working |
+| [inject](src/nodes/ered_node_inject.erl) | working for most types except for flow, global ... |
+| [join](src/nodes/ered_node_join.erl) | *manual arrays of count X* is working, `parts` isn't supported  |
+| [json](src/nodes/ered_node_json.erl) | working |
+| [junction](src/nodes/ered_node_junction.erl) | working |
+| [link_call](src/nodes/ered_node_link_call.erl) | working - dynamic calls also |
+| [link_in](src/nodes/ered_node_link_in.erl) | working |
+| [link_out](src/nodes/ered_node_link_out.erl) | working |
+| [mqtt_in](src/nodes/ered_node_mqtt_in.erl) | should be working |
+| [mqtt_out](src/nodes/ered_node_mqtt_out.erl) | should be working |
+| [noop](src/nodes/ered_node_noop.erl) | doing nothing is very much supported |
+| [split](src/nodes/ered_node_split.erl) | splitting arrays into individual messages is supported, string, buffers and objects aren't. |
+| [status](src/nodes/ered_node_status.erl) | working |
+| [switch](src/nodes/ered_node_switch.erl) | most operators work along with basic JSONata expressions  |
+| [template](src/nodes/ered_node_template.erl) | mustache templating is working but parsing into JSON or YAML isn't supported |
+| [trigger](src/nodes/ered_node_trigger.erl) | the default settings should work |
 
 Contexts are not supported, so there is no setting things on `flow`, `node` or `global`.
 
