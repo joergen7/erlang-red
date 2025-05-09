@@ -368,5 +368,6 @@ trigger_outgoing_messages(_, _, _) ->
 %% erlfmt:ignore alignment
 is_config_node(<<"mqtt-broker">>)        -> true;
 is_config_node(<<"FlowCompareCfg">>)     -> true;
+is_config_node(<<"FlowHubCfg">>)         -> true;
 is_config_node(<<"websocket-listener">>) -> true;
 is_config_node(_)                        -> false.

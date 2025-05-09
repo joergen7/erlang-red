@@ -44,6 +44,7 @@
 -import(ered_nodes, [
     get_prop_value_from_map/3,
     jstr/2,
+    post_exception_or_debug/3,
     send_msg_to_connected_nodes/2
 ]).
 -import(ered_msg_handling, [
@@ -95,6 +96,7 @@ handle_msg({exec_process_died, Msg}, NodeDef) ->
 handle_msg({incoming, Msg}, NodeDef) ->
     case maps:find(kill, Msg) of
         {ok, Signal} ->
+            %% kill a command
             %% Signal is something like SIGINT, SIGTERM, ...
             Tuple =
                 case maps:find(pid, Msg) of
@@ -123,6 +125,7 @@ handle_msg({incoming, Msg}, NodeDef) ->
                     {handled, NodeDef, Msg}
             end;
         _ ->
+            %% execute a command
             case to_bool(maps:get(useSpawn, NodeDef)) of
                 true ->
                     {handled, start_command_running(Msg, NodeDef),
@@ -138,8 +141,15 @@ handle_msg(_, NodeDef) ->
 %%
 %%
 start_command_running(Msg, NodeDef) ->
-    Cmd = maps:get(command, NodeDef),
+    start_command_running(maps:get(command, NodeDef), Msg, NodeDef).
 
+start_command_running(<<>>, Msg, NodeDef) ->
+    ErrMsg = jstr(
+        "TypeError: The argument 'file' cannot be empty. Received ''", []
+    ),
+    post_exception_or_debug(NodeDef, Msg, ErrMsg),
+    NodeDef;
+start_command_running(Cmd, Msg, NodeDef) ->
     Wires = maps:get(wires, NodeDef),
 
     Opts = #{
