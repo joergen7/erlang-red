@@ -106,18 +106,26 @@ handle_info({store_flow, FlowId, JsonText}, FlowStore) ->
     Push = fun(Key, Value, Acc) ->
         [{binary_to_atom(Key), Value} | Acc]
     end,
+
     {FlowMap, _, _} = json:decode(JsonText, ok, #{object_push => Push}),
     {ok, NodeAry} = maps:find(flow, FlowMap),
 
-    FileName = io_lib:format("flow.~s.json", [FlowId]),
     DestFileName = io_lib:format(
-        "~s/testflows/~s",
-        [code:priv_dir(erlang_red), FileName]
+        "~s/testflows/~s/flows.json",
+        [code:priv_dir(erlang_red), FlowId]
     ),
 
-    file:write_file(DestFileName, NodeAry),
+    filelib:ensure_dir(DestFileName),
+    case file:write_file(DestFileName, NodeAry) of
+        ok ->
+            ignore_all_went_well;
+        R ->
+            io:format( "FILE SAVING FAILED: ~s --> ~p~n",
+                       [DestFileName, R])
+    end,
 
-    FlowDetails = compile_file_store([{FlowId, DestFileName}], #{}),
+    FlowDetails = compile_file_store([{binary_to_list(FlowId),
+                                       lists:flatten(DestFileName)}], #{}),
 
     {noreply, maps:merge(FlowStore, FlowDetails)};
 handle_info({timeout, _From, initial_load_of_flow_files}, _FlowStore) ->
@@ -151,13 +159,14 @@ tab_name_or_filename([NodeDef | MoreNodeDefs], FileName) ->
     end.
 
 compile_file_list() ->
-    {ok, MP} = re:compile("flow.([A-Z0-9]{16}).json", [caseless]),
+    {ok, MP} = re:compile("([A-Z0-9]{16})/flows.json", [caseless]),
 
-    TestFlowDir = io_lib:format("~s/testflows", [code:priv_dir(erlang_red)]),
+    TestFlowDir = io_lib:format("~s/testflows/", [code:priv_dir(erlang_red)]),
+
     FileNames = filelib:fold_files(
         TestFlowDir,
-        "",
-        false,
+        "flows.json",
+        true,
         fun(Fname, Acc) ->
             case re:run(Fname, MP) of
                 {match, [{_, _}, {S, L}]} ->
@@ -176,7 +185,6 @@ compile_file_store([], FileStore) ->
 compile_file_store([FileDetails | MoreFileNames], FileStore) ->
     FlowId   = element(1, FileDetails),
     FileName = element(2, FileDetails),
-
     Ary      = parse_flow_file(FileName),
     TestName = tab_name_or_filename(Ary, FlowId),
 

@@ -203,8 +203,8 @@ foreach_testflow_test_() ->
 
     {_Cnt, FileNames} = filelib:fold_files(
         io_lib:format("~s/testflows", [code:priv_dir(erlang_red)]),
-        "",
-        false,
+        "flows.json",
+        true,
         fun(Fname, Acc) ->
             {element(1, Acc) + 1, [Fname | element(2, Acc)]}
         end,
