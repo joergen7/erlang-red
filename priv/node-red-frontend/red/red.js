@@ -929,7 +929,7 @@ var RED = (function() {
                 cache: false,
                 url: `testcase/${RED.workspaces.active()}/create`,
                 method: 'POST',
-                data: JSON.stringify({ "flow": JSON.stringify(nodes,null,4) }),
+                data: JSON.stringify({ "flow": JSON.stringify(nodes) }),
                 contentType: "application/json",
                 success: function(data) {
                     data = JSON.parse(data)
@@ -1175,7 +1175,7 @@ var RED = (function() {
                           options.success({
                               "rev": "ea246f68766c8630ea246f68766c8630",
                               "revision": "fb0df6d24f37fbdf5b3ff97b723416ab4d5f00f9",
-                              "flowid": "ea246f68766c8630",
+                              "flowid": "ea246f68766c8632",
                               "flows": JSON.parse(flowdata)["flows"]
                           })
 
@@ -44731,7 +44731,7 @@ RED.clipboard = (function() {
                             // ensure that the current flow is selected and that
                             // the json is formatted.
                             $('#red-ui-clipboard-dialog-export-rng-flow').trigger('click')
-                            $('#red-ui-clipboard-dialog-export-fmt-full').trigger('click')
+                            $('#red-ui-clipboard-dialog-export-fmt-mini').trigger('click')
                             setTimeout( () => {
                                 $( this ).dialog( "close" );
                                 var data = $("#red-ui-clipboard-dialog-export-text").val();
