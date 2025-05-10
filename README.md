@@ -173,7 +173,11 @@ To create unit tests for this, Node-RED frontend has been extended with a
 
 ![img](.images/create-test-case.png)
 
-Then flow is then stored in the [testflows](priv/testflows) dir and will be picked up the next time `make eunit-test` is called. In this way it is possible to create unit tests visually.
+Test flows are stored in the [testflows](priv/testflows) dir and will be picked up the next time `make eunit-test` is called. In this way it is possible to create unit tests visually.
+
+Flow tests can also be tested within the flow editor, for more details see below.
+
+The flow test suite is now maintained in a [separate](https://github.com/gorenje/erlang-red-flow-testsuite) repository but is duplicated here.
 
 Assert Nodes
 ---
