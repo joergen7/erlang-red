@@ -42,17 +42,28 @@ handle_call({del_route, _Path, _Method, _WsName}, _From, State) ->
     %% TODO here check for duplication and ensure that its replaced with the
     %% TODO current handler. I.e. Path, Method, WsName should be unique and
     %% TODO map to exactly one pid.
+    %% TODO DON"T forget to consider the WsName also ...
     {reply, ok, State};
 handle_call({add_route, Path, Method, {Pid, WsName}}, _From, State) ->
     %% TODO here check for duplication and ensure that its replaced with the
-    %% TODO current handler. I.e. Path, Method, WsName should be unique and
-    %% TODO map to exactly one pid.
-    ExtraRoutes = [
-        {Path, [{method, Method}], ered_http_node_http_in_handler, #{
-            pid => Pid, wsname => WsName
-        }}
-        | maps:get(http_in_routes, State)
-    ],
+    %% TODO current handler. I.e. Tuple {Path, Method, WsName} should be
+    %% TODO unique and  map to exactly one pid.
+
+    ExtraRoutes =
+        case lists:keyfind(Path, 1, maps:get(http_in_routes, State)) of
+            false ->
+                [
+                    {Path, ered_http_node_http_in_handler, [
+                        {Method, Pid, WsName}
+                    ]}
+                    | maps:get(http_in_routes, State)
+                ];
+            {Path, Handler, Ary} ->
+                [
+                    {Path, Handler, [{Method, Pid, WsName} | Ary]}
+                    | lists:keydelete(Path, 1, maps:get(http_in_routes, State))
+                ]
+        end,
 
     Dispatch = cowboy_router:compile(
         [{'_', ExtraRoutes ++ maps:get(floweditor_routes, State)}]

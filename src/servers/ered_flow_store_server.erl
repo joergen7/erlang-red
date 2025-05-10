@@ -120,12 +120,15 @@ handle_info({store_flow, FlowId, JsonText}, FlowStore) ->
         ok ->
             ignore_all_went_well;
         R ->
-            io:format( "FILE SAVING FAILED: ~s --> ~p~n",
-                       [DestFileName, R])
+            io:format(
+                "FILE SAVING FAILED: ~s --> ~p~n",
+                [DestFileName, R]
+            )
     end,
 
-    FlowDetails = compile_file_store([{binary_to_list(FlowId),
-                                       lists:flatten(DestFileName)}], #{}),
+    FlowDetails = compile_file_store(
+        [{binary_to_list(FlowId), lists:flatten(DestFileName)}], #{}
+    ),
 
     {noreply, maps:merge(FlowStore, FlowDetails)};
 handle_info({timeout, _From, initial_load_of_flow_files}, _FlowStore) ->
