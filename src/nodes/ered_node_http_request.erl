@@ -37,6 +37,22 @@ handle_event(_, NodeDef) ->
 %%
 %%
 handle_msg({incoming, Msg}, NodeDef) ->
+    case {maps:find(headers, NodeDef), maps:find(headers, Msg)} of
+        {{ok, []}, {ok, []}} ->
+            no_headers_set;
+        {{ok, []}, error} ->
+            no_headers_set;
+        {{ok, []}, {ok, [_ | _]}} ->
+            unsupported(NodeDef, Msg, "message: headers unsupported");
+        {{ok, [_ | _]}, {ok, []}} ->
+            unsupported(NodeDef, Msg, "node definition: headers unsupported");
+        {{ok, [_ | _]}, error} ->
+            unsupported(NodeDef, Msg, "node definition: headers unsupported");
+        {{ok, [_ | _]}, {ok, [_ | _]}} ->
+            unsupported(NodeDef, Msg, "node definition: headers unsupported"),
+            unsupported(NodeDef, Msg, "message: headers unsupported")
+    end,
+
     Url = get_prop_from_nodedef_or_msg(url, NodeDef, Msg),
     Method =
         case maps:get(method, NodeDef) of
@@ -48,16 +64,16 @@ handle_msg({incoming, Msg}, NodeDef) ->
 
     case {Method, Url} of
         {[], []} ->
-            unsupported(NodeDef, Msg, "url and method not set"),
+            post_exception_or_debug(NodeDef, Msg, "url and method not set"),
             {handled, NodeDef, Msg};
         {[], _} ->
-            unsupported(NodeDef, Msg, "method not set"),
+            post_exception_or_debug(NodeDef, Msg, "method not set"),
             {handled, NodeDef, Msg};
         {_, []} ->
-            unsupported(NodeDef, Msg, "url not set"),
+            post_exception_or_debug(NodeDef, Msg, "url not set"),
             {handled, NodeDef, Msg};
         _ ->
-            case httpc:request(mth_to_atom(Method), {Url, []}, [], []) of
+            case perform_request(Method, Url, NodeDef, Msg) of
                 {ok, {{_, StatusCode, _ReasonPhrase}, _, Body}} ->
                     Msg2 = maps:put(statusCode, StatusCode, Msg),
                     Msg3 = maps:put(payload, jstr(Body), Msg2),
@@ -90,3 +106,32 @@ get_prop_from_nodedef_or_msg(PropName, NodeDef, Msg) ->
         _ ->
             get_prop_value_from_map(PropName, NodeDef)
     end.
+
+perform_request(Method = <<"POST">>, Url, _NodeDef, Msg) ->
+    case maps:find(payload, Msg) of
+        {ok, Payload} ->
+            httpc:request(
+                mth_to_atom(Method),
+                {Url, [], "application/json", Payload},
+                [],
+                []
+            );
+        _ ->
+            httpc:request(
+                mth_to_atom(Method),
+                {Url, [], "application/json", ""},
+                [],
+                []
+            )
+    end;
+perform_request(Method = <<"GET">>, Url, NodeDef, Msg) ->
+    case maps:find(paytoqs, NodeDef) of
+        {ok, <<"ignore">>} ->
+            httpc:request(mth_to_atom(Method), {Url, []}, [], []);
+        _ ->
+            ErrMsg = jstr("unsuported config for payload handling", []),
+            post_exception_or_debug(NodeDef, Msg, ErrMsg)
+    end;
+perform_request(_Method, _Url, NodeDef, Msg) ->
+    unsupported(NodeDef, Msg, "unsuported method"),
+    {error, unsupported_method}.
