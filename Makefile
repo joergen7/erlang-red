@@ -30,6 +30,9 @@ fly-io-run: fly-io-build
 fly-io-enter:
 	docker exec -it $$(docker ps -f ancestor=fly-er -q) sh
 
+check-testflows:
+	diff -qr priv/testflows ../erlang-red-flow-testsuite  | grep -v preview.svg | grep -v nodedetails.json | grep -v README | grep -v .git | grep -v .image
+
 ##
 ## The following are done inside the docker container - after running
 ## make enter-docker-shell
