@@ -61,7 +61,8 @@ This is a non-complete list of nodes that partially or completely work:
 | [delay](src/nodes/ered_node_delay.erl) | supported static delay not dynamic delay set via `msg.delay` |
 | [exec](src/nodes/ered_node_exec.erl) | executing and killing commands is supported  but only for commands in spawn mode and set on the node. Appending arguments to commands isn't supported. Timeouts are supported. Kill messages are also supported. |
 | [file in](src/nodes/ered_node_file_in.erl) | working for files located in `/priv` |
-| [http in](src/nodes/ered_node_http_in.erl) | working for GET, not tested for POST,PUT,DELETE etc |
+| [function](src/nodes/ered_node_function.erl) | working for any Erlang. Stop and start also respected. Timeout and more than one output port isn't supported. |
+| [http in](src/nodes/ered_node_http_in.erl) | working for GET and POST, not available for PUT,DELETE etc |
 | [http request](src/nodes/ered_node_http_request.erl) | basic support for doing rrequests, anything complex probably won't work |
 | [http response](src/nodes/ered_node_http_response.erl) | working |
 | [inject](src/nodes/ered_node_inject.erl) | working for most types except for flow, global ... |
