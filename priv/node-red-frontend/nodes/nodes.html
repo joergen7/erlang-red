@@ -3181,7 +3181,7 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
         category: 'function',
         defaults: {
             name: {value:"_DEFAULT_"},
-            func: {value:"\nreturn msg;"},
+            func: {value:"\nfun (Msg) ->\n    Msg\nend.\n"},
             outputs: {value:1},
             timeout:{value:RED.settings.functionTimeout || 0},
             noerr: {value:0,required:true,
@@ -3311,7 +3311,7 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
             var buildEditor = function(id, stateId, focus, value, defaultValue, extraLibs, offset) {
                 var editor = RED.editor.createEditor({
                     id: id,
-                    mode: 'ace/mode/nrjavascript',
+                    mode: 'ace/mode/erlang',
                     value: value || defaultValue || "",
                     stateId: stateId,
                     focus: true,
@@ -3345,7 +3345,7 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
                 url:"functions", // where to get the data from
                 type:"function", // the type of object the library is for
                 editor:this.editor, // the field name the main text body goes to
-                mode:"ace/mode/nrjavascript",
+                mode:"ace/mode/erlang",
                 fields:[
                     'name', 'outputs', 'timeout',
                     {
@@ -3389,7 +3389,7 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
                         value: value,
                         width: "Infinity",
                         stateId: editor.__stateId,
-                        mode: "ace/mode/nrjavascript",
+                        mode: "ace/mode/erlang",
                         focus: true,
                         cancel: function () {
                             setTimeout(function () {

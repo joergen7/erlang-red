@@ -405,8 +405,8 @@
             "var": "vari\u00e1vel"
         },
         "text": {
-            "finalize": "//O c\u00f3digo adicionado aqui ser\u00e1 executado quando o n\u00f3\n// for interrompido ou reimplementado.\n",
-            "initialize": "//O c\u00f3digo adicionado aqui ser\u00e1 executado uma vez\n// sempre que o n\u00f3 for iniciado.\n"
+            "finalize": "%%O c\u00f3digo adicionado aqui ser\u00e1 executado quando o n\u00f3\n%% for interrompido ou reimplementado.\n",
+            "initialize": "%%O c\u00f3digo adicionado aqui ser\u00e1 executado uma vez\n%% sempre que o n\u00f3 for iniciado.\n"
         }
     },
     "global-config": {
