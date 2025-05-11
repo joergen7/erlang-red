@@ -38,17 +38,25 @@ unregister_http_in(Path, Method, WsName) ->
 
 %%
 %%
-handle_call({del_route, _Path, _Method, _WsName}, _From, State) ->
-    %% TODO here check for duplication and ensure that its replaced with the
-    %% TODO current handler. I.e. Path, Method, WsName should be unique and
-    %% TODO map to exactly one pid.
-    %% TODO DON"T forget to consider the WsName also ...
-    {reply, ok, State};
+handle_call({del_route, Path, Method, WsName}, _From, State) ->
+    NwR =
+        case lists:keyfind(Path, 1, maps:get(http_in_routes, State)) of
+            false ->
+                maps:get(http_in_routes, State);
+            {Path, Handler, Ary} ->
+                Ary2 = lists:filter(
+                    fun({M, _P, W}) -> M =/= Method andalso W =/= WsName end,
+                    Ary
+                ),
+                lists:keyreplace(
+                    Path,
+                    1,
+                    maps:get(http_in_routes, State),
+                    {Path, Handler, Ary2}
+                )
+        end,
+    {reply, ok, maps:put(http_in_routes, NwR, State)};
 handle_call({add_route, Path, Method, {Pid, WsName}}, _From, State) ->
-    %% TODO here check for duplication and ensure that its replaced with the
-    %% TODO current handler. I.e. Tuple {Path, Method, WsName} should be
-    %% TODO unique and  map to exactly one pid.
-
     ExtraRoutes =
         case lists:keyfind(Path, 1, maps:get(http_in_routes, State)) of
             false ->
@@ -59,6 +67,9 @@ handle_call({add_route, Path, Method, {Pid, WsName}}, _From, State) ->
                     | maps:get(http_in_routes, State)
                 ];
             {Path, Handler, Ary} ->
+                %% TODO here check for duplication and ensure that its replaced
+                %% TODO with the current handler. I.e. Tuple {Path, Method,
+                %% TODO WsName} should be unique and  map to exactly one pid.
                 [
                     {Path, Handler, [{Method, Pid, WsName} | Ary]}
                     | lists:keydelete(Path, 1, maps:get(http_in_routes, State))

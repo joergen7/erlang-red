@@ -15,7 +15,8 @@
     jstr/2
 ]).
 -import(ered_nodered_comm, [
-    unsupported/3
+    unsupported/3,
+    ws_from/1
 ]).
 -import(ered_msg_handling, [
     convert_to_num/1,
@@ -33,13 +34,14 @@ handle_event(_, NodeDef) ->
     NodeDef.
 
 %%
-%% outgoing message is triggered by the ered_http_node_http_in_handler module
+%% This sends a message to the ered_http_node_http_in_handler telling it
+%% to send the payload to the client.
 handle_msg({incoming, Msg}, NodeDef) ->
     StatusCode = retrieve_status_code(NodeDef, Msg),
     Headers = retrieve_headers(NodeDef, Msg),
     {ok, ReqPid} = maps:find(reqpid, Msg),
 
-    ReqPid ! {reply, StatusCode, Headers, maps:get(payload, Msg)},
+    ReqPid ! {reply, StatusCode, Headers, ws_from(Msg), maps:get(payload, Msg)},
 
     {handled, NodeDef, Msg};
 handle_msg(_, NodeDef) ->

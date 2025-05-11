@@ -24,6 +24,10 @@
     unsupported/3
 ]).
 
+-import(ered_nodered_comm, [
+    ws_from/1
+]).
+
 %%
 %%
 start(NodeDef, _WsName) ->
@@ -112,14 +116,22 @@ perform_request(Method = <<"POST">>, Url, _NodeDef, Msg) ->
         {ok, Payload} ->
             httpc:request(
                 mth_to_atom(Method),
-                {Url, [], "application/json", Payload},
+                {Url,
+                    [
+                        {"Cookie", io_lib:format("wsname=~s", [ws_from(Msg)])}
+                    ],
+                    "application/json", Payload},
                 [],
                 []
             );
         _ ->
             httpc:request(
                 mth_to_atom(Method),
-                {Url, [], "application/json", ""},
+                {Url,
+                    [
+                        {"Cookie", io_lib:format("wsname=~s", [ws_from(Msg)])}
+                    ],
+                    "application/json", ""},
                 [],
                 []
             )
@@ -127,7 +139,14 @@ perform_request(Method = <<"POST">>, Url, _NodeDef, Msg) ->
 perform_request(Method = <<"GET">>, Url, NodeDef, Msg) ->
     case maps:find(paytoqs, NodeDef) of
         {ok, <<"ignore">>} ->
-            httpc:request(mth_to_atom(Method), {Url, []}, [], []);
+            httpc:request(
+                mth_to_atom(Method),
+                {Url, [
+                    {"Cookie", io_lib:format("wsname=~s", [ws_from(Msg)])}
+                ]},
+                [],
+                []
+            );
         _ ->
             ErrMsg = jstr("unsuported config for payload handling", []),
             post_exception_or_debug(NodeDef, Msg, ErrMsg)

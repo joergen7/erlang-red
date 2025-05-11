@@ -19,7 +19,11 @@
 ]).
 
 %%
-%% Compute engine for managing flows on this server.
+%% Compute engine for executing flows on this server.
+%%
+%% Compute engine creates the pids for each node and lets those processes
+%% run. The unitest engine runs flows and then brings down the processes
+%% after the test.
 %%
 
 -import(ered_nodes, [
@@ -130,7 +134,11 @@ handle_info({timeout, _From, {load_flowid, FlowId}}, State) ->
             ignore;
         FileName ->
             Ary = ered_flows:parse_flow_file(FileName),
-            ered_nodes:create_pid_for_node(Ary, no_ws)
+            %% Websockets are scopes that identify a client using the
+            %% floweditor to execute flows. If there is no floweditor
+            %% frontend and a flow is loaded what then? Well it's a none
+            %% websocket. Important is that a websocket name is supplied.
+            ered_nodes:create_pid_for_node(Ary, none)
     end,
     {noreply, State};
 handle_info(_, State) ->
