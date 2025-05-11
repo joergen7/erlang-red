@@ -201,6 +201,11 @@ base_routes() ->
         {"/FlowCompare/jslib/flowviewer.min.js", [{method, <<"GET">>}],
             cowboy_static, {priv_file, erlang_red, "vendor/flowviewer.min.js"}},
 
+        {"/vendor/monaco-tokenizer.js", [{method, <<"GET">>}],
+            cowboy_static, {priv_file, erlang_red, "vendor/monaco-tokenizer.js"}},
+        {"/vendor/erlang.js", [{method, <<"GET">>}],
+            cowboy_static, {priv_file, erlang_red, "vendor/erlang.js"}},
+
         %% TODO the constraints here DONT WORK - Cowboy just
         %% TODO ignores them because Bindings is empty.
         %%

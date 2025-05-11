@@ -1295,6 +1295,11 @@ var RED = (function() {
 
         $("#red-ui-main-container").show();
 
+        // add Erlang support to monaco
+        monaco.languages.register( { id: 'erlang'})
+        MonacoAceTokenizer.registerRulesForLanguage('erlang',
+                         new MonacoAceTokenizer.erlangDefinition.default)
+
         loadPluginList();
     }
 
