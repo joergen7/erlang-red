@@ -200,6 +200,11 @@ foreach_testflow_test_() ->
     %% pg is required for the catch nodes
     pg:start_link(),
     ered_config_store:start(),
+    code:add_path("/usr/local/lib/elixir/lib/elixir/ebin"),
+    code:add_path("elixir/erlang_red_helpers/_build/dev/lib/earmark/ebin"),
+    code:add_path(
+        "elixir/erlang_red_helpers/_build/dev/lib/erlang_red_helpers/ebin"
+    ),
 
     {_Cnt, FileNames} = filelib:fold_files(
         io_lib:format("~s/testflows", [code:priv_dir(erlang_red)]),
