@@ -82,7 +82,7 @@ check_rule_against_msg(<<"noteql">>, <<"msg">>, Rule, Msg) ->
                 true ->
                     {failed,
                         jstr(
-                            "Prop '~p': Unequal but same. Exp: '~p' Was: '~p'",
+                            "Prop '~p': Unequal but same. Exp: ~n '~p' ~n Was: ~n '~p' ~n",
                             [Prop, ReqVal, Val]
                         )};
                 _ ->
@@ -149,7 +149,7 @@ match_value_on_msg(Prop, MsgVal, <<"str">>, ReqPattern, MatchVal, _Msg) ->
         _ ->
             {failed,
                 jstr(
-                    "Prop '~p': Not matched. Mat '~p' Val: '~p'",
+                    "Prop '~p':~n~nNot matched.~n~nMat~n~n'~p'~n~nVal:~n~n'~p'~n~n",
                     [Prop, MatchVal, MsgVal]
                 )}
     end;
@@ -170,7 +170,7 @@ eql_msg_op(Prop, SrcVal, <<"json">>, ReqVal, _Msg) ->
             %% TODO is_same(..) converts binaries to lists for comparison.
             {failed,
                 jstr(
-                    "Prop '~p': Exp: '~p' Was: '~p'",
+                    "Prop '~p':~n~nExp:~n~n'~p'~n~nWas:~n~n'~p'~n~n",
                     [Prop, DecodedVal, SrcVal]
                 )}
     end;
@@ -181,7 +181,7 @@ eql_msg_op(Prop, SrcVal, <<"str">>, ReqVal, _Msg) ->
         _ ->
             {failed,
                 jstr(
-                    "Prop '~p': Exp: '~p' Was: '~p'",
+                    "Prop '~p':~n~nExp:~n~n'~p'~n~nWas:~n~n'~p'~n~n",
                     [Prop, ReqVal, SrcVal]
                 )}
     end;
@@ -205,7 +205,7 @@ eql_msg_op(Prop, SrcVal, <<"msg">>, ReqProp, Msg) ->
                 _ ->
                     {failed,
                         jstr(
-                            "Prop '~p': Exp: '~p' Was: '~p'",
+                            "Prop '~p':~n~nExp:~n~n'~p'~n~nWas:~n~n'~p'~n~n",
                             [Prop, ReqVal, SrcVal]
                         )}
             end;
