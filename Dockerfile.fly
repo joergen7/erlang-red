@@ -1,14 +1,15 @@
 # Try to maintain user-servicable parts up front
-# ARG OTP_VERSION=27.3.3
+ARG ELIXIR_VERSION=1.18.3
+ARG OTP_VERSION=27.3.4
 ARG ALPINE_VERSION=3.21.3
 
-ARG BUILDER_IMAGE="erlang:alpine"
+ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-alpine-${ALPINE_VERSION}"
 ARG RUNNER_IMAGE="alpine:${ALPINE_VERSION}"
 
 FROM ${BUILDER_IMAGE} AS builder
 
-RUN apk update && apk add alpine-sdk bash curl \
-                          cmake perl linux-headers && \
+RUN apk update && \
+    apk add alpine-sdk bash curl cmake perl linux-headers rebar3 && \
 	rm -rf /var/cache/apk/*
 
 WORKDIR /builder
