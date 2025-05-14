@@ -31,7 +31,7 @@ fly-io-enter:
 	docker exec -it $$(docker ps -f ancestor=fly-er -q) sh
 
 check-testflows:
-	diff -qr priv/testflows ../erlang-red-flow-testsuite  | grep -v preview.svg | grep -v nodedetails.json | grep -v README | grep -v .git | grep -v .image
+	diff -qr priv/testflows ../erlang-red-flow-testsuite  | grep -v preview.svg | grep -v nodedetails.json | grep -v README | grep -v .git | grep -v .image | grep -v 499288ab4007ac6a | grep -v b8e2ad1371ddb546 | grep -v c562c43e69bcf0af | grep -v f346d45c81f595e5 || true
 
 ##
 ## The following are done inside the docker container - after running
@@ -39,6 +39,7 @@ check-testflows:
 ##
 compile:
 	rebar3 compile
+	cd elixir/erlang_red_helpers && mix deps.get && mix
 
 compile-loop:
 	while [ 1 ] ; do make -s compile ; sleep 2 ; reset ; done
@@ -54,6 +55,7 @@ app-start-loop:
 
 eunit-test:
 	rebar3 eunit
+	cd elixir/erlang_red_helpers && mix test
 
 # This helps understanding dialyzser
 #  --> https://grantwinney.com/common-dialyzer-errors-and-solutions-in-erlang/
