@@ -2,8 +2,6 @@
 FROM erlang:27.3.0.0 as builder
 
 RUN apt-get update && apt-get -y install \
-    emacs \
-    bash-completion \
     git \
     inotify-tools \
     cmake \
@@ -17,6 +15,10 @@ WORKDIR /builder
 COPY rebar.config .
 COPY rebar.lock .
 
+## needed for Elixir
+ENV LANG=C.UTF-8
+ENV ELIXIR_ERL_OPTIONS="+fnu"
+
 RUN rebar3 get-deps
 RUN rebar3 compile
 
@@ -25,9 +27,18 @@ FROM builder2 as builder3
 
 WORKDIR /builder
 
+## needed for Elixir
+ENV LANG=C.UTF-8
+ENV ELIXIR_ERL_OPTIONS="+fnu"
+
 COPY src src/
 COPY include include/
 COPY priv priv/
+
+## copy some content into the images to use for the website
+COPY MILESTONES.md priv/
+COPY README.md priv/
+COPY .images priv/
 
 RUN rebar3 as prod release -n erlang_red
 
@@ -43,6 +54,10 @@ COPY --from=builder3 --chown=nobody:root /builder/_build/prod/rel/erlang_red ./
 ENV SHELL=/bin/bash
 ENV COMPUTEFLOW=499288ab4007ac6a
 ENV DISABLE_FLOWEDITOR=YES
+
+## needed for Elixir
+ENV LANG=C.UTF-8
+ENV ELIXIR_ERL_OPTIONS="+fnu"
 
 USER nobody
 EXPOSE 8080

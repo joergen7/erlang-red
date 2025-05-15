@@ -20,7 +20,8 @@ heroku-enter:
 	docker exec -it $$(docker ps -f ancestor=heroku-red-erik -q) bash
 heroku-stop:
 	docker kill $$(docker ps -f ancestor=heroku-red-erik -q)
-
+heroku-console: heroku-build
+	docker run -i -t heroku-red-erik /erlang-red/bin/erlang_red console
 ##
 ## fly.io docker image
 fly-io-build:
