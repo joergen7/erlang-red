@@ -4,18 +4,6 @@
 -export([init/1, start_link/0]).
 
 start_link() ->
-    %% code required by the Elixir helpers used in the Erlang code.
-    %% Taken from :
-    %%  -- https://elixirforum.com/t/calling-elixir-from-erlang/10940 -->
-    %%  -- https://joearms.github.io/published/2017-12-18-Calling-Elixir-From-Erlang.html
-    %%
-    io:format("===> Elixir Code Paths~n", []),
-    code:add_path("/usr/local/lib/elixir/lib/elixir/ebin"),
-    code:add_path("elixir/erlang_red_helpers/_build/dev/lib/earmark/ebin"),
-    code:add_path(
-        "elixir/erlang_red_helpers/_build/dev/lib/erlang_red_helpers/ebin"
-    ),
-
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init([]) ->

@@ -89,6 +89,20 @@ Build
 
     $ rebar3 compile
 
+Note: the first build *might* fail with:
+
+```
+-- Up-to-date: /code/_build/default/lib/quicer/priv/libquicer_nif.so
+make[1]: Leaving directory '/code/_build/default/lib/quicer/c_build'
+===> Compiling earmark
+===> Uncaught error in rebar_core. Run with DIAGNOSTIC=1 to see stacktrace or consult rebar3.crashdump
+===> When submitting a bug report, please include the output of `rebar3 report "your command"`
+```
+
+The cause are dependencies computation, the fix is just to redo the command `rebar3 compile`.
+
+If this is not the case, then please create an issue here.
+
 Test
 -----
 

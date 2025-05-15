@@ -39,7 +39,6 @@ check-testflows:
 ##
 compile:
 	rebar3 compile
-	cd elixir/erlang_red_helpers && mix deps.get && mix
 
 compile-loop:
 	while [ 1 ] ; do make -s compile ; sleep 2 ; reset ; done
@@ -55,7 +54,6 @@ app-start-loop:
 
 eunit-test:
 	rebar3 eunit
-	cd elixir/erlang_red_helpers && mix test
 
 # This helps understanding dialyzser
 #  --> https://grantwinney.com/common-dialyzer-errors-and-solutions-in-erlang/
