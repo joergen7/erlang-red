@@ -84,6 +84,18 @@ This is a non-complete list of nodes that partially or completely work:
 
 Contexts are not supported, so there is no setting things on `flow`, `node` or `global`.
 
+
+Elixir
+---
+
+Elixir helpers can be added to [erlang_red_helpers](https://github.com/gorenje/erlang-red-elixir-helpers) repository.
+
+There is nothing stopping anyone from creating a complete node in Elixir provided there is a Erlang "node-wrapper", i.e., a bit of Erlang code in the [src/nodes](src/nodes) directory that references the Elixir node.
+
+The initial example [markdown node](https://github.com/gorenje/erlang-red/blob/42f10112baac5a5f916ecd805eafc87382632dec/src/nodes/ered_node_markdown.erl#L38) is an Erlang node that referencs code over in Elixir. I also wrote a Elixir wrapper function whereby I could have just as easily referenced Earmark directly. That was a stylist choice.
+
+I tend to use the Elixir code-corner for importing Elixir libraries to the project and less actually coding nodes in Elixir. I simply prefer Erlang syntax. But each to their own, I don't care :)
+
 Build
 -----
 
@@ -224,20 +236,6 @@ What the gif shows is my list of unit tests, which at the press of a button, can
 The best bit though is that all errors are pushed to the debug panel and from there I get directly to the node causing the error. Unit testing is now completely integrated into Erlang-RED.
 
 My intention is to create many small flows that represent functionality that needs to be implemented by Erlang-RED. These unit tests shows the compatibility to Node-RED and less the correctness of the Erlang code.
-
-
-Elixir
----
-
-Elixir helpers can be added in the [erlang_red_helpers](elixir/erlang_red_helpers) directory.
-
-The code paths might need to be added [here](https://github.com/gorenje/erlang-red/blob/42f10112baac5a5f916ecd805eafc87382632dec/src/erlang_red_sup.erl#L7-L17) and [here](https://github.com/gorenje/erlang-red/blob/42f10112baac5a5f916ecd805eafc87382632dec/test/flow_file_test.erl#L203-L207) to have ErlangRED access the BEAM code.
-
-There is nothing stopping anyone from creating a complete node in Elixir provided there is a Erlang "node-wrapper", i.e., a bit of Erlang code in the [src/nodes](src/nodes) directory that references the Elixir node.
-
-The initial example [markdown node](https://github.com/gorenje/erlang-red/blob/42f10112baac5a5f916ecd805eafc87382632dec/src/nodes/ered_node_markdown.erl#L38) is an Erlang node that referencs code over in Elixir. I also wrote a Elixir wrapper function whereby I could have just as easily referenced Earmark directly. That was a stylist choice.
-
-I tend to use the Elixir code-corner for importing Elixir libraries to the project and less actually coding nodes in Elixir. I simply prefer Erlang syntax. But each to their own, I don't care :)
 
 
 Contributing
