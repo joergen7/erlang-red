@@ -16,7 +16,7 @@ start() ->
     InitialState =
         case os:getenv("DISABLE_FLOWEDITOR") of
             false ->
-                #{floweditor_routes => base_routes()};
+                #{floweditor_routes => flow_editor_routes()};
             _ ->
                 io:format("Disabling FlowEditor Frontend~n", []),
                 #{floweditor_routes => []}
@@ -55,6 +55,8 @@ handle_call({del_route, Path, Method, WsName}, _From, State) ->
                     {Path, Handler, Ary2}
                 )
         end,
+
+    restart_dispatcher(NwR ++ maps:get(floweditor_routes, State)),
     {reply, ok, maps:put(http_in_routes, NwR, State)};
 handle_call({add_route, Path, Method, {Pid, WsName}}, _From, State) ->
     ExtraRoutes =
@@ -69,18 +71,14 @@ handle_call({add_route, Path, Method, {Pid, WsName}}, _From, State) ->
             {Path, Handler, Ary} ->
                 %% TODO here check for duplication and ensure that its replaced
                 %% TODO with the current handler. I.e. Tuple {Path, Method,
-                %% TODO WsName} should be unique and  map to exactly one pid.
+                %% TODO WsName} should be unique and map to exactly one pid.
                 [
                     {Path, Handler, [{Method, Pid, WsName} | Ary]}
                     | lists:keydelete(Path, 1, maps:get(http_in_routes, State))
                 ]
         end,
 
-    Dispatch = cowboy_router:compile(
-        [{'_', ExtraRoutes ++ maps:get(floweditor_routes, State)}]
-    ),
-
-    cowboy:set_env(erlang_red_listener, dispatch, Dispatch),
+    restart_dispatcher(ExtraRoutes ++ maps:get(floweditor_routes, State)),
     {reply, ok, maps:put(http_in_routes, ExtraRoutes, State)};
 handle_call(_Msg, _From, State) ->
     {reply, State, State}.
@@ -139,11 +137,11 @@ herd_up_the_cattle(State) ->
 
 %%
 %% Naming convention is that anything with 'nodered' in the name is part
-%% of the orignal NodeRED API that link the flow editor with the server.
-%% Other calls are extensions to support ErlangRED functionality.
+%% of the orignal NodeRED API that links the flow editor with the server.
+%% Other calls are extensions to support ErlangRED functionality or node
+%% functionality (e.g., FlowCompare, FlowHubLib, ...)
 %%
-
-base_routes() ->
+flow_editor_routes() ->
     [
         %%
         %% Sock'em in the eye websockets
@@ -177,12 +175,11 @@ base_routes() ->
         {"/flows", ered_http_nodered_flow_deploy_handler, []},
         {"/inject/:nodeid", ered_http_nodered_inject_node_button_handler, []},
 
-        {"/debug/view/debug-utils.js", [{method, <<"GET">>}], cowboy_static,
+        {"/debug/view/debug-utils.js", cowboy_static,
             {priv_file, erlang_red,
                 "node-red-frontend/debug/view/debug-utils.js"}},
 
-        {"/debug/:nodeid/:action", [{method, <<"POST">>}],
-            ered_http_nodered_debug_node_active, []},
+        {"/debug/:nodeid/:action", ered_http_nodered_debug_node_active, []},
 
         %%
         %% GET handlers for delivery of the static content
@@ -192,45 +189,45 @@ base_routes() ->
         %% Flow Compare node allows comparing the flow data in the browser
         %% with what is stored on the server. Good for knowing the in-browser
         %% changes made to installed test cases.
-        {"/FlowCompare/jslib/diff.min.js", [{method, <<"GET">>}], cowboy_static,
+        {"/FlowCompare/jslib/diff.min.js", cowboy_static,
             {priv_file, erlang_red, "vendor/diff.min.js"}},
 
-        {"/FlowHubLib/jslib/diff.min.js", [{method, <<"GET">>}], cowboy_static,
+        {"/FlowHubLib/jslib/diff.min.js", cowboy_static,
             {priv_file, erlang_red, "vendor/flowhub.diff.min.js"}},
 
-        {"/FlowCompare/jslib/flowviewer.min.js", [{method, <<"GET">>}],
-            cowboy_static, {priv_file, erlang_red, "vendor/flowviewer.min.js"}},
+        {"/FlowCompare/jslib/flowviewer.min.js", cowboy_static,
+            {priv_file, erlang_red, "vendor/flowviewer.min.js"}},
 
-        {"/vendor/monaco-tokenizer.js", [{method, <<"GET">>}], cowboy_static,
+        {"/vendor/monaco-tokenizer.js", cowboy_static,
             {priv_file, erlang_red, "vendor/monaco-tokenizer.js"}},
-        {"/vendor/erlang.js", [{method, <<"GET">>}], cowboy_static,
+        {"/vendor/erlang.js", cowboy_static,
             {priv_file, erlang_red, "vendor/erlang.js"}},
 
-        %% TODO the constraints here DONT WORK - Cowboy just
-        %% TODO ignores them because Bindings is empty.
-        %%
-        {"/library/local/flows/", [{method, <<"GET">>}],
-            ered_http_nodered_empty_json, []},
-        {"/credentials/[...]", [{method, <<"GET">>}],
-            ered_http_nodered_empty_json, []},
-        {"/context/[...]", [{method, <<"GET">>}], ered_http_nodered_empty_json,
-            []},
+        %% flow editor stuff that isn't supported yet
+        {"/library/local/flows/", ered_http_nodered_empty_json, []},
+        {"/credentials/[...]", ered_http_nodered_empty_json, []},
+        {"/context/[...]", ered_http_nodered_empty_json, []},
 
-        {"/node-red", [{method, <<"GET">>}], cowboy_static,
+        {"/node-red", cowboy_static,
             {priv_file, erlang_red, "node-red-frontend/index.html"}},
 
-        %%% Wrapper site nonsense starts
-        {"/", [{method, <<"GET">>}], ered_http_release_status, []},
+        %%% Wrapper site on '/' - flow editor is on '/node-red'
+        {"/", ered_http_release_status, []},
 
-        {"/media/[...]", [{method, <<"GET">>}], cowboy_static,
+        {"/media/[...]", cowboy_static,
             {priv_dir, erlang_red, "wrapper_site/media", []}},
 
-        {"/styles/[...]", [{method, <<"GET">>}], cowboy_static,
+        {"/styles/[...]", cowboy_static,
             {priv_dir, erlang_red, "wrapper_site/styles", []}},
-        %%% Wrapper site nonsense ends
 
-        {"/[...]", [{method, <<"GET">>}], cowboy_static,
+        {"/[...]", cowboy_static,
             {priv_dir, erlang_red, "node-red-frontend", [
                 {mimetypes, ered_http_nodered_mimetypes, mt}
             ]}}
     ].
+
+%%
+%%
+restart_dispatcher(Routes) ->
+    Dispatch = cowboy_router:compile([{'_', Routes}]),
+    cowboy:set_env(erlang_red_listener, dispatch, Dispatch).
