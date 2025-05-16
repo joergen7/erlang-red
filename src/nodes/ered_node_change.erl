@@ -26,7 +26,8 @@
     delete_prop/2,
     get_prop/2,
     set_prop_value/3,
-    timestamp/0
+    timestamp/0,
+    to_bool/1
 ]).
 
 %%
@@ -101,6 +102,8 @@ do_set_value(Prop, _Value, <<"date">>, Msg, _NodeDef) ->
     set_prop_value(Prop, Msg, timestamp());
 do_set_value(Prop, Value, <<"str">>, Msg, _NodeDef) ->
     set_prop_value(Prop, Msg, Value);
+do_set_value(Prop, Value, <<"bool">>, Msg, _NodeDef) ->
+    set_prop_value(Prop, Msg, to_bool(Value));
 do_set_value(Prop, Value, <<"json">>, Msg, _NodeDef) ->
     set_prop_value(Prop, Msg, decode_json(Value));
 do_set_value(Prop, Value, <<"msg">>, Msg, _NodeDef) ->
