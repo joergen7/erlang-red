@@ -41,12 +41,13 @@ start() ->
     case os:getenv("COMPUTEFLOW") of
         false ->
             ignore;
-        FlowId ->
-            erlang:start_timer(
-                750,
-                ered_compute_engine,
-                {load_flowid, FlowId}
-            )
+        FlowIdsCommaSeparated ->
+            [erlang:start_timer(
+               750,
+               ered_compute_engine,
+               {load_flowid, FlowId}
+              ) || FlowId <- string:split(FlowIdsCommaSeparated, ",", all),
+                   FlowId =/= []]
     end,
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
