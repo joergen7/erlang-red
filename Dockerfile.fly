@@ -19,12 +19,9 @@ COPY src src/
 COPY include include/
 COPY priv priv/
 COPY rebar.config .
+COPY rebar.lock .
 
-## Repeating the building is necessary because dependency computation
-## only works on the second go. This is really weird since the same
-## code in the heroku dockerfile just works the first time. I don't
-## understand it but rinse & repeat works here ...
-RUN rebar3 as prod release -n erlang_red || true
+RUN rebar3 get-deps
 RUN rebar3 as prod release -n erlang_red
 
 
