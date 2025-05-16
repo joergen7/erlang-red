@@ -15,17 +15,6 @@ RUN apt-get update && apt-get -y install \
     cmake \
     mosquitto
 
-# apt-get package elixir does not work with OTP 27.
-WORKDIR /elixir
-RUN git clone --branch v1.18.3 https://github.com/elixir-lang/elixir.git
-
-WORKDIR /elixir/elixir
-RUN make
-RUN make install
-
-WORKDIR /
-RUN rm -fr /elixir/elixir
-
 # create a user for docker image since erlexec complains too much
 # but give the user super-powers - erlang and the power of root
 RUN useradd -s /bin/bash -m -G users -G sudo erlang
