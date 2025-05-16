@@ -27,7 +27,8 @@
     convert_to_num/1,
     decode_json/1,
     get_prop/2,
-    is_same/2
+    is_same/2,
+    to_bool/1
 ]).
 
 %%
@@ -185,6 +186,18 @@ eql_msg_op(Prop, SrcVal, <<"str">>, ReqVal, _Msg) ->
                     [Prop, ReqVal, SrcVal]
                 )}
     end;
+eql_msg_op(Prop, SrcVal, <<"bool">>, ReqVal, _Msg) ->
+    case is_same(to_bool(ReqVal), to_bool(SrcVal)) of
+        true ->
+            true;
+        _ ->
+            {failed,
+                jstr(
+                    "Prop '~p':~n~nExp:~n~n'~p'~n~nWas:~n~n'~p'~n~n",
+                    [Prop, ReqVal, SrcVal]
+                )}
+    end;
+
 eql_msg_op(Prop, SrcVal, <<"msg">>, ReqProp, Msg) ->
     %% ReqProp not ReqVal because the value is actually a property name
     %% on the message object. That property then contains the required

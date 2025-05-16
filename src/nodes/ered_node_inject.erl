@@ -24,10 +24,11 @@
 ]).
 -import(ered_msg_handling, [
     convert_to_num/1,
+    decode_json/1,
     get_prop/2,
     set_prop_value/3,
     timestamp/0,
-    decode_json/1
+    to_bool/1
 ]).
 -import(ered_message_exchange, [
     post_completed/2
@@ -48,6 +49,8 @@ value_for_proptype(<<"str">>, Val, Prop, _NodeDef, Msg) ->
     set_prop_value(Prop, Msg, Val);
 value_for_proptype(<<"num">>, Val, Prop, _NodeDef, Msg) ->
     set_prop_value(Prop, Msg, convert_to_num(Val));
+value_for_proptype(<<"bool">>, Val, Prop, _NodeDef, Msg) ->
+    set_prop_value(Prop, Msg, to_bool(Val));
 value_for_proptype(<<"msg">>, Val, Prop, _NodeDef, Msg) ->
     case get_prop({ok, Val}, Msg) of
         {ok, Value, _} ->
