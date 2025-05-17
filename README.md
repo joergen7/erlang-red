@@ -3,7 +3,7 @@ Erlang-RED - A Node-RED backend coded in Erlang
 
 An experiment to replace Node-REDs existing NodeJS backend with an Erlang equivalent that is 100% compatible[1] to existing flow code.
 
-The goal is bring the advantages of low-code visual flow-based programming to a programming language that is designed for message passing and concurrency from the ground up, hence Erlang.
+The goal is bring the advantages of low-code visual [flow-based programming](https://jpaulm.github.io/fbp/index.html) to a programming language that is designed for message passing and concurrency from the ground up, hence Erlang.
 
 [1] = 100% won't be possible since function nodes that are coded in Javascript aren't supported (or aren't intended to be supported - unless someone has a workaround)
 
@@ -21,7 +21,7 @@ So won't it be great to have the simplicity of low-code visual flow based progra
 Development Strategy
 ---
 
-My development process is best described as [flow driven development](DevelopmentStrategy.md) based around a set of [test flows](prive/testflows) to ensure that node functionality is implemented correctly - meaning that it matches the existing Node-RED functionality.
+My development process is best described as [flow driven development](DevelopmentStrategy.md) based around a set of [test flows](priv/testflows) to ensure that node functionality is implemented correctly - meaning that it matches the existing Node-RED functionality.
 
 Test flows are mirrored in a separate [repository](https://github.com/gorenje/erlang-red-flow-testsuite) for better maintainability and also integration with existing Node-RED installations.
 
