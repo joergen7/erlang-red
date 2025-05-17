@@ -197,7 +197,6 @@ eql_msg_op(Prop, SrcVal, <<"bool">>, ReqVal, _Msg) ->
                     [Prop, ReqVal, SrcVal]
                 )}
     end;
-
 eql_msg_op(Prop, SrcVal, <<"msg">>, ReqProp, Msg) ->
     %% ReqProp not ReqVal because the value is actually a property name
     %% on the message object. That property then contains the required

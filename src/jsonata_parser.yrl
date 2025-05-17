@@ -26,6 +26,7 @@ Nonterminals
   dot_name
   dot_names
   expr
+  function_definition
   arith_expr
   function_call
   key_value_pair
@@ -47,7 +48,6 @@ Terminals
   '*'
   '+'
   ','
-  ','
   '-'
   '.'
   '/'
@@ -60,8 +60,10 @@ Terminals
   chars
   comment_end
   comment_start
+  dollar
   float
   funct
+  funct_def
   int
   msg_obj
   name
@@ -119,6 +121,9 @@ statement -> comments : comment.
 function_call -> funct '(' args ')' : convert_funct('$1', '$3').
 function_call -> funct '(' ')' : convert_funct('$1', {no_args}).
 
+function_definition -> funct_def '(' args ')' '{' expr '}' :
+                           inline_function_definition('$3', '$6').
+
 %% function call assumes the result should be a string, for a num
 %% we need a number as result, hence num_function_call that just reduces
 %% to the plain function call.
@@ -138,7 +143,9 @@ key_value_pairs -> key_value_pair : ['$1'].
 key_value_pairs -> key_value_pair ',' key_value_pairs : ['$1' | '$3'].
 
 args -> expr : ['$1'].
+args -> function_definition : ['$1'].
 args -> expr ',' args : ['$1' | '$3'].
+args -> function_definition ',' args : ['$1' | '$3'].
 
 array -> '[' ']' : array_handler({no_args}).
 array -> '[' args ']' : array_handler('$2').
@@ -157,6 +164,8 @@ expr -> chars : '$1'.
 expr -> int : '$1'.
 expr -> float : '$1'.
 expr -> name : '$1'.
+expr -> dollar name : '$2'.
+expr -> dollar name dot_names : {var_ref, '$2', '$3'}.
 expr -> function_call : '$1'.
 
 %% num are used in arithmetic expressions, these are explicitly not the
@@ -382,6 +391,16 @@ args_to_string([H|T], Acc) ->
     args_to_string(T, io_lib:format("~s, ~s", [Acc, to_list(H)])).
 
 %%
+%% Support single simple inline function def:
+%%    "function($v) { $v.col1.col2 }" --> attribute reference on object
+inline_function_definition([{name, _LineNo, Var}],
+                           {var_ref, {name, _LineNum, Var}, DotNames}) ->
+    list_to_binary(io_lib:format("fun(V) -> ~s end",
+                                 [to_map_get(DotNames, "V")]));
+inline_function_definition(_Args, _Expr) ->
+    unsupported.
+
+%%
 %% This converts the list of inbuilt functions -
 %%   --> https://github.com/jsonata-js/jsonata/blob/09dba374ce9475e5fb08eee4d99de59bd72a2c8b/src/functions.js
 %%   --> https://github.com/jsonata-js/jsonata/blob/09dba374ce9475e5fb08eee4d99de59bd72a2c8b/src/datetime.js
@@ -409,6 +428,15 @@ convert_funct({funct,_LineNo,FunctName}, Expr) ->
         length ->
             list_to_binary(io_lib:format("erlang:length(~s)",
                                          [args_to_string(Expr)]));
+        sum ->
+            list_to_binary(io_lib:format("lists:sum(~s)",
+                                         [args_to_string(Expr)]));
+        map ->
+            %% lists:reverse(...) here because the argumenst to $map(...)
+            %% and lists:map(...) are exactly the opposite: (Fun, List) versus
+            %% (List, Fun)
+            list_to_binary(io_lib:format("lists:map(~s)",
+                                         [args_to_string(lists:reverse(Expr))]));
         replace ->
             case Expr of
                 [_, _, _] ->

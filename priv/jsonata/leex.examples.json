@@ -297,5 +297,6 @@
     "'https://cdn.openmindmap.org/embed/' & msg.req.params.name",
     "$split($$.payload.name,\"/\")[-1]",
     "{\t    \"lomin\": $$.lomin,\t    \"lamin\": $$.lamin,\t    \"lamax\": $$.lamax,\t    \"lomax\": $$.lomax\t}",
-    "/* asdsadasd"
+    "/* asdsadasd",
+    "$sum($map($$.payload, function($v) { $v.col2.col3 }))"
 ]

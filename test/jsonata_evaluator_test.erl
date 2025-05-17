@@ -375,6 +375,66 @@ unsupport_function_test() ->
         )
     ).
 
+function_map_with_funct_test() ->
+    ?assertEqual(
+        {ok, [1, 2, 3]},
+        jsonata_evaluator:execute(
+            "$map($$.payload, function ($v) { $v.col } )",
+            #{payload => [#{col => 1}, #{col => 2}, #{col => 3}]}
+        )
+    ),
+    ?assertEqual(
+        {ok, ["a", "b", "c"]},
+        jsonata_evaluator:execute(
+            "$map($$.payload, function ($v) { $v.col } )",
+            #{payload => [#{col => "a"}, #{col => "b"}, #{col => "c"}]}
+        )
+    ),
+    ?assertEqual(
+        {ok, ["a", 2, "c"]},
+        jsonata_evaluator:execute(
+            "$map($$.payload, function ($v) { $v.col.value } )",
+            #{
+                payload => [
+                    #{col => #{value => "a"}},
+                    #{col => #{value => 2}},
+                    #{col => #{value => "c"}}
+                ]
+            }
+        )
+    ).
+
+function_sum_with_arrays_test() ->
+    ?assertEqual(
+        {ok, 21},
+        jsonata_evaluator:execute(
+            "$sum($$.payload)",
+            #{payload => [1, 2, 3, 4, 5, 6]}
+        )
+    ),
+    ?assertEqual(
+        {ok, 22.1},
+        jsonata_evaluator:execute(
+            "$sum($$.payload)",
+            #{payload => [1, 2, 3.4, 4.2, 5.1, 6.4]}
+        )
+    ).
+
+function_sum_with_arrays_of_objects_test() ->
+    ?assertEqual(
+        {ok, 7},
+        jsonata_evaluator:execute(
+            "$sum($map($$.payload, function ($v) { $v.col.value } ))",
+            #{
+                payload => [
+                    #{col => #{value => 2}},
+                    #{col => #{value => 2}},
+                    #{col => #{value => 3}}
+                ]
+            }
+        )
+    ).
+
 array_with_index_test() ->
     ?assertEqual(
         {ok, 1},

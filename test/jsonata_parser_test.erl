@@ -252,22 +252,34 @@ foreach_parser_test_() ->
         end."
       },
       {
+        function_definition_as_argument,
+        "$sum($map($$.payload, function($v) { $v.col2 }))",
+        "fun (Msg) ->
+            lists:sum(lists:map(fun(V) -> maps:get(col2, V) end,
+                              maps:get(payload, Msg)))
+         end."
+      },
+      {
+        function_sum_of_array,
+        "$sum($$.payload)",
+        "fun (Msg) ->
+            lists:sum(maps:get(payload, Msg))
+         end."
+      },
+      {
+        function_map_of_objects,
+        "$map($$.payload, function($r) { $r.attr })",
+        "fun (Msg) ->
+            lists:map(fun(V) -> maps:get(attr, V) end, maps:get(payload, Msg))
+         end."
+      },
+      {
         array_with_content,
         "[1, 2, \"asdasd\", $$.payload]",
         "fun (Msg) ->
            [1, 2, \"asdasd\", maps:get(payload, Msg)]
         end."
       }
-
-
-
-      %% reg-expression are supported in the parser.
-      %% {
-      %%  string_concatenation_2,
-      %%  "\"- [\" & $$.payload.done & \"] [\" & $replace($$.payload.path,\"datasets/\",\"\") & \"](https://raw.githubusercontent.com/opensanctions/opensanctions/main/\" &  $$.payload.path & \") [@](https://github.com/opensanctions/opensanctions/tree/main/\" & $replace($$.payload.path,/\\/[^\\/]+$/,\"\") & \")\\n\"",
-      %%  "fun (Msg) ->
-      %%   end."
-      %% }
      ],
 
     TestList = [{
