@@ -32,7 +32,7 @@ fly-io-enter:
 	docker exec -it $$(docker ps -f ancestor=fly-er -q) sh
 
 check-testflows:
-	diff -qr priv/testflows ../erlang-red-flow-testsuite  | grep -v preview.svg | grep -v nodedetails.json | grep -v README | grep -v .git | grep -v .image | grep -v 499288ab4007ac6a | grep -v b8e2ad1371ddb546 | grep -v c562c43e69bcf0af | grep -v f346d45c81f595e5 || true
+	diff -qr priv/testflows ../erlang-red-flow-testsuite  | grep -v preview.svg | grep -v nodedetails.json | grep -v README | grep -v .git | grep -v .image | grep -v 499288ab4007ac6a | grep -v b8e2ad1371ddb546 | grep -v c562c43e69bcf0af | grep -v f346d45c81f595e5 | grep -v  777bee1d06741240 | grep -v 9d3f5506aa810b22 || true
 
 ##
 ## The following are done inside the docker container - after running
