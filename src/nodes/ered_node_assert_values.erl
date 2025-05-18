@@ -209,8 +209,8 @@ eql_msg_op(Prop, SrcVal, <<"msg">>, ReqProp, Msg) ->
     %%     "to": "originalmsgid",
     %%     "tot": "msg"
     %% }
-    case maps:find(binary_to_atom(ReqProp), Msg) of
-        {ok, ReqVal} ->
+    case get_prop({ok, ReqProp}, Msg) of
+        {ok, ReqVal, _} ->
             case is_same(ReqVal, SrcVal) of
                 true ->
                     true;
@@ -222,7 +222,7 @@ eql_msg_op(Prop, SrcVal, <<"msg">>, ReqProp, Msg) ->
                         )}
             end;
         _ ->
-            {failed, jstr("Prop not set on msg: '~p'", [ReqProp])}
+            {failed, jstr("Prop not set on msg: '~p': ~p", [ReqProp, Msg])}
     end;
 eql_msg_op(Prop, SrcVal, <<"num">>, ReqVal, _Msg) ->
     %% "t": "eql",
@@ -341,7 +341,7 @@ handle_event(_, NodeDef) ->
 
 %%
 %%
-handle_incoming(NodeDef, Msg) ->
+handle_msg({incoming, Msg}, NodeDef) ->
     case maps:find(rules, NodeDef) of
         {ok, Ary} ->
             check_rules(Ary, NodeDef, Msg, 0);
@@ -349,12 +349,6 @@ handle_incoming(NodeDef, Msg) ->
             ignore
     end,
     send_msg_to_connected_nodes(NodeDef, Msg),
-    {NodeDef, Msg}.
-
-%%
-%%
-handle_msg({incoming, Msg}, NodeDef) ->
-    {NodeDef2, Msg2} = handle_incoming(NodeDef, Msg),
-    {handled, NodeDef2, Msg2};
+    {handled, NodeDef, Msg};
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
