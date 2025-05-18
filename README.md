@@ -46,6 +46,7 @@ This is a non-complete list of nodes that partially or completely work:
 | [catch](src/nodes/ered_node_catch.erl) | catches exception of selected nodes and of entire flows but not groups |
 | [change](src/nodes/ered_node_change.erl) | supports many operators but not all. JSONata in basic form is also supported. |
 | [complete](src/nodes/ered_node_complete.erl) | is available and can be used on certain nodes, not all |
+| [csv](src/nodes/ered_node_csv.erl) | initial RFC4180 decoder working, supports only comma separator |
 | [debug](src/nodes/ered_node_debug.erl) | only debugs the entire message, individal msg properties aren't supported. msg count as status is supported. |
 | [delay](src/nodes/ered_node_delay.erl) | supported static delay not dynamic delay set via `msg.delay` |
 | [exec](src/nodes/ered_node_exec.erl) | executing and killing commands is supported  but only for commands in spawn mode and set on the node. Appending arguments to commands isn't supported. Timeouts are supported. Kill messages are also supported. |
@@ -146,7 +147,7 @@ Using the container stack at heroku, deployment becomes a `git push heroku` afte
 
 - `heroku login` --> `heroku git:remote -a <app name>` --> `heroku stack:set container` --> `git push heroku`
 
-However the [Dockerfile.heroku](Dockerfile.heroku) does not start the flow editor, the image is designed to run a set of flows, in this case (at time of writing) a simple website with a single page. 
+However the [Dockerfile.heroku](Dockerfile.heroku) does not start the flow editor, the image is designed to run a set of flows, in this case (at time of writing) a simple website with a single page.
 
 Basically this [flow](https://github.com/gorenje/erlang-red/blob/main/priv/testflows/flow.499288ab4007ac6a.json) is the [red-erik.org](https://red-erik.org) site.
 
@@ -169,7 +170,7 @@ What the gif shows is executing a [simple flow](https://flowhub.org/f/ea246f6876
 
 All nodes are are processes- that is shown on the left in the terminal window.
 
-This example is extremely trivial but it does lay the groundwork for expansion. 
+This example is extremely trivial but it does lay the groundwork for expansion.
 
 Testing
 ---
@@ -209,7 +210,7 @@ I created a keyboard shortcut for creating and storing these test flows from the
 
 ![img](.images/unit-testing-inside-nodered.gif)
 
-What the gif shows is my list of unit tests, which at the press of a button, can all be tested. Notifications for each test shows the result. In addition, the tree list shows which tests failed/succeed (red 'x' or green check). Also tests can be executed individually so that failures can be checked individually. 
+What the gif shows is my list of unit tests, which at the press of a button, can all be tested. Notifications for each test shows the result. In addition, the tree list shows which tests failed/succeed (red 'x' or green check). Also tests can be executed individually so that failures can be checked individually.
 
 The best bit though is that all errors are pushed to the debug panel and from there I get directly to the node causing the error. Visual unit testing is completely integrated into Erlang-RED.
 
