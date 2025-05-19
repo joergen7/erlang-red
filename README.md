@@ -223,7 +223,12 @@ Contributions very much welcome in the form of Erlang code or as Node-RED test-f
 
 Each test flow should test exactly one feature and use the assert nodes to check correctness of expected results. Tests can also be pending to indicate that the corresponding Erlang functionality is still missing.
 
+FAQs
+---
+
 Questions and Answers at either the [Erlang Forum](https://erlangforums.com/t/erlang-red-erlang-interpreter-for-node-red-flow-code-visual-flow-based-programming/4678) or the [Node-RED Forum](https://discourse.nodered.org/t/erlang-red-erlang-backed-node-red/96458).
+
+Also for more details, there was also a discussion on [Hacker News](https://news.ycombinator.com/item?id=44006231).
 
 Branch Technology
 ---
