@@ -139,7 +139,7 @@ handle_check_all_rules(
                         Rules, Val, MoreWires, NodeDef, Msg, HadMatch
                     )
             end;
-        {<<"false">>,_} ->
+        {<<"false">>, _} ->
             %% this is a "is false" operation
             case
                 does_rule_match(
