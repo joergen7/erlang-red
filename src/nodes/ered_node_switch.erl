@@ -31,7 +31,8 @@
     convert_to_num/1,
     get_prop/2,
     is_not_same/2,
-    is_same/2
+    is_same/2,
+    to_bool/1
 ]).
 
 -import(ered_nodered_comm, [
@@ -57,6 +58,8 @@ obtain_operator_value(<<"num">>, OpVal, _Msg) ->
     {ok, convert_to_num(OpVal)};
 obtain_operator_value(<<"str">>, OpVal, _Msg) ->
     {ok, OpVal};
+obtain_operator_value(<<"bool">>, OpVal, _Msg) ->
+    {ok, OpVal};
 obtain_operator_value(OpType, _OpVal, _Msg) ->
     {unsupported, jstr("unsupported operator type: ~p", [OpType])}.
 
@@ -70,6 +73,8 @@ does_rule_match(<<"gt">>, OpCompVal, MsgVal) ->
     MsgVal > OpCompVal;
 does_rule_match(<<"lt">>, OpCompVal, MsgVal) ->
     MsgVal < OpCompVal;
+does_rule_match(<<"bleq">>, OpCompVal, MsgVal) ->
+    is_same(to_bool(MsgVal), OpCompVal);
 does_rule_match(Op, _, _) ->
     {unsupported, jstr("unsupported operator ~p", [Op])}.
 
@@ -119,6 +124,38 @@ handle_check_all_rules(
             handle_check_all_rules(Rules, Val, MoreWires, NodeDef, Msg, true);
         {<<"else">>, true} ->
             handle_check_all_rules(Rules, Val, MoreWires, NodeDef, Msg, true);
+        {<<"true">>, _} ->
+            %% this is a "is true" operation
+            case
+                does_rule_match(<<"bleq">>, <<"bool">>, true, Val, NodeDef, Msg)
+            of
+                true ->
+                    send_msg_on(Wires, Msg),
+                    handle_check_all_rules(
+                        Rules, Val, MoreWires, NodeDef, Msg, true
+                    );
+                _ ->
+                    handle_check_all_rules(
+                        Rules, Val, MoreWires, NodeDef, Msg, HadMatch
+                    )
+            end;
+        {<<"false">>,_} ->
+            %% this is a "is false" operation
+            case
+                does_rule_match(
+                    <<"bleq">>, <<"bool">>, false, Val, NodeDef, Msg
+                )
+            of
+                true ->
+                    send_msg_on(Wires, Msg),
+                    handle_check_all_rules(
+                        Rules, Val, MoreWires, NodeDef, Msg, true
+                    );
+                _ ->
+                    handle_check_all_rules(
+                        Rules, Val, MoreWires, NodeDef, Msg, HadMatch
+                    )
+            end;
         _ ->
             {ok, Type} = maps:find(vt, Rule),
             {ok, OpVal} = maps:find(v, Rule),
@@ -152,17 +189,34 @@ handle_stop_after_one([Rule | Rules], Val, [Wires | MoreWires], NodeDef, Msg) ->
         %% else operator has no vt nor v values.
         <<"else">> ->
             send_msg_on(Wires, Msg);
+        <<"true">> ->
+            %% this is a "is true" operation
+            case
+                does_rule_match(<<"bleq">>, <<"bool">>, true, Val, NodeDef, Msg)
+            of
+                true ->
+                    send_msg_on(Wires, Msg);
+                _ ->
+                    handle_stop_after_one(Rules, Val, MoreWires, NodeDef, Msg)
+            end;
+        <<"false">> ->
+            %% this is a "is false" operation
+            case
+                does_rule_match(
+                    <<"bleq">>, <<"bool">>, false, Val, NodeDef, Msg
+                )
+            of
+                true ->
+                    send_msg_on(Wires, Msg);
+                _ ->
+                    handle_stop_after_one(Rules, Val, MoreWires, NodeDef, Msg)
+            end;
         _ ->
             {ok, Type} = maps:find(vt, Rule),
             {ok, OpVal} = maps:find(v, Rule),
 
             case does_rule_match(Op, Type, OpVal, Val, NodeDef, Msg) of
                 true ->
-                    %% ?? switch node does not generate complete message for the
-                    %% ?? complete node - make sense since the switch node is only
-                    %% ?? control not computation, i.e. it's direct the flow of data
-                    %% ?? but not directly altering data.
-                    %% post_completed(NodeDef, Msg),
                     send_msg_on(Wires, Msg);
                 _ ->
                     handle_stop_after_one(Rules, Val, MoreWires, NodeDef, Msg)
