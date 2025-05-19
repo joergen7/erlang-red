@@ -38,6 +38,7 @@
 
 -import(ered_nodes, [
     add_state/2,
+    post_exception_or_debug/3,
     this_should_not_happen/2
 ]).
 
@@ -124,8 +125,17 @@ handle_cast({MsgType = ws_event, Details}, {Module, NodeDef}) ->
 %% These post_completed messages, hence they differ from the more general
 %% use case.
 handle_cast({MsgType, Msg}, {Module, NodeDef}) ->
-    Results = Module:handle_msg({MsgType, Msg}, bump_counter(MsgType, NodeDef)),
-    handle_msg_responder(MsgType, Msg, Module, Results, post_completed);
+    try
+        Results = Module:handle_msg(
+            {MsgType, Msg},
+            bump_counter(MsgType, NodeDef)
+        ),
+        handle_msg_responder(MsgType, Msg, Module, Results, post_completed)
+    catch
+        E:F:S ->
+            ErrMsg = io_lib:format("Error: ~p:~p \n ~p", [E, F, S]),
+            post_exception_or_debug(NodeDef, Msg, ErrMsg)
+    end;
 handle_cast(Msg, {Module, NodeDef}) ->
     unsupported(NodeDef, Msg, <<"Unsupported Msg Received">>),
     {noreply, {Module, NodeDef}}.
