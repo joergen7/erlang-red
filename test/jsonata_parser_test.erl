@@ -277,7 +277,7 @@ foreach_parser_test_() ->
         function_keys_of_objects,
         "$keys($$.payload)",
         "fun (Msg) ->
-             maps:keys(maps:get(payload, Msg))
+             jsonata_keys(maps:get(payload, Msg))
          end."
       },
       {

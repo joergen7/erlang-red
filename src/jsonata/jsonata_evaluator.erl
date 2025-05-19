@@ -47,6 +47,16 @@ execute(JSONata, Msg) ->
 %% Inspired by this blog post:
 %% https://grantwinney.com/how-to-evaluate-a-string-of-code-in-erlang-at-runtime/
 %%
+handle_local_function(jsonata_keys, Args) ->
+    case Args of
+        [Lst] when is_list(Lst) ->
+            UniqKeys = sets:from_list(
+                lists:flatten([maps:keys(Map) || Map <- Lst])
+            ),
+            [any_to_binary(K) || K <- sets:to_list(UniqKeys)];
+        [Map] when is_map(Map) ->
+            [any_to_binary(K) || K <- maps:keys(Map)]
+    end;
 handle_local_function(split, Args) ->
     case Args of
         [Str] ->
@@ -137,3 +147,14 @@ jsonata_to_erlang(JSONataString) ->
         R ->
             R
     end.
+
+%%
+%%
+any_to_binary(V) when is_binary(V) ->
+    V;
+any_to_binary(V) when is_atom(V) ->
+    atom_to_binary(V);
+any_to_binary(V) when is_list(V) ->
+    list_to_binary(V);
+any_to_binary(V) ->
+    V.
