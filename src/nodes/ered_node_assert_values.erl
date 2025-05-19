@@ -263,24 +263,27 @@ eql_msg_op(_, _, _, _, _) ->
 
 %%
 %%
-check_rules([], NodeDef, Msg, 0) ->
-    node_status(
-        ws_from(Msg),
-        NodeDef,
-        <<"assert succeed">>,
-        "green",
-        "ring"
-    );
-check_rules([], NodeDef, Msg, FCnt) ->
+check_rules(Rules, NodeDef, Msg) ->
+    check_rules(Rules, NodeDef, Msg, 0, []).
+
+check_rules([], NodeDef, Msg, 0, _Failures) ->
+    node_status(ws_from(Msg), NodeDef, <<"assert succeed">>, "green", "ring"),
+    maps:put(assert_succeed, true, maps:remove(assert_failures, Msg));
+check_rules([], NodeDef, Msg, FCnt, Failures) ->
     ErrMsg = jstr("~p check(s) failed", [FCnt]),
-    node_status(ws_from(Msg), NodeDef, ErrMsg, "red", "dot");
-check_rules([H | T], NodeDef, Msg, FCnt) ->
+    node_status(ws_from(Msg), NodeDef, ErrMsg, "red", "dot"),
+    maps:put(
+        assert_succeed,
+        false,
+        maps:put(assert_failures, Failures, Msg)
+    );
+check_rules([H | T], NodeDef, Msg, FCnt, Failures) ->
     {ok, Op} = maps:find(t, H),
     {ok, Pt} = maps:find(pt, H),
 
     case check_rule_against_msg(Op, Pt, H, Msg) of
         true ->
-            check_rules(T, NodeDef, Msg, FCnt);
+            check_rules(T, NodeDef, Msg, FCnt, Failures);
         unsupported ->
             ErrMsg = jstr(
                 "Assert values: unsupported Rule: '~p'",
@@ -290,14 +293,26 @@ check_rules([H | T], NodeDef, Msg, FCnt) ->
             %% Unlike other nodes, this is an assertion failure. Can't
             %% be silently ignoring tests.
             assert_failure(NodeDef, ws_from(Msg), ErrMsg),
-            check_rules(T, NodeDef, Msg, FCnt + 1);
+            check_rules(
+                T,
+                NodeDef,
+                Msg,
+                FCnt + 1,
+                [{unsupported, H} | Failures]
+            );
         {failed, ErrMsg} ->
             this_should_not_happen(
                 NodeDef,
                 io_lib:format("~p ~p\n", [ErrMsg, Msg])
             ),
             debug(ws_from(Msg), debug_data(NodeDef, ErrMsg), error),
-            check_rules(T, NodeDef, Msg, FCnt + 1)
+            check_rules(
+                T,
+                NodeDef,
+                Msg,
+                FCnt + 1,
+                [{failure, H} | Failures]
+            )
     end.
 
 %%
@@ -344,11 +359,12 @@ handle_event(_, NodeDef) ->
 handle_msg({incoming, Msg}, NodeDef) ->
     case maps:find(rules, NodeDef) of
         {ok, Ary} ->
-            check_rules(Ary, NodeDef, Msg, 0);
+            Msg2 = check_rules(Ary, NodeDef, Msg),
+            send_msg_to_connected_nodes(NodeDef, Msg2),
+            {handled, NodeDef, Msg2};
         _ ->
-            ignore
-    end,
-    send_msg_to_connected_nodes(NodeDef, Msg),
-    {handled, NodeDef, Msg};
+            send_msg_to_connected_nodes(NodeDef, Msg),
+            {handled, NodeDef, Msg}
+    end;
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
