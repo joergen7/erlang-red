@@ -233,6 +233,9 @@ convert_funct({funct,_LineNo,FunctName}, Expr) ->
         sum ->
             list_to_binary(io_lib:format("lists:sum(~s)",
                                          [args_to_string(Expr)]));
+        keys ->
+            list_to_binary(io_lib:format("maps:keys(~s)",
+                                         [args_to_string(Expr)]));
         map ->
             %% lists:reverse(...) here because the argumenst to $map(...)
             %% and lists:map(...) are exactly the opposite: (Fun, List) versus
@@ -506,7 +509,7 @@ yecctoken2string1(Other) ->
 
 
 
--file("/code/src/jsonata_parser.erl", 509).
+-file("/code/src/jsonata_parser.erl", 512).
 
 -dialyzer({nowarn_function, yeccpars2/7}).
 -compile({nowarn_unused_function,  yeccpars2/7}).
@@ -3433,4 +3436,4 @@ yeccpars2_129_(__Stack0) ->
   end | __Stack].
 
 
--file("/code/src/jsonata_parser.yrl", 518).
+-file("/code/src/jsonata_parser.yrl", 521).

@@ -274,6 +274,20 @@ foreach_parser_test_() ->
          end."
       },
       {
+        function_keys_of_objects,
+        "$keys($$.payload)",
+        "fun (Msg) ->
+             maps:keys(maps:get(payload, Msg))
+         end."
+      },
+      {
+        function_split_of_strings,
+        "$count($split($$.payload))",
+        "fun (Msg) ->
+            erlang:length(split(maps:get(payload, Msg)))
+         end."
+      },
+      {
         array_with_content,
         "[1, 2, \"asdasd\", $$.payload]",
         "fun (Msg) ->

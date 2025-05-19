@@ -431,6 +431,9 @@ convert_funct({funct,_LineNo,FunctName}, Expr) ->
         sum ->
             list_to_binary(io_lib:format("lists:sum(~s)",
                                          [args_to_string(Expr)]));
+        keys ->
+            list_to_binary(io_lib:format("maps:keys(~s)",
+                                         [args_to_string(Expr)]));
         map ->
             %% lists:reverse(...) here because the argumenst to $map(...)
             %% and lists:map(...) are exactly the opposite: (Fun, List) versus
