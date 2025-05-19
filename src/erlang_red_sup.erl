@@ -54,6 +54,13 @@ init([]) ->
                     module => [ered_config_store]
                 },
                 #{
+                    id => ered_ch9_csv_parser_store,
+                    start => {ered_csv_parser_store, start, []},
+                    restart => permanent,
+                    type => worker,
+                    module => [ered_csv_parser_store]
+                },
+                #{
                     id => ered_ch7_compute_engine,
                     start => {ered_compute_engine, start, []},
                     restart => permanent,

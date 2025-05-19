@@ -200,6 +200,7 @@ foreach_testflow_test_() ->
     %% pg is required for the catch nodes
     pg:start_link(),
     ered_config_store:start(),
+    ered_csv_parser_store:start(),
 
     {_Cnt, FileNames} = filelib:fold_files(
         io_lib:format("~s/testflows", [code:priv_dir(erlang_red)]),

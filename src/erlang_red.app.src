@@ -17,7 +17,8 @@
         ered_error_store,
         ered_flow_store_server,
         ered_compute_engine,
-        ered_config_store
+        ered_config_store,
+        ered_csv_parser_store
     ]},
     {licenses, ["Apache-2.0"]},
     {links, []}
