@@ -145,7 +145,12 @@ code_change(_OldVersion, ErrorStore, _Extra) ->
 stop() ->
     gen_server:cast(?MODULE, stop).
 
+%%
+%%
 terminate(normal, _State) ->
+    ok;
+terminate(Event, _State) ->
+    io:format("Flow Store Terminated with {{{ ~p }}}~n", [Event]),
     ok.
 
 %%

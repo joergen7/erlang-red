@@ -54,7 +54,12 @@ handle_call(_Msg, _From, ErrorStore) ->
 stop() ->
     gen_server:cast(?MODULE, stop).
 
+%%
+%%
 terminate(normal, _State) ->
+    ok;
+terminate(Event, _State) ->
+    io:format("Error Store Terminated with {{{ ~p }}}~n", [Event]),
     ok.
 
 handle_cast(stop, State) ->

@@ -128,7 +128,12 @@ code_change(_OldVersion, ErrorStore, _Extra) ->
 stop() ->
     gen_server:cast(?MODULE, stop).
 
+%%
+%%
 terminate(normal, _State) ->
+    ok;
+terminate(Event, _State) ->
+    io:format("Unittest engine terminated with {{{ ~p }}}~n", [Event]),
     ok.
 
 %%

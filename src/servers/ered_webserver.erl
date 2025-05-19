@@ -102,6 +102,9 @@ stop() ->
     gen_server:cast(?MODULE, stop).
 
 terminate(normal, _State) ->
+    ok;
+terminate(Event, _State) ->
+    io:format("Webserver Terminated with {{{ ~p }}}~n", [Event]),
     ok.
 
 %%

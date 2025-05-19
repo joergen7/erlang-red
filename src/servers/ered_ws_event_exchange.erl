@@ -297,7 +297,12 @@ code_change(_OldVersion, SubscriberStore, _Extra) ->
 stop() ->
     gen_server:cast(?MODULE, stop).
 
+%%
+%%
 terminate(normal, _State) ->
+    ok;
+terminate(Event, _State) ->
+    io:format("WS event exchange terminated with {{{ ~p }}}~n", [Event]),
     ok.
 
 %%

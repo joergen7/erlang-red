@@ -74,7 +74,12 @@ handle_call(_Msg, _From, Store) ->
 stop() ->
     gen_server:cast(?MODULE, stop).
 
+%%
+%%
 terminate(normal, _State) ->
+    ok;
+terminate(Event, _State) ->
+    io:format("Config Store Terminated with {{{ ~p }}}~n", [Event]),
     ok.
 
 handle_cast(stop, State) ->
