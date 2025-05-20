@@ -1,5 +1,36 @@
 Milestones
 ---
+
+*Milestone Three - m3*
+
+1. Elixir code constructively includable. 
+
+    Since Elixir also runs on the BEAM VM and there are some libraries that aren't available in Erlang, I made an effort to integrate third party Elixir libraries - in a structured manner - into the codebase of Erlang-RED. Many thanks to [@filmor](https://github.com/filmor) for the tip of using their [exerl](https://github.com/filmor/exerl) plugin. Works like a charm!
+    
+    This effort lead to  two new nodes using Elixir codebases: the [markdown node](src/nodes/ered_node_markdown.erl) uses [earmark](https://github.com/pragdave/earmark) and the [csv node](src/nodes/ered_node_csv.erl) uses [nimble_csv](https://github.com/dashbitco/nimble_csv).  Nimble might be removed again since there are pure Erlang CSV libraries - we'll see.
+    
+2. Erlang JSONata has moved out
+
+	  Moved the codebase for the JSONata parser out into its own [repository](https://github.com/gorenje/erlang-red-jsonata). I wasn't actively extending it and moving it out will allow others to extend and add to the JSONata functionality supported in Erlang-RED. It's always sad when the children move out but its for the best!
+	  
+3. Function node in Erlang!
+
+    One of the more important nodes in Node-RED is the function node because it allows for creating Javascript code, i.e., dropping down to high-code instead of low-code. This can be helpful for adding functionality to a flow that is not covered by any available node. What the function node offers is syntax highlighting and error highlighting in code. This makes it a mini editor inside of Node-RED.
+    
+    An initial emulation of this this for Erlang has been made so that Erlang-RED flows can now also speak Erlang. The implementation is still rudimentary but it shows what needs to be done to get this happening. A function provides much power and the Erlang one is no different - i.e. it's a window into the server hosting Erlang-RED. So a sandbox needs to be created and much thought into how to ensure that nothing breaks or gets maliciously damaged.
+    
+    **Use at own risk!** is the conclusion.
+    
+4. Add FlowHub.org nodes for managing flow test cases
+
+     [FlowHub.org](https://flowhub.org) is my attempt to make visual programming truly visual. One of the first things I did was to create a visualisation of Node-RED outside of Node-RED, i.e., flows [displayed in webpages](https://github.com/gorenje/node-red-flowviewer-js). From that initial effort, FlowHub.org was created to support visual version controlling of flow code - both inside of Node-RED/Erlang-RED and also externally via a website.
+     
+     Adding FlowHub to Erlang-RED now allows me to maintain the test flow [repository](https://github.com/gorenje/erlang-red-flow-testsuite) and easily import tests into either Node-RED or Erlang-RED - with the same consistent interface. As an aside: FlowHub is also coded in Node-RED, i.e., dog-fooding all the way down to the turtles.
+    
+5. [Red-Erik.org](https://red-erik.org) utilises multiple flows
+
+    The initial release of Red-Erik was based on a single, now its a multiple flow monster! Why is this important? Because it ensures that the link nodes work across multiple flows - this is their main purposes. Also it made me think about how I could get Erlang-RED to execute multiple flows. In doing so, it became clear that executing and designing flows are very much different activities. When the flows get executed, they basically just become an Erlang architecture of processes, nothing remains of the original flows. Each process only knows where to send its messages to - when it receives a message. There is no overall structure of the flow in memory. This is great because there is no overhead to maintain such a structure.
+
 *Milestone Two - m2*
 
 1. JSONata parser and evaluator
@@ -17,7 +48,6 @@ Milestones
      Exec node can be used to shell-out to a new process. Finally it is possible to read `cat /etc/passwd` using Erlang-RED - have hours of fun and games with family and friends by hacking each other installation of Erlang-RED ;) 
      
      With these three nodes done, it is possible to create applications for routing MQTT traffic or HTTP traffic to MQTT or vice versa. 
-
      
 3. 100+ Visual test flows for ensuring compatibility
     
