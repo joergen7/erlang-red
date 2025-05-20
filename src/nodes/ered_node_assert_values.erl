@@ -26,6 +26,7 @@
 -import(ered_msg_handling, [
     convert_to_num/1,
     decode_json/1,
+    escape_specials/1,
     get_prop/2,
     is_same/2,
     to_bool/1
@@ -176,7 +177,10 @@ eql_msg_op(Prop, SrcVal, <<"json">>, ReqVal, _Msg) ->
                 )}
     end;
 eql_msg_op(Prop, SrcVal, <<"str">>, ReqVal, _Msg) ->
-    case is_same(ReqVal, SrcVal) of
+    % replace/escape all specials so that a test case can use \r \t \n for
+    % these things and it becomes visible what is desired. Ie. in the SrcVal
+    % we escape these to their visible equivalents.
+    case is_same(ReqVal, escape_specials(SrcVal)) of
         true ->
             true;
         _ ->

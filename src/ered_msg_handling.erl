@@ -6,6 +6,7 @@
     create_outgoing_msg/1,
     decode_json/1,
     delete_prop/2,
+    escape_specials/1,
     get_prop/2,
     is_same/2,
     is_not_same/2,
@@ -260,3 +261,17 @@ to_bool(<<"false">>) -> false;
 to_bool(false)       -> false;
 to_bool("false")     -> false;
 to_bool(_) -> true.
+
+
+%%
+%% From a string value, escape all occurance of \r \t \n to be replaced
+%% by \\r \\t \\n - this allows for test definitions that include \r and
+%% not a "return" or "tab" value.
+%%
+escape_specials(Str) ->
+    re:replace(
+      re:replace(
+        re:replace(Str,
+          "\r", "\\\\r", [{return, binary}, global]),
+        "\n", "\\\\n", [{return, binary}, global]),
+      "\t", "\\\\t", [{return, binary}, global]).
