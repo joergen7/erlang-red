@@ -14,16 +14,20 @@ RUN apk update && \
 
 WORKDIR /builder
 
-COPY .git .git/
-COPY src src/
-COPY include include/
-COPY priv priv/
+## First get and create the dependencies
 COPY rebar.config .
 COPY rebar.lock .
 
 RUN rebar3 get-deps
-RUN rebar3 as prod release -n erlang_red
+RUN rebar3 compile
 
+## Changes to the source does not rebuild the dependencies
+COPY .git .git/
+COPY src src/
+COPY include include/
+COPY priv priv/
+
+RUN rebar3 as prod release -n erlang_red
 
 FROM ${RUNNER_IMAGE}
 
