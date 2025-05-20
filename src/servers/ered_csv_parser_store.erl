@@ -58,21 +58,7 @@ get_store() ->
 %%
 %%
 init([]) ->
-    {module, P1, _, ok} =
-        'Elixir.ErlangRedHelpers':define_csv_parser(
-            csv_parser_01, [{separator, <<",">>}, {escape, <<"\"">>}]
-        ),
-
-    {module, P3, _, ok} =
-        'Elixir.ErlangRedHelpers':define_csv_parser(
-            csv_parser_03, [{separator, <<",">>}, {escape, <<"'">>}]
-        ),
-
-    Store = [
-        {<<",">>, <<"\"">>, P1},
-        {<<",">>, <<"'">>, P3}
-    ],
-    {ok, Store}.
+    {ok, []}.
 
 %%
 %%
