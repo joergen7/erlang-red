@@ -121,7 +121,7 @@ do_set_value(Prop, Value, <<"jsonata">>, Msg, NodeDef) ->
     %% "pt": "msg",
     %% "to": "$count($$.payload)",
     %% "tot": "jsonata"
-    case jsonata_evaluator:execute(Value, Msg) of
+    case erlang_red_jsonata:execute(Value, Msg) of
         {ok, Result} ->
             set_prop_value(Prop, Msg, Result);
         {error, Error} ->

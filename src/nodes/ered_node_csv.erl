@@ -136,7 +136,7 @@ handle_encode(Sep, LineSep, Payload = [H | _T], NodeDef, Msg) when is_list(H) ->
     {handled, NodeDef, Msg2};
 % Payload is single array of values - this is also handled by the Node-RED
 % CSV node even though - IMHO - it's incorrect formatting. Data that should
-% be converted to CSV should always be a list-of-lists.
+% be converted to CSV should always be a list-of-lists or a list of maps.
 handle_encode(Sep, LineSep, Payload, NodeDef, Msg) ->
     handle_encode(Sep, LineSep, [Payload], NodeDef, Msg).
 

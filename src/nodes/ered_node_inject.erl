@@ -59,7 +59,7 @@ value_for_proptype(<<"msg">>, Val, Prop, _NodeDef, Msg) ->
             set_prop_value(Prop, Msg, <<>>)
     end;
 value_for_proptype(<<"jsonata">>, Val, Prop, NodeDef, Msg) ->
-    case jsonata_evaluator:execute(Val, Msg) of
+    case erlang_red_jsonata:execute(Val, Msg) of
         {ok, Result} ->
             set_prop_value(Prop, Msg, Result);
         {error, Error} ->

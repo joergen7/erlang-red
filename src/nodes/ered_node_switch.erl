@@ -46,7 +46,7 @@ start(NodeDef, _WsName) ->
 %%
 %%
 obtain_operator_value(<<"jsonata">>, OpVal, Msg) ->
-    case jsonata_evaluator:execute(OpVal, Msg) of
+    case erlang_red_jsonata:execute(OpVal, Msg) of
         {ok, Result} ->
             {ok, Result};
         {error, Error} ->
@@ -236,7 +236,7 @@ obtain_compare_to_value({ok, <<"msg">>}, {ok, PropName}, Msg) ->
             {error, jstr("property not found on msg: [~p]", [PropName])}
     end;
 obtain_compare_to_value({ok, <<"jsonata">>}, {ok, PropName}, Msg) ->
-    case jsonata_evaluator:execute(PropName, Msg) of
+    case erlang_red_jsonata:execute(PropName, Msg) of
         {ok, Result} ->
             {ok, Result};
         {error, Error} ->
