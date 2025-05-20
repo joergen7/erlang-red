@@ -19,11 +19,11 @@
 %% of what is a separator and what is an escape.
 %%
 
--export([get_parser_for/2]).
-
 -export([parse_string/3]).
 -export([parse_string/4]).
+-export([encode_something/4]).
 
+%% -export([get_parser_for/2]).
 -export([get_store/0]).
 
 -import(ered_nodes, [
@@ -35,9 +35,11 @@ start() ->
 
 %%
 %%
-get_parser_for(Separator, Escape) ->
-    gen_server:call(?MODULE, {get_parser_for, Separator, Escape}).
-
+-spec parse_string(
+    Separator :: binary(),
+    Escape :: binary(),
+    Str :: binary()
+) -> [map()].
 parse_string(Separator, Escape, Str) ->
     erlang:apply(
         get_parser_for(Separator, Escape),
@@ -45,12 +47,37 @@ parse_string(Separator, Escape, Str) ->
         [to_binary(Str)]
     ).
 
+-spec parse_string(
+    Separator :: binary(),
+    Escape :: binary(),
+    Str :: binary(),
+    ParseOpts :: [tuple()]
+) -> [map()].
 parse_string(Separator, Escape, Str, ParseOpts) ->
     erlang:apply(
         get_parser_for(Separator, Escape),
         parse_string,
         [to_binary(Str), ParseOpts]
     ).
+
+-spec encode_something(
+    Payload :: [map()],
+    Separator :: binary(),
+    Escape :: binary(),
+    LineSep :: binary()
+) -> iodata().
+encode_something(Payload, Separator, Escape, LineSep) ->
+    erlang:apply(
+        get_parser_for_with_line_separator(Separator, Escape, LineSep),
+        dump_to_iodata,
+        [Payload]
+    ).
+
+get_parser_for_with_line_separator(Separator, Escape, LineSep) ->
+    gen_server:call(?MODULE, {get_parser_for, Separator, Escape, LineSep}).
+
+get_parser_for(Separator, Escape) ->
+    gen_server:call(?MODULE, {get_parser_for, Separator, Escape}).
 
 get_store() ->
     gen_server:call(?MODULE, {get_store}).
@@ -64,18 +91,18 @@ init([]) ->
 %%
 handle_call({get_store}, _From, ParserStore) ->
     {reply, ParserStore, ParserStore};
-handle_call({get_parser_for, Separator, Escape}, _From, ParserStore) ->
+handle_call({get_parser_for, Separator, Escape, LineSep}, _From, ParserStore) ->
     case
-        lists:keyfind(
-            Escape,
-            2,
-            lists:filter(
-                fun({V, _, _}) -> V =:= Separator end,
-                ParserStore
-            )
+        lists:filter(
+            fun({S, E, L, _P}) ->
+                S =:= Separator andalso L =:= LineSep andalso E =:= Escape
+            end,
+            ParserStore
         )
     of
-        false ->
+        [{Separator, Escape, LineSep, Parser}] ->
+            {reply, Parser, ParserStore};
+        _ ->
             ModuleName =
                 list_to_atom(
                     lists:flatten(
@@ -85,14 +112,66 @@ handle_call({get_parser_for, Separator, Escape}, _From, ParserStore) ->
                         )
                     )
                 ),
-            ParserOpts = add_escape([{separator, Separator}], Escape),
+
+            ParserOpts = add_escape(
+                [
+                    {separator, Separator},
+                    {line_separator, LineSep}
+                ],
+                Escape
+            ),
+
             {module, Parser, _, ok} =
                 'Elixir.ErlangRedHelpers':define_csv_parser(
                     ModuleName, ParserOpts
                 ),
-            {reply, Parser, [{Separator, Escape, Parser} | ParserStore]};
-        {_, _, Parser} ->
-            {reply, Parser, ParserStore}
+
+            {reply, Parser, [
+                {Separator, Escape, LineSep, Parser} | ParserStore
+            ]}
+    end;
+handle_call({get_parser_for, Separator, Escape}, _From, ParserStore) ->
+    case
+        lists:filter(
+            fun({S, E, L, _P}) ->
+                S =:= Separator andalso L =:= no_line_sep andalso E =:= Escape
+            end,
+            ParserStore
+        )
+    of
+        [{Separator, Escape, no_line_sep, Parser}] ->
+            {reply, Parser, ParserStore};
+        _ ->
+            ModuleName =
+                list_to_atom(
+                    lists:flatten(
+                        io_lib:format(
+                            "csv_parser_~s",
+                            [binary_to_list(generate_id())]
+                        )
+                    )
+                ),
+
+            ParserOpts = add_escape(
+                [
+                    {separator, Separator},
+                    {newlines, [
+                        <<"\r\n">>,
+                        <<"\n">>,
+                        <<"\r">>
+                    ]}
+                ],
+                Escape
+            ),
+
+            {module, Parser, _, ok} =
+                'Elixir.ErlangRedHelpers':define_csv_parser(
+                    ModuleName, ParserOpts
+                ),
+
+            {reply, Parser, [
+                {Separator, Escape, no_line_sep, Parser} | ParserStore
+            ]}
     end;
 handle_call(_Msg, _From, ParserStore) ->
     {reply, ok, ParserStore}.

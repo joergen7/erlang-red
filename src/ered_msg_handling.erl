@@ -262,7 +262,6 @@ to_bool(false)       -> false;
 to_bool("false")     -> false;
 to_bool(_) -> true.
 
-
 %%
 %% From a string value, escape all occurance of \r \t \n to be replaced
 %% by \\r \\t \\n - this allows for test definitions that include \r and
@@ -270,8 +269,18 @@ to_bool(_) -> true.
 %%
 escape_specials(Str) ->
     re:replace(
-      re:replace(
-        re:replace(Str,
-          "\r", "\\\\r", [{return, binary}, global]),
-        "\n", "\\\\n", [{return, binary}, global]),
-      "\t", "\\\\t", [{return, binary}, global]).
+        re:replace(
+            re:replace(
+                Str,
+                "\r",
+                "\\\\r",
+                [{return, binary}, global]
+            ),
+            "\n",
+            "\\\\n",
+            [{return, binary}, global]
+        ),
+        "\t",
+        "\\\\t",
+        [{return, binary}, global]
+    ).
