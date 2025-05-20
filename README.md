@@ -74,7 +74,7 @@ This is a non-complete list of nodes that partially or completely work:
 
 - Contexts are **not supported**, so there is no setting things on `flow`, `node` or `global`.
 
-- [JSONata](https://jsonata.org) has been **partially implemented** by the [jsonata parser](src/jsonata_parser.yrl). Most functionality isn't supported but can be [added to the evaluator](src/jsonata/jsonata_evaluator.erl).
+- [JSONata](https://jsonata.org) has been **partially implemented** by the [Erlang JSONata Parser](https://github.com/gorenje/erlang-red-jsonata).
 
 Elixir & Erlang-RED
 ---
@@ -222,6 +222,20 @@ Contributing
 Contributions very much welcome in the form of Erlang code or as Node-RED test-flows, ideally with the Erlang implementation. Elixir code is also welcome, only it has its own [home](https://github.com/gorenje/erlang-red-elixir-helpers).
 
 Each test flow should test exactly one feature and use the assert nodes to check correctness of expected results. Tests can also be pending to indicate that the corresponding Erlang functionality is still missing.
+
+
+Sibling Repos
+---
+
+An overview of the sibling projects for both the reader and me:
+
+- [Unit test flow suite](https://github.com/gorenje/erlang-red-flow-testsuite) provides *visual* unit tests that verify the functionality being implemented here is the same as in Node-RED. Those test flows are designed to be executed in both Node-RED and Erlang-RED. [FlowHub.org](https://flowhub.org) maintains the repository and is used to synchronise flow tests between Erlang-RED and Node-RED. These tests can also be used for other projects that aim to replicate Node-RED functionality in an alternative programming language.
+
+- [Node-RED and Erlang-RED unit testing nodes](https://github.com/gorenje/erlang-red-unittesting-nodes) are used to define and automatically ensure the correct functionality. These nodes are embedded in test flows and ensure that test flows are correct. This makes testing repeatable and reliable and fast! As an aside, these nodes are maintained in an [Node-RED flow](https://flowhub.org/f/ef91cb280e1bfd72).
+
+- [JSONata support for Erlang-RED](https://github.com/gorenje/erlang-red-jsonata) is implemented by an Erlang parser with a grammer that covers most of JSONata syntax, no guarantees made. Support of JSONata functionality is limited to what the test flows require. Nothing prevents others from extending the functionality themselves, it is not a priority of mine.
+
+- [Elixir helper library](https://github.com/gorenje/erlang-red-elixir-helpers) allows Elixir code to be also part of Erlang-RED. Erlang-RED is not intended to be a *pure* Erlang project, it is intended to be a *pure* BEAM project. Anything that compiles down to the BEAM VM, why not include it?
 
 FAQs
 ---
