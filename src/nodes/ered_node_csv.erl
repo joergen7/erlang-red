@@ -187,7 +187,6 @@ create_columns_values(Row) ->
     list_to_binary(lists:join(",", [atom_to_binary(R) || R <- Row])).
 
 obtain_columns([FirstRow | HeadlessData], true) ->
-    io:format("FIRT: ~p~n", [FirstRow]),
     {[binary_to_atom(F) || F <- FirstRow], HeadlessData};
 obtain_columns(All = [FirstRow | _RestData], _HdrIn) ->
     {
