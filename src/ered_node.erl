@@ -125,19 +125,8 @@ handle_cast({MsgType = ws_event, Details}, {Module, NodeDef}) ->
 %% These post_completed messages, hence they differ from the more general
 %% use case.
 handle_cast({MsgType, Msg}, {Module, NodeDef}) ->
-    try
-        Results = Module:handle_msg(
-            {MsgType, Msg},
-            bump_counter(MsgType, NodeDef)
-        ),
-        handle_msg_responder(MsgType, Msg, Module, Results, post_completed)
-    catch
-        E:F:S ->
-            ErrMsg = io_lib:format(
-                       "MsgType: \"~p\"~nNodeDef: {{{ ~p }}}~nMsg: {{{ ~p }}}~nError: ~p:~p~n~p",
-                       [MsgType, NodeDef, Msg, E, F, S]),
-            post_exception_or_debug(NodeDef, Msg, ErrMsg)
-    end;
+    Results = Module:handle_msg({MsgType, Msg}, bump_counter(MsgType, NodeDef)),
+    handle_msg_responder(MsgType, Msg, Module, Results, post_completed);
 handle_cast(Msg, {Module, NodeDef}) ->
     unsupported(NodeDef, Msg, <<"Unsupported Msg Received">>),
     {noreply, {Module, NodeDef}}.
