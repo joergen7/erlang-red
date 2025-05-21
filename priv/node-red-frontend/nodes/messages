@@ -1,5 +1,40 @@
 {
     "@gorenje/node-red-contrib-flowcompare/flowcompare": {},
+    "@gregoriusrippenstein/erlang-red-supervisor-node/erlsupervisor": {
+        "erlsupervisor": {
+            "auto_shutdown": {
+                "all_significant": "All Significant",
+                "any_significant": "Any Significant",
+                "never": "Never"
+            },
+            "label": {
+                "auto_shutdown": "Auto Shutdown",
+                "intensity": "Intensity (count)",
+                "period": "Period (seconds)",
+                "restart_strategy": "Restart Strategy",
+                "selectAll": "select all",
+                "source": "Supervise Processes"
+            },
+            "nodeCount": "supervisor: __number__",
+            "placeholder": {
+                "intensity": "Count",
+                "period": "Seconds"
+            },
+            "restart_strategy": {
+                "one_for_all": "One for All",
+                "one_for_one": "One for one",
+                "rest_for_one": "Rest for one",
+                "simple_one_for_one": "Simple One for one"
+            },
+            "scope": {
+                "all": "flow nodes",
+                "group": "in same group",
+                "selected": "selected nodes"
+            },
+            "superviseFlow": "supervisor: flow",
+            "superviseGroup": "supervisor: group"
+        }
+    },
     "@gregoriusrippenstein/erlang-red-unittest/ut-assert-debug": {
         "ut-assert-debug": {
             "label": {

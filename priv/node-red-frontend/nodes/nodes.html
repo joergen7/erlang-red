@@ -1154,7 +1154,6 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
                   const getNodeLabel = (n) => {
                     n ? (n.name || (typeof n.label === "function" && n.label())  || (typeof n.label === "string" && n.label) || (n.type + ":" + n.id)) : "undefined";
                   }
-
                     pathHierarchy = pathParts.map((id,index) => {
                         if (index === 0) {
                             if (id === "global") {
@@ -11869,6 +11868,272 @@ msg.cookies = {
    Visual comparison of flows being edited and flow that has been deployed.
 </script>
 
+<!-- --- [red-module:@gregoriusrippenstein/erlang-red-supervisor-node/erlsupervisor] --- -->
+<script type="text/javascript">
+  (function(){
+
+  RED.nodes.registerType('erlsupervisor',{
+    color: '#E9967A',
+    icon: "font-awesome/fa-ambulance",
+    category: 'common',
+    paletteLabel: 'Supervisor',
+
+    defaults: {
+      name: {
+        value:"",
+      },
+
+      scope: { value: null, type: "*[]" },
+      strategy: { value: "one_for_one" },
+      auto_shutdown: { value: "never" },
+      intensity: { value: 1 },
+      period: { value: 5 }
+    },
+
+    inputs: 0,
+
+    outputs: 1,
+
+    label: function() {
+        if (this.name) {
+            return this.name;
+        }
+        if (this.scope === "group") {
+            return this._("erlsupervisor.superviseGroup");
+        } else if (Array.isArray(this.scope)) {
+            return this._("erlsupervisor.nodeCount",{number:this.scope.length});
+        }
+        return this._("erlsupervisor.superviseFlow")
+    },
+
+    labelStyle: function() {
+      return this.name?"node_label_italic":"";
+    },
+
+    onpaletteadd: function() {
+    },
+
+    onpaletteremove: function() {
+    },
+
+    oneditprepare: function() {
+      var node = this;
+      var scope = node.scope || [];
+
+      this._resize = function () {
+        var rows = $("#dialog-form>div:not(.node-input-target-list-row)");
+        var height = $("#dialog-form").height();
+        for (var i = 0; i < rows.length; i++) {
+          height -= $(rows[i]).outerHeight(true);
+        }
+        var editorRow = $("#dialog-form>div.node-input-target-list-row");
+        editorRow.css("height", height + "px");
+      };
+      var search = $("#node-input-erlsupervisor-target-filter").searchBox({
+        style: "compact",
+        delay: 300,
+        change: function () {
+          var val = $(this).val().trim().toLowerCase();
+          if (val === "") {
+            dirList.treeList("filter", null);
+            search.searchBox("count", "");
+          } else {
+            var count = dirList.treeList("filter", function (item) {
+              return item.label.toLowerCase().indexOf(val) > -1 || item.node.type.toLowerCase().indexOf(val) > -1
+            });
+            search.searchBox("count", count + " / " + candidateNodes.length);
+          }
+        }
+      });
+      var dirList = $("#node-input-erlsupervisor-target-container-div").css({ width: "100%", height: "100%" })
+        .treeList({ multi: true }).on("treelistitemmouseover", function (e, item) {
+          item.node.highlighted = true;
+          item.node.dirty = true;
+          RED.view.redraw();
+        }).on("treelistitemmouseout", function (e, item) {
+          item.node.highlighted = false;
+          item.node.dirty = true;
+          RED.view.redraw();
+        })
+      var candidateNodes = RED.nodes.filterNodes({ z: node.z });
+      var allChecked = true;
+      var items = [];
+      var nodeItemMap = {};
+
+      candidateNodes.forEach(function (n) {
+        if (n.id === node.id) {
+          return;
+        }
+        var isChecked = scope.indexOf(n.id) !== -1;
+
+        allChecked = allChecked && isChecked;
+
+        var nodeDef = RED.nodes.getType(n.type);
+        var label;
+        var sublabel;
+        if (nodeDef) {
+          var l = nodeDef.label;
+          label = (typeof l === "function" ? l.call(n) : l) || "";
+          sublabel = n.type;
+          if (sublabel.indexOf("subflow:") === 0) {
+            var subflowId = sublabel.substring(8);
+            var subflow = RED.nodes.subflow(subflowId);
+            sublabel = "subflow : " + subflow.name;
+          }
+        }
+        if (!nodeDef || !label) {
+          label = n.type;
+        }
+        nodeItemMap[n.id] = {
+          node: n,
+          label: label,
+          sublabel: sublabel,
+          selected: isChecked,
+          checkbox: true
+        };
+        items.push(nodeItemMap[n.id]);
+      });
+      dirList.treeList('data', items);
+
+      $("#node-input-erlsupervisor-target-select").on("click", function (e) {
+        e.preventDefault();
+        var preselected = dirList.treeList('selected').map(function (n) { return n.node.id });
+        RED.tray.hide();
+        RED.view.selectNodes({
+          selected: preselected,
+          onselect: function (selection) {
+            RED.tray.show();
+            var newlySelected = {};
+            selection.forEach(function (n) {
+              newlySelected[n.id] = true;
+              if (nodeItemMap[n.id]) {
+                nodeItemMap[n.id].treeList.select(true);
+              }
+            })
+            preselected.forEach(function (id) {
+              if (!newlySelected[id]) {
+                nodeItemMap[id].treeList.select(false);
+              }
+            })
+          },
+          oncancel: function () {
+            RED.tray.show();
+          },
+          filter: function (n) {
+            return n.id !== node.id;
+          }
+        });
+      })
+
+      $("#node-input-scope-select").on("change", function (e) {
+        var scope = $(this).val();
+        if (scope === "target") {
+          $(".node-input-target-row").show();
+        } else {
+          $(".node-input-target-row").hide();
+        }
+        node._resize();
+      });
+      if (this.scope === null) {
+        $("#node-input-scope-select").val("all");
+      } else if (this.scope === "group") {
+        $("#node-input-scope-select").val("group");
+      } else {
+        $("#node-input-scope-select").val("target");
+      }
+      $("#node-input-scope-select").trigger("change");
+    },
+
+    oneditcancel: function() {
+    },
+
+    oneditsave: function() {
+      var scope = $("#node-input-scope-select").val();
+      if (scope === 'all') {
+        this.scope = null;
+      } else if (scope === 'group') {
+        this.scope = "group";
+      } else {
+        this.scope = $("#node-input-erlsupervisor-target-container-div").treeList('selected').map(function (i) { return i.node.id })
+      }
+    },
+
+    oneditresize: function(size) {
+      this._resize();
+    },
+
+
+  });
+})();
+
+</script>
+
+<script type="text/html" data-template-name="erlsupervisor">
+
+      <div class="form-row">
+        <label style="width: 150px;" for="node-input-strategy" data-i18n="erlsupervisor.label.restart_strategy"></label>
+        <select id="node-input-strategy">
+            <option value="one_for_one" data-i18n="erlsupervisor.restart_strategy.one_for_one"></option>
+            <option value="one_for_all" data-i18n="erlsupervisor.restart_strategy.one_for_all"></option>
+            <option value="rest_for_one" data-i18n="erlsupervisor.restart_strategy.rest_for_one"></option>
+            <option value="simple_one_for_one" data-i18n="erlsupervisor.restart_strategy.simple_one_for_one"></option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label style="width: 150px;" for="node-input-auto_shutdown" data-i18n="erlsupervisor.label.auto_shutdown"></label>
+        <select id="node-input-auto_shutdown">
+            <option value="never" data-i18n="erlsupervisor.auto_shutdown.never"></option>
+            <option value="any_significant" data-i18n="erlsupervisor.auto_shutdown.any_significant"></option>
+            <option value="all_significant" data-i18n="erlsupervisor.auto_shutdown.all_significant"></option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label style="width: 150px;" for="node-input-intensity" data-i18n="erlsupervisor.label.intensity"></label>
+        <input type="number" id="node-input-intensity" data-i18n="[placeholder]erlsupervisor.placeholder.intensity" style="width: 100px;"></input>
+      </div>
+
+      <div class="form-row">
+        <label style="width: 150px;" for="node-input-period" data-i18n="erlsupervisor.label.period"></label>
+        <input type="number" id="node-input-period" data-i18n="[placeholder]erlsupervisor.placeholder.period"  style="width: 100px;"></input>
+      </div>
+
+      <div class="form-row">
+        <label style="width: 150px;" for="node-input-scope" data-i18n="erlsupervisor.label.source"></label>
+        <select id="node-input-scope-select">
+            <option value="all" data-i18n="erlsupervisor.scope.all"></option>
+            <option value="group" data-i18n="erlsupervisor.scope.group"></option>
+            <option value="target" data-i18n="erlsupervisor.scope.selected"></option>
+        </select>
+      </div>
+
+      <div class="form-row node-input-target-row">
+        <button type="button" id="node-input-erlsupervisor-target-select" class="red-ui-button" data-i18n="node-red:common.label.selectNodes"></button>
+      </div>
+
+      <div class="form-row node-input-target-row node-input-target-list-row" style="position: relative; min-height: 100px">
+        <div style="position: absolute; top: -30px; right: 0;"><input type="text" id="node-input-erlsupervisor-target-filter"></div>
+        <div id="node-input-erlsupervisor-target-container-div"></div>
+      </div>
+
+      <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
+      </div>
+</script>
+<script type="text/html" data-help-name="erlsupervisor">
+  <p>Supervisor for restarting selected nodes if they die.</p>
+  Supervisor for restarting selected nodes if they die.
+
+<p>This will restart nodes or a group of nodes, depening on the strategy if they die.
+
+<p>Failure is throwing an exception, die is if the process dies, disappears, vanishes.
+
+<p>For more detauls, <a href="https://www.erlang.org/doc/apps/stdlib/supervisor.html">Erlang documentation</a>.
+
+</script>
+
 <!-- --- [red-module:@gregoriusrippenstein/erlang-red-unittest/ut-assert-failure] --- -->
 <script type="text/javascript">
   (function(){
@@ -11986,6 +12251,7 @@ Attach this to any branch of a flow that is intended to fail.
     inputs: 1,
 
     outputs: 1,
+    outputLabels: ["result"],
 
     label: function () {
       function prop2name(type, key) {
@@ -12234,9 +12500,15 @@ Attach this to any branch of a flow that is intended to fail.
   <p>Ensure specific values are set on the message passing through this node.</p>
   Ensure specific values are set on the message passing through this node.
 
+<p>
 If the values do not match, this node will cause and error.
 
-**This has no implementation when used with Node-RED, this is a Erlang-RED specific node.**
+<p>
+Upon completion, the node sets the "assert_succeed" flag on the message to either true or false depending on whether
+all tests succeed or some failed. This is an all or one flag.
+
+<p>
+The "assert_failures" array value is set on the message to contain all failures and unsupported features.
 
 </script>
 
