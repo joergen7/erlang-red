@@ -133,7 +133,9 @@ handle_cast({MsgType, Msg}, {Module, NodeDef}) ->
         handle_msg_responder(MsgType, Msg, Module, Results, post_completed)
     catch
         E:F:S ->
-            ErrMsg = io_lib:format("Error: ~p:~p \n ~p", [E, F, S]),
+            ErrMsg = io_lib:format(
+                       "MsgType: \"~p\"~nNodeDef: {{{ ~p }}}~nMsg: {{{ ~p }}}~nError: ~p:~p~n~p",
+                       [MsgType, NodeDef, Msg, E, F, S]),
             post_exception_or_debug(NodeDef, Msg, ErrMsg)
     end;
 handle_cast(Msg, {Module, NodeDef}) ->

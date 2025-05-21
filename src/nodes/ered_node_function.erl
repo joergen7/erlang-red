@@ -112,15 +112,17 @@ execute(ErlangCode, NodeDef, Msg) ->
                 NodeDef
         end
     catch
-        E:F ->
+        E:F:S ->
             ErrMsg2 = io_lib:format(
-                "Stanza: {{{ ~p }}} Error: ~p:~p",
-                [ErlangCode, E, F]
+                "Stanza: {{{ ~p }}}~nError: ~p:~p~nStack ~p~n",
+                [ErlangCode, E, F, S]
             ),
             post_exception_or_debug(NodeDef, Msg, ErrMsg2),
             NodeDef
     end.
 
+%%
+%%
 handle_local_function(FunctionName, Args) ->
     io:format("~p(~p)", [FunctionName, Args]).
 
