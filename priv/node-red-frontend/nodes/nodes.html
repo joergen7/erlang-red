@@ -3180,7 +3180,7 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
         category: 'function',
         defaults: {
             name: {value:"_DEFAULT_"},
-            func: {value:"\nfun (Msg) ->\n    Msg\nend.\n"},
+            func: {value:"%% Code here is wrapped in a fun (Msg) call\n%% fun (Msg) ->\n    Msg\n%% end.\n"},
             outputs: {value:1},
             timeout:{value:RED.settings.functionTimeout || 0},
             noerr: {value:0,required:true,
@@ -11885,9 +11885,10 @@ msg.cookies = {
 
       scope: { value: null, type: "*[]" },
       strategy: { value: "one_for_one" },
+      supervisor_type: { value: "dynamic" },
       auto_shutdown: { value: "never" },
-      intensity: { value: 1 },
-      period: { value: 5 }
+      intensity: { value: "1" },
+      period: { value: "5" }
     },
 
     inputs: 0,
@@ -12069,6 +12070,14 @@ msg.cookies = {
 </script>
 
 <script type="text/html" data-template-name="erlsupervisor">
+
+      <div class="form-row">
+        <label style="width: 150px;" for="node-input-supervisor_type" data-i18n="erlsupervisor.label.supervisor_type"></label>
+        <select id="node-input-supervisor_type">
+            <option value="dynamic" data-i18n="erlsupervisor.supervisor_type.dynamic"></option>
+            <option value="static" data-i18n="erlsupervisor.supervisor_type.static"></option>
+        </select>
+      </div>
 
       <div class="form-row">
         <label style="width: 150px;" for="node-input-strategy" data-i18n="erlsupervisor.label.restart_strategy"></label>

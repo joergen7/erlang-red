@@ -13,7 +13,8 @@
                 "period": "Period (seconds)",
                 "restart_strategy": "Restart Strategy",
                 "selectAll": "select all",
-                "source": "Supervise Processes"
+                "source": "Supervised Nodes",
+                "supervisor_type": "Type of Supervisor"
             },
             "nodeCount": "supervisor: __number__",
             "placeholder": {
@@ -27,12 +28,16 @@
                 "simple_one_for_one": "Simple One for one"
             },
             "scope": {
-                "all": "flow nodes",
+                "all": "all flow nodes",
                 "group": "in same group",
                 "selected": "selected nodes"
             },
             "superviseFlow": "supervisor: flow",
-            "superviseGroup": "supervisor: group"
+            "superviseGroup": "supervisor: group",
+            "supervisor_type": {
+                "dynamic": "Dynamic child specification",
+                "static": "Static child specification"
+            }
         }
     },
     "@gregoriusrippenstein/erlang-red-unittest/ut-assert-debug": {
