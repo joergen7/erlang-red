@@ -46,8 +46,8 @@ handle_msg({incoming, Msg}, NodeDef) ->
     % If no flowid is configured, take it from the Msg, if there is none
     % there also, then silently ignore the message.
     FlowId = get_prop_value_from_map(
-               flowid, NodeDef, get_prop_value_from_map(flowid, Msg, undefined)
-     ),
+        flowid, NodeDef, get_prop_value_from_map(flowid, Msg, undefined)
+    ),
 
     case FlowId of
         undefined ->
@@ -55,13 +55,15 @@ handle_msg({incoming, Msg}, NodeDef) ->
             post_exception_or_debug(NodeDef, Msg, ErrMsg),
             {handled, NodeDef, Msg};
         _ ->
-            FileName = io_lib:format("~s/testflows/~s/flows.json",
-                                     [code:priv_dir(erlang_red), FlowId]),
+            FileName = io_lib:format(
+                "~s/testflows/~s/flows.json",
+                [code:priv_dir(erlang_red), FlowId]
+            ),
             case file:read_file(FileName) of
                 {ok, FileData} ->
                     % node has two ports, therefore wires is
                     %   [ [WiresPort1], [WiresPort2] ]
-                    [WiresPort1|_] = maps:get(wires,NodeDef),
+                    [WiresPort1 | _] = maps:get(wires, NodeDef),
 
                     Msg2 = maps:put(payload, FileData, Msg),
                     send_msg_on(WiresPort1, Msg2),
@@ -82,6 +84,5 @@ handle_msg({incoming, Msg}, NodeDef) ->
                     {handled, NodeDef, Msg}
             end
     end;
-
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.

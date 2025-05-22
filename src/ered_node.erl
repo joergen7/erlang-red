@@ -64,11 +64,19 @@ init({Module, NodeDef}) ->
 
 %%
 %% Sync calls to the node.
+
+%% Filter nodes is a call to the supervisor to remove all the nodes from the
+%% list for which it is responsible, It then stops and starts these nodes
+%% as required.
+handle_call({filter_nodes, NodeDefs}, _From, {Module, NodeDef}) ->
+    {NewListOfNodeDefs, ModuleNodeDef} =
+        Module:handle_event({filter_nodes, NodeDefs}, NodeDef),
+    {reply, NewListOfNodeDefs, {Module, ModuleNodeDef}};
 handle_call({registered, WsName, Pid}, _From, {Module, NodeDef}) ->
     NodeDef2 = Module:handle_event({registered, WsName, Pid}, NodeDef),
     {reply, NodeDef2, {Module, NodeDef2}};
 handle_call(Msg, _From, {Module, NodeDef}) ->
-    io:format("Unknown call: ~p~n", [Msg]),
+    io:format("Unknown call to node ~p: ~p~n", [self(), Msg]),
     {reply, NodeDef, {Module, NodeDef}}.
 
 %%
@@ -169,7 +177,10 @@ handle_info({stop, WsName}, {Module, NodeDef}) ->
     Module:handle_event({stop, WsName}, NodeDef),
     {stop, normal, {Module, NodeDef}};
 handle_info(Event, {Module, NodeDef}) ->
-    io:format("Node Received unsupported event {{{ ~p }}}~n", [Event]),
+    io:format(
+        "Node ~p Received unsupported event {{{ ~p }}}~n",
+        [self(), Event]
+    ),
     % unsupported(NodeDef, Event, <<"Unsupported Event Received">>),
     {noreply, {Module, NodeDef}}.
 
@@ -185,7 +196,7 @@ code_change(_OldVersion, State, _Extra) ->
 terminate(normal, _State) ->
     ok;
 terminate(Event, _State) ->
-    io:format("Node Terminate called with {{{ ~p }}}~n", [Event]),
+    io:format("Node ~p Terminate called with {{{ ~p }}}~n", [self(), Event]),
     ok.
 
 %%

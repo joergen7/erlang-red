@@ -23,6 +23,10 @@
     send_msg_on_by_pids/2,
     send_msg_to_connected_nodes/2,
 
+    %% This is used by the supervisor node to revive dead processes
+    super_spin_up_node/2,
+    is_supervisor/1,
+
     tabid_to_error_collector/1,
     this_should_not_happen/2,
     trigger_outgoing_messages/3,
@@ -157,23 +161,69 @@ add_state(NodeDef, NodePid) ->
     NodeDef5 = maps:put('_mc_outgoing', 0, NodeDef4),
     maps:put('_mc_exception', 0, NodeDef5).
 
+extract_supervisors(NodeDefs) ->
+    extract_supervisors(NodeDefs, [], []).
+
+extract_supervisors([], Supervisors, Nodes) ->
+    {Nodes, Supervisors};
+extract_supervisors([NodeDef | MoreNodeDefs], Supervisors, Nodes) ->
+    case is_supervisor(maps:get(type, NodeDef)) of
+        true ->
+            extract_supervisors(MoreNodeDefs, [NodeDef | Supervisors], Nodes);
+        _ ->
+            extract_supervisors(MoreNodeDefs, Supervisors, [NodeDef | Nodes])
+    end.
+
+%% erlfmt:ignore alignment
+spin_up_supervisor(NodeDef, WsName) ->
+    TypeStr = maps:get(type, NodeDef),
+    IdStr   = maps:get(id, NodeDef),
+    Module  = node_type_to_module(TypeStr, disabled(NodeDef)),
+    GrpName = get_node_name(WsName, IdStr),
+
+    clear_pg_group(GrpName),
+
+    {ok, Pid} = Module:start(add_state(NodeDef, GrpName), WsName),
+    Pid.
+
+super_filter_nodes([], NodeDefs) ->
+    NodeDefs;
+super_filter_nodes([SupRef | Supervisors], NodeDefs) ->
+    super_filter_nodes(
+        Supervisors,
+        ered_node_supervisor:extract_nodes(SupRef, NodeDefs)
+    ).
+
 %% TODO: a tab node (i.e. the tab containing a flow) also has a disabled
 %% TODO: flag but this is called 'disabled'. If it is set, then the entire
 %% TODO: flow should be ignoreed --> this is not handled at the moment.
-create_pid_for_node(Ary, WsName) ->
-    store_config_nodes(Ary, WsName),
-    create_pid_for_node(Ary, [], WsName).
+create_pid_for_node(AryAll, WsName) ->
+    store_config_nodes(AryAll, WsName),
+
+    {Ary, Supervisors} = extract_supervisors(AryAll),
+
+    Supers = [spin_up_supervisor(NodeDef, WsName) || NodeDef <- Supervisors],
+
+    ReducedAry = super_filter_nodes(Supers, Ary),
+
+    create_pid_for_node(ReducedAry, Supers, WsName).
 
 %% erlfmt:ignore equals and arrows should line up here.
 create_pid_for_node([], Pids, _WsName) ->
     Pids;
 create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
+    {ok, Pid} = spin_up_node(NodeDef, WsName),
+    create_pid_for_node(MoreNodeDefs, [Pid | Pids], WsName).
+
+%%
+%% This can be used by a supervisor to revive a dead process.
+spin_up_node(NodeDef, WsName) ->
     {ok, IdStr} = maps:find(id, NodeDef),
     {ok, TypeStr} = maps:find(type, NodeDef),
 
     %% here have to respect the 'd' (disabled) attribute. if true, then
     %% the node does not need to have a Pid created for it.
-    Module = node_type_to_fun(TypeStr, disabled(NodeDef)),
+    Module = node_type_to_module(TypeStr, disabled(NodeDef)),
 
     GrpName = get_node_name(WsName, IdStr),
 
@@ -181,16 +231,24 @@ create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
 
     StatefulNodeDef = add_state(NodeDef, GrpName),
 
+    %% The Module:start calls the ered_node:start(..) function which registers
+    %% the PID with the corresponding pg group
     {ok, Pid} = Module:start(StatefulNodeDef, WsName),
 
     %% Perform any Post spawn activities. This is mostly registering with
     %% collectors of events as subscribers, see catch and complete nodes
     %% for examples. This is done after the spawn because to register
     %% with the various servers, a Pid is needed and that is not known
-    %% when a node is initialised via the spawn.
-    gen_server:call( Pid, {registered, WsName, Pid} ),
+    %% when a node is initialised via the Module:start.
+    gen_server:call(Pid, {registered, WsName, Pid}),
 
-    create_pid_for_node(MoreNodeDefs, [Pid | Pids], WsName).
+    {ok, Pid}.
+
+%% Used by the supervisor node to restart/start nodes.
+super_spin_up_node(NodeDef, WsName) ->
+    {ok, Pid} = spin_up_node(NodeDef, WsName),
+    erlang:link(Pid),
+    {ok, Pid}.
 
 %%
 %% Squirrel away all config nodes to the config store for later retrieval
@@ -292,59 +350,60 @@ send_msg_on_by_pids([Pid | Wires], Msg) ->
 %% on checking by type.
 %%
 
-node_type_to_fun(_Type, true) ->
+node_type_to_module(_Type, true) ->
     ered_node_disabled;
-node_type_to_fun(Type, _) ->
-    node_type_to_fun(Type).
+node_type_to_module(Type, _) ->
+    node_type_to_module(Type).
 
 %%
 %% Mapping more Node-RED Node Type to Erlang node module. Required because
 %% some node types map to the same module, i.e. ered_node_ignore.
 %%
 %% erlfmt:ignore alignment.
-node_type_to_fun(<<"inject">>)        -> ered_node_inject;
-node_type_to_fun(<<"switch">>)        -> ered_node_switch;
-node_type_to_fun(<<"debug">>)         -> ered_node_debug;
-node_type_to_fun(<<"junction">>)      -> ered_node_junction;
-node_type_to_fun(<<"change">>)        -> ered_node_change;
-node_type_to_fun(<<"link out">>)      -> ered_node_link_out;
-node_type_to_fun(<<"link in">>)       -> ered_node_link_in;
-node_type_to_fun(<<"link call">>)     -> ered_node_link_call;
-node_type_to_fun(<<"delay">>)         -> ered_node_delay;
-node_type_to_fun(<<"file in">>)       -> ered_node_file_in;
-node_type_to_fun(<<"json">>)          -> ered_node_json;
-node_type_to_fun(<<"template">>)      -> ered_node_template;
-node_type_to_fun(<<"join">>)          -> ered_node_join;
-node_type_to_fun(<<"split">>)         -> ered_node_split;
-node_type_to_fun(<<"catch">>)         -> ered_node_catch;
-node_type_to_fun(<<"comment">>)       -> ered_node_ignore;
-node_type_to_fun(<<"tab">>)           -> ered_node_ignore;
-node_type_to_fun(<<"complete">>)      -> ered_node_complete;
-node_type_to_fun(<<"group">>)         -> ered_node_ignore;
-node_type_to_fun(<<"status">>)        -> ered_node_status;
-node_type_to_fun(<<"trigger">>)       -> ered_node_trigger;
-node_type_to_fun(<<"http in">>)       -> ered_node_http_in;
-node_type_to_fun(<<"http response">>) -> ered_node_http_response;
-node_type_to_fun(<<"http request">>)  -> ered_node_http_request;
-node_type_to_fun(<<"mqtt in">>)       -> ered_node_mqtt_in;
-node_type_to_fun(<<"mqtt out">>)      -> ered_node_mqtt_out;
-node_type_to_fun(<<"exec">>)          -> ered_node_exec;
-node_type_to_fun(<<"function">>)      -> ered_node_function;
-node_type_to_fun(<<"markdown">>)      -> ered_node_markdown;
-node_type_to_fun(<<"csv">>)           -> ered_node_csv;
-node_type_to_fun(<<"FlowHubPull">>)   -> ered_node_flowhub_pull;
+node_type_to_module(<<"inject">>)        -> ered_node_inject;
+node_type_to_module(<<"switch">>)        -> ered_node_switch;
+node_type_to_module(<<"debug">>)         -> ered_node_debug;
+node_type_to_module(<<"junction">>)      -> ered_node_junction;
+node_type_to_module(<<"change">>)        -> ered_node_change;
+node_type_to_module(<<"link out">>)      -> ered_node_link_out;
+node_type_to_module(<<"link in">>)       -> ered_node_link_in;
+node_type_to_module(<<"link call">>)     -> ered_node_link_call;
+node_type_to_module(<<"delay">>)         -> ered_node_delay;
+node_type_to_module(<<"file in">>)       -> ered_node_file_in;
+node_type_to_module(<<"json">>)          -> ered_node_json;
+node_type_to_module(<<"template">>)      -> ered_node_template;
+node_type_to_module(<<"join">>)          -> ered_node_join;
+node_type_to_module(<<"split">>)         -> ered_node_split;
+node_type_to_module(<<"catch">>)         -> ered_node_catch;
+node_type_to_module(<<"comment">>)       -> ered_node_ignore;
+node_type_to_module(<<"tab">>)           -> ered_node_ignore;
+node_type_to_module(<<"complete">>)      -> ered_node_complete;
+node_type_to_module(<<"group">>)         -> ered_node_ignore;
+node_type_to_module(<<"status">>)        -> ered_node_status;
+node_type_to_module(<<"trigger">>)       -> ered_node_trigger;
+node_type_to_module(<<"http in">>)       -> ered_node_http_in;
+node_type_to_module(<<"http response">>) -> ered_node_http_response;
+node_type_to_module(<<"http request">>)  -> ered_node_http_request;
+node_type_to_module(<<"mqtt in">>)       -> ered_node_mqtt_in;
+node_type_to_module(<<"mqtt out">>)      -> ered_node_mqtt_out;
+node_type_to_module(<<"exec">>)          -> ered_node_exec;
+node_type_to_module(<<"function">>)      -> ered_node_function;
+node_type_to_module(<<"markdown">>)      -> ered_node_markdown;
+node_type_to_module(<<"csv">>)           -> ered_node_csv;
+node_type_to_module(<<"FlowHubPull">>)   -> ered_node_flowhub_pull;
+node_type_to_module(<<"erlsupervisor">>) -> ered_node_supervisor;
 
 %%
 %% Assert nodes for testing functionality of the nodes. These are the first
 %% Node-RED and Erlang-RED nodes - they have implmentations for both because
 %% they confirm the compatiability between Node-RED and ErlangRED.
 %%
-node_type_to_fun(<<"ut-assert-values">>)  -> ered_node_assert_values;
-node_type_to_fun(<<"ut-assert-failure">>) -> ered_node_assert_failure;
-node_type_to_fun(<<"ut-assert-success">>) -> ered_node_assert_success;
-node_type_to_fun(<<"ut-assert-status">>)  -> ered_node_assert_status;
-node_type_to_fun(<<"ut-assert-debug">>)   -> ered_node_assert_debug;
-node_type_to_fun(Unknown) ->
+node_type_to_module(<<"ut-assert-values">>)  -> ered_node_assert_values;
+node_type_to_module(<<"ut-assert-failure">>) -> ered_node_assert_failure;
+node_type_to_module(<<"ut-assert-success">>) -> ered_node_assert_success;
+node_type_to_module(<<"ut-assert-status">>)  -> ered_node_assert_status;
+node_type_to_module(<<"ut-assert-debug">>)   -> ered_node_assert_debug;
+node_type_to_module(Unknown) ->
     case is_config_node(Unknown) of
         false ->
             io:format("noop node initiated for unknown type: ~p\n", [Unknown]),
@@ -375,3 +434,12 @@ is_config_node(<<"FlowCompareCfg">>)     -> true;
 is_config_node(<<"FlowHubCfg">>)         -> true;
 is_config_node(<<"websocket-listener">>) -> true;
 is_config_node(_)                        -> false.
+
+%%
+%% this is also used by the supervisor node, hence the extra support.
+is_supervisor(NodeDef) when is_map(NodeDef) ->
+    is_supervisor(maps:get(type, NodeDef));
+is_supervisor(<<"erlsupervisor">>) ->
+    true;
+is_supervisor(_) ->
+    false.
