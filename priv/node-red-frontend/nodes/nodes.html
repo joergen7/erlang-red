@@ -11883,7 +11883,7 @@ msg.cookies = {
         value:"",
       },
 
-      scope: { value: null, type: "*[]" },
+      scope: { value: "flow", type: "*[]" },
       strategy: { value: "one_for_one" },
       supervisor_type: { value: "dynamic" },
       auto_shutdown: { value: "never" },
@@ -12035,8 +12035,8 @@ msg.cookies = {
         }
         node._resize();
       });
-      if (this.scope === null) {
-        $("#node-input-scope-select").val("all");
+      if (this.scope === null || this.scope === "flow") {
+        $("#node-input-scope-select").val("flow");
       } else if (this.scope === "group") {
         $("#node-input-scope-select").val("group");
       } else {
@@ -12050,8 +12050,8 @@ msg.cookies = {
 
     oneditsave: function() {
       var scope = $("#node-input-scope-select").val();
-      if (scope === 'all') {
-        this.scope = null;
+      if (scope === 'flow') {
+        this.scope = 'flow';
       } else if (scope === 'group') {
         this.scope = "group";
       } else {
@@ -12111,7 +12111,7 @@ msg.cookies = {
       <div class="form-row">
         <label style="width: 150px;" for="node-input-scope" data-i18n="erlsupervisor.label.source"></label>
         <select id="node-input-scope-select">
-            <option value="all" data-i18n="erlsupervisor.scope.all"></option>
+            <option value="flow" data-i18n="erlsupervisor.scope.all"></option>
             <option value="group" data-i18n="erlsupervisor.scope.group"></option>
             <option value="target" data-i18n="erlsupervisor.scope.selected"></option>
         </select>
