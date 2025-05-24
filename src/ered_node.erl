@@ -171,6 +171,9 @@ handle_info(Event = {'DOWN', _, _, _, _}, {Module, NodeDef}) ->
 handle_info({timeout, _TimerREf, Msg}, {Module, NodeDef}) ->
     NodeDef2 = Module:handle_event(Msg, NodeDef),
     {noreply, {Module, NodeDef2}};
+handle_info({supervisor_node, Tuple}, {Module, NodeDef}) ->
+    NodeDef2 = Module:handle_event(Tuple, NodeDef),
+    {noreply, {Module, NodeDef2}};
 %%
 %% Now this is bad. Stopping is really the last thing that should happen.
 handle_info({stop, WsName}, {Module, NodeDef}) ->
