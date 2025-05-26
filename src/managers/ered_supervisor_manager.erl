@@ -24,24 +24,25 @@ start_link(NodePid, NodeDef, Children) ->
         )
     ),
 
+    whereis(MgrId) =/= undefined andalso
+        is_process_alive(whereis(MgrId)) andalso
+        gen_server:stop(MgrId),
+
     {ok, Pid} = supervisor:start_link(
         {local, MgrId},
         ?MODULE,
         [NodePid, NodeDef, Children]
     ),
 
-    NodePid ! {supervisor_node, {started, Pid}},
+    NodePid ! {supervisor_node, {supervisor_started, Pid}},
     NodePid ! {supervisor_node, {monitor_this_process, Pid}},
     {ok, Pid}.
 
-init(Args = [NodePid, NodeDef, Children]) ->
-    io:format("init ~p called on supervisor manager~n", [NodePid]),
-    {ok, {
-        #{
-            strategy => binary_to_atom(maps:get(strategy, NodeDef)),
-            intensity => binary_to_integer(maps:get(intensity, NodeDef)),
-            period => binary_to_integer(maps:get(period, NodeDef)),
-            auto_shutdown => binary_to_atom(maps:get(auto_shutdown, NodeDef))
-        },
-        Children
-    }}.
+init([NodePid, NodeDef, Children]) ->
+    SupOpts = #{
+        strategy => binary_to_atom(maps:get(strategy, NodeDef)),
+        intensity => binary_to_integer(maps:get(intensity, NodeDef)),
+        period => binary_to_integer(maps:get(period, NodeDef)),
+        auto_shutdown => binary_to_atom(maps:get(auto_shutdown, NodeDef))
+    },
+    {ok, {SupOpts, Children}}.
