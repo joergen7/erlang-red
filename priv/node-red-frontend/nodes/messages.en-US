@@ -7,19 +7,41 @@
                 "any_significant": "Any Significant",
                 "never": "Never"
             },
+            "child_restart": {
+                "permanent": "Permanent",
+                "temporary": "Temporary",
+                "transient": "Transient"
+            },
+            "child_shutdown": {
+                "brutal_kill": "Brutal Kill",
+                "infinite": "Infinite Timeout",
+                "timeout": "Timeout"
+            },
+            "child_type": {
+                "supervisor": "Supervisor",
+                "worker": "Worker"
+            },
             "label": {
                 "auto_shutdown": "Auto Shutdown",
+                "child_restart": "Restart",
+                "child_shutdown": "Shutdown",
+                "child_type": "Type",
                 "intensity": "Intensity (count)",
                 "period": "Period (seconds)",
                 "restart_strategy": "Restart Strategy",
                 "selectAll": "select all",
                 "source": "Supervised Nodes",
-                "supervisor_type": "Type of Supervisor"
+                "supervisor_type": "Type of Supervisor",
+                "tab": {
+                    "child_config": "Children",
+                    "supervisor_config": "Options"
+                }
             },
             "nodeCount": "supervisor: __number__",
             "placeholder": {
                 "intensity": "Count",
-                "period": "Seconds"
+                "period": "Seconds",
+                "timeout": "Timeout (secs)"
             },
             "restart_strategy": {
                 "one_for_all": "One for All",
@@ -28,9 +50,9 @@
                 "simple_one_for_one": "Simple One for one"
             },
             "scope": {
-                "all": "all flow nodes",
-                "group": "in same group",
-                "selected": "selected nodes"
+                "all": "All flow nodes",
+                "group": "In same group",
+                "selected": "Selected nodes"
             },
             "superviseFlow": "supervisor: flow",
             "superviseGroup": "supervisor: group",

@@ -11884,11 +11884,17 @@ msg.cookies = {
       },
 
       scope: { value: "flow", type: "*[]" },
-      strategy: { value: "one_for_one" },
+
       supervisor_type: { value: "dynamic" },
+      strategy: { value: "one_for_one" },
       auto_shutdown: { value: "never" },
       intensity: { value: "1" },
-      period: { value: "5" }
+      period: { value: "5" },
+
+      child_type: { value: "worker" },
+      child_restart: { value: "permanent" },
+      child_shutdown: { value: "brutal_kill" },
+      child_shutdown_timeout: { value: "0" }
     },
 
     inputs: 1,
@@ -11919,6 +11925,33 @@ msg.cookies = {
 
     oneditprepare: function() {
       var node = this;
+      var childDirList = undefined;
+
+      $("#node-input-erlsupervisor-child-target-container-div")
+
+
+      var tabs = RED.tabs.create({
+        id: "erlsupervisor-tabs",
+        onchange: function (tab) {
+          $("#erlsupervisor-tabs-content").children().hide();
+          $("#" + tab.id).show();
+        }
+      });
+
+      tabs.addTab({
+        id: "erlsupervisor-tab-supervisor-config",
+        iconClass: "fa fa-cog",
+        label: node._("erlsupervisor.label.tab.supervisor_config")
+      });
+
+      tabs.addTab({
+        id: "erlsupervisor-tab-child-config",
+        iconClass: "fa fa-child",
+        label: node._("erlsupervisor.label.tab.child_config")
+      });
+
+      tabs.activateTab("erlsupervisor-tab-supervisor-config");
+
       var scope = node.scope || [];
 
       this._resize = function () {
@@ -11946,8 +11979,17 @@ msg.cookies = {
           }
         }
       });
-      var dirList = $("#node-input-erlsupervisor-target-container-div").css({ width: "100%", height: "100%" })
-        .treeList({ multi: true }).on("treelistitemmouseover", function (e, item) {
+
+      /*
+        sortable is a hidden feature of treeList --> https://github.com/node-red/node-red/blob/master/packages/node_modules/%40node-red/editor-client/src/js/ui/common/treeList.js --> which is a feature of editableList ==> https://github.com/node-red/node-red/blob/master/packages/node_modules/%40node-red/editor-client/src/js/ui/common/editableList.js
+       */
+      var dirList = $("#node-input-erlsupervisor-target-container-div").css({
+          width: "100%",
+          height: "100%"
+        }).treeList({
+          multi: true,
+          sortable: true
+        }).on("treelistitemmouseover", function (e, item) {
           item.node.highlighted = true;
           item.node.dirty = true;
           RED.view.redraw();
@@ -11956,9 +11998,10 @@ msg.cookies = {
           item.node.dirty = true;
           RED.view.redraw();
         })
+
       var candidateNodes = RED.nodes.filterNodes({ z: node.z });
-      var allChecked = true;
       var items = [];
+      var scopedItems = [];
       var nodeItemMap = {};
 
       candidateNodes.forEach(function (n) {
@@ -11966,8 +12009,6 @@ msg.cookies = {
           return;
         }
         var isChecked = scope.indexOf(n.id) !== -1;
-
-        allChecked = allChecked && isChecked;
 
         var nodeDef = RED.nodes.getType(n.type);
         var label;
@@ -11985,16 +12026,26 @@ msg.cookies = {
         if (!nodeDef || !label) {
           label = n.type;
         }
+
         nodeItemMap[n.id] = {
           node: n,
+          id: n.id,
           label: label,
           sublabel: sublabel,
           selected: isChecked,
           checkbox: true
         };
-        items.push(nodeItemMap[n.id]);
+
+        if ( isChecked ) {
+          scopedItems.push(nodeItemMap[n.id]);
+        } else {
+          items.push(nodeItemMap[n.id]);
+        }
       });
-      dirList.treeList('data', items);
+
+      scopedItems.sort( (a,b) => { return scope.indexOf(a.id) < scope.indexOf(b.id) ? -1 : 1})
+
+      dirList.treeList('data', [...scopedItems, ...items]);
 
       $("#node-input-erlsupervisor-target-select").on("click", function (e) {
         e.preventDefault();
@@ -12035,6 +12086,17 @@ msg.cookies = {
         }
         node._resize();
       });
+
+      $("#node-input-child_shutdown").on("change", function (e) {
+        var sdown = $(this).val();
+        if (sdown === "timeout") {
+          $("#node-input-child_shutdown_timeout").show();
+        } else {
+          $("#node-input-child_shutdown_timeout").hide();
+        }
+      });
+      $("#node-input-child_shutdown").trigger('change')
+
       if (this.scope === null || this.scope === "flow") {
         $("#node-input-scope-select").val("flow");
       } else if (this.scope === "group") {
@@ -12043,6 +12105,8 @@ msg.cookies = {
         $("#node-input-scope-select").val("target");
       }
       $("#node-input-scope-select").trigger("change");
+
+      $('#node-input-erlsupervisor-target-container-div > .red-ui-treeList-container').css({ "height": "40vh" })
     },
 
     oneditcancel: function() {
@@ -12050,12 +12114,13 @@ msg.cookies = {
 
     oneditsave: function() {
       var scope = $("#node-input-scope-select").val();
-      if (scope === 'flow') {
+      if (scope === null || scope === 'flow') {
         this.scope = 'flow';
       } else if (scope === 'group') {
         this.scope = "group";
       } else {
-        this.scope = $("#node-input-erlsupervisor-target-container-div").treeList('selected').map(function (i) { return i.node.id })
+        // this seems to be the only way to get the list of ids in sorted ordered ...
+        this.scope = Array.from($("#node-input-erlsupervisor-target-container-div").find('li').find('.selected').map( (d,o) => $($(o).parent()).data().data.id ))
       }
     },
 
@@ -12072,64 +12137,104 @@ msg.cookies = {
 <script type="text/html" data-template-name="erlsupervisor">
 
       <div class="form-row">
-        <label style="width: 150px;" for="node-input-supervisor_type" data-i18n="erlsupervisor.label.supervisor_type"></label>
-        <select id="node-input-supervisor_type">
-            <option value="dynamic" data-i18n="erlsupervisor.supervisor_type.dynamic"></option>
-            <option value="static" data-i18n="erlsupervisor.supervisor_type.static"></option>
-        </select>
-      </div>
-
-      <div class="form-row">
-        <label style="width: 150px;" for="node-input-strategy" data-i18n="erlsupervisor.label.restart_strategy"></label>
-        <select id="node-input-strategy">
-            <option value="one_for_one" data-i18n="erlsupervisor.restart_strategy.one_for_one"></option>
-            <option value="one_for_all" data-i18n="erlsupervisor.restart_strategy.one_for_all"></option>
-            <option value="rest_for_one" data-i18n="erlsupervisor.restart_strategy.rest_for_one"></option>
-            <option value="simple_one_for_one" data-i18n="erlsupervisor.restart_strategy.simple_one_for_one"></option>
-        </select>
-      </div>
-
-      <div class="form-row">
-        <label style="width: 150px;" for="node-input-auto_shutdown" data-i18n="erlsupervisor.label.auto_shutdown"></label>
-        <select id="node-input-auto_shutdown">
-            <option value="never" data-i18n="erlsupervisor.auto_shutdown.never"></option>
-            <option value="any_significant" data-i18n="erlsupervisor.auto_shutdown.any_significant"></option>
-            <option value="all_significant" data-i18n="erlsupervisor.auto_shutdown.all_significant"></option>
-        </select>
-      </div>
-
-      <div class="form-row">
-        <label style="width: 150px;" for="node-input-intensity" data-i18n="erlsupervisor.label.intensity"></label>
-        <input type="number" id="node-input-intensity" data-i18n="[placeholder]erlsupervisor.placeholder.intensity" style="width: 100px;"></input>
-      </div>
-
-      <div class="form-row">
-        <label style="width: 150px;" for="node-input-period" data-i18n="erlsupervisor.label.period"></label>
-        <input type="number" id="node-input-period" data-i18n="[placeholder]erlsupervisor.placeholder.period"  style="width: 100px;"></input>
-      </div>
-
-      <div class="form-row">
-        <label style="width: 150px;" for="node-input-scope" data-i18n="erlsupervisor.label.source"></label>
-        <select id="node-input-scope-select">
-            <option value="flow" data-i18n="erlsupervisor.scope.all"></option>
-            <option value="group" data-i18n="erlsupervisor.scope.group"></option>
-            <option value="target" data-i18n="erlsupervisor.scope.selected"></option>
-        </select>
-      </div>
-
-      <div class="form-row node-input-target-row">
-        <button type="button" id="node-input-erlsupervisor-target-select" class="red-ui-button" data-i18n="node-red:common.label.selectNodes"></button>
-      </div>
-
-      <div class="form-row node-input-target-row node-input-target-list-row" style="position: relative; min-height: 100px">
-        <div style="position: absolute; top: -30px; right: 0;"><input type="text" id="node-input-erlsupervisor-target-filter"></div>
-        <div id="node-input-erlsupervisor-target-container-div"></div>
-      </div>
-
-      <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
         <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
       </div>
+
+      <div class="form-row func-tabs-row">
+        <ul style="min-width: 400px; margin-bottom: 20px;" id="erlsupervisor-tabs"></ul>
+      </div>
+
+      <div id="erlsupervisor-tabs-content" style="min-height: calc(100% - 95px);">
+
+        <div id="erlsupervisor-tab-supervisor-config" style="display:none">
+          <div class="form-row">
+            <label style="width: 150px;" for="node-input-supervisor_type" data-i18n="erlsupervisor.label.supervisor_type"></label>
+            <select id="node-input-supervisor_type">
+                <option value="dynamic" data-i18n="erlsupervisor.supervisor_type.dynamic"></option>
+                <option value="static" data-i18n="erlsupervisor.supervisor_type.static"></option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label style="width: 150px;" for="node-input-strategy" data-i18n="erlsupervisor.label.restart_strategy"></label>
+            <select id="node-input-strategy">
+                <option value="one_for_one" data-i18n="erlsupervisor.restart_strategy.one_for_one"></option>
+                <option value="one_for_all" data-i18n="erlsupervisor.restart_strategy.one_for_all"></option>
+                <option value="rest_for_one" data-i18n="erlsupervisor.restart_strategy.rest_for_one"></option>
+                <option value="simple_one_for_one" data-i18n="erlsupervisor.restart_strategy.simple_one_for_one"></option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label style="width: 150px;" for="node-input-auto_shutdown" data-i18n="erlsupervisor.label.auto_shutdown"></label>
+            <select id="node-input-auto_shutdown">
+                <option value="never" data-i18n="erlsupervisor.auto_shutdown.never"></option>
+                <option value="any_significant" data-i18n="erlsupervisor.auto_shutdown.any_significant"></option>
+                <option value="all_significant" data-i18n="erlsupervisor.auto_shutdown.all_significant"></option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label style="width: 150px;" for="node-input-intensity" data-i18n="erlsupervisor.label.intensity"></label>
+            <input type="number" id="node-input-intensity" data-i18n="[placeholder]erlsupervisor.placeholder.intensity" style="width: 100px;"></input>
+          </div>
+
+          <div class="form-row">
+            <label style="width: 150px;" for="node-input-period" data-i18n="erlsupervisor.label.period"></label>
+            <input type="number" id="node-input-period" data-i18n="[placeholder]erlsupervisor.placeholder.period"  style="width: 100px;"></input>
+          </div>
+
+          <div class="form-row">
+            <label style="width: 150px;" for="node-input-scope" data-i18n="erlsupervisor.label.source"></label>
+            <select id="node-input-scope-select">
+                <option value="flow" data-i18n="erlsupervisor.scope.all"></option>
+                <option value="group" data-i18n="erlsupervisor.scope.group"></option>
+                <option value="target" data-i18n="erlsupervisor.scope.selected"></option>
+            </select>
+          </div>
+
+          <div class="form-row node-input-target-row">
+            <button type="button" id="node-input-erlsupervisor-target-select" class="red-ui-button" data-i18n="node-red:common.label.selectNodes"></button>
+          </div>
+
+          <div class="form-row node-input-target-row node-input-target-list-row" style="position: relative; min-height: 100px">
+            <div style="position: absolute; top: -30px; right: 0;"><input type="text" id="node-input-erlsupervisor-target-filter"></div>
+            <div id="node-input-erlsupervisor-target-container-div"></div>
+          </div>
+        </div>
+
+        <div id="erlsupervisor-tab-child-config" style="display:none">
+
+          <div class="form-row">
+            <label style="width: 150px;" for="node-input-supervisor_type" data-i18n="erlsupervisor.label.child_type"></label>
+            <select id="node-input-child_type">
+                <option value="worker" data-i18n="erlsupervisor.child_type.worker"></option>
+                <option value="supervisor" data-i18n="erlsupervisor.child_type.supervisor"></option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label style="width: 150px;" for="node-input-child_restart" data-i18n="erlsupervisor.label.child_restart"></label>
+            <select id="node-input-child_restart">
+                <option value="permanent" data-i18n="erlsupervisor.child_restart.permanent"></option>
+                <option value="temporary" data-i18n="erlsupervisor.child_restart.temporary"></option>
+                <option value="transient" data-i18n="erlsupervisor.child_restart.transient"></option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label style="width: 150px;" for="node-input-child_shutdown" data-i18n="erlsupervisor.label.child_shutdown"></label>
+            <select id="node-input-child_shutdown">
+                <option value="brutal_kill" data-i18n="erlsupervisor.child_shutdown.brutal_kill"></option>
+                <option value="timeout" data-i18n="erlsupervisor.child_shutdown.timeout"></option>
+                <option value="infinite" data-i18n="erlsupervisor.child_shutdown.infinite"></option>
+            </select>
+            <input type="number" id="node-input-child_shutdown_timeout" data-i18n="[placeholder]erlsupervisor.placeholder.timeout"  style="width: 100px; display: none;"></input>
+          </div>
+        </div>
+
+    </div>
 </script>
 <script type="text/html" data-help-name="erlsupervisor">
   <p>Supervisor for restarting selected nodes if they die.</p>
