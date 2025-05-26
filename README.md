@@ -39,7 +39,7 @@ An architectural diagram of this interconnectedness would be probably be just as
 Supported Nodes & Features
 ---
 
-This is a non-complete list of nodes that partially or completely work:
+This is a non-complete list of [nodes](src/nodes/) that partially or completely work:
 
 | Node | Comment |
 | ---- | ------- |
@@ -68,6 +68,7 @@ This is a non-complete list of nodes that partially or completely work:
 | [noop](src/nodes/ered_node_noop.erl) | doing nothing is very much supported |
 | [split](src/nodes/ered_node_split.erl) | splitting arrays into individual messages is supported, string, buffers and objects aren't. |
 | [status](src/nodes/ered_node_status.erl) | working |
+| [supervisor](src/nodes/ered_node_supervisor.erl) | Erlang-only node that implements the [supervisor behaviour](https://www.erlang.org/doc/system/sup_princ.html)  |
 | [switch](src/nodes/ered_node_switch.erl) | most operators work along with basic JSONata expressions  |
 | [template](src/nodes/ered_node_template.erl) | mustache templating is working but parsing into JSON or YAML isn't supported |
 | [trigger](src/nodes/ered_node_trigger.erl) | the default settings should work |
