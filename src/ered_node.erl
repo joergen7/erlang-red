@@ -188,7 +188,7 @@ handle_info(Event, {Module, NodeDef}) ->
     {noreply, {Module, NodeDef}}.
 
 %%
-%% ------------------------ Helpers and the rest
+%% ------------------------ Termination
 %%
 
 %%
@@ -198,9 +198,17 @@ code_change(_OldVersion, State, _Extra) ->
 
 terminate(normal, _State) ->
     ok;
-terminate(Event, _State) ->
-    io:format("Node ~p Terminate called with {{{ ~p }}}~n", [self(), Event]),
+terminate(fake_crash, _State) ->
+    % used by the supervisor test to demonstrate a non-normal exit.
+    ok;
+terminate(Event, State) ->
+    io:format("Node ~p: Non-normal Termination: '~p' State: {{{ ~p }}}~n",
+              [self(), Event, State]),
     ok.
+
+%%
+%% ------------------------ Helpers
+%%
 
 %%
 %%
