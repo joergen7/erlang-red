@@ -12,8 +12,23 @@
 %%
 %% Supervisor for restarting processes that die unexpectedly.
 %%
-%% For the time being, this supervisor node implements a dynamic supervisor.
-
+%%
+%% "type": "erlsupervisor",
+%% "scope": [         <<--- this can also be "group" or "flow"
+%%     "874cb18b3842747d",
+%%     "84927e2b99bfc27b"
+%% ],
+%% "supervisor_type": "static", <<--- or "dynamic"
+%% "strategy": "one_for_all", <<--+- as desribed in the OTP docu
+%% "auto_shutdown": "never", <<--/
+%% "intensity": "5",     <<-----/
+%% "period": "30",     <<------/
+%% "child_type": "worker",
+%% "child_restart": "permanent",
+%% "child_shutdown": "brutal_kill",  <<--- if this timeout then
+%% "child_shutdown_timeout": "",  <<<---- this value is relevant
+%%
+%%
 -import(ered_nodes, [
     is_supervisor/1,
     jstr/1,
@@ -134,7 +149,7 @@ handle_event({stop, WsName}, NodeDef) ->
     node_status(WsName, NodeDef, "stopped", "red", "dot"),
     case maps:find('_super_ref', NodeDef) of
         {ok, SupRef} ->
-            is_process_alive(SupRef) andalso gen_server:stop(SupRef),
+            is_process_alive(SupRef) andalso exit(SupRef, shutdown),
             maps:remove('_super_ref', NodeDef);
         _ ->
             NodeDef
@@ -143,13 +158,7 @@ handle_event({'DOWN', _, process, Pid, shutdown}, NodeDef) ->
     case maps:get('_super_ref', NodeDef) of
         Pid ->
             WsName = ws_from(NodeDef),
-            node_status(
-                WsName,
-                NodeDef,
-                "dead",
-                "blue",
-                "ring"
-            ),
+            node_status(WsName, NodeDef, "dead", "blue", "ring"),
             send_status_message(<<"dead">>, NodeDef, WsName);
         _ ->
             ignore
@@ -224,8 +233,16 @@ filter_nodedefs(_, _) ->
 %% node will act as supervisor.
 filter_nodedefs_by_ids(LstOfNodeIds, NodeDefs) ->
     filter_nodedefs_by_ids(LstOfNodeIds, NodeDefs, [], []).
-filter_nodedefs_by_ids(_, [], RestNodes, MyNodes) ->
-    {RestNodes, MyNodes};
+filter_nodedefs_by_ids(LstOfNodeIds, [], RestNodes, MyNodes) ->
+    % order the nodes for this supervisor in the order of the IDs defined
+    % in the scope list. This defines the start-up and shutdown order and
+    % also for rest-for-one restart policy.
+    Lookup = lists:map(fun(E) -> {maps:get(id, E), E} end, MyNodes),
+    OrderMyNodes = lists:map(
+        fun(E) -> element(2, lists:keyfind(E, 1, Lookup)) end,
+        LstOfNodeIds
+    ),
+    {RestNodes, OrderMyNodes};
 filter_nodedefs_by_ids(
     LstOfNodeIds,
     [NodeDef | OtherNodeDefs],
@@ -251,6 +268,17 @@ filter_nodedefs_by_ids(
 
 %%
 %%
+cf_child_restart(<<"temporary">>) -> temporary;
+cf_child_restart(<<"transient">>) -> transient;
+cf_child_restart(_) -> permanent.
+
+cf_child_shutdown(<<"infinite">>, _) -> infinity;
+cf_child_shutdown(<<"timeout">>, Timeout) -> convert_to_num(Timeout);
+cf_child_shutdown(_, _Timeout) -> brutal_kill.
+
+cf_child_type(<<"supervisor">>) -> supervisor;
+cf_child_type(_) -> worker.
+
 create_children(MyNodeDefs, SupNodeDef, WsName) ->
     SupNodeId = maps:get('_node_pid_', SupNodeDef),
 
@@ -264,16 +292,17 @@ create_children(MyNodeDefs, SupNodeDef, WsName) ->
             )
         ),
 
-        %% TODO: Besides the child id and start, the configuration could also
-        %% TODO: be done in the supervisor node.
         #{
             id => ChildId,
             start => {
                 ered_nodes, super_spin_up_node, [NodeDef, WsName]
             },
-            restart => permanent,
-            shutdown => brutal_kill,
-            type => worker
+            restart => cf_child_restart(maps:get(child_restart, SupNodeDef)),
+            shutdown => cf_child_shutdown(
+                maps:get(child_shutdown, SupNodeDef),
+                maps:get(child_shutdown_timeout, SupNodeDef)
+            ),
+            type => cf_child_type(maps:get(child_type, SupNodeDef))
         }
     end,
 
@@ -288,18 +317,12 @@ create_children(MyNodeDefs, SupNodeDef, WsName) ->
 
     whereis(SupOfSupName) =/= undefined andalso
         is_process_alive(whereis(SupOfSupName)) andalso
-        gen_server:stop(SupOfSupName),
+        exit(whereis(SupOfSupName), shutdown),
 
     %% this supervisor ensures that this node does not go down when the
     %% supervisor supervising the nodes goes down.
     %% The configuraton for this supervisor is the init/1 function of this
     %% module.
-    io:format("Order: ~p~n", [
-        lists:map(
-            fun(A) -> maps:get(name, A) end,
-            sort_by_y_coord(MyNodeDefs)
-        )
-    ]),
     supervisor:start_link(?MODULE, [
         #{
             id => SupOfSupName,
@@ -309,10 +332,7 @@ create_children(MyNodeDefs, SupNodeDef, WsName) ->
                 [
                     self(),
                     SupNodeDef,
-                    [
-                        StartChild(NodeDef)
-                     || NodeDef <- sort_by_y_coord(MyNodeDefs)
-                    ]
+                    [StartChild(NodeDef) || NodeDef <- MyNodeDefs]
                 ]
             },
             restart => temporary,
@@ -322,14 +342,3 @@ create_children(MyNodeDefs, SupNodeDef, WsName) ->
     ]),
 
     maps:put('_my_node_defs', MyNodeDefs, SupNodeDef).
-
-%%
-%%
-sort_by_y_coord(Lst) ->
-    lists:sort(
-        fun(A, B) ->
-            convert_to_num(maps:get(y, A)) <
-                convert_to_num(maps:get(y, B))
-        end,
-        Lst
-    ).
