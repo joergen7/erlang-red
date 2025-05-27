@@ -26,7 +26,7 @@ start_link(NodePid, NodeDef, Children) ->
 
     whereis(MgrId) =/= undefined andalso
         is_process_alive(whereis(MgrId)) andalso
-        gen_server:stop(MgrId),
+        exit(whereis(MgrId), shutdown),
 
     {ok, Pid} = supervisor:start_link(
         {local, MgrId},
