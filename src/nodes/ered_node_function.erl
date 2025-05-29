@@ -99,7 +99,6 @@ handle_msg(_, NodeDef) ->
 execute(ErlangCode, NodeDef, Msg) when is_list(ErlangCode) ->
     execute(list_to_binary(ErlangCode), NodeDef, Msg);
 execute(ErlangCode, NodeDef, Msg) ->
-    %% try
     case evaluate_erlang(binary_to_list(ErlangCode)) of
         {ok, Func} ->
             Func(NodeDef, Msg);
@@ -112,19 +111,6 @@ execute(ErlangCode, NodeDef, Msg) ->
             post_exception_or_debug(NodeDef, Msg, ErrMsg),
             NodeDef
     end.
-%% catch
-%%     E:F:S ->
-%%         ErrMsg2 = io_lib:format(
-%%             "EXIT caused by Stanza: {{{ ~p }}}~nError: ~p:~p~nStack ~p~n",
-%%             [ErlangCode, E, F, S]
-%%         ),
-%%         % exeption can be caught by the catch node
-%%         post_exception_or_debug(NodeDef, Msg, ErrMsg2),
-%%         % exception state, let the supervisor decide what to do.
-%%         exit(self(), {exception, {E,F,S}}),
-%%         % this won't happen but it's nice that it's here.
-%%         NodeDef
-%% end.
 
 %%
 %%
