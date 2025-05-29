@@ -155,7 +155,7 @@ handle_info({timeout, _From, {load_flowid, FlowId}}, State) ->
     end,
     {noreply, State};
 handle_info(Msg, State) ->
-    io:foramt("Compute engine, unknown info: {{ ~p }}~n", [Msg]),
+    io:format("Compute engine, unknown info: {{ ~p }}~n", [Msg]),
     {noreply, State}.
 
 %%
