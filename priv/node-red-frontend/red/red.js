@@ -30847,6 +30847,19 @@ RED.view.tools = (function() {
             RED.actions.add("core:copy-item-url", function (node) { copyItemUrl(node) })
             RED.actions.add("core:copy-item-edit-url", function (node) { copyItemUrl(node, true) })
 
+            var handleDocuLink = (node) => {
+              var content = "<a class='' data-ids=''></a>";
+              if (node.type == "group" ) {
+                content = `<a class="ahl-group-only" data-ids="${node.id}">${RED.utils.getNodeLabel(node,node.id)}</a>`
+              } else {
+                content = `<a class="ahl-node-only" data-ids="${node.id}">${RED.utils.getNodeLabel(node,node.id)}</a>`
+              }
+              if (RED.clipboard.copyText(content)) {
+                 RED.notify("copied link to clipboard", { timeout: 2000 })
+              }
+            };
+            RED.actions.add("core:copy-item-docu-href", handleDocuLink);
+
             // RED.actions.add("core:add-node", function() { addNode() })
         },
         /**
@@ -32012,6 +32025,16 @@ RED.sidebar.info = (function() {
         propertiesPanelHeaderIcon = $("<span>").appendTo(propertiesPanelHeader);
         propertiesPanelHeaderLabel = $("<span>").appendTo(propertiesPanelHeader);
 
+
+        $('<button type="button" class="red-ui-button red-ui-button-small"><i class="fa fa-pencil"></button>').css({
+            position: 'absolute',
+            top: '12px',
+            right: '56px'
+        }).on("click", function(evt) {
+            RED.actions.invoke('core:copy-item-docu-href',selectedObject)
+        }).appendTo(propertiesPanelHeader).show();
+
+
         propertiesPanelHeaderCopyLink = $('<button type="button" class="red-ui-button red-ui-button-small"><i class="fa fa-link"></button>').css({
             position: 'absolute',
             top: '12px',
@@ -32024,7 +32047,7 @@ RED.sidebar.info = (function() {
         propertiesPanelHeaderHelp = $('<button type="button" class="red-ui-button red-ui-button-small"><i class="fa fa-book"></button>').css({
             position: 'absolute',
             top: '12px',
-            right: '56px'
+            right: '80px'
         }).on("click", function(evt) {
             evt.preventDefault();
             evt.stopPropagation();
