@@ -57,7 +57,7 @@ handle_cast(_Msg, Store) ->
 stop_all_pids([], _) ->
     ok;
 stop_all_pids([Pid | Pids], WsName) ->
-    Pid ! {stop, WsName},
+    is_process_alive(Pid) =/= false andalso Pid ! {stop, WsName},
     stop_all_pids(Pids, WsName).
 
 not_happen_loop(TestName, ErrorStorePid) ->

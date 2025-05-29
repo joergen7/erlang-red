@@ -94,7 +94,9 @@ handle_call({deploy, JsonStr, WsName}, _From, State) ->
     %% node_pid_ws<....> and either stopping those processes that no
     %% no longer exist or reseting their state if they do. or simply
     %% remove all nodes with the prefix and restart create them all
+
     Prefix = get_node_name(WsName, <<"">>),
+
     Nodes = lists:filter(
         fun(AA) ->
             case binary:match(AA, Prefix) of
@@ -106,7 +108,14 @@ handle_call({deploy, JsonStr, WsName}, _From, State) ->
         end,
         pg:which_groups()
     ),
-    [[M ! {stop, WsName} || M <- pg:get_members(GrpName)] || GrpName <- Nodes],
+
+    [
+        [
+            is_process_alive(M) =/= false andalso M ! {stop, WsName}
+         || M <- pg:get_members(GrpName)
+        ]
+     || GrpName <- Nodes
+    ],
 
     FlowMap = decode_json(JsonStr),
     {ok, NodeAry} = maps:find(flows, FlowMap),
@@ -145,7 +154,8 @@ handle_info({timeout, _From, {load_flowid, FlowId}}, State) ->
             ered_nodes:create_pid_for_node(Ary, none)
     end,
     {noreply, State};
-handle_info(_, State) ->
+handle_info(Msg, State) ->
+    io:foramt("Compute engine, unknown info: {{ ~p }}~n", [Msg]),
     {noreply, State}.
 
 %%

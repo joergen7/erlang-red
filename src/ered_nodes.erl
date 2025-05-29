@@ -24,7 +24,7 @@
     send_msg_to_connected_nodes/2,
 
     %% This is used by the supervisor node to revive dead processes
-    super_spin_up_node/2,
+    spin_up_and_link_node/2,
     is_supervisor/1,
 
     tabid_to_error_collector/1,
@@ -161,6 +161,8 @@ add_state(NodeDef, NodePid) ->
     NodeDef5 = maps:put('_mc_outgoing', 0, NodeDef4),
     maps:put('_mc_exception', 0, NodeDef5).
 
+%%
+%%
 extract_supervisors(NodeDefs) ->
     extract_supervisors(NodeDefs, [], []).
 
@@ -174,39 +176,73 @@ extract_supervisors([NodeDef | MoreNodeDefs], Supervisors, Nodes) ->
             extract_supervisors(MoreNodeDefs, Supervisors, [NodeDef | Nodes])
     end.
 
-%% erlfmt:ignore alignment
-spin_up_supervisor(NodeDef, WsName) ->
-    TypeStr = maps:get(type, NodeDef),
-    IdStr   = maps:get(id, NodeDef),
-    Module  = node_type_to_module(TypeStr, disabled(NodeDef)),
-    GrpName = get_node_name(WsName, IdStr),
-
-    clear_pg_group(GrpName),
-
-    {ok, Pid} = Module:start(add_state(NodeDef, GrpName), WsName),
-    Pid.
-
-super_filter_nodes([], NodeDefs) ->
+%%
+%% supervisor_filter_nodes iterates through the node defintions until all
+%% supervisors have their nodes. This iteration is needed for implementing
+%% the supervisor-of-supervisor pattern.
+%%
+%% What each supervisor definition does is add the nodes to its definition
+%% and remove those nodes from the list of node definitions. here order is
+%% important since a supervisor should only be defined once the other supervisor
+%% has defined itself. It has done this when it reappears in the list of
+%% node definitions.
+%%
+%% A supervisor node definition will be removed from the list of node
+%% definitions to be started but the supervisor will add itself back to the
+%% list of node definitions once it has found all its children. Hence another
+%% supervisor that is supervising that supervisor can then pick it up from
+%% there.
+supervisor_filter_nodes(_Supervisors, NodeDefs, _RedoSupervisors, _WsName, 0) ->
     NodeDefs;
-super_filter_nodes([SupRef | Supervisors], NodeDefs) ->
-    super_filter_nodes(
-        Supervisors,
-        ered_node_supervisor:extract_nodes(SupRef, NodeDefs)
-    ).
+supervisor_filter_nodes([], NodeDefs, [], _WsName, _Limit) ->
+    NodeDefs;
+supervisor_filter_nodes([], NodeDefs, RedoSupervisors, _WsName, Limit) ->
+    supervisor_filter_nodes(RedoSupervisors, NodeDefs, [], _WsName, Limit - 1);
+supervisor_filter_nodes(
+    [SupNodeDef | MoreSupNodeDefs],
+    NodeDefs,
+    RedoSupervisors,
+    WsName,
+    Limit
+) ->
+    Module = node_type_to_module(SupNodeDef),
+
+    case Module:extract_nodes(SupNodeDef, NodeDefs, WsName) of
+        {ok, ReducedNodeDefs} ->
+            supervisor_filter_nodes(
+                MoreSupNodeDefs,
+                ReducedNodeDefs,
+                RedoSupervisors,
+                WsName,
+                Limit - 1
+            );
+        {error, _} ->
+            supervisor_filter_nodes(
+                MoreSupNodeDefs,
+                NodeDefs,
+                [SupNodeDef | RedoSupervisors],
+                WsName,
+                Limit - 1
+            )
+    end.
 
 %% TODO: a tab node (i.e. the tab containing a flow) also has a disabled
 %% TODO: flag but this is called 'disabled'. If it is set, then the entire
-%% TODO: flow should be ignoreed --> this is not handled at the moment.
+%% TODO: flow should be ignored --> this is not handled at the moment.
 create_pid_for_node(AryAll, WsName) ->
     store_config_nodes(AryAll, WsName),
 
     {Ary, Supervisors} = extract_supervisors(AryAll),
 
-    Supers = [spin_up_supervisor(NodeDef, WsName) || NodeDef <- Supervisors],
+    ReducedAry = supervisor_filter_nodes(
+        Supervisors,
+        Ary,
+        [],
+        WsName,
+        length(Supervisors) + 1
+    ),
 
-    ReducedAry = super_filter_nodes(Supers, Ary),
-
-    create_pid_for_node(ReducedAry, Supers, WsName).
+    create_pid_for_node(ReducedAry, [], WsName).
 
 %% erlfmt:ignore equals and arrows should line up here.
 create_pid_for_node([], Pids, _WsName) ->
@@ -229,11 +265,9 @@ spin_up_node(NodeDef, WsName) ->
 
     clear_pg_group(GrpName),
 
-    StatefulNodeDef = add_state(NodeDef, GrpName),
-
     %% The Module:start calls the ered_node:start(..) function which registers
     %% the PID with the corresponding pg group
-    {ok, Pid} = Module:start(StatefulNodeDef, WsName),
+    {ok, Pid} = Module:start(add_state(NodeDef, GrpName), WsName),
 
     %% Perform any Post spawn activities. This is mostly registering with
     %% collectors of events as subscribers, see catch and complete nodes
@@ -245,9 +279,18 @@ spin_up_node(NodeDef, WsName) ->
     {ok, Pid}.
 
 %% Used by the supervisor node to restart/start nodes.
-super_spin_up_node(NodeDef, WsName) ->
+spin_up_and_link_node(NodeDef, WsName) ->
     {ok, Pid} = spin_up_node(NodeDef, WsName),
     erlang:link(Pid),
+    % this flag indicates that a supervisor node should fall down if
+    % its supervisor process dies, that's because the supervisor node
+    % is being started by another supervisor. that supervisor is responsible
+    % for restarting this node when it goes down. Also this function is
+    % exclusively used by supervisor nodes, so its safe to set the
+    % flag here. The top-level supervisor is started by the spin_up_nodes
+    % function and hence does not have this flag.
+    gen_server:call(Pid, {die_on_supervisor_death}),
+
     {ok, Pid}.
 
 %%
@@ -360,6 +403,8 @@ node_type_to_module(Type, _) ->
 %% some node types map to the same module, i.e. ered_node_ignore.
 %%
 %% erlfmt:ignore alignment.
+node_type_to_module(NodeDef) when is_map(NodeDef) ->
+    node_type_to_module(maps:get(type,NodeDef));
 node_type_to_module(<<"inject">>)        -> ered_node_inject;
 node_type_to_module(<<"switch">>)        -> ered_node_switch;
 node_type_to_module(<<"debug">>)         -> ered_node_debug;

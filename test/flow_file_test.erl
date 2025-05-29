@@ -9,7 +9,7 @@ stop_all_pids([]) ->
     ok;
 stop_all_pids([Pid | Pids]) ->
     %% none is the websocket name - doesn't exist.
-    Pid ! {stop, none},
+    is_process_alive(Pid) =/= false andalso Pid ! {stop, none},
     stop_all_pids(Pids).
 
 %%

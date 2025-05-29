@@ -68,10 +68,8 @@ init({Module, NodeDef}) ->
 %% Filter nodes is a call to the supervisor to remove all the nodes from the
 %% list for which it is responsible, It then stops and starts these nodes
 %% as required.
-handle_call({filter_nodes, NodeDefs}, _From, {Module, NodeDef}) ->
-    {NewListOfNodeDefs, ModuleNodeDef} =
-        Module:handle_event({filter_nodes, NodeDefs}, NodeDef),
-    {reply, NewListOfNodeDefs, {Module, ModuleNodeDef}};
+handle_call({die_on_supervisor_death}, _From, {Module, NodeDef}) ->
+    {reply, ok, {Module, maps:put('_fail_on_supervisor_death', true, NodeDef)}};
 handle_call({registered, WsName, Pid}, _From, {Module, NodeDef}) ->
     NodeDef2 = Module:handle_event({registered, WsName, Pid}, NodeDef),
     {reply, NodeDef2, {Module, NodeDef2}};
@@ -202,8 +200,10 @@ terminate(fake_crash, _State) ->
     % used by the supervisor test to demonstrate a non-normal exit.
     ok;
 terminate(Event, State) ->
-    io:format("Node ~p: Non-normal Termination: '~p' State: {{{ ~p }}}~n",
-              [self(), Event, State]),
+    io:format(
+        "Node ~p: Non-normal Termination: '~p' State: {{{ ~p }}}~n",
+        [self(), Event, State]
+    ),
     ok.
 
 %%

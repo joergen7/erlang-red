@@ -19,26 +19,17 @@ start_link(NodePid, NodeDef, Children) ->
         list_to_binary(
             io_lib:format(
                 "supervisor_for_~s",
-                [maps:get(id, NodeDef)]
+                [maps:get('_node_pid_', NodeDef)]
             )
         )
     ),
 
-    whereis(MgrId) =/= undefined andalso
-        is_process_alive(whereis(MgrId)) andalso
-        exit(whereis(MgrId), shutdown),
-
-    {ok, Pid} = supervisor:start_link(
-        {local, MgrId},
-        ?MODULE,
-        [NodePid, NodeDef, Children]
-    ),
-
+    Pid = start_or_kill(MgrId, [NodePid, NodeDef, Children]),
     NodePid ! {supervisor_node, {supervisor_started, Pid}},
     NodePid ! {supervisor_node, {monitor_this_process, Pid}},
     {ok, Pid}.
 
-init([NodePid, NodeDef, Children]) ->
+init([_NodePid, NodeDef, Children]) ->
     SupOpts = #{
         strategy => binary_to_atom(maps:get(strategy, NodeDef)),
         intensity => binary_to_integer(maps:get(intensity, NodeDef)),
@@ -46,3 +37,21 @@ init([NodePid, NodeDef, Children]) ->
         auto_shutdown => binary_to_atom(maps:get(auto_shutdown, NodeDef))
     },
     {ok, {SupOpts, Children}}.
+
+%%
+%%
+start_or_kill(MgrId, [NodePid, NodeDef, Children]) ->
+    case
+        supervisor:start_link(
+            {local, MgrId},
+            ?MODULE,
+            [NodePid, NodeDef, Children]
+        )
+    of
+        {ok, Pid} ->
+            Pid;
+        {error, {already_started, Pid}} ->
+            unregister(MgrId),
+            exit(Pid, normal),
+            start_or_kill(MgrId, [NodePid, NodeDef, Children])
+    end.
