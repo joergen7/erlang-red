@@ -102,26 +102,6 @@ init(Children) ->
 
 %%
 %%
-check_config(NodeDef) ->
-    check_config(
-        maps:get(strategy, NodeDef),
-        maps:get(auto_shutdown, NodeDef),
-        maps:get(supervisor_type, NodeDef)
-    ).
-
-check_config(_Strategy, <<"any_significant">>, _SupervisorType) ->
-    {no, "auto shutdown"};
-check_config(_Strategy, <<"all_significant">>, _SupervisorType) ->
-    {no, "auto shutdown"};
-check_config(_Strategy, _AutoShutdown, <<"dymanic">>) ->
-    {no, "dynamic supervisor type"};
-check_config(<<"simple_one_for_one">>, _AutoShutdown, _SupervisorType) ->
-    {no, "simple one-to-one"};
-check_config(_Strategy, _AutoShutdown, _SupervisorType) ->
-    ok.
-
-%%
-%%
 handle_event({registered, WsName, _Pid}, NodeDef) ->
     case maps:find('_my_node_defs', NodeDef) of
         {ok, Children} ->
@@ -132,9 +112,12 @@ handle_event({registered, WsName, _Pid}, NodeDef) ->
     NodeDef;
 handle_event({stop, WsName}, NodeDef) ->
     node_status(WsName, NodeDef, "stopped", "red", "dot"),
+    % _super_ref is set in the monitor_this_process event and that Pid
+    % is the supervisor process that is actually doing the work.
     case maps:find('_super_ref', NodeDef) of
         {ok, SupRef} ->
-            is_process_alive(SupRef) andalso exit(SupRef, shutdown),
+            is_process_alive(SupRef) andalso exit(SupRef, normal),
+
             maps:remove('_super_ref', NodeDef);
         _ ->
             NodeDef
@@ -206,6 +189,121 @@ send_status_message(Status, NodeDef, WsName) ->
 
 %%
 %%
+cf_child_restart(<<"temporary">>) -> temporary;
+cf_child_restart(<<"transient">>) -> transient;
+cf_child_restart(_) -> permanent.
+
+cf_child_shutdown(<<"infinite">>, _) -> infinity;
+cf_child_shutdown(<<"timeout">>, Timeout) -> convert_to_num(Timeout);
+cf_child_shutdown(_, _Timeout) -> brutal_kill.
+
+%% Any child that is a supervisor is set as supervisor regardless of the
+%% configuration of the children configuraion found in supervisor node.
+cf_child_type(SuperNodeConfigChildType, ChildNodeDef) ->
+    case is_supervisor(ChildNodeDef) of
+        true ->
+            supervisor;
+        false ->
+            cf_child_type(SuperNodeConfigChildType)
+    end.
+cf_child_type(<<"supervisor">>) -> supervisor;
+cf_child_type(_) -> worker.
+
+create_children(MyNodeDefs, SupNodeDef, WsName) ->
+    SupNodeId = maps:get('_node_pid_', SupNodeDef),
+
+    StartChild = fun(NodeDef) ->
+        ChildId = binary_to_atom(
+            list_to_binary(
+                io_lib:format(
+                    "child_~s_~s",
+                    [SupNodeId, maps:get(id, NodeDef)]
+                )
+            )
+        ),
+
+        #{
+            id => ChildId,
+            start => {
+                ered_nodes, spin_up_and_link_node, [NodeDef, WsName]
+            },
+            restart => cf_child_restart(maps:get(child_restart, SupNodeDef)),
+            shutdown => cf_child_shutdown(
+                maps:get(child_shutdown, SupNodeDef),
+                maps:get(child_shutdown_timeout, SupNodeDef)
+            ),
+            type => cf_child_type(maps:get(child_type, SupNodeDef), NodeDef)
+        }
+    end,
+
+    SupOfSupName = binary_to_atom(
+        list_to_binary(
+            io_lib:format(
+                "supervisor_manager_~s",
+                [SupNodeId]
+            )
+        )
+    ),
+
+    whereis(SupOfSupName) =/= undefined andalso unregister(SupOfSupName),
+
+    %% this supervisor ensures that this node does not go down when the
+    %% supervisor supervising the nodes goes down.
+    %% The configuraton for this supervisor is the init/1 function of this
+    %% module.
+    %%
+    %% The single child is a supervisor so the shutdown policy is infinity
+    %% to avoid an error message from the gen_server about being killed since
+    %% the supervisor behaviour is a descendant of the gen_server behaviour.
+    supervisor:start_link(?MODULE, [
+        #{
+            id => SupOfSupName,
+            start => {
+                ered_supervisor_manager,
+                start_link,
+                [
+                    self(),
+                    SupNodeDef,
+                    [StartChild(NodeDef) || NodeDef <- MyNodeDefs]
+                ]
+            },
+            restart => temporary,
+            shutdown => infinity,
+            type => supervisor
+        }
+    ]),
+
+    maps:put('_my_node_defs', MyNodeDefs, SupNodeDef).
+
+%%
+%% ------------- pre spin up configuration setup
+%%
+%% The functionality beyond here is related to configuring supervisor nodes
+%% before these are spun up. This functionality checks the configuration of the
+%% supervisor node and extracts the nodes from a list of nodes. This is called
+%% from the ered_nodes:create_pid_for_node/2 function.
+%%
+%%
+check_config(NodeDef) ->
+    check_config(
+        maps:get(strategy, NodeDef),
+        maps:get(auto_shutdown, NodeDef),
+        maps:get(supervisor_type, NodeDef)
+    ).
+
+check_config(_Strategy, <<"any_significant">>, _SupervisorType) ->
+    {no, "auto shutdown"};
+check_config(_Strategy, <<"all_significant">>, _SupervisorType) ->
+    {no, "auto shutdown"};
+check_config(_Strategy, _AutoShutdown, <<"dynamic">>) ->
+    {no, "dynamic supervisor type"};
+check_config(<<"simple_one_for_one">>, _AutoShutdown, _SupervisorType) ->
+    {no, "simple one-to-one"};
+check_config(_Strategy, _AutoShutdown, _SupervisorType) ->
+    ok.
+
+%%
+%%
 filter_nodedefs(<<"flow">>, _NodeDefs) ->
     {error, "scope flow"};
 filter_nodedefs(<<"group">>, _NodeDefs) ->
@@ -235,7 +333,7 @@ filter_nodedefs_by_ids(LstOfNodeIds, [], RestNodes, MyNodes) ->
             ),
             {ok, {RestNodes, OrderMyNodes}};
         {_But, _Different} ->
-            {error, "not all nodes found"}
+            {not_all_nodes_found, "not all nodes found"}
     end;
 filter_nodedefs_by_ids(
     LstOfNodeIds,
@@ -261,82 +359,6 @@ filter_nodedefs_by_ids(
     end.
 
 %%
-%%
-cf_child_restart(<<"temporary">>) -> temporary;
-cf_child_restart(<<"transient">>) -> transient;
-cf_child_restart(_) -> permanent.
-
-cf_child_shutdown(<<"infinite">>, _) -> infinity;
-cf_child_shutdown(<<"timeout">>, Timeout) -> convert_to_num(Timeout);
-cf_child_shutdown(_, _Timeout) -> brutal_kill.
-
-cf_child_type(<<"supervisor">>) -> supervisor;
-cf_child_type(_) -> worker.
-
-create_children(MyNodeDefs, SupNodeDef, WsName) ->
-    SupNodeId = maps:get('_node_pid_', SupNodeDef),
-
-    StartChild = fun(NodeDef) ->
-        ChildId = binary_to_atom(
-            list_to_binary(
-                io_lib:format(
-                    "child_~s_~s",
-                    [SupNodeId, maps:get(id, NodeDef)]
-                )
-            )
-        ),
-
-        #{
-            id => ChildId,
-            start => {
-                ered_nodes, spin_up_and_link_node, [NodeDef, WsName]
-            },
-            restart => cf_child_restart(maps:get(child_restart, SupNodeDef)),
-            shutdown => cf_child_shutdown(
-                maps:get(child_shutdown, SupNodeDef),
-                maps:get(child_shutdown_timeout, SupNodeDef)
-            ),
-            type => cf_child_type(maps:get(child_type, SupNodeDef))
-        }
-    end,
-
-    SupOfSupName = binary_to_atom(
-        list_to_binary(
-            io_lib:format(
-                "supervisor_manager_~s",
-                [SupNodeId]
-            )
-        )
-    ),
-
-    whereis(SupOfSupName) =/= undefined andalso unregister(SupOfSupName),
-
-    %% this supervisor ensures that this node does not go down when the
-    %% supervisor supervising the nodes goes down.
-    %% The configuraton for this supervisor is the init/1 function of this
-    %% module.
-
-    supervisor:start_link(?MODULE, [
-        #{
-            id => SupOfSupName,
-            start => {
-                ered_supervisor_manager,
-                start_link,
-                [
-                    self(),
-                    SupNodeDef,
-                    [StartChild(NodeDef) || NodeDef <- MyNodeDefs]
-                ]
-            },
-            restart => temporary,
-            shutdown => brutal_kill,
-            type => supervisor
-        }
-    ]),
-
-    maps:put('_my_node_defs', MyNodeDefs, SupNodeDef).
-
-%%
 %% From the list of Node definitions, remove all those nodes that are managed
 %% by the Supervisor (defined by the SupNodeDef) and return the reduced list of
 %% nodes including this supervisor definition.
@@ -357,6 +379,11 @@ extract_nodes(SupNodeDef, NodeDefs, WsName) ->
                             SupNodeDef
                         ),
                     {ok, [SupNodeDefWithNodes | RestNodeDefs]};
+                {not_all_nodes_found, ErrMsg} ->
+                    %% Ignore this because we iterate through the list until
+                    %% all nodes are found, supervisor of supervisor of
+                    %% supervisor patterns uses this logic.
+                    {error, NodeDefs};
                 {error, ErrMsg} ->
                     % TODO: group and flow are both not supported, although
                     % TODO: flow would be easy since it would imply all the

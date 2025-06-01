@@ -192,6 +192,23 @@ extract_supervisors([NodeDef | MoreNodeDefs], Supervisors, Nodes) ->
 %% list of node definitions once it has found all its children. Hence another
 %% supervisor that is supervising that supervisor can then pick it up from
 %% there.
+supervisor_filter_nodes(
+    AllSupers = [_SuperNodeDef | _Supervisors],
+    NodeDefs,
+    _RedoSupervisors,
+    WsName,
+    0
+) ->
+    [
+        send_out_debug_msg(
+            ND,
+            #{'_ws' => WsName},
+            <<"Not all supervisors configured, check for incorrect configurations">>,
+            error
+        )
+     || ND <- AllSupers
+    ],
+    NodeDefs;
 supervisor_filter_nodes(_Supervisors, NodeDefs, _RedoSupervisors, _WsName, 0) ->
     NodeDefs;
 supervisor_filter_nodes([], NodeDefs, [], _WsName, _Limit) ->
@@ -234,12 +251,18 @@ create_pid_for_node(AryAll, WsName) ->
 
     {Ary, Supervisors} = extract_supervisors(AryAll),
 
+    % limit is set sufficiently large (`+ 100`) so that complex supervisor trees
+    % are supported. If the limit is too small, that can lead to distractingly
+    % difficult bugs to debug. The Limit is a hard upper limit on the recursion
+    % required for constructing supervisors trees. If there are no more
+    % supervisors to configure, then the recursion exits before the limit
+    % is reached.
     ReducedAry = supervisor_filter_nodes(
         Supervisors,
         Ary,
         [],
         WsName,
-        length(Supervisors) + 1
+        length(Supervisors) + 100
     ),
 
     create_pid_for_node(ReducedAry, [], WsName).
