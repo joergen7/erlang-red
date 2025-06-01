@@ -46,7 +46,7 @@ find_tab_env_ary([_H | T]) ->
 %% value of this function is milliseconds, even if the original value in
 %% the flow was seconds.
 obtain_timeout([]) ->
-    1234;
+    2222;
 obtain_timeout([#{value := V, name := <<"ERED_TIMEOUT">>} | _T]) ->
     element(1, string:to_integer(V)) * 1000;
 obtain_timeout([_H | T]) ->
