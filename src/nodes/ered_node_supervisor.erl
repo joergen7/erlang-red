@@ -93,11 +93,14 @@ start(NodeDef, WsName) ->
 %% erlfmt:ignore alignment
 init(Children) ->
     {ok, {
+          % these settings are irrelevant because the single child of the
+          % supervisor goes down once and stays down. The fight is rigged.
+          % (because the restart strategy is temporary).
           #{
-            strategy      => one_for_all,
+            strategy      => one_for_one,
             intensity     => 1,
             period        => 5,
-            auto_shutdown => any_significant
+            auto_shutdown => never
       }, Children}}.
 
 %%
@@ -379,7 +382,7 @@ extract_nodes(SupNodeDef, NodeDefs, WsName) ->
                             SupNodeDef
                         ),
                     {ok, [SupNodeDefWithNodes | RestNodeDefs]};
-                {not_all_nodes_found, ErrMsg} ->
+                {not_all_nodes_found, _ErrMsg} ->
                     %% Ignore this because we iterate through the list until
                     %% all nodes are found, supervisor of supervisor of
                     %% supervisor patterns uses this logic.
