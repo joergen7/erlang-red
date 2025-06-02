@@ -3,7 +3,7 @@ Erlang-RED - A Node-RED backend coded in Erlang
 
 An experiment to replace Node-REDs existing NodeJS backend with an Erlang equivalent that is 100% compatible[1] to existing flow code.
 
-The goal is bring the advantages of low-code visual [flow-based programming](https://jpaulm.github.io/fbp/index.html) to a programming language that is designed for message passing and concurrency from the ground up, hence Erlang.
+The goal is bring the advantages of low-code visual [flow-based programming](https://jpaulm.github.io/fbp/index.html) to a programming language that is designed for message passing and concurrency from the ground up, hence Erlang. More details described in the corresponding [blog post](https://blog.openmindmap.org/erlang-red).
 
 [1] = 100% won't be possible since function nodes that are coded in Javascript aren't supported (or aren't intended to be supported - unless someone has a workaround)
 
@@ -41,37 +41,37 @@ Supported Nodes & Features
 
 This is a non-complete list of [nodes](src/nodes/) that partially or completely work:
 
-| Node | Comment |
-| ---- | ------- |
-| [catch](src/nodes/ered_node_catch.erl) | catches exception of selected nodes and of entire flows but not groups |
-| [change](src/nodes/ered_node_change.erl) | supports many operators but not all. JSONata in basic form is also supported. |
-| [complete](src/nodes/ered_node_complete.erl) | is available and can be used on certain nodes, not all |
-| [csv](src/nodes/ered_node_csv.erl) | initial RFC4180 decoder working, supports only comma separator |
-| [debug](src/nodes/ered_node_debug.erl) | only debugs the entire message, individal msg properties aren't supported. msg count as status is supported. |
-| [delay](src/nodes/ered_node_delay.erl) | supported static delay not dynamic delay set via `msg.delay` |
-| [exec](src/nodes/ered_node_exec.erl) | executing and killing commands is supported  but only for commands in spawn mode and set on the node. Appending arguments to commands isn't supported. Timeouts are supported. Kill messages are also supported. |
-| [file in](src/nodes/ered_node_file_in.erl) | working for files located in `/priv` |
-| [function](src/nodes/ered_node_function.erl) | working for any Erlang. Stop and start also respected. Timeout and more than one output port isn't supported. |
-| [http in](src/nodes/ered_node_http_in.erl) | working for GET and POST, not available for PUT,DELETE etc |
-| [http request](src/nodes/ered_node_http_request.erl) | basic support for doing rrequests, anything complex probably won't work |
-| [http response](src/nodes/ered_node_http_response.erl) | working |
-| [inject](src/nodes/ered_node_inject.erl) | working for most types except for flow, global ... |
-| [join](src/nodes/ered_node_join.erl) | *manual arrays of count X* is working, `parts` isn't supported  |
-| [json](src/nodes/ered_node_json.erl) | working |
-| [junction](src/nodes/ered_node_junction.erl) | working |
-| [link call](src/nodes/ered_node_link_call.erl) | working - dynamic calls also |
-| [link in](src/nodes/ered_node_link_in.erl) | working |
-| [link out](src/nodes/ered_node_link_out.erl) | working |
-| [markdown](src/nodes/ered_node_markdown.erl) | working and supports whatever [earmark](https://github.com/pragdave/earmark) supports. |
-| [mqtt in](src/nodes/ered_node_mqtt_in.erl) | should be working |
-| [mqtt out](src/nodes/ered_node_mqtt_out.erl) | should be working |
-| [noop](src/nodes/ered_node_noop.erl) | doing nothing is very much supported |
-| [split](src/nodes/ered_node_split.erl) | splitting arrays into individual messages is supported, string, buffers and objects aren't. |
-| [status](src/nodes/ered_node_status.erl) | working |
-| [supervisor](src/nodes/ered_node_supervisor.erl) | Erlang-only node that implements the [supervisor behaviour](https://www.erlang.org/doc/system/sup_princ.html). Supports supervising supervisors and ordering of processes (i.e. nodes) to ensure correct restart and shutdown sequences. |
-| [switch](src/nodes/ered_node_switch.erl) | most operators work along with basic JSONata expressions  |
-| [template](src/nodes/ered_node_template.erl) | mustache templating is working but parsing into JSON or YAML isn't supported |
-| [trigger](src/nodes/ered_node_trigger.erl) | the default settings should work |
+| Node | Comment | Examples |
+| ---- | ------- | -------- |
+| [catch](src/nodes/ered_node_catch.erl) | catches exception of selected nodes and of entire flows but not groups | [Flow](https://flows.red-erik.org/f/71f65246c742cfc9) |
+| [change](src/nodes/ered_node_change.erl) | supports many operators but not all. JSONata in basic form is also supported. | [Flow](https://flows.red-erik.org/f/12572f9ac11e1786) |
+| [complete](src/nodes/ered_node_complete.erl) | is available and can be used on certain nodes, not all | [Flow](https://flows.red-erik.org/f/b723353a316fa50e) |
+| [csv](src/nodes/ered_node_csv.erl) | initial RFC4180 decoder working, supports only comma separator | [Flow](https://flows.red-erik.org/f/16b0bc0cdb0c5807) |
+| [debug](src/nodes/ered_node_debug.erl) | only debugs the entire message, individal msg properties aren't supported. msg count as status is supported. | [Flow](https://flows.red-erik.org/f/b2a67e301fabab0e) |
+| [delay](src/nodes/ered_node_delay.erl) | supported static delay not dynamic delay set via `msg.delay` | [Flow](https://flows.red-erik.org/f/9d11bfc3a6d88535) |
+| [exec](src/nodes/ered_node_exec.erl) | executing and killing commands is supported  but only for commands in spawn mode and set on the node. Appending arguments to commands isn't supported. Timeouts are supported. Kill messages are also supported. | [Flow](https://flows.red-erik.org/f/090eb2d5d71fd45f) |
+| [file in](src/nodes/ered_node_file_in.erl) | working for files located in `/priv` | [Flow](https://flows.red-erik.org/f/538be5947c639b32) |
+| [function](src/nodes/ered_node_function.erl) | working for any Erlang. Stop and start also respected. Timeout and more than one output port isn't supported. | [Flow](https://flows.red-erik.org/f/3bba732ae17b01a9) |
+| [http in](src/nodes/ered_node_http_in.erl) | working for GET and POST, not available for PUT,DELETE etc | [Flow](https://flows.red-erik.org/f/64445798b59d2630) |
+| [http request](src/nodes/ered_node_http_request.erl) | basic support for doing rrequests, anything complex probably won't work | [Flow](https://flows.red-erik.org/f/27804627fb8f56bd) |
+| [http response](src/nodes/ered_node_http_response.erl) | working | [Flow](https://flows.red-erik.org/f/44f12f6e4a455084) |
+| [inject](src/nodes/ered_node_inject.erl) | working for most types except for flow, global ... | [Flow](https://flows.red-erik.org/f/7e1d04570c6bdff9) |
+| [join](src/nodes/ered_node_join.erl) | *manual arrays of count X* is working, `parts` isn't supported  | [Flow](https://flows.red-erik.org/f/987cd33b9cda8529) |
+| [json](src/nodes/ered_node_json.erl) | working | [Flow](https://flows.red-erik.org/f/c4690c0a085d6ef5) |
+| [junction](src/nodes/ered_node_junction.erl) | working | [Flow](https://flows.red-erik.org/f/e1ced3b16782f7c8) |
+| [link call](src/nodes/ered_node_link_call.erl) | working - dynamic calls also | [Flow](https://flows.red-erik.org/f/c6ee6e89a51c98fc) |
+| [link in](src/nodes/ered_node_link_in.erl) | working | [Flow](https://flows.red-erik.org/f/8a627c9bfe3b4aff) |
+| [link out](src/nodes/ered_node_link_out.erl) | working | [Flow](https://flows.red-erik.org/f/bbb1fc2d47c3cd5f) |
+| [markdown](src/nodes/ered_node_markdown.erl) | working and supports whatever [earmark](https://github.com/pragdave/earmark) supports. | [Flow](https://flows.red-erik.org/f/90c1ce90f8af227f) |
+| [mqtt in](src/nodes/ered_node_mqtt_in.erl) | should be working | [Flow](https://flows.red-erik.org/f/486c1412721bb241) |
+| [mqtt out](src/nodes/ered_node_mqtt_out.erl) | should be working | [Flow](https://flows.red-erik.org/f/486c1412721bb241) |
+| [noop](src/nodes/ered_node_noop.erl) | doing nothing is very much supported | [Flow](https://flows.red-erik.org/f/2c5903c9e50d0648) |
+| [split](src/nodes/ered_node_split.erl) | splitting arrays into individual messages is supported, string, buffers and objects aren't. | [Flow](https://flows.red-erik.org/f/b1430ea37ba7cc19) |
+| [status](src/nodes/ered_node_status.erl) | working | [Flow](https://flows.red-erik.org/f/a916165378c446e3) |
+| [supervisor](src/nodes/ered_node_supervisor.erl) | Erlang-only node that implements the [supervisor behaviour](https://www.erlang.org/doc/system/sup_princ.html). Supports supervising supervisors and ordering of processes (i.e. nodes) to ensure correct restart and shutdown sequences. | [Flow](https://flows.red-erik.org/f/83c5e1824f32abec) |
+| [switch](src/nodes/ered_node_switch.erl) | most operators work along with basic JSONata expressions  | [Flow](https://flows.red-erik.org/f/3edda6bd788f88c2) |
+| [template](src/nodes/ered_node_template.erl) | mustache templating is working but parsing into JSON or YAML isn't supported | [Flow](https://flows.red-erik.org/f/3ed472eab9503b4f) |
+| [trigger](src/nodes/ered_node_trigger.erl) | the default settings should work | [Flow](https://flows.red-erik.org/f/1566e453a88578a9) |
 
 - Contexts are **not supported**, so there is no setting things on `flow`, `node` or `global`.
 
