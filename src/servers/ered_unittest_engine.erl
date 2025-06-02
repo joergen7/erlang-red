@@ -59,17 +59,7 @@ stop_all_pids([], _) ->
 stop_all_pids([Pid | Pids], WsName) when Pid =:= false ->
     stop_all_pids(Pids, WsName);
 stop_all_pids([Pid | Pids], WsName) ->
-    try
-        is_process_alive(Pid) =/= false andalso Pid ! {stop, WsName}
-    catch _E:_F:_S ->
-        % Even though we check for false, this still generates a
-        %
-        % * 1st argument: invalid destination
-        %  :erlang.send(false, {:stop, :ws74961d})
-        %
-        % my take on that is the return value
-        ignore
-    end,
+    (is_process_alive(Pid) =/= false) andalso (Pid ! {stop, WsName}),
     stop_all_pids(Pids, WsName).
 
 not_happen_loop(TestName, ErrorStorePid) ->
