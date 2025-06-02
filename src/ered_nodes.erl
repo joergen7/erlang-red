@@ -34,6 +34,7 @@
 ]).
 
 -import(ered_nodered_comm, [
+    node_status/5,
     send_out_debug_msg/4,
     ws_from/1
 ]).
@@ -193,21 +194,22 @@ extract_supervisors([NodeDef | MoreNodeDefs], Supervisors, Nodes) ->
 %% supervisor that is supervising that supervisor can then pick it up from
 %% there.
 supervisor_filter_nodes(
-    AllSupers = [_SuperNodeDef | _Supervisors],
+    Supervisors,
     NodeDefs,
-    _RedoSupervisors,
+    RedoSupers,
     WsName,
     0
-) ->
-    [
+) when length(Supervisors) > 0; length(RedoSupers) > 0 ->
+    FailedSuper = fun(NodeDef, WebsocketName) ->
         send_out_debug_msg(
-            ND,
-            #{'_ws' => WsName},
-            <<"Not all supervisors configured, check for incorrect configurations">>,
+            NodeDef,
+            #{'_ws' => WebsocketName},
+            <<"Not all supervisors configured, check configurations">>,
             error
-        )
-     || ND <- AllSupers
-    ],
+        ),
+        node_status(WsName, NodeDef, "configuration failure", "red", "ring")
+    end,
+    [FailedSuper(ND, WsName) || ND <- (RedoSupers ++ Supervisors)],
     NodeDefs;
 supervisor_filter_nodes(_Supervisors, NodeDefs, _RedoSupervisors, _WsName, 0) ->
     NodeDefs;

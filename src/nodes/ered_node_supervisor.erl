@@ -371,6 +371,13 @@ extract_nodes(SupNodeDef, NodeDefs, WsName) ->
     case check_config(SupNodeDef) of
         {no, ErrMsg} ->
             unsupported(SupNodeDef, {websocket, WsName}, ErrMsg),
+            node_status(
+                WsName,
+                SupNodeDef,
+                "unsupported configuration",
+                "yellow",
+                "dot"
+            ),
             {error, NodeDefs};
         _ ->
             case filter_nodedefs(maps:get(scope, SupNodeDef), NodeDefs) of
@@ -393,6 +400,13 @@ extract_nodes(SupNodeDef, NodeDefs, WsName) ->
                     % TODO: nodedefs while group are all the nodes with the
                     % TODO: same 'g' value as the supervisor
                     unsupported(SupNodeDef, {websocket, WsName}, ErrMsg),
+                    node_status(
+                        WsName,
+                        SupNodeDef,
+                        "unsupported configuration",
+                        "yellow",
+                        "dot"
+                    ),
                     {error, NodeDefs}
             end
     end.
