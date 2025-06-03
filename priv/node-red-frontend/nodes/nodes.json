@@ -587,5 +587,77 @@
         ],
         "user": false,
         "version": "0.1.13"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/node-red-contrib-introspection/seeker",
+        "local": true,
+        "module": "@gregoriusrippenstein/node-red-contrib-introspection",
+        "name": "seeker",
+        "types": [
+            "Seeker"
+        ],
+        "user": false,
+        "version": "0.10.3"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/node-red-contrib-introspection/sink",
+        "local": true,
+        "module": "@gregoriusrippenstein/node-red-contrib-introspection",
+        "name": "sink",
+        "types": [
+            "Sink"
+        ],
+        "user": false,
+        "version": "0.10.3"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/node-red-contrib-introspection/clientcode",
+        "local": true,
+        "module": "@gregoriusrippenstein/node-red-contrib-introspection",
+        "name": "clientcode",
+        "types": [
+            "ClientCode"
+        ],
+        "user": false,
+        "version": "0.10.3"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/node-red-contrib-introspection/getflows",
+        "local": true,
+        "module": "@gregoriusrippenstein/node-red-contrib-introspection",
+        "name": "getflows",
+        "types": [
+            "GetFlows"
+        ],
+        "user": false,
+        "version": "0.10.3"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/node-red-contrib-introspection/sendflow",
+        "local": true,
+        "module": "@gregoriusrippenstein/node-red-contrib-introspection",
+        "name": "sendflow",
+        "types": [
+            "SendFlow"
+        ],
+        "user": false,
+        "version": "0.10.3"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/node-red-contrib-introspection/installpackage",
+        "local": true,
+        "module": "@gregoriusrippenstein/node-red-contrib-introspection",
+        "name": "installpackage",
+        "types": [
+            "InstallPackage"
+        ],
+        "user": false,
+        "version": "0.10.3"
     }
 ]
