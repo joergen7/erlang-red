@@ -34,5 +34,17 @@
         "runtime": false,
         "user": false,
         "version": "0.8.9"
+    },
+    {
+        "editor": true,
+        "enabled": true,
+        "id": "@gregoriusrippenstein/node-red-contrib-flow2uml/sidebar-plugin",
+        "local": true,
+        "module": "@gregoriusrippenstein/node-red-contrib-flow2uml",
+        "name": "sidebar-plugin",
+        "plugins": [],
+        "runtime": false,
+        "user": false,
+        "version": "0.1.13"
     }
 ]
