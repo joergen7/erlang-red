@@ -1069,6 +1069,13 @@ var RED = (function() {
                 return
             }
 
+            // Message tracer add websocket name to the request
+            mth = options.url.match(/^MsgTracer/i)
+            if ( mth ) {
+               let hsh = JSON.parse(options.data)
+               hsh["wsname"] = document.cookie.split("=")[1]
+               options.data = JSON.stringify(hsh)
+            }
 
             // Token retrieval
             mth = options.url.match(/^FlowHubToken/i)
