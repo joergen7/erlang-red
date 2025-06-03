@@ -14,7 +14,9 @@
     get_websocket_name/0,
     node_status_clear/2,
     node_status/5,
+    send_on_if_ws/2,
     send_out_debug_msg/4,
+    send_to_debug_sidebar/2,
     unittest_result/3,
     unsupported/3,
     websocket_name_from_request/1,
@@ -122,6 +124,33 @@ send_out_debug_msg(NodeDef, Msg, ErrMsg, DebugType) ->
 
 %%
 %%
+%% erlfmt:ignore equals and arrows should line up here.
+send_to_debug_sidebar(NodeDef,Msg) ->
+    Type     = get_prop_value_from_map(type,  NodeDef),
+    IdStr    = get_prop_value_from_map(id,    NodeDef),
+    ZStr     = get_prop_value_from_map(z,     NodeDef),
+    NameStr  = get_prop_value_from_map(name,  NodeDef, Type),
+    TopicStr = get_prop_value_from_map(topic, Msg,     ""),
+
+    %% format is important here.
+    %% Triggery for large files and I don't know what. Using format
+    %% of "object" as opposed to "Object" (capital-o) causes less
+    %% breakage. Definitely something to investigate.
+    %% See info for test id: c4690c0a085d6ef5 for more details.
+    Data = #{
+             id       => IdStr,
+             z        => ZStr,
+             path     => ZStr,
+             name     => NameStr,
+             topic    => to_binary_if_not_binary(TopicStr),
+             msg      => Msg,
+             format   => <<"object">>
+            },
+
+    debug(ws_from(Msg), Data, normal).
+
+%%
+%%
 get_websocket_name() ->
     binary_to_atom(
         list_to_binary(io_lib:format("ws~s", [generate_id(6)]))
@@ -192,3 +221,12 @@ assert_failure(NodeDef,WsName,ErrMsg) ->
 
     debug(WsName, Data, error),
     node_status(WsName, NodeDef, "assert failed", "red", "dot").
+
+%%
+%%
+to_binary_if_not_binary(Obj) when is_binary(Obj) ->
+    Obj;
+to_binary_if_not_binary(Obj) when is_list(Obj) ->
+    list_to_binary(Obj);
+to_binary_if_not_binary(Obj) ->
+    Obj.

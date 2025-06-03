@@ -68,7 +68,14 @@ init([]) ->
                     module => [ered_compute_engine]
                 },
                 #{
-                    id => ered_ch8_red_web,
+                    id => ered_ch8_msg_tracer,
+                    start => {ered_msgtracer_manager, start_link, []},
+                    restart => permanent,
+                    type => worker,
+                    module => [ered_msgtracer_manager]
+                },
+                #{
+                    id => ered_ch9_red_web,
                     start => {ered_webserver, start, []},
                     restart => permanent,
                     type => worker,

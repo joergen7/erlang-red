@@ -18,7 +18,8 @@
         ered_flow_store_server,
         ered_compute_engine,
         ered_config_store,
-        ered_csv_parser_store
+        ered_csv_parser_store,
+        ered_msgtracer_manager
     ]},
     {licenses, ["Apache-2.0"]},
     {links, []}

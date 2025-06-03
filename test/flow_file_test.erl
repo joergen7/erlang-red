@@ -202,6 +202,7 @@ foreach_testflow_test_() ->
     pg:start_link(),
     ered_config_store:start(),
     ered_csv_parser_store:start(),
+    ered_msgtracer_manager:start_link(),
 
     {_Cnt, FileNames} = filelib:fold_files(
         io_lib:format("~s/testflows", [code:priv_dir(erlang_red)]),

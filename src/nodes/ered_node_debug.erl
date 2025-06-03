@@ -15,6 +15,7 @@
 -import(ered_nodered_comm, [
     debug/3,
     node_status/5,
+    send_to_debug_sidebar/2,
     unsupported/3,
     ws_from/1
 ]).
@@ -31,40 +32,6 @@
 %%
 start(NodeDef, _WsName) ->
     ered_node:start(NodeDef, ?MODULE).
-
-to_binary_if_not_binary(Obj) when is_binary(Obj) ->
-    Obj;
-to_binary_if_not_binary(Obj) when is_list(Obj) ->
-    list_to_binary(Obj);
-to_binary_if_not_binary(Obj) ->
-    Obj.
-
-%%
-%%
-%% erlfmt:ignore equals and arrows should line up here.
-send_to_sidebar(NodeDef,Msg) ->
-    Type     = get_prop_value_from_map(type,  NodeDef),
-    IdStr    = get_prop_value_from_map(id,    NodeDef),
-    ZStr     = get_prop_value_from_map(z,     NodeDef),
-    NameStr  = get_prop_value_from_map(name,  NodeDef, Type),
-    TopicStr = get_prop_value_from_map(topic, Msg,     ""),
-
-    %% format is important here.
-    %% Triggery for large files and I don't know what. Using format
-    %% of "object" as opposed to "Object" (capital-o) causes less
-    %% breakage. Definitely something to investigate.
-    %% See info for test id: c4690c0a085d6ef5 for more details.
-    Data = #{
-             id       => IdStr,
-             z        => ZStr,
-             path     => ZStr,
-             name     => NameStr,
-             topic    => to_binary_if_not_binary(TopicStr),
-             msg      => Msg,
-             format   => <<"object">>
-            },
-
-    debug(ws_from(Msg), Data, normal).
 
 %%
 %%
@@ -104,7 +71,7 @@ handle_incoming(NodeDef, Msg) ->
         {ok, true} ->
             case maps:find(active, NodeDef) of
                 {ok, true} ->
-                    send_to_sidebar(NodeDef, Msg);
+                    send_to_debug_sidebar(NodeDef, Msg);
                 _ ->
                     not_active_no_output
             end;

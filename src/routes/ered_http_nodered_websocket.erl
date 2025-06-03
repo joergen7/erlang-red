@@ -146,6 +146,16 @@ websocket_info({unittest_results, FlowId, Status}, State) ->
         }
     ]),
     {reply, {text, Msg}, State};
+websocket_info({msgtracing, NodeId}, State) ->
+    Msg = json:encode([
+        #{
+            topic => 'msgtracer:node-received',
+            data => #{
+                nodeid => NodeId
+            }
+        }
+    ]),
+    {reply, {text, Msg}, State};
 websocket_info(_Info, State) ->
     {ok, State}.
 

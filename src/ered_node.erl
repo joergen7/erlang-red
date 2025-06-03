@@ -122,8 +122,12 @@ handle_cast({MsgType = ws_event, Details}, {Module, NodeDef}) ->
     handle_msg_responder(
         MsgType, Details, Module, Results, dont_post_completed
     );
+%% incoming message for node, pass this off to the message tracer service
+handle_cast({MsgType = incoming, Msg}, {Module, NodeDef}) ->
+    ered_msgtracer_manager:node_received_msg(NodeDef, Msg),
+    Results = Module:handle_msg({MsgType, Msg}, bump_counter(MsgType, NodeDef)),
+    handle_msg_responder(MsgType, Msg, Module, Results, post_completed);
 %% This function signature can match the following messages:
-%%    - {incoming, Msg}
 %%    - {link_return, Msg}
 %%    - {mqtt_incoming, Msg}
 %%    - {delay_push_out, Msg}

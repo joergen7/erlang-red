@@ -157,6 +157,9 @@ flow_editor_routes() ->
         %% POST handlers
         %%
 
+        %% Message tracer API endpoint
+        {"/MsgTracer/:task/:state", ered_http_msgtracer_plugin, []},
+
         %% API for storing test cases to disk.
         {"/testcase/:workspaceid/create", ered_http_testcase_post_handler, []},
 
