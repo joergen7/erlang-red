@@ -462,6 +462,8 @@ node_type_to_module(<<"markdown">>)      -> ered_node_markdown;
 node_type_to_module(<<"csv">>)           -> ered_node_csv;
 node_type_to_module(<<"FlowHubPull">>)   -> ered_node_flowhub_pull;
 node_type_to_module(<<"erlsupervisor">>) -> ered_node_supervisor;
+node_type_to_module(<<"Sink">>)          -> ered_node_ignore;
+node_type_to_module(<<"Seeker">>)        -> ered_node_ignore;
 
 %%
 %% Assert nodes for testing functionality of the nodes. These are the first
@@ -501,6 +503,7 @@ trigger_outgoing_messages(_, _, _) ->
 %% erlfmt:ignore alignment
 is_config_node(<<"mqtt-broker">>)        -> true;
 is_config_node(<<"FlowCompareCfg">>)     -> true;
+is_config_node(<<"Flow2MermaidCfg">>)    -> true;
 is_config_node(<<"FlowHubCfg">>)         -> true;
 is_config_node(<<"websocket-listener">>) -> true;
 is_config_node(_)                        -> false.
