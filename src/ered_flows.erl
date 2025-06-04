@@ -38,7 +38,7 @@ find_tab_env_ary([_H | T]) ->
 %% to define a timeout per flow test. This is possible by using the ENV
 %% variables, for a flow tab:
 %%
-%%   double-click on flow tab --> properties --> env --> TIMEOUT
+%%   double-click on flow tab --> properties --> env --> ERED_TIMEOUT
 %%
 %% a timeout value is always in seconds.
 %%

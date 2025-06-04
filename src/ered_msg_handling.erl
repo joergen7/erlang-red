@@ -19,7 +19,7 @@
 ]).
 
 %%
-%% Helper functions for dealing with messages and their electics.
+%% Helper functions for dealing with messages and their electic needs.
 %%
 
 -import(ered_nodes, [

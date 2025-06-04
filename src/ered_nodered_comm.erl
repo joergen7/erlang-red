@@ -112,12 +112,12 @@ send_out_debug_msg(NodeDef, Msg, ErrMsg, DebugType) ->
     NameStr  = get_prop_value_from_map(name,  NodeDef, TypeStr),
 
     Data = #{
-      id       => IdStr,
-      z        => ZStr,
-      path     => ZStr,
-      name     => NameStr,
-      msg      => ErrMsg,
-      format   => <<"string">>
+      id     => IdStr,
+      z      => ZStr,
+      path   => ZStr,
+      name   => NameStr,
+      msg    => ErrMsg,
+      format => <<"string">>
      },
 
     debug(ws_from(Msg), Data, DebugType).
@@ -138,14 +138,14 @@ send_to_debug_sidebar(NodeDef,Msg) ->
     %% breakage. Definitely something to investigate.
     %% See info for test id: c4690c0a085d6ef5 for more details.
     Data = #{
-             id       => IdStr,
-             z        => ZStr,
-             path     => ZStr,
-             name     => NameStr,
-             topic    => to_binary_if_not_binary(TopicStr),
-             msg      => Msg,
-             format   => <<"object">>
-            },
+      id     => IdStr,
+      z      => ZStr,
+      path   => ZStr,
+      name   => NameStr,
+      topic  => to_binary_if_not_binary(TopicStr),
+      msg    => Msg,
+      format => <<"object">>
+     },
 
     debug(ws_from(Msg), Data, normal).
 
@@ -210,14 +210,14 @@ assert_failure(NodeDef,WsName,ErrMsg) ->
     NameStr = get_prop_value_from_map(name, NodeDef, TypeStr),
 
     Data = #{
-             id       => IdStr,
-             z        => ZStr,
-             '_alias' => IdStr,
-             path     => ZStr,
-             name     => NameStr,
-             msg      => jstr(ErrMsg),
-             format   => <<"string">>
-            },
+      id       => IdStr,
+      z        => ZStr,
+      '_alias' => IdStr,
+      path     => ZStr,
+      name     => NameStr,
+      msg      => jstr(ErrMsg),
+      format   => <<"string">>
+     },
 
     debug(WsName, Data, error),
     node_status(WsName, NodeDef, "assert failed", "red", "dot").

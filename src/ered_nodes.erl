@@ -1,8 +1,5 @@
 -module(ered_nodes).
 
-%%
-%% External exports, should be used by others.
-%%
 -export([
     add_state/2,
     create_pid_for_node/2,
@@ -32,6 +29,17 @@
     trigger_outgoing_messages/3,
     unpriv/1
 ]).
+
+%%
+%% Module provides help for the nodes doing the work. Just a collection
+%% of helper functionality that may or may not be used.
+%%
+%% The main rasion d'etre for this module is the create_pid_for_node/2
+%% functionality that spins up the processes for the nodes defined in
+%% a flow. This is used by unittest code and the compute engine. In
+%% contains all sorts of logic for the various types of nodes and their
+%% specific behaviours.
+%%
 
 -import(ered_nodered_comm, [
     node_status/5,
