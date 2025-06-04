@@ -3,7 +3,7 @@
 %%
 %% Module for sending various websocket messages to Node-RED frontend
 %%
-%% Its the module that represents the encapsulates the communication beteen
+%% Its the module that represents the encapsulates the communication between
 %% nodes in Erlang and their representation in the flow editor.
 %%
 -export([
@@ -58,13 +58,13 @@ node_status(WsName, NodeDef, Txt, Clr, Shp) ->
     send_on_if_ws(WsName, {status, NodeId, Txt, Clr, Shp}).
 
 debug(WsName, Data, error) ->
-    send_on_if_ws(WsName, {error_debug, Data});
+    send_on_if_ws(WsName, {debug, Data, error});
 debug(WsName, Data, warning) ->
-    send_on_if_ws(WsName, {warning_debug, Data});
+    send_on_if_ws(WsName, {debug, Data, warning});
 debug(WsName, Data, notice) ->
-    send_on_if_ws(WsName, {notice_debug, Data});
+    send_on_if_ws(WsName, {debug, Data, notice});
 debug(WsName, Data, normal) ->
-    send_on_if_ws(WsName, {debug, Data}).
+    send_on_if_ws(WsName, {debug, Data, normal}).
 
 unittest_result(WsName, FlowId, failed) ->
     send_on_if_ws(WsName, {unittest_results, FlowId, <<"failed">>});

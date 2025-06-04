@@ -134,14 +134,14 @@ websocket_info({data, Msg}, State) ->
 %%
 %% Debug messages are sent immediately since they - might be - are important
 %% while status and unittest results can be bulked up.
-websocket_info({debug, Data}, State) ->
-    send_debug_down_the_pipe(Data, State, normal);
-websocket_info({notice_debug, Data}, State) ->
+websocket_info({debug, Data, notice}, State) ->
     send_debug_down_the_pipe(maps:put(level, 40, Data), State, notice);
-websocket_info({warning_debug, Data}, State) ->
+websocket_info({debug, Data, warning}, State) ->
     send_debug_down_the_pipe(maps:put(level, 30, Data), State, warning);
-websocket_info({error_debug, Data}, State) ->
+websocket_info({debug, Data, error}, State) ->
     send_debug_down_the_pipe(maps:put(level, 20, Data), State, error);
+websocket_info({debug, Data, Level}, State) ->
+    send_debug_down_the_pipe(Data, State, Level);
 %% -------------------- Node status updates
 %%
 %% Clear a previous status update for a node
