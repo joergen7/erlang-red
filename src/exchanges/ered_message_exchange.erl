@@ -48,6 +48,11 @@ subscribe_to_completed(NodeDef, WsName, Pid) ->
 %% It also provides feed back to the caller as to whether there was a
 %% catch node or not, if not, deal with it yourself is the message.
 %%
+%% This is a Node-RED thing that if an exception occurs and no one is
+%% listening, then it makes a sound and that sound is in the debug panel.
+%% So the user is informed even when there is no catch node there to catch
+%% the exception.
+%%
 post_exception(SrcNode, SrcMsg, ErrMsg) ->
     {ok, FlowId} = maps:find(z, SrcNode),
     {ok, NodeId} = maps:find(id, SrcNode),

@@ -150,7 +150,9 @@ flow_editor_routes() ->
         %% Sock'em in the eye websockets
         %%
         {"/node-red/comms", ered_http_nodered_websocket, #{
-            stats_interval => 30000
+            stats_interval => 30000,
+            % milliseconds
+            bulk_send_interval => 127
         }},
 
         %%
