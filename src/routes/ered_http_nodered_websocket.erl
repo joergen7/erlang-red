@@ -35,15 +35,8 @@ init(Req, State) ->
     {cowboy_websocket, Req, State, #{idle_timeout => 120000}}.
 
 websocket_init(State) ->
-    %% TODO this won't work for two tabs in the same browser since
-    %% TODO the cookie is attached to the host, not the tab. Same server
-    %% TODO host, same cookie, same value.
-
     WsName = get_websocket_name(),
     register(WsName, self()),
-    State2 = maps:merge(State, #{wsname => WsName, bulkdata => []}),
-
-    Millis = erlang:system_time(millisecond),
 
     % heartbeat timer
     erlang:start_timer(
@@ -52,7 +45,7 @@ websocket_init(State) ->
         json:encode([
             #{
                 topic => hb,
-                data => Millis
+                data => erlang:system_time(millisecond)
             },
             #{
                 topic => <<"notification/runtime-state">>,
@@ -66,14 +59,9 @@ websocket_init(State) ->
     ),
 
     % bulk data push out timer
-    erlang:start_timer(
-        maps:get(bulk_send_interval, State2) + 400,
-        WsName,
-        push_out_bulk_data
-    ),
+    erlang:start_timer(501, WsName, push_out_bulk_data),
 
-    {ok, State2}.
-
+    {ok, maps:merge(State, #{wsname => WsName, bulkdata => []})}.
 
 %% -------------------- incoming messages from flow editor
 %%
@@ -107,7 +95,6 @@ websocket_handle({text, JsonData}, State) ->
 websocket_handle(_Data, State) ->
     {ok, State}.
 
-
 %% -------------------- start_timer handlers
 %%
 %% timeout endpoint for the two timers started to send out bulkdata
@@ -115,21 +102,21 @@ websocket_handle(_Data, State) ->
 websocket_info({timeout, _Ref, push_out_bulk_data}, State) ->
     BulkData = maps:get(bulkdata, State),
 
+    RestartTimer = fun() ->
+        erlang:start_timer(
+            maps:get(bulk_send_interval, State),
+            self(),
+            push_out_bulk_data
+        )
+    end,
+
     case length(BulkData) of
         0 ->
-            erlang:start_timer(
-                maps:get(bulk_send_interval, State),
-                self(),
-                push_out_bulk_data
-            ),
+            RestartTimer(),
             {ok, State};
         _ ->
             TxtData = json:encode(lists:reverse(BulkData)),
-            erlang:start_timer(
-                maps:get(bulk_send_interval, State),
-                self(),
-                push_out_bulk_data
-            ),
+            RestartTimer(),
             {reply, {text, TxtData}, maps:put(bulkdata, [], State)}
     end;
 websocket_info({timeout, _Ref, Msg}, State) ->
@@ -148,30 +135,13 @@ websocket_info({data, Msg}, State) ->
 %% Debug messages are sent immediately since they - might be - are important
 %% while status and unittest results can be bulked up.
 websocket_info({debug, Data}, State) ->
-    Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
-    ered_ws_event_exchange:debug_msg(maps:find(wsname, State), normal, Data2),
-    Msg = encode_json([#{topic => debug, data => Data2}]),
-    {reply, {text, Msg}, State};
+    send_debug_down_the_pipe(Data, State, normal);
 websocket_info({notice_debug, Data}, State) ->
-    Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
-    Data3 = maps:put(level, 40, Data2),
-    ered_ws_event_exchange:debug_msg(maps:find(wsname, State), notice, Data3),
-    Msg = encode_json([#{topic => debug, data => Data3}]),
-    {reply, {text, Msg}, State};
+    send_debug_down_the_pipe(maps:put(level, 40, Data), State, notice);
 websocket_info({warning_debug, Data}, State) ->
-    Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
-    Data3 = maps:put(level, 30, Data2),
-    ered_ws_event_exchange:debug_msg(
-        maps:find(wsname, State), warning, Data3
-    ),
-    Msg = encode_json([#{topic => debug, data => Data3}]),
-    {reply, {text, Msg}, State};
+    send_debug_down_the_pipe(maps:put(level, 30, Data), State, warning);
 websocket_info({error_debug, Data}, State) ->
-    Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
-    Data3 = maps:put(level, 20, Data2),
-    ered_ws_event_exchange:debug_msg(maps:find(wsname, State), error, Data3),
-    Msg = encode_json([#{topic => debug, data => Data3}]),
-    {reply, {text, Msg}, State};
+    send_debug_down_the_pipe(maps:put(level, 20, Data), State, error);
 %% -------------------- Node status updates
 %%
 %% Clear a previous status update for a node
@@ -180,9 +150,6 @@ websocket_info({status, NodeId, clear}, State) ->
         topic => jstr("status/~s", [NodeId]),
         data => #{}
     },
-
-    %% TODO this isn't sent to the status ered_ws_event_exchange:node because
-    %% TODO there does not seem to be a need and there is no API.
 
     {ok, maps:put(bulkdata, [Msg | maps:get(bulkdata, State)], State)};
 %%
@@ -243,7 +210,6 @@ websocket_info({msgtracing, NodeId}, State) ->
         }
     ]),
     {reply, {text, Msg}, State};
-
 websocket_info(_Info, State) ->
     {ok, State}.
 
@@ -276,6 +242,13 @@ encode_json(Value2) ->
     json:encode(Value2, fun(Value, Encode) -> encoder(Value, Encode) end).
 
 %%
+%%
+send_debug_down_the_pipe(Data, State, Level) ->
+    Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
+    ered_ws_event_exchange:debug_msg(maps:find(wsname, State), Level, Data2),
+    {reply, {text, encode_json([#{topic => debug, data => Data2}])}, State}.
+
+%%
 %% HAHAHA the Millis is off by the timer time - since the message is created
 %% and then the timer is set. Why I did this this way remains a mystery, lets
 %% just say the tea leafs aren't helping.
@@ -294,4 +267,5 @@ ws_send_heartbeat(Pid, State) ->
             data => #{name => WsName}
         }
     ]),
+
     erlang:start_timer(SInterval, Pid, Data_jsonb).
