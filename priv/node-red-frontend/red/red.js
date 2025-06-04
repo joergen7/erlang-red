@@ -10076,6 +10076,7 @@ RED.utils = (function() {
     function renderMarkdown(txt) {
         var rendered = _marked.parse(txt);
         var cleaned = DOMPurify.sanitize(rendered, {SAFE_FOR_JQUERY: true})
+        RED.events.emit("markdown:rendered")
         return cleaned;
     }
 
@@ -29008,7 +29009,7 @@ RED.view = (function() {
             clearSelection();
             if (options.selected) {
                 options.selected.forEach(function(id) {
-                    var n = RED.nodes.node(id);
+                    var n = RED.nodes.node(id) || RED.nodes.junction(id);
                     if (n) {
                         n.selected = true;
                         n.dirty = true;
