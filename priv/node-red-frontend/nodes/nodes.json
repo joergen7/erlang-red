@@ -574,7 +574,31 @@
             "erlsupervisor"
         ],
         "user": false,
-        "version": "0.1.3"
+        "version": "6.7.823"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/erlang-red-supervisor-node/erlmodule",
+        "local": true,
+        "module": "@gregoriusrippenstein/erlang-red-supervisor-node",
+        "name": "erlmodule",
+        "types": [
+            "erlmodule"
+        ],
+        "user": false,
+        "version": "6.7.823"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/erlang-red-supervisor-node/erlstatemachine",
+        "local": true,
+        "module": "@gregoriusrippenstein/erlang-red-supervisor-node",
+        "name": "erlstatemachine",
+        "types": [
+            "erlstatemachine"
+        ],
+        "user": false,
+        "version": "6.7.823"
     },
     {
         "enabled": true,

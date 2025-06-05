@@ -102,7 +102,7 @@ done
 
 #curl -s "${NODERED_URL}/debug/view/debug-utils.js?_=${CBSTMP}" -o debug/view/debug-utils.js
 
-curl -s "${NODERED_URL}/nodes?_=${CBSTMP}" -H 'Accept: text/html' > nodes/nodes.html
+#curl -s "${NODERED_URL}/nodes?_=${CBSTMP}" -H 'Accept: text/html' > nodes/nodes.html
 
 LoCaLeS="en-US en-GB en de-DE de fr ja ko pt-BR ru zh-CN zh-TW"
 

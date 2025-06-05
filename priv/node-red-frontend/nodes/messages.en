@@ -1,5 +1,7 @@
 {
     "@gorenje/node-red-contrib-flowcompare/flowcompare": {},
+    "@gregoriusrippenstein/erlang-red-supervisor-node/erlmodule": {},
+    "@gregoriusrippenstein/erlang-red-supervisor-node/erlstatemachine": {},
     "@gregoriusrippenstein/erlang-red-supervisor-node/erlsupervisor": {},
     "@gregoriusrippenstein/erlang-red-unittest/ut-assert-debug": {},
     "@gregoriusrippenstein/erlang-red-unittest/ut-assert-failure": {},

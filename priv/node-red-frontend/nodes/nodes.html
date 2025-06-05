@@ -11885,7 +11885,7 @@ msg.cookies = {
 
       scope: { value: "flow", type: "*[]" },
 
-      supervisor_type: { value: "dynamic" },
+      supervisor_type: { value: "static" },
       strategy: { value: "one_for_one" },
       auto_shutdown: { value: "never" },
       intensity: { value: "1" },
@@ -11925,10 +11925,6 @@ msg.cookies = {
 
     oneditprepare: function() {
       var node = this;
-      var childDirList = undefined;
-
-      $("#node-input-erlsupervisor-child-target-container-div")
-
 
       var tabs = RED.tabs.create({
         id: "erlsupervisor-tabs",
@@ -12005,7 +12001,7 @@ msg.cookies = {
       var nodeItemMap = {};
 
       candidateNodes.forEach(function (n) {
-        if (n.id === node.id) {
+        if (n.id === node.id || n.type === "erlmodule") {
           return;
         }
         var isChecked = scope.indexOf(n.id) !== -1;
@@ -12150,7 +12146,7 @@ msg.cookies = {
         <div id="erlsupervisor-tab-supervisor-config" style="display:none">
           <div class="form-row">
             <label style="width: 150px;" for="node-input-supervisor_type" data-i18n="erlsupervisor.label.supervisor_type"></label>
-            <select id="node-input-supervisor_type">
+            <select id="node-input-supervisor_type" disabled>
                 <option value="dynamic" data-i18n="erlsupervisor.supervisor_type.dynamic"></option>
                 <option value="static" data-i18n="erlsupervisor.supervisor_type.static"></option>
             </select>
@@ -12245,6 +12241,321 @@ msg.cookies = {
 <p>Failure is throwing an exception, die is if the process dies, disappears, vanishes.
 
 <p>For more detauls, <a href="https://www.erlang.org/doc/apps/stdlib/supervisor.html">Erlang documentation</a>.
+
+</script>
+
+<!-- --- [red-module:@gregoriusrippenstein/erlang-red-supervisor-node/erlmodule] --- -->
+<script type="text/javascript">
+  (function(){
+
+
+  function frontendSupportFunction() {
+  }
+
+  var functTwo = (arg) => {
+
+  };
+
+  RED.nodes.registerType('erlmodule',{
+    color: '#FFCC66',
+    icon: "font-awesome/fa-keyboard-o",
+    category: 'function',
+    paletteLabel: 'Module Code',
+    defaults: {
+      name: {
+        value: "",
+      },
+      module_name: {
+        value:"",
+        required: true,
+        validate: RED.validators.regex(/^[a-z0-9_]+$/)
+      },
+      code: {
+        value: "",
+        required: true
+      }
+    },
+
+    inputs: 0,
+
+    outputs: 0,
+
+    label: function() {
+      return (this.name || this.module_name || this._def.paletteLabel);
+    },
+
+    labelStyle: function() {
+      return this.name?"node_label_italic":"";
+    },
+
+    onpaletteadd: function() {
+    },
+
+    onpaletteremove: function() {
+    },
+
+    oneditprepare: function() {
+      var node = this;
+
+      var tabs = RED.tabs.create({
+        id: "erlmodule-tabs",
+        onchange: function (tab) {
+          $("#erlmodule-tabs-content").children().hide();
+          $("#" + tab.id).show();
+        }
+      });
+
+      tabs.addTab({
+        id: "erlmodule-tab-config",
+        iconClass: "fa fa-cog",
+        label: node._("erlmodule.label.tab.config")
+      });
+
+      tabs.addTab({
+        id: "erlmodule-tab-code",
+        iconClass: "fa fa-cog",
+        label: node._("erlmodule.label.tab.code")
+      });
+
+      tabs.activateTab("erlmodule-tab-code");
+
+      this.editor = RED.editor.createEditor({
+        id: 'node-input-erlmodule-editor',
+        mode: 'ace/mode/erlang',
+        value: this.code,
+        width: "Infinity",
+        height: "calc(90vh)",
+        focus: true
+      });
+    },
+
+    oneditcancel: function() {
+      this.editor.destroy();
+      delete this.editor;
+    },
+
+    oneditsave: function() {
+      this.code = this.editor.getValue();
+      this.editor.destroy();
+      delete this.editor;
+    },
+
+    oneditresize: function(size) {
+    },
+
+
+  });
+})();
+
+</script>
+
+<script type="text/html" data-template-name="erlmodule">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+    <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
+  </div>
+
+  <div class="form-row func-tabs-row">
+    <ul style="min-width: 400px; margin-bottom: 20px;" id="erlmodule-tabs"></ul>
+  </div>
+
+  <div id="erlmodule-tabs-content" style="min-height: calc(100% - 95px);">
+
+    <div id="erlmodule-tab-config" style="display:none">
+      <div class="form-row">
+        <label for="node-input-module_name"><i class="fa fa-tag"></i> <span data-i18n="erlmodule.label.name"></span></label>
+        <input type="text" id="node-input-module_name" data-i18n="[placeholder]erlmodule.label.name">
+      </div>
+    </div>
+
+    <div id="erlmodule-tab-code" style="display:none">
+      <div class="form-row">
+         <div style="height: 600px; min-height:150px;" class="node-text-editor" id="node-input-erlmodule-editor"></div>
+      </div>
+    </div>
+  </div>
+
+</script>
+<script type="text/html" data-help-name="erlmodule">
+  <p>Node for encapsulating erlang module code.</p>
+  Node for encapsulating erlang module code.
+
+Defines a module that can be used with a state machine and other elements of Erlang-Red.
+</script>
+
+<!-- --- [red-module:@gregoriusrippenstein/erlang-red-supervisor-node/erlstatemachine] --- -->
+<script type="text/javascript">
+  (function(){
+
+  RED.nodes.registerType('erlstatemachine',{
+    color: '#FFCC66',
+    icon: "font-awesome/fa-gears",
+    category: 'function',
+    paletteLabel: 'State Machine',
+    defaults: {
+      name: {
+        value:"",
+      },
+      module_name: {
+        value: ""
+      },
+      nodeid: {
+        value: "",
+        required: true,
+        validate: RED.validators.regex(/[a-zA-Z0-9]{16}/)
+      }
+    },
+
+    inputs: 1,
+
+    outputs: 1,
+
+    label: function() {
+      return (this.name || this._def.paletteLabel);
+    },
+
+    labelStyle: function() {
+      return this.name?"node_label_italic":"";
+    },
+
+    onpaletteadd: function() {
+    },
+
+    onpaletteremove: function() {
+    },
+
+    oneditprepare: function() {
+      var node = this;
+
+      var tabs = RED.tabs.create({
+        id: "erlstatemachine-tabs",
+        onchange: function (tab) {
+          $("#erlstatemachine-tabs-content").children().hide();
+          $("#" + tab.id).show();
+        }
+      });
+
+      tabs.addTab({
+        id: "erlstatemachine-tab-statem-config",
+        iconClass: "fa fa-cog",
+        label: node._("erlstatemachine.label.tab.statem_config")
+      });
+
+      tabs.addTab({
+        id: "erlstatemachine-tab-handler-config",
+        iconClass: "fa fa-cog",
+        label: node._("erlstatemachine.label.tab.handler_config")
+      });
+
+      tabs.activateTab("erlstatemachine-tab-handler-config");
+
+
+      var dirList = $("#node-input-handler-target-container-div").css({
+        width: "100%",
+        height: "calc(100%)"
+      }).treeList(
+        {
+          multi: false
+        }
+      ).on('treelistselect', function (event, item) {
+        if (item && item.nodeid) {
+          RED.view.reveal(item.nodeid);
+          RED.view.select(item.nodeid);
+        }
+      }).on('treelistconfirm', function (event, item) {
+      });
+
+      var search = $("#node-input-handler-target-filter").searchBox({
+        style: "compact",
+        delay: 300,
+        change: function () {
+          var val = $(this).val().trim().toLowerCase();
+          if (val === "") {
+            dirList.treeList("filter", null);
+            search.searchBox("count", "");
+          } else {
+            var count = dirList.treeList("filter", function (item) {
+              return item.label.toLowerCase().indexOf(val) > -1 || item.sublabel.toLowerCase().indexOf(val) > -1
+            });
+            search.searchBox("count", count + " / " + dirList.treeList("data").length);
+          }
+        }
+      });
+
+      let data = RED.nodes.filterNodes({ z: RED.workspaces.active() }).filter(n => n.id != this.id).filter(n => n.type == "erlmodule").map(nde => {
+        return {
+          label: RED.utils.getNodeLabel(nde),
+          icon: "",
+          nodeid: nde.id,
+          sublabel: nde.type,
+          selected: nde.id == this.nodeid,
+          checkbox: false,
+          radio: true,
+          children: undefined
+        }
+      })
+
+      dirList.treeList('data', data)
+    },
+
+    oneditcancel: function() {
+    },
+
+    oneditsave: function() {
+      if ($("#node-input-handler-target-container-div").treeList('selected').nodeid) {
+        this.nodeid = $("#node-input-handler-target-container-div").treeList('selected').nodeid;
+
+        let node = RED.nodes.node(this.nodeid)
+        this.module_name = node.module_name;
+      }
+    },
+
+    oneditresize: function(size) {
+    },
+
+
+  });
+})();
+
+</script>
+
+<script type="text/html" data-template-name="erlstatemachine">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+    <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
+  </div>
+
+  <div class="form-row func-tabs-row">
+    <ul style="min-width: 400px; margin-bottom: 20px;" id="erlstatemachine-tabs"></ul>
+  </div>
+
+  <div id="erlstatemachine-tabs-content" style="min-height: calc(100% - 95px);">
+
+    <div id="erlstatemachine-tab-statem-config" style="display:none">
+    </div>
+
+    <div id="erlstatemachine-tab-handler-config" style="display:none">
+      <div class="form-row" style="margin-left: 10px; position: relative; height: 40vh; margin-right: 15px; min-height: 5vh;">
+        <div style=" margin-bottom: 5px; width: 35%; padding-left: 60%;">
+          <input type="text" id="node-input-handler-target-filter">
+        </div>
+
+        <div id="node-input-handler-target-container-div"></div>
+      </div>
+    </div>
+  </div>
+</script>
+<script type="text/html" data-help-name="erlstatemachine">
+  <p>Implements that State Machine behaviour.</p>
+  Implements the Erlang state machine behaviour.
+
+<p>
+See <a href="https://www.erlang.org/doc/apps/stdlib/gen_statem">OTP Docu</a> for more details.
+</p>
+
+<p>
+A handler can only be of type <code>erlmodule</code>.
+</p>
 
 </script>
 
