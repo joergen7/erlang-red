@@ -196,6 +196,16 @@ cf_child_restart(<<"temporary">>) -> temporary;
 cf_child_restart(<<"transient">>) -> transient;
 cf_child_restart(_) -> permanent.
 
+%% Any child that is a supervisor and has no timeout set, it is assigned a
+%% infinite timeout instead. Note: other child nodes, i.e. workers, aren't
+%% affected by this.
+cf_child_shutdown(ShutdownCfg, ShutdownTimeout, ChildNodeDef) ->
+    case {ShutdownCfg, is_supervisor(ChildNodeDef)} of
+        {<<"brutal_kill">>, true} ->
+            infinity;
+        _ ->
+            cf_child_shutdown(ShutdownCfg, ShutdownTimeout)
+    end.
 cf_child_shutdown(<<"infinite">>, _) -> infinity;
 cf_child_shutdown(<<"timeout">>, Timeout) -> convert_to_num(Timeout);
 cf_child_shutdown(_, _Timeout) -> brutal_kill.
@@ -230,12 +240,18 @@ create_children(MyNodeDefs, SupNodeDef, WsName) ->
             start => {
                 ered_nodes, spin_up_and_link_node, [NodeDef, WsName]
             },
-            restart => cf_child_restart(maps:get(child_restart, SupNodeDef)),
+            restart => cf_child_restart(
+                maps:get(child_restart, SupNodeDef)
+            ),
             shutdown => cf_child_shutdown(
                 maps:get(child_shutdown, SupNodeDef),
-                maps:get(child_shutdown_timeout, SupNodeDef)
+                maps:get(child_shutdown_timeout, SupNodeDef),
+                NodeDef
             ),
-            type => cf_child_type(maps:get(child_type, SupNodeDef), NodeDef)
+            type => cf_child_type(
+                maps:get(child_type, SupNodeDef),
+                NodeDef
+            )
         }
     end,
 
