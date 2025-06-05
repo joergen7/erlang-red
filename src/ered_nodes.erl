@@ -44,6 +44,7 @@
 -import(ered_nodered_comm, [
     node_status/5,
     send_out_debug_msg/4,
+    send_out_debug_error/2,
     ws_from/1
 ]).
 -import(ered_msg_handling, [
@@ -62,7 +63,7 @@ post_exception_or_debug(NodeDef, Msg, ErrMsg) ->
         dealt_with ->
             ok;
         _ ->
-            send_out_debug_msg(NodeDef, Msg, jstr(ErrMsg), error)
+            send_out_debug_error(NodeDef, maps:put(error_msg, ErrMsg, Msg))
     end.
 
 %%
@@ -157,6 +158,57 @@ tabid_to_error_collector(IdStr) ->
         )
     ).
 
+%% TODO: a tab node (i.e. the tab containing a flow) also has a disabled
+%% TODO: flag but this is called 'disabled'. If it is set, then the entire
+%% TODO: flow should be ignored --> this is not handled at the moment.
+create_pid_for_node(AryAll, WsName) ->
+    store_config_nodes(AryAll, WsName),
+
+    % all this does is ensure that the code contained in a module node
+    % is installed in this instance of the BEAM.
+    % TODO: because we do this before initialising any catch nodes, the
+    % TODO: exception raised here always ends up in the debug panel.
+    install_module_node_code(AryAll, WsName),
+
+    % as a side affect, this will drop any disabled nodes from the list.
+    {Ary, Supervisors} = extract_supervisors(AryAll),
+
+    % limit is set sufficiently large (`+ 100`) so that complex supervisor trees
+    % are supported. If the limit is too small, that can lead to distractingly
+    % difficult bugs to debug. The Limit is a hard upper limit on the recursion
+    % required for constructing supervisors trees. If there are no more
+    % supervisors to configure, then the recursion exits before the limit
+    % is reached.
+    ReducedAry = supervisor_filter_nodes(
+        Supervisors,
+        Ary,
+        [],
+        WsName,
+        length(Supervisors) + 100
+    ),
+
+    create_pid_for_node(ReducedAry, [], WsName).
+
+%% erlfmt:ignore equals and arrows should line up here.
+create_pid_for_node([], Pids, _WsName) ->
+    Pids;
+create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
+    {ok, Pid} = spin_up_node(NodeDef, WsName),
+    create_pid_for_node(MoreNodeDefs, [Pid | Pids], WsName).
+
+%%
+%%
+install_module_node_code([], _WsName) ->
+    ok;
+install_module_node_code([NodeDef | ModeNodeDefs], WsName) ->
+    case {is_module_node(NodeDef), disabled(NodeDef)} of
+        {true, false} ->
+            ered_node_erlmodule:install(NodeDef, WsName);
+        _ ->
+            ignore
+    end,
+    install_module_node_code(ModeNodeDefs, WsName).
+
 %%
 %% Add the state to the NodeDef to prepare it for starting the flow.
 %%
@@ -178,10 +230,13 @@ extract_supervisors(NodeDefs) ->
 extract_supervisors([], Supervisors, Nodes) ->
     {Nodes, Supervisors};
 extract_supervisors([NodeDef | MoreNodeDefs], Supervisors, Nodes) ->
-    case is_supervisor(maps:get(type, NodeDef)) of
-        true ->
+    case {is_supervisor(maps:get(type, NodeDef)), disabled(NodeDef)} of
+        {_, true} ->
+            %% drop any disabled nodes from the list of nodes
+            extract_supervisors(MoreNodeDefs, Supervisors, Nodes);
+        {true, false} ->
             extract_supervisors(MoreNodeDefs, [NodeDef | Supervisors], Nodes);
-        _ ->
+        {false, false} ->
             extract_supervisors(MoreNodeDefs, Supervisors, [NodeDef | Nodes])
     end.
 
@@ -252,37 +307,6 @@ supervisor_filter_nodes(
                 Limit - 1
             )
     end.
-
-%% TODO: a tab node (i.e. the tab containing a flow) also has a disabled
-%% TODO: flag but this is called 'disabled'. If it is set, then the entire
-%% TODO: flow should be ignored --> this is not handled at the moment.
-create_pid_for_node(AryAll, WsName) ->
-    store_config_nodes(AryAll, WsName),
-
-    {Ary, Supervisors} = extract_supervisors(AryAll),
-
-    % limit is set sufficiently large (`+ 100`) so that complex supervisor trees
-    % are supported. If the limit is too small, that can lead to distractingly
-    % difficult bugs to debug. The Limit is a hard upper limit on the recursion
-    % required for constructing supervisors trees. If there are no more
-    % supervisors to configure, then the recursion exits before the limit
-    % is reached.
-    ReducedAry = supervisor_filter_nodes(
-        Supervisors,
-        Ary,
-        [],
-        WsName,
-        length(Supervisors) + 100
-    ),
-
-    create_pid_for_node(ReducedAry, [], WsName).
-
-%% erlfmt:ignore equals and arrows should line up here.
-create_pid_for_node([], Pids, _WsName) ->
-    Pids;
-create_pid_for_node([NodeDef | MoreNodeDefs], Pids, WsName) ->
-    {ok, Pid} = spin_up_node(NodeDef, WsName),
-    create_pid_for_node(MoreNodeDefs, [Pid | Pids], WsName).
 
 %%
 %% This can be used by a supervisor to revive a dead process.
@@ -438,41 +462,42 @@ node_type_to_module(Type, _) ->
 %% erlfmt:ignore alignment.
 node_type_to_module(NodeDef) when is_map(NodeDef) ->
     node_type_to_module(maps:get(type,NodeDef));
-node_type_to_module(<<"inject">>)        -> ered_node_inject;
-node_type_to_module(<<"switch">>)        -> ered_node_switch;
-node_type_to_module(<<"debug">>)         -> ered_node_debug;
-node_type_to_module(<<"junction">>)      -> ered_node_junction;
-node_type_to_module(<<"change">>)        -> ered_node_change;
-node_type_to_module(<<"link out">>)      -> ered_node_link_out;
-node_type_to_module(<<"link in">>)       -> ered_node_link_in;
-node_type_to_module(<<"link call">>)     -> ered_node_link_call;
-node_type_to_module(<<"delay">>)         -> ered_node_delay;
-node_type_to_module(<<"file in">>)       -> ered_node_file_in;
-node_type_to_module(<<"json">>)          -> ered_node_json;
-node_type_to_module(<<"template">>)      -> ered_node_template;
-node_type_to_module(<<"join">>)          -> ered_node_join;
-node_type_to_module(<<"split">>)         -> ered_node_split;
-node_type_to_module(<<"catch">>)         -> ered_node_catch;
-node_type_to_module(<<"comment">>)       -> ered_node_ignore;
-node_type_to_module(<<"tab">>)           -> ered_node_ignore;
-node_type_to_module(<<"complete">>)      -> ered_node_complete;
-node_type_to_module(<<"group">>)         -> ered_node_ignore;
-node_type_to_module(<<"status">>)        -> ered_node_status;
-node_type_to_module(<<"trigger">>)       -> ered_node_trigger;
-node_type_to_module(<<"http in">>)       -> ered_node_http_in;
-node_type_to_module(<<"http response">>) -> ered_node_http_response;
-node_type_to_module(<<"http request">>)  -> ered_node_http_request;
-node_type_to_module(<<"mqtt in">>)       -> ered_node_mqtt_in;
-node_type_to_module(<<"mqtt out">>)      -> ered_node_mqtt_out;
-node_type_to_module(<<"exec">>)          -> ered_node_exec;
-node_type_to_module(<<"function">>)      -> ered_node_function;
-node_type_to_module(<<"markdown">>)      -> ered_node_markdown;
-node_type_to_module(<<"csv">>)           -> ered_node_csv;
-node_type_to_module(<<"FlowHubPull">>)   -> ered_node_flowhub_pull;
-node_type_to_module(<<"erlsupervisor">>) -> ered_node_supervisor;
-node_type_to_module(<<"Sink">>)          -> ered_node_ignore;
-node_type_to_module(<<"Seeker">>)        -> ered_node_ignore;
-
+node_type_to_module(<<"inject">>)          -> ered_node_inject;
+node_type_to_module(<<"switch">>)          -> ered_node_switch;
+node_type_to_module(<<"debug">>)           -> ered_node_debug;
+node_type_to_module(<<"junction">>)        -> ered_node_junction;
+node_type_to_module(<<"change">>)          -> ered_node_change;
+node_type_to_module(<<"link out">>)        -> ered_node_link_out;
+node_type_to_module(<<"link in">>)         -> ered_node_link_in;
+node_type_to_module(<<"link call">>)       -> ered_node_link_call;
+node_type_to_module(<<"delay">>)           -> ered_node_delay;
+node_type_to_module(<<"file in">>)         -> ered_node_file_in;
+node_type_to_module(<<"json">>)            -> ered_node_json;
+node_type_to_module(<<"template">>)        -> ered_node_template;
+node_type_to_module(<<"join">>)            -> ered_node_join;
+node_type_to_module(<<"split">>)           -> ered_node_split;
+node_type_to_module(<<"catch">>)           -> ered_node_catch;
+node_type_to_module(<<"comment">>)         -> ered_node_ignore;
+node_type_to_module(<<"tab">>)             -> ered_node_ignore;
+node_type_to_module(<<"complete">>)        -> ered_node_complete;
+node_type_to_module(<<"group">>)           -> ered_node_ignore;
+node_type_to_module(<<"status">>)          -> ered_node_status;
+node_type_to_module(<<"trigger">>)         -> ered_node_trigger;
+node_type_to_module(<<"http in">>)         -> ered_node_http_in;
+node_type_to_module(<<"http response">>)   -> ered_node_http_response;
+node_type_to_module(<<"http request">>)    -> ered_node_http_request;
+node_type_to_module(<<"mqtt in">>)         -> ered_node_mqtt_in;
+node_type_to_module(<<"mqtt out">>)        -> ered_node_mqtt_out;
+node_type_to_module(<<"exec">>)            -> ered_node_exec;
+node_type_to_module(<<"function">>)        -> ered_node_function;
+node_type_to_module(<<"markdown">>)        -> ered_node_markdown;
+node_type_to_module(<<"csv">>)             -> ered_node_csv;
+node_type_to_module(<<"FlowHubPull">>)     -> ered_node_flowhub_pull;
+node_type_to_module(<<"erlsupervisor">>)   -> ered_node_supervisor;
+node_type_to_module(<<"Sink">>)            -> ered_node_ignore;
+node_type_to_module(<<"Seeker">>)          -> ered_node_ignore;
+node_type_to_module(<<"erlmodule">>)       -> ered_node_erlmodule;
+node_type_to_module(<<"erlstatemachine">>) -> ered_node_erlstatemachine;
 %%
 %% Assert nodes for testing functionality of the nodes. These are the first
 %% Node-RED and Erlang-RED nodes - they have implmentations for both because
@@ -523,4 +548,14 @@ is_supervisor(NodeDef) when is_map(NodeDef) ->
 is_supervisor(<<"erlsupervisor">>) ->
     true;
 is_supervisor(_) ->
+    false.
+
+%%
+%% module nodes are started before everything else because they define
+%% code modules needed for the statemachine node (for example).
+is_module_node(NodeDef) when is_map(NodeDef) ->
+    is_module_node(maps:get(type, NodeDef));
+is_module_node(<<"erlmodule">>) ->
+    true;
+is_module_node(_) ->
     false.

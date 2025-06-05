@@ -16,6 +16,7 @@
     node_status/5,
     send_on_if_ws/2,
     send_out_debug_msg/4,
+    send_out_debug_error/2,
     send_to_debug_sidebar/2,
     unittest_result/3,
     unsupported/3,
@@ -121,6 +122,24 @@ send_out_debug_msg(NodeDef, Msg, ErrMsg, DebugType) ->
      },
 
     debug(ws_from(Msg), Data, DebugType).
+
+%% erlfmt:ignore lined up and to attention
+send_out_debug_error(NodeDef, Msg) ->
+    TypeStr  = get_prop_value_from_map(type,  NodeDef),
+    IdStr    = get_prop_value_from_map(id,    NodeDef),
+    ZStr     = get_prop_value_from_map(z,     NodeDef),
+    NameStr  = get_prop_value_from_map(name,  NodeDef, TypeStr),
+
+    Data = #{
+      id     => IdStr,
+      z      => ZStr,
+      path   => ZStr,
+      name   => NameStr,
+      msg    => Msg,
+      format => <<"object">>
+     },
+
+    debug(ws_from(Msg), Data, error).
 
 %%
 %%
