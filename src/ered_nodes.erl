@@ -493,7 +493,7 @@ node_type_to_module(<<"function">>)        -> ered_node_function;
 node_type_to_module(<<"markdown">>)        -> ered_node_markdown;
 node_type_to_module(<<"csv">>)             -> ered_node_csv;
 node_type_to_module(<<"FlowHubPull">>)     -> ered_node_flowhub_pull;
-node_type_to_module(<<"erlsupervisor">>)   -> ered_node_supervisor;
+node_type_to_module(<<"erlsupervisor">>)   -> ered_node_erlsupervisor;
 node_type_to_module(<<"Sink">>)            -> ered_node_ignore;
 node_type_to_module(<<"Seeker">>)          -> ered_node_ignore;
 node_type_to_module(<<"erlmodule">>)       -> ered_node_erlmodule;

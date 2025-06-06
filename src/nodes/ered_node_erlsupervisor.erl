@@ -1,4 +1,4 @@
--module(ered_node_supervisor).
+-module(ered_node_erlsupervisor).
 
 -behaviour(ered_node).
 
