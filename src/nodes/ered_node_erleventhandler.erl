@@ -47,7 +47,6 @@ handle_msg({incoming, Msg}, NodeDef) ->
                 binary_to_atom(maps:get(payload, Msg)),
                 []
             ),
-            io:format( "DDD : {{ ~p }}~n", [R]),
             Msg2 = Msg#{payload => R},
             send_msg_to_connected_nodes(NodeDef, Msg2);
         {ok, <<"delete_handler">>} ->
@@ -56,7 +55,6 @@ handle_msg({incoming, Msg}, NodeDef) ->
                 binary_to_atom(maps:get(payload, Msg)),
                 []
             ),
-            io:format( "DDD : {{ ~p }}~n", [R]),
             Msg2 = Msg#{payload => R},
             send_msg_to_connected_nodes(NodeDef, Msg2);
         _ ->
