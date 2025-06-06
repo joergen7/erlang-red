@@ -498,6 +498,7 @@ node_type_to_module(<<"Sink">>)            -> ered_node_ignore;
 node_type_to_module(<<"Seeker">>)          -> ered_node_ignore;
 node_type_to_module(<<"erlmodule">>)       -> ered_node_erlmodule;
 node_type_to_module(<<"erlstatemachine">>) -> ered_node_erlstatemachine;
+node_type_to_module(<<"erleventhandler">>) -> ered_node_erleventhandler;
 %%
 %% Assert nodes for testing functionality of the nodes. These are the first
 %% Node-RED and Erlang-RED nodes - they have implmentations for both because
