@@ -11875,7 +11875,7 @@ msg.cookies = {
   RED.nodes.registerType('erlsupervisor',{
     color: '#E9967A',
     icon: "font-awesome/fa-ambulance",
-    category: 'common',
+    category: 'behaviour',
     paletteLabel: 'Supervisor',
 
     defaults: {
@@ -12248,16 +12248,8 @@ msg.cookies = {
 <script type="text/javascript">
   (function(){
 
-
-  function frontendSupportFunction() {
-  }
-
-  var functTwo = (arg) => {
-
-  };
-
   RED.nodes.registerType('erlmodule',{
-    color: '#FFCC66',
+    color: '#fdd0a2',
     icon: "font-awesome/fa-keyboard-o",
     category: 'function',
     paletteLabel: 'Module Code',
@@ -12278,7 +12270,7 @@ msg.cookies = {
 
     inputs: 0,
 
-    outputs: 0,
+    outputs: 1,
 
     label: function() {
       return (this.name || this.module_name || this._def.paletteLabel);
@@ -12390,7 +12382,7 @@ Defines a module that can be used with a state machine and other elements of Erl
   RED.nodes.registerType('erlstatemachine',{
     color: '#FFCC66',
     icon: "font-awesome/fa-gears",
-    category: 'function',
+    category: 'behaviour',
     paletteLabel: 'State Machine',
     defaults: {
       name: {
@@ -12403,6 +12395,9 @@ Defines a module that can be used with a state machine and other elements of Erl
         value: "",
         required: true,
         validate: RED.validators.regex(/[a-zA-Z0-9]{16}/)
+      },
+      emit_on_state_change: {
+        value: false
       }
     },
 
@@ -12532,6 +12527,11 @@ Defines a module that can be used with a state machine and other elements of Erl
   <div id="erlstatemachine-tabs-content" style="min-height: calc(100% - 95px);">
 
     <div id="erlstatemachine-tab-statem-config" style="display:none">
+      <div class="form-row">
+        <input type="checkbox" id="node-input-emit_on_state_change"
+                style="display:inline-block; width:15px; vertical-align:baseline;">
+        <label for="node-input-emit_on_state_change"><span data-i18n="erlstatemachine.label.emit-on-state-change"></span></label>
+      </div>
     </div>
 
     <div id="erlstatemachine-tab-handler-config" style="display:none">
@@ -12556,6 +12556,71 @@ See <a href="https://www.erlang.org/doc/apps/stdlib/gen_statem">OTP Docu</a> for
 <p>
 A handler can only be of type <code>erlmodule</code>.
 </p>
+
+</script>
+
+<!-- --- [red-module:@gregoriusrippenstein/erlang-red-supervisor-node/erleventhandler] --- -->
+<script type="text/javascript">
+  (function(){
+
+  RED.nodes.registerType('erleventhandler',{
+    color: '#FFCC66',
+    icon: "font-awesome/fa-snowflake-o",
+    category: 'behaviour',
+    paletteLabel: 'Event Handler',
+    defaults: {
+      name: {
+        value:"",
+      },
+    },
+
+    inputs: 1,
+
+    outputs: 1,
+
+    label: function() {
+      return (this.name || this._def.paletteLabel);
+    },
+
+    labelStyle: function() {
+      return this.name?"node_label_italic":"";
+    },
+
+    onpaletteadd: function() {
+    },
+
+    onpaletteremove: function() {
+    },
+
+    oneditprepare: function() {
+    },
+
+    oneditcancel: function() {
+    },
+
+    oneditsave: function() {
+    },
+
+    oneditresize: function(size) {
+    },
+
+
+  });
+})();
+
+</script>
+
+<script type="text/html" data-template-name="erleventhandler">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+    <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
+  </div>
+</script>
+<script type="text/html" data-help-name="erleventhandler">
+  <p>Implements that event handler behaviour.</p>
+  Implements the Erlang event behaviour.
+
+See <a href="https://www.erlang.org/doc/apps/stdlib/gen_event.html">OTP Docu</a> for more details.
 
 </script>
 

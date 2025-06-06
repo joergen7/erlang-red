@@ -574,7 +574,7 @@
             "erlsupervisor"
         ],
         "user": false,
-        "version": "6.7.823"
+        "version": "4.8.192"
     },
     {
         "enabled": true,
@@ -586,7 +586,7 @@
             "erlmodule"
         ],
         "user": false,
-        "version": "6.7.823"
+        "version": "4.8.192"
     },
     {
         "enabled": true,
@@ -598,7 +598,19 @@
             "erlstatemachine"
         ],
         "user": false,
-        "version": "6.7.823"
+        "version": "4.8.192"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/erlang-red-supervisor-node/erleventhandler",
+        "local": true,
+        "module": "@gregoriusrippenstein/erlang-red-supervisor-node",
+        "name": "erleventhandler",
+        "types": [
+            "erleventhandler"
+        ],
+        "user": false,
+        "version": "4.8.192"
     },
     {
         "enabled": true,

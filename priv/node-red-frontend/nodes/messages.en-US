@@ -1,5 +1,16 @@
 {
     "@gorenje/node-red-contrib-flowcompare/flowcompare": {},
+    "@gregoriusrippenstein/erlang-red-supervisor-node/erleventhandler": {
+        "erleventhandler": {
+            "label": {
+                "statusset": "Status Set"
+            },
+            "status": {
+                "timeout": "No more time to waiting",
+                "waiting": "Waiting for Godot"
+            }
+        }
+    },
     "@gregoriusrippenstein/erlang-red-supervisor-node/erlmodule": {
         "erlmodule": {
             "label": {
@@ -19,6 +30,7 @@
     "@gregoriusrippenstein/erlang-red-supervisor-node/erlstatemachine": {
         "erlstatemachine": {
             "label": {
+                "emit-on-state-change": "Only emit output message on state change",
                 "statusset": "Status Set",
                 "tab": {
                     "handler_config": "Handler",
