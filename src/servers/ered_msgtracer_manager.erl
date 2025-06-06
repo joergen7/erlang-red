@@ -65,7 +65,7 @@ handle_call(_Request, State) ->
     {ok, ok, State}.
 
 handle_info(_Info, State) ->
-    {noreply, State}.
+    {ok, State}.
 
 terminate(_Reason, _State) ->
     ok.
