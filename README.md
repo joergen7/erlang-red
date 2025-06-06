@@ -67,6 +67,7 @@ This is a non-complete list of [nodes](src/nodes/) that partially or completely 
 | [mqtt out](src/nodes/ered_node_mqtt_out.erl) | should be working | [Flow](https://flows.red-erik.org/f/486c1412721bb241) |
 | [noop](src/nodes/ered_node_noop.erl) | doing nothing is very much supported | [Flow](https://flows.red-erik.org/f/2c5903c9e50d0648) |
 | [split](src/nodes/ered_node_split.erl) | splitting arrays into individual messages is supported, string, buffers and objects aren't. | [Flow](https://flows.red-erik.org/f/b1430ea37ba7cc19) |
+| [statemachine](src/nodes/ered_node_erlstatemachine.erl) | Implements the [`gen_statem`](https://www.erlang.org/doc/apps/stdlib/gen_statem.html) behaviour. Requires a [module node](src/nodes/ered_node_erlmodule.erl) to define the actions of the statemachine. | [Flow](https://flows.red-erik.org/f/5672fa442b2b881d) |
 | [status](src/nodes/ered_node_status.erl) | working | [Flow](https://flows.red-erik.org/f/a916165378c446e3) |
 | [supervisor](src/nodes/ered_node_supervisor.erl) | Erlang-only node that implements the [supervisor behaviour](https://www.erlang.org/doc/system/sup_princ.html). Supports supervising supervisors and ordering of processes (i.e. nodes) to ensure correct restart and shutdown sequences. | [Flow](https://flows.red-erik.org/f/83c5e1824f32abec) |
 | [switch](src/nodes/ered_node_switch.erl) | most operators work along with basic JSONata expressions  | [Flow](https://flows.red-erik.org/f/3edda6bd788f88c2) |

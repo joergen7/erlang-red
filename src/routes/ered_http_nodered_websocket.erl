@@ -230,7 +230,10 @@ terminate(_Reason, _Req, State) ->
 %%
 %% This is json:encode except that Pids are converted to strings. Used for
 %% the contents of debug messages - that may certainly contain a Pid or two.
+%% Tuples are also a foe of JSON - convert them to lists.
 %%
+encoder({K, V}, Encode) ->
+    json:encode_value([K, V], Encode);
 encoder([{_, _} | _] = Value, Encode) ->
     json:encode_key_value_list(Value, Encode);
 encoder(Other, Encode) when is_pid(Other) ->
