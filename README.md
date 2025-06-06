@@ -239,6 +239,8 @@ An overview of the sibling projects for both the reader and me:
 
 - [Elixir helper library](https://github.com/gorenje/erlang-red-elixir-helpers) allows Elixir code to be also part of Erlang-RED. Erlang-RED is not intended to be a *pure* Erlang project, it is intended to be a *pure* BEAM project. Anything that compiles down to the BEAM VM, why not include it?
 
+- [Supervisor nodes](https://github.com/gorenje/erlang-red-supervisor-node) and other Erlang behaviours as Node-RED nodes. Node package includes `gen_statem` and `gen_event` as nodes that can be used with Erlang-Red flows. These nodes can also be installed into Node-RED but there they do nothing.
+
 FAQs
 ---
 
