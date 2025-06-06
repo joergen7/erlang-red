@@ -36,16 +36,16 @@ websocket_faker(WsName) ->
     receive
         stop ->
             ok;
-        {debug, Data} ->
+        {debug, Data, normal} ->
             ered_ws_event_exchange:debug_msg({ok, WsName}, normal, Data),
             websocket_faker(WsName);
-        {notice_debug, Data} ->
+        {debug, Data, notice} ->
             ered_ws_event_exchange:debug_msg({ok, WsName}, notice, Data),
             websocket_faker(WsName);
-        {warning_debug, Data} ->
+        {debug, Data, warning} ->
             ered_ws_event_exchange:debug_msg({ok, WsName}, warning, Data),
             websocket_faker(WsName);
-        {error_debug, Data} ->
+        {debug, Data, error} ->
             ered_ws_event_exchange:debug_msg({ok, WsName}, error, Data),
             websocket_faker(WsName);
         {status, NodeId, T, C, S} ->
