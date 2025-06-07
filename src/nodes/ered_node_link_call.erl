@@ -45,16 +45,16 @@ start(NodeDef, _WsName) ->
                 try
                     case binary_to_integer(Val) * 1000 of
                         N when N < 0 ->
-                            NodeDef#{ timeout => 0 };
+                            NodeDef#{timeout => 0};
                         N ->
-                            NodeDef#{ timeout => N }
+                            NodeDef#{timeout => N}
                     end
                 catch
                     _E:_F:_S ->
-                        NodeDef#{ timeout => 30_000 }
+                        NodeDef#{timeout => 30_000}
                 end;
             _ ->
-                NodeDef#{ timeout => 30_000 }
+                NodeDef#{timeout => 30_000}
         end,
         ?MODULE
     ).
@@ -88,7 +88,7 @@ handle_msg({incoming, Msg}, NodeDef) ->
                                 [Pid],
                                 update_linksource(
                                     NodeDef,
-                                    Msg#{ '_timeout_ref' => ?SET_TIMER }
+                                    Msg#{'_timeout_ref' => ?SET_TIMER}
                                 )
                             );
                         _Pids ->
@@ -109,7 +109,7 @@ handle_msg({incoming, Msg}, NodeDef) ->
                         Links,
                         update_linksource(
                             NodeDef,
-                            Msg#{ '_timeout_ref' => ?SET_TIMER }
+                            Msg#{'_timeout_ref' => ?SET_TIMER}
                         )
                     );
                 _ ->
