@@ -31,24 +31,39 @@
     obtain_link_node_pid/2
 ]).
 
+-define(SET_TIMER,
+    erlang:start_timer(maps:get(timeout, NodeDef), self(), {msg_timed_out, Msg})
+).
+
 %%
 %%
 start(NodeDef, _WsName) ->
-    ered_node:start(NodeDef, ?MODULE).
-
-update_linksource(NodeDef, Msg) ->
-    {ok, IdStr} = maps:find(id, NodeDef),
-    LinkBack = #{id => generate_id(32), node => IdStr},
-
-    case maps:find('_linkSource', Msg) of
-        {ok, Ary} ->
-            maps:put('_linkSource', Ary ++ [LinkBack], Msg);
-        _ ->
-            maps:put('_linkSource', [LinkBack], Msg)
-    end.
+    % Ensure timeout value is set to a number and converted to milliseconds
+    ered_node:start(
+        case maps:find(timeout, NodeDef) of
+            {ok, Val} ->
+                try
+                    case binary_to_integer(Val) * 1000 of
+                        N when N < 0 ->
+                            NodeDef#{ timeout => 0 };
+                        N ->
+                            NodeDef#{ timeout => N }
+                    end
+                catch
+                    _E:_F:_S ->
+                        NodeDef#{ timeout => 30_000 }
+                end;
+            _ ->
+                NodeDef#{ timeout => 30_000 }
+        end,
+        ?MODULE
+    ).
 
 %%
 %%
+handle_event({msg_timed_out, Msg}, NodeDef) ->
+    post_exception_or_debug(NodeDef, Msg, <<"timeout">>),
+    NodeDef;
 handle_event(_, NodeDef) ->
     NodeDef.
 
@@ -71,7 +86,10 @@ handle_msg({incoming, Msg}, NodeDef) ->
                             %% is an error
                             send_msg_on_by_pids(
                                 [Pid],
-                                update_linksource(NodeDef, Msg)
+                                update_linksource(
+                                    NodeDef,
+                                    Msg#{ '_timeout_ref' => ?SET_TIMER }
+                                )
                             );
                         _Pids ->
                             ErrMsg = jstr(
@@ -87,7 +105,13 @@ handle_msg({incoming, Msg}, NodeDef) ->
         {ok, <<"static">>} ->
             case maps:find(links, NodeDef) of
                 {ok, Links} ->
-                    send_msg_on(Links, update_linksource(NodeDef, Msg));
+                    send_msg_on(
+                        Links,
+                        update_linksource(
+                            NodeDef,
+                            Msg#{ '_timeout_ref' => ?SET_TIMER }
+                        )
+                    );
                 _ ->
                     ignore
             end;
@@ -109,7 +133,26 @@ handle_msg({link_return, Msg}, NodeDef) ->
     %% This comes from a link out node in return mode, this means we pass
     %% the message on to all the nodes connected to us, i.e. the 'wires'
     %% attribute.
+    case maps:find('_timeout_ref', Msg) of
+        {ok, TRef} ->
+            erlang:cancel_timer(TRef);
+        _ ->
+            ignore
+    end,
     send_msg_to_connected_nodes(NodeDef, Msg),
     {handled, NodeDef, Msg};
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
+
+%%
+%%
+update_linksource(NodeDef, Msg) ->
+    {ok, IdStr} = maps:find(id, NodeDef),
+    LinkBack = #{id => generate_id(32), node => IdStr},
+
+    case maps:find('_linkSource', Msg) of
+        {ok, Ary} ->
+            maps:put('_linkSource', Ary ++ [LinkBack], Msg);
+        _ ->
+            maps:put('_linkSource', [LinkBack], Msg)
+    end.

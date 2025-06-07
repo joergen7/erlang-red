@@ -59,7 +59,7 @@ This is a non-complete list of [nodes](src/nodes/) that partially or completely 
 | [join](src/nodes/ered_node_join.erl) | *manual arrays of count X* is working, `parts` isn't supported  | [Flow](https://flows.red-erik.org/f/987cd33b9cda8529) |
 | [json](src/nodes/ered_node_json.erl) | working | [Flow](https://flows.red-erik.org/f/c4690c0a085d6ef5) |
 | [junction](src/nodes/ered_node_junction.erl) | working | [Flow](https://flows.red-erik.org/f/e1ced3b16782f7c8) |
-| [link call](src/nodes/ered_node_link_call.erl) | working - dynamic calls also | [Flow](https://flows.red-erik.org/f/c6ee6e89a51c98fc) |
+| [link call](src/nodes/ered_node_link_call.erl) | working - dynamic & static calls and timeout is respected | [Flow](https://flows.red-erik.org/f/c6ee6e89a51c98fc) |
 | [link in](src/nodes/ered_node_link_in.erl) | working | [Flow](https://flows.red-erik.org/f/8a627c9bfe3b4aff) |
 | [link out](src/nodes/ered_node_link_out.erl) | working | [Flow](https://flows.red-erik.org/f/bbb1fc2d47c3cd5f) |
 | [markdown](src/nodes/ered_node_markdown.erl) | working and supports whatever [earmark](https://github.com/pragdave/earmark) supports. | [Flow](https://flows.red-erik.org/f/90c1ce90f8af227f) |
