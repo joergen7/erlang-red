@@ -88,7 +88,6 @@ handle_websocket({debug, WsName, NodeId, Type, _Data}, NodeDef) ->
             assert_failure(NodeDef, WsName, ErrMsg);
         _ ->
             {ok, ExpType} = maps:find(msgtype, NodeDef),
-            io:format("Exp ~p v. ~p~n", [ExpType, Type]),
 
             case is_same(binary_to_atom(ExpType), Type) of
                 true ->
