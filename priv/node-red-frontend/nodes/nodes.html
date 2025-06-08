@@ -12270,7 +12270,7 @@ msg.cookies = {
 
     inputs: 0,
 
-    outputs: 1,
+    outputs: 0,
 
     label: function() {
       return (this.name || this.module_name || this._def.paletteLabel);
@@ -12444,7 +12444,6 @@ Defines a module that can be used with a state machine and other elements of Erl
 
       tabs.activateTab("erlstatemachine-tab-handler-config");
 
-
       var dirList = $("#node-input-handler-target-container-div").css({
         width: "100%",
         height: "calc(100%)"
@@ -12458,7 +12457,15 @@ Defines a module that can be used with a state machine and other elements of Erl
           RED.view.select(item.nodeid);
         }
       }).on('treelistconfirm', function (event, item) {
-      });
+      }).on("treelistitemmouseover", function (e, item) {
+        item.node.highlighted = true;
+        item.node.dirty = true;
+        RED.view.redraw();
+      }).on("treelistitemmouseout", function (e, item) {
+        item.node.highlighted = false;
+        item.node.dirty = true;
+        RED.view.redraw();
+      })
 
       var search = $("#node-input-handler-target-filter").searchBox({
         style: "compact",
@@ -12482,6 +12489,7 @@ Defines a module that can be used with a state machine and other elements of Erl
           label: RED.utils.getNodeLabel(nde),
           icon: "",
           nodeid: nde.id,
+          node: nde,
           sublabel: nde.type,
           selected: nde.id == this.nodeid,
           checkbox: false,
@@ -13168,6 +13176,14 @@ If this node isn't reached, then the test will fail.
           RED.view.select(item.nodeid);
         }
       }).on('treelistconfirm', function (event, item) {
+      }).on("treelistitemmouseover", function (e, item) {
+        item.node.highlighted = true;
+        item.node.dirty = true;
+        RED.view.redraw();
+      }).on("treelistitemmouseout", function (e, item) {
+        item.node.highlighted = false;
+        item.node.dirty = true;
+        RED.view.redraw();
       });
 
       var search = $("#node-input-assert-status-target-filter").searchBox({
@@ -13192,6 +13208,7 @@ If this node isn't reached, then the test will fail.
           label: RED.utils.getNodeLabel(nde),
           icon: "",
           nodeid: nde.id,
+          node: nde,
           sublabel: nde.type,
           selected: nde.id == this.nodeid,
           checkbox: false,
@@ -13358,6 +13375,14 @@ If this node isn't reached, then the test will fail.
           RED.view.select(item.nodeid);
         }
       }).on('treelistconfirm', function (event, item) {
+      }).on("treelistitemmouseover", function (e, item) {
+        item.node.highlighted = true;
+        item.node.dirty = true;
+        RED.view.redraw();
+      }).on("treelistitemmouseout", function (e, item) {
+        item.node.highlighted = false;
+        item.node.dirty = true;
+        RED.view.redraw();
       });
 
       var search = $("#node-input-assert-debug-target-filter").searchBox({
@@ -13382,6 +13407,7 @@ If this node isn't reached, then the test will fail.
             label: RED.utils.getNodeLabel(nde),
             icon: "",
             nodeid: nde.id,
+            node: nde,
             sublabel: nde.type,
             selected: nde.id == this.nodeid,
             checkbox: false,
@@ -13416,7 +13442,7 @@ If this node isn't reached, then the test will fail.
   </div>
 
   <div class="form-row">
-      <input type="checkbox" id="node-input-inverse"
+     <input type="checkbox" id="node-input-inverse"
            style="display:inline-block; width:15px; vertical-align:baseline;">
     <label for="node-input-inverse"><span data-i18n="ut-assert-debug.label.inverse"></span></label>
   </div>
@@ -13436,7 +13462,7 @@ If this node isn't reached, then the test will fail.
     </div>
   </div>
 
-    <div class="form-row" style="margin-left: 10px; position: relative; height: 40vh; margin-right: 15px; min-height: 5vh;"">
+    <div class="form-row" style="margin-left: 10px; position: relative; height: 40vh; margin-right: 15px; min-height: 5vh;">
       <div style="margin-bottom: 5px; width: 35%; padding-left: 60%;">
         <input type="text" id="node-input-assert-debug-target-filter">
       </div>

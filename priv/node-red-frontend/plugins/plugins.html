@@ -1196,6 +1196,39 @@ RED.sidebar.addTab({
   visible: true
 });
 
+/*
+var tabs = RED.tabs.create({
+  id: 'func-unittesting-tabs',
+  onchange: function (tab) {
+    $('#func-unittesting-tabs-content').children().hide();
+    $('#' + tab.id).show();
+  }
+});
+
+// Add pull tab
+tabs.addTab({
+  id: 'func-unittesting-tab-pull',
+  iconClass: 'fa fa-arrow-down',
+  label: 'Tests'
+});
+
+// Add compare tab
+tabs.addTab({
+  id: 'func-unittesting-tab-compare',
+  iconClass: 'fa fa-clone',
+  label: 'TBD'
+});
+
+// Add push tab
+tabs.addTab({
+  id: 'func-unittesting-tab-push',
+  iconClass: 'fa fa-arrow-up',
+  label: 'TBD'
+});
+
+tabs.activateTab("func-unittesting-tab-pull");
+*/
+
 $('#func-unittesting-tab-pull').show();
 
 var dirList = $("#node-input-unittestingpull-sb-target-container-div").css({
