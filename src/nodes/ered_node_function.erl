@@ -218,8 +218,7 @@ handle_event({'DOWN', func_code_mgr, msg, Msg, Reason}, NodeDef) ->
     % watching over us with loving grace.
     ?EXIT_WHEN_SUPERVISED(Reason),
     NodeDef;
-handle_event(E, NodeDef) ->
-    io:format("Recev (handle_event): ~p ~n", [E]),
+handle_event(_, NodeDef) ->
     NodeDef.
 
 %%
@@ -230,6 +229,5 @@ handle_msg({incoming, Msg}, NodeDef) ->
     {handled, NodeDef, dont_send_complete_msg};
 handle_msg({func_completed_with, Msg}, NodeDef) ->
     {handled, NodeDef, Msg};
-handle_msg(Msg, NodeDef) ->
-    io:format("Unhandled (handle_msg): ~p ~n", [Msg]),
+handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.

@@ -43,10 +43,14 @@
     Receiver ! {function_eval_result, Msg2, Msg}
 end).
 
--define(POST_OFF_ERROR,
+-define(POST_OFF_PARSE_ERROR,
     ErrMsg = jstr("Stanza: {{{ ~p }}} Error: ~p", [jstr(ErlangCode), Error]),
     node_status(ws_from(Msg), NodeDef, "parse error", "red", "dot"),
     post_exception_or_debug(NodeDef, Msg, ErrMsg)
+).
+
+-define(POST_MISSING_CODE(Txt),
+    post_exception_or_debug(NodeDef,Msg,Txt)
 ).
 
 -define(POST_TO_PARENT(Reason),
@@ -66,16 +70,14 @@ init(Args) ->
 %%
 %%  ------------------ call
 
-handle_call(Msg, _From, State) ->
-    io:format("FUNC Manager Call: ~p~n", [Msg]),
+handle_call(_, _From, State) ->
     {reply, ok, State}.
 
 %%
 %%
 %%  ------------------ cast
 
-handle_cast(Msg, State) ->
-    io:format("FUNC Manager Cast: ~p~n", [Msg]),
+handle_cast(_, State) ->
     {noreply, State}.
 
 %%
@@ -155,8 +157,7 @@ stop() ->
 %%
 terminate(normal, _State) ->
     ok;
-terminate(Event, _State) ->
-    io:format("FUNC manager terminated with {{{ ~p }}}~n", [Event]),
+terminate(_, _State) ->
     ok.
 
 %%
@@ -168,11 +169,7 @@ terminate(Event, _State) ->
 perform_func_code(NodeDef, Msg, From) ->
     case maps:find(func, NodeDef) of
         {ok, <<>>} ->
-            post_exception_or_debug(
-                NodeDef,
-                Msg,
-                <<"empty function code, doing nothing">>
-            );
+            ?POST_MISSING_CODE(<<"empty function code, doing nothing">>);
         {ok, Code} ->
             NewMsg = execute_sync(
                 io_lib:format("fun(NodeDef,Msg) -> ~n ~s ~n end.", [Code]),
@@ -193,11 +190,7 @@ perform_func_code(NodeDef, Msg, From) ->
                         gen_server:cast(From, {func_completed_with, Msg})
             end;
         _ ->
-            post_exception_or_debug(
-                NodeDef,
-                Msg,
-                <<"function code not found">>
-            )
+            ?POST_MISSING_CODE(<<"function code not found">>)
     end.
 
 %%
@@ -209,7 +202,7 @@ execute_sync(ErlangCode, NodeDef, Msg) ->
         {ok, Func} ->
             Func(NodeDef, Msg);
         Error ->
-            ?POST_OFF_ERROR,
+            ?POST_OFF_PARSE_ERROR,
             NodeDef
     end.
 
