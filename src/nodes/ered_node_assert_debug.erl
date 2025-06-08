@@ -31,30 +31,34 @@ is_same(_, _) -> false.
 %%
 %%
 handle_event({registered, WsName, _Pid}, NodeDef) ->
-    {ok, TgtNodeId} = maps:find(nodeid, NodeDef),
-    {ok, MsgType} = maps:find(msgtype, NodeDef),
-    {ok, NodePid} = maps:find('_node_pid_', NodeDef),
-    %%
-    %% inverse means that there should be **no** debug message, this
-    %% means that this node needs to subscribe too all types of debug
-    %% messages.
-    case maps:find(inverse, NodeDef) of
-        {ok, true} ->
-            ered_ws_event_exchange:subscribe(
-                WsName,
-                TgtNodeId,
-                debug,
-                any,
-                NodePid
-            );
+    case maps:find(nodeid, NodeDef) of
+        {ok, TgtNodeId} ->
+            {ok, MsgType} = maps:find(msgtype, NodeDef),
+            {ok, NodePid} = maps:find('_node_pid_', NodeDef),
+            %%
+            %% inverse means that there should be **no** debug message, this
+            %% means that this node needs to subscribe too all types of debug
+            %% messages.
+            case maps:find(inverse, NodeDef) of
+                {ok, true} ->
+                    ered_ws_event_exchange:subscribe(
+                        WsName,
+                        TgtNodeId,
+                        debug,
+                        any,
+                        NodePid
+                    );
+                _ ->
+                    ered_ws_event_exchange:subscribe(
+                        WsName,
+                        TgtNodeId,
+                        debug,
+                        MsgType,
+                        NodePid
+                    )
+            end;
         _ ->
-            ered_ws_event_exchange:subscribe(
-                WsName,
-                TgtNodeId,
-                debug,
-                MsgType,
-                NodePid
-            )
+            ignore_missing_value
     end,
     NodeDef;
 handle_event({stop, WsName}, NodeDef) ->
