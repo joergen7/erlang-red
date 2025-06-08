@@ -66,11 +66,15 @@ check_attributes(Clr, Shp, Txt) ->
 %%
 %%
 handle_event({registered, WsName, _Pid}, NodeDef) ->
-    {ok, TgtNodeId} = maps:find(nodeid, NodeDef),
-    {ok, NodePid} = maps:find('_node_pid_', NodeDef),
-    ered_ws_event_exchange:subscribe(
-        WsName, TgtNodeId, status, NodePid
-    ),
+    case maps:find(nodeid, NodeDef) of
+        {ok, TgtNodeId} ->
+            {ok, NodePid} = maps:find('_node_pid_', NodeDef),
+            ered_ws_event_exchange:subscribe(
+                WsName, TgtNodeId, status, NodePid
+            );
+        _ ->
+            ignore_missing_value
+    end,
     NodeDef;
 handle_event({stop, WsName}, NodeDef) ->
     case maps:find('_mc_websocket', NodeDef) of
