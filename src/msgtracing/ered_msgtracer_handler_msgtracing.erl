@@ -12,16 +12,16 @@
 ]).
 
 -import(ered_msgtracer_helpers, [
-    do_msgtrace_for_node/2
+    do_msgtrace_for_node/3
 ]).
 
 init(Args) ->
     {ok, Args}.
 
-handle_event({incoming, NodeDef, _Msg}, State) ->
+handle_event({incoming, NodeDef, Pid, _Msg}, State) ->
     case lists:member(maps:get(id, NodeDef), maps:get(nodeids, State)) of
         true ->
-            do_msgtrace_for_node(NodeDef, State);
+            do_msgtrace_for_node(NodeDef, Pid, State);
         _ ->
             ignore
     end,

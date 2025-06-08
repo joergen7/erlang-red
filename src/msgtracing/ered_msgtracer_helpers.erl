@@ -1,7 +1,7 @@
 -module(ered_msgtracer_helpers).
 
 -export([
-    do_msgtrace_for_node/2,
+    do_msgtrace_for_node/3,
     send_off_debug/2
 ]).
 
@@ -21,6 +21,10 @@
     ws_from/1
 ]).
 
+-import(ered_nodes,[
+   jstr/2
+]).
+
 %%
 %%
 send_off_debug(NodeDef, Msg) ->
@@ -37,11 +41,11 @@ send_off_debug(_Type, NodeDef, Msg) ->
 
 %%
 %%
-do_msgtrace_for_node(NodeDef, State) ->
+do_msgtrace_for_node(NodeDef, Pid, State) ->
     WsName = binary_to_atom(ws_from(State)),
 
     send_on_if_ws(WsName, {msgtracing, maps:get(id,NodeDef)}),
-    node_status(WsName, NodeDef, "msg received", "green", "ring"),
+    node_status(WsName, NodeDef, jstr("~p msg received",[Pid]), "green", "ring"),
 
     % no need to keep the entire NodeDef when clearing the status - only
     % need the id of the node

@@ -23,7 +23,7 @@
 -export([
     start_link/0,
     stop/0,
-    node_received_msg/2,
+    node_received_msg/3,
     remove_handler/1,
     add_handler/2
 ]).
@@ -45,8 +45,8 @@ start_link() ->
 stop() ->
     gen_event:stop(?MODULE).
 
-node_received_msg(NodeDef, Msg) ->
-    gen_event:notify(?MODULE, {incoming, NodeDef, Msg}).
+node_received_msg(NodeDef, Pid, Msg) ->
+    gen_event:notify(?MODULE, {incoming, NodeDef, Pid, Msg}).
 
 remove_handler(Module) ->
     gen_event:delete_handler(?MODULE, Module, []).

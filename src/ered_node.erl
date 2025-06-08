@@ -124,7 +124,7 @@ handle_cast({ws_event = MsgType, Details}, {Module, NodeDef}) ->
     );
 %% incoming message for node, pass this off to the message tracer service
 handle_cast({incoming = MsgType, Msg}, {Module, NodeDef}) ->
-    ered_msgtracer_manager:node_received_msg(NodeDef, Msg),
+    ered_msgtracer_manager:node_received_msg(NodeDef, self(), Msg),
     Results = Module:handle_msg({MsgType, Msg}, bump_counter(MsgType, NodeDef)),
     handle_msg_responder(MsgType, Msg, Module, Results, post_completed);
 %% This function signature can match the following messages:
