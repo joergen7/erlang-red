@@ -39,7 +39,7 @@ handle_get_response(Req, State) ->
             %% This should actually only be one for now
             %% But we'll take the first if we messed up
             [{Name, Vsn, Apps, RelStat} | _] ->
-                [{name, Name}, {version, Vsn}, {apps, Apps}, {status, RelStat}];
+                [{name, Name}, {version, Vsn}, {apps, lists:sort(Apps)}, {status, RelStat}];
             _ ->
                 []
         end,
