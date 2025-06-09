@@ -13506,14 +13506,6 @@ If this node isn't reached, then the test will fail.
 <script type="text/javascript">
   (function(){
 
-
-  function frontendSupportFunction() {
-  }
-
-  var functTwo = (arg) => {
-
-  };
-
   RED.nodes.registerType('mermaid-flowchart',{
     color: '#C7E9C0',
     icon: "font-awesome/fa-code-fork",
@@ -13555,7 +13547,7 @@ If this node isn't reached, then the test will fail.
       RED.nodes.getDownstreamNodes(RED.nodes.node(this.id)).forEach(nde => {
           var currVal = this.wirecfgs.filter(d => d.id == nde.id)[0] || {};
 
-          var sltObj = $('<select>', {class: 'wirecfg-arrow', style: "width: 100px"} )
+          var sltObj = $('<select>', {class: 'wirecfg-arrow', style: "max-width: 100px"} )
           for (var idx = 0; idx < possibleArrows.length; idx++ ) {
             let val = possibleArrows[idx]
             let selected = val == currVal.arrow ? { selected: "selected" } : {}
@@ -13569,7 +13561,8 @@ If this node isn't reached, then the test will fail.
           label.append($("<span>").text(RED.utils.getNodeLabel(nde)))
 
           container.append(label)
-          container.append( $('<input>', { style: 'width: 200px', class:'wirecfg-name', type: "text", placeholder: "Name", value: currVal.name }))
+          container.append($('<br/>'))
+          container.append( $('<input>', { style: 'min-width: 150px', class:'wirecfg-name', type: "text", placeholder: "Name", value: currVal.name }))
 
           container.append( sltObj )
 
