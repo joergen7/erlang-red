@@ -131,6 +131,8 @@ handle_info(
     {'DOWN', _, process, From, killed},
     {_NodeDef, _Msg, From, ExecPid} = State
 ) ->
+    % ignore any timeout process that is running, it will eventually
+    % trigger and find that this process has disappeared. QED.
     exit(ExecPid, kill),
     {stop, normal, State};
 % so the execute pid exited because there was an exit(self(),...) call
@@ -141,7 +143,7 @@ handle_info(
 ) ->
     ?POST_TO_PARENT(Reason),
     {stop, normal, State};
-% catch all.
+% ignore all.
 handle_info(_, State) ->
     {noreply, State}.
 
