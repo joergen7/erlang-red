@@ -13543,9 +13543,20 @@ If this node isn't reached, then the test will fail.
 
     oneditprepare: function() {
       var possibleArrows = ["arrow", "dotarrow", "thickarrow", "line"]
+      var allOurWires = [];
 
       RED.nodes.getDownstreamNodes(RED.nodes.node(this.id)).forEach(nde => {
-          var currVal = this.wirecfgs.filter(d => d.id == nde.id)[0] || {};
+        if ( !this.wirecfgs.some( (d) => d.id == nde.id ) ) {
+          this.wirecfgs.push({id: nde.id, name: "", arrow: ""})
+        }
+        allOurWires.push( nde.id)
+      })
+
+      this.wirecfgs.sort( (a,b) => a.id < b.id ).forEach( currVal => {
+         let nde = RED.nodes.node(currVal.id)
+
+          if ( !nde ) { return }
+          if ( allOurWires.indexOf(currVal.id) < 0 ) { return }
 
           var sltObj = $('<select>', {class: 'wirecfg-arrow', style: "max-width: 100px"} )
           for (var idx = 0; idx < possibleArrows.length; idx++ ) {
@@ -13555,8 +13566,10 @@ If this node isn't reached, then the test will fail.
             sltObj.append( $( "<option>", { value: val, ...selected }).append(val) )
           }
           var container = $("<div>", { class: "wirecfg form-row", "data-id": nde.id });
+          container.append('<a href="#" style="float: right; color: red;" onclick="$(this).parent().remove(); return false;"><i class="fa fa-close"></i></a>')
+          container.append('<a href="#" style="float: right; margin-right: 10px; color: green;" onclick="$(\'#node-input-wirecfgs-container\').append($(this).parent().clone()); return false;"><i class="fa fa-plus"></i></a>')
 
-          var label = $('<label>', { for: "node-input-name" })
+        var label = $('<label>', { for: "node-input-name", "data-id": nde.id, onmouseover: "nde=RED.nodes.node($(this).data('id'));nde.highlighted = true;nde.dirty=true;RED.view.redraw();", onmouseout: "nde=RED.nodes.node($(this).data('id'));nde.highlighted = false;nde.dirty=true;RED.view.redraw();" })
           label.append('<i class="fa fa-tag"></i>&nbsp;')
           label.append($("<span>").text(RED.utils.getNodeLabel(nde)))
 
