@@ -10,6 +10,7 @@
     "@gregoriusrippenstein/erlang-red-unittest/ut-assert-success": {},
     "@gregoriusrippenstein/erlang-red-unittest/ut-assert-values": {},
     "@gregoriusrippenstein/node-red-contrib-flow2uml/flowtomermaid": {},
+    "@gregoriusrippenstein/node-red-contrib-flow2uml/mermaid-flowchart": {},
     "@gregoriusrippenstein/node-red-contrib-flowhub/flowhubcfg": {},
     "@gregoriusrippenstein/node-red-contrib-flowhub/flowhubpull": {},
     "@gregoriusrippenstein/node-red-contrib-introspection/clientcode": {},

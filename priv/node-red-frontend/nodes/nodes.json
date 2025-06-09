@@ -574,7 +574,19 @@
             "Flow2MermaidCfg"
         ],
         "user": false,
-        "version": "0.1.13"
+        "version": "0.2.0"
+    },
+    {
+        "enabled": true,
+        "id": "@gregoriusrippenstein/node-red-contrib-flow2uml/mermaid-flowchart",
+        "local": true,
+        "module": "@gregoriusrippenstein/node-red-contrib-flow2uml",
+        "name": "mermaid-flowchart",
+        "types": [
+            "mermaid-flowchart"
+        ],
+        "user": false,
+        "version": "0.2.0"
     },
     {
         "enabled": true,
