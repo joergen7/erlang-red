@@ -33,6 +33,10 @@
 %%     }
 %% ]
 %%
+
+%%
+%% TODO investigate how thsi interacts with a supervisor node supervising
+%% TODO this node. I don't think it is supported at the moment.
 %%
 
 -import(ered_nodered_comm, [
