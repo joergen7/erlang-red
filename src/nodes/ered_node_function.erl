@@ -119,7 +119,7 @@
 %% In that case, if *any* subprocess goes down, then the node process goes
 %% down to indicate to the supervisor that failure has happened.
 -define(EXIT_WHEN_SUPERVISED(Why),
-    case maps:find('_fail_on_supervisor_death', NodeDef) of
+    case maps:find('_being_supervised', NodeDef) of
         {ok, true} ->
             exit(self(), Why);
         _ ->

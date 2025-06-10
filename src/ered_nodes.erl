@@ -346,7 +346,7 @@ spin_up_and_link_node(NodeDef, WsName) ->
     % exclusively used by supervisor nodes, so its safe to set the
     % flag here. The top-level supervisor is started by the spin_up_nodes
     % function and hence does not have this flag.
-    gen_server:call(Pid, {die_on_supervisor_death}),
+    gen_server:call(Pid, {being_supervised, WsName}),
 
     {ok, Pid}.
 
@@ -462,43 +462,44 @@ node_type_to_module(Type, _) ->
 %% erlfmt:ignore alignment.
 node_type_to_module(NodeDef) when is_map(NodeDef) ->
     node_type_to_module(maps:get(type,NodeDef));
-node_type_to_module(<<"inject">>)          -> ered_node_inject;
-node_type_to_module(<<"switch">>)          -> ered_node_switch;
-node_type_to_module(<<"debug">>)           -> ered_node_debug;
-node_type_to_module(<<"junction">>)        -> ered_node_junction;
-node_type_to_module(<<"change">>)          -> ered_node_change;
-node_type_to_module(<<"link out">>)        -> ered_node_link_out;
-node_type_to_module(<<"link in">>)         -> ered_node_link_in;
-node_type_to_module(<<"link call">>)       -> ered_node_link_call;
-node_type_to_module(<<"delay">>)           -> ered_node_delay;
-node_type_to_module(<<"file in">>)         -> ered_node_file_in;
-node_type_to_module(<<"json">>)            -> ered_node_json;
-node_type_to_module(<<"template">>)        -> ered_node_template;
-node_type_to_module(<<"join">>)            -> ered_node_join;
-node_type_to_module(<<"split">>)           -> ered_node_split;
-node_type_to_module(<<"catch">>)           -> ered_node_catch;
-node_type_to_module(<<"comment">>)         -> ered_node_ignore;
-node_type_to_module(<<"tab">>)             -> ered_node_ignore;
-node_type_to_module(<<"complete">>)        -> ered_node_complete;
-node_type_to_module(<<"group">>)           -> ered_node_ignore;
-node_type_to_module(<<"status">>)          -> ered_node_status;
-node_type_to_module(<<"trigger">>)         -> ered_node_trigger;
-node_type_to_module(<<"http in">>)         -> ered_node_http_in;
-node_type_to_module(<<"http response">>)   -> ered_node_http_response;
-node_type_to_module(<<"http request">>)    -> ered_node_http_request;
-node_type_to_module(<<"mqtt in">>)         -> ered_node_mqtt_in;
-node_type_to_module(<<"mqtt out">>)        -> ered_node_mqtt_out;
-node_type_to_module(<<"exec">>)            -> ered_node_exec;
-node_type_to_module(<<"function">>)        -> ered_node_function;
-node_type_to_module(<<"markdown">>)        -> ered_node_markdown;
-node_type_to_module(<<"csv">>)             -> ered_node_csv;
-node_type_to_module(<<"FlowHubPull">>)     -> ered_node_flowhub_pull;
-node_type_to_module(<<"erlsupervisor">>)   -> ered_node_erlsupervisor;
-node_type_to_module(<<"Sink">>)            -> ered_node_ignore;
-node_type_to_module(<<"Seeker">>)          -> ered_node_ignore;
-node_type_to_module(<<"erlmodule">>)       -> ered_node_erlmodule;
-node_type_to_module(<<"erlstatemachine">>) -> ered_node_erlstatemachine;
-node_type_to_module(<<"erleventhandler">>) -> ered_node_erleventhandler;
+node_type_to_module(<<"inject">>)            -> ered_node_inject;
+node_type_to_module(<<"switch">>)            -> ered_node_switch;
+node_type_to_module(<<"debug">>)             -> ered_node_debug;
+node_type_to_module(<<"junction">>)          -> ered_node_junction;
+node_type_to_module(<<"change">>)            -> ered_node_change;
+node_type_to_module(<<"link out">>)          -> ered_node_link_out;
+node_type_to_module(<<"link in">>)           -> ered_node_link_in;
+node_type_to_module(<<"link call">>)         -> ered_node_link_call;
+node_type_to_module(<<"delay">>)             -> ered_node_delay;
+node_type_to_module(<<"file in">>)           -> ered_node_file_in;
+node_type_to_module(<<"json">>)              -> ered_node_json;
+node_type_to_module(<<"template">>)          -> ered_node_template;
+node_type_to_module(<<"join">>)              -> ered_node_join;
+node_type_to_module(<<"split">>)             -> ered_node_split;
+node_type_to_module(<<"catch">>)             -> ered_node_catch;
+node_type_to_module(<<"comment">>)           -> ered_node_ignore;
+node_type_to_module(<<"tab">>)               -> ered_node_ignore;
+node_type_to_module(<<"complete">>)          -> ered_node_complete;
+node_type_to_module(<<"group">>)             -> ered_node_ignore;
+node_type_to_module(<<"status">>)            -> ered_node_status;
+node_type_to_module(<<"trigger">>)           -> ered_node_trigger;
+node_type_to_module(<<"http in">>)           -> ered_node_http_in;
+node_type_to_module(<<"http response">>)     -> ered_node_http_response;
+node_type_to_module(<<"http request">>)      -> ered_node_http_request;
+node_type_to_module(<<"mqtt in">>)           -> ered_node_mqtt_in;
+node_type_to_module(<<"mqtt out">>)          -> ered_node_mqtt_out;
+node_type_to_module(<<"exec">>)              -> ered_node_exec;
+node_type_to_module(<<"function">>)          -> ered_node_function;
+node_type_to_module(<<"markdown">>)          -> ered_node_markdown;
+node_type_to_module(<<"csv">>)               -> ered_node_csv;
+node_type_to_module(<<"FlowHubPull">>)       -> ered_node_flowhub_pull;
+node_type_to_module(<<"erlsupervisor">>)     -> ered_node_erlsupervisor;
+node_type_to_module(<<"Sink">>)              -> ered_node_ignore;
+node_type_to_module(<<"Seeker">>)            -> ered_node_ignore;
+node_type_to_module(<<"erlmodule">>)         -> ered_node_erlmodule;
+node_type_to_module(<<"erlstatemachine">>)   -> ered_node_erlstatemachine;
+node_type_to_module(<<"erleventhandler">>)   -> ered_node_erleventhandler;
+node_type_to_module(<<"mermaid-flowchart">>) -> ered_node_ignore;
 %%
 %% Assert nodes for testing functionality of the nodes. These are the first
 %% Node-RED and Erlang-RED nodes - they have implmentations for both because

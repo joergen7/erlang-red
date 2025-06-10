@@ -50,7 +50,7 @@ end).
 ).
 
 -define(POST_MISSING_CODE(Txt),
-    post_exception_or_debug(NodeDef,Msg,Txt)
+    post_exception_or_debug(NodeDef, Msg, Txt)
 ).
 
 -define(POST_TO_PARENT(Reason),

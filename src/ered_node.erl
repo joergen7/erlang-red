@@ -68,10 +68,12 @@ init({Module, NodeDef}) ->
 %% Filter nodes is a call to the supervisor to remove all the nodes from the
 %% list for which it is responsible, It then stops and starts these nodes
 %% as required.
-handle_call({die_on_supervisor_death}, _From, {Module, NodeDef}) ->
-    {reply, ok, {Module, maps:put('_fail_on_supervisor_death', true, NodeDef)}};
-handle_call({registered, WsName, Pid}, _From, {Module, NodeDef}) ->
-    NodeDef2 = Module:handle_event({registered, WsName, Pid}, NodeDef),
+handle_call({being_supervised, _WsName} = Msg, _From, {Module, NodeDef}) ->
+    NodeDef2 = maps:put('_being_supervised', true, NodeDef),
+    NodeDef3 = Module:handle_event(Msg, NodeDef2),
+    {reply, ok, {Module, NodeDef3}};
+handle_call({registered, _WsName, _Pid} = Msg, _From, {Module, NodeDef}) ->
+    NodeDef2 = Module:handle_event(Msg, NodeDef),
     {reply, NodeDef2, {Module, NodeDef2}};
 handle_call(Msg, _From, {Module, NodeDef}) ->
     io:format("Unknown call to node ~p: ~p~n", [self(), Msg]),

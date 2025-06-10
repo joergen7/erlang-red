@@ -26,7 +26,6 @@ start_link(NodePid, NodeDef, Children) ->
 
     Pid = start_or_kill(MgrId, [NodePid, NodeDef, Children]),
     NodePid ! {supervisor_node, {supervisor_started, Pid}},
-    NodePid ! {supervisor_node, {monitor_this_process, Pid}},
     {ok, Pid}.
 
 init([_NodePid, NodeDef, Children]) ->
