@@ -42400,13 +42400,14 @@ RED.editor = (function() {
                     }
                 })
                 $.ajax({
-                    url: `vendor/mermaid/mermaid.min.js?v=${cacheBuster}`,
+                   /* url: `vendor/mermaid/mermaid.min.js?v=${cacheBuster}`, */
+                    url: `vendor/mermaid/mermaid.min.11.6.0.js?v=${cacheBuster}`,
                     dataType: "script",
                     cache: true,
                     success: function (data, stat, jqxhr) {
                         mermaid.initialize({
                             startOnLoad: false,
-                            theme: RED.settings.get('mermaid', {}).theme
+                            theme: RED.settings.get('mermaid', {}).theme || 'default'
                         })
                         loaded = true
                         while(pendingEvals.length > 0) {
