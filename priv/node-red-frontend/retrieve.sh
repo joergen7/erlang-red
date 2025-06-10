@@ -54,7 +54,6 @@ for fle in vendor/jquery/css/base/jquery-ui.min.css \
            vendor/font-awesome/fonts/fontawesome-webfont.woff \
            vendor/mermaid/mermaid.min.js \
            vendor/purify.min.js.map \
-           red/red.min.js \
            red/main.min.js \
            red/tours/welcome.js \
            red/images/deploy-full.svg \

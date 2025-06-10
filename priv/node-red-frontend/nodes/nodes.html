@@ -13542,18 +13542,29 @@ If this node isn't reached, then the test will fail.
     },
 
     oneditprepare: function() {
-      var possibleArrows = ["arrow", "dotarrow", "thickarrow", "line"]
+      var possibleArrows = [
+        "--", "-.-", "==",
+        "-->", "-.->", "==>",
+        "<-->", "<-.->", "<==>",
+        "--x", "-.-x", "==x",
+        "x--x", "x-.-x", "x==x",
+        "--o", "-.-o", "==o",
+        "o--o", "o-.-o", "o==o",
+      ]
       var allOurWires = [];
 
       RED.nodes.getDownstreamNodes(RED.nodes.node(this.id)).forEach(nde => {
         if ( !this.wirecfgs.some( (d) => d.id == nde.id ) ) {
-          this.wirecfgs.push({id: nde.id, name: "", arrow: ""})
+          this.wirecfgs.push({id: nde.id, name: "", arrow: "-->"})
         }
         allOurWires.push( nde.id)
       })
 
       this.wirecfgs.sort( (a,b) => a.id < b.id ).forEach( currVal => {
          let nde = RED.nodes.node(currVal.id)
+
+        // support older versions
+        currVal.arrow = { "arrow": "-->", "thickarrow": "==>", "line": "--", "dotarrow": "-.->" }[currVal.arrow] || currVal.arrow;
 
           if ( !nde ) { return }
           if ( allOurWires.indexOf(currVal.id) < 0 ) { return }
