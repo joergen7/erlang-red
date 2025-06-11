@@ -39162,8 +39162,8 @@ RED.editor = (function() {
 
     RED.editor.registerEditPane("editor-tab-flow-properties", function(node) {
         let previewHandler = () => {
-           let tabNode = RED.nodes.createExportableNodeSet([RED.nodes.workspace(RED.workspaces.active())])[0];
-           tabNode.info = window.currentTabflowEditor.getValue();
+           let tabNode = RED.nodes.createExportableNodeSet([node])[0];
+           tabNode.info = node.currentTabflowEditor.getValue();
            RED.sidebar.info.refresh(tabNode);
         };
 
@@ -39194,7 +39194,7 @@ RED.editor = (function() {
                 $("#node-input-name").val(node.label);
                 RED.text.bidi.prepareInput($("#node-input-name"));
                 this.tabflowEditor.getSession().setValue(node.info || "", -1);
-                window.currentTabflowEditor = this.tabflowEditor;
+                node.currentTabflowEditor = this.tabflowEditor;
                 RED.events.on("tabeditor:preview", previewHandler );
             },
             resize: function(size) {
@@ -39204,6 +39204,7 @@ RED.editor = (function() {
             close: function() {
                 RED.events.off("tabeditor:preview", previewHandler );
                 this.tabflowEditor.destroy();
+                delete node.currentTabflowEditor
             },
             apply: function(editState) {
                 RED.events.off("tabeditor:preview", previewHandler );
@@ -39222,6 +39223,9 @@ RED.editor = (function() {
                     node.info = info;
                 }
                 $("#red-ui-tab-"+(node.id.replace(".","-"))).toggleClass('red-ui-workspace-disabled',!!node.disabled);
+
+                delete node.currentTabflowEditor
+
             }
         }
     });
