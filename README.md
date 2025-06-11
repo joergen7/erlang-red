@@ -36,6 +36,17 @@ While the [exception node](https://github.com/gorenje/erlang-red/blob/e2bd2f324d
 
 An architectural diagram of this interconnectedness would be probably be just as confusing as the code itself.
 
+**UPDATE**
+
+Having said the exact opposite above, here are some Erlang architectural descrptions of:
+
+- A [supervisor node](https://flows.red-erik.org/f/211405fa9e8a6f9b) supervising a function node
+- The challenges of [function node](https://flows.red-erik.org/f/1fd621a674360b5d) which must support timeouts, sub-processes and being supervised by a supervisor
+- How [link nodes](https://flows.red-erik.org/f/43e8af136f4d0fbe) deal with dynamic link calls - WIP, liable to be completed.
+
+These descrptions should be self-contained but perfection is boredom.
+
+
 Supported Nodes & Features
 ---
 
