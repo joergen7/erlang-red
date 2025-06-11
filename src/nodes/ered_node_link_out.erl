@@ -40,6 +40,11 @@ send_to_link_call({ok, NodeId}, Msg) ->
             gen_server:cast(Pid, {link_return, Msg})
     end.
 
+%%
+%% last_value returns the last entry in the _linkSource array - that is the
+%% last link-call node that passed on this message. That is also the link-call
+%% node to which we return this message to. But that message will have a new
+%% _linkSource array with that link-call node removed.
 last_value([], _) ->
     empty;
 last_value([H | []], Rest) ->
