@@ -1,6 +1,68 @@
 Milestones
 ---
 
+*Milestones Five - m5*
+
+1. Erlang-Red Message Tracing
+
+    Using the [introspection node package](https://flows.nodered.org/node/@gregoriusrippenstein/node-red-contrib-introspection), implemented message tracing of Erlang-Red messages.
+
+    ![msgtracing](.images/msgtracing.gif)
+
+    **Note**: that there are two types of messages in Erlang-Red - the Erlang type of messages and the Erlang-Red types of messages. A disadvantage of using a message passing based programming language to implement a message passing programming paradigm like flow-based programming! Either way, this feature traces Erlang-Red messages (the kind passed between nodes) and not Erlang messages (the kind passed between processes).
+
+    A second point - related to the feature - message tracing can be activated at any time and does not require deploying the flow to the server, i.e., message of a live running server are being traced.
+
+    A third point is that this feature was originally implemented for Node-RED and all I did was port the backend to Erlang. Now I have the same insights that I have in Node-RED but in Erlang-Red.
+
+    One more point: this feature can definitely flood the flow editor into submission. Use with care. The server should be fine since all it is doing is sending messages out on a web-socket via an exclusive process for the web-socket connection.
+
+    A fifth point: in the message tracing, the status of the node is abused to have a "msg received" status appear. That message (only in Erlang-Red) now contains the process id of the underlying Erlang process for the node.
+
+2. Nodes for gen\_event & gen\_statem behaviours
+
+    Erlang-Red has become more Erlang-like by not only implementing the supervisor behaviour but also the [gen_event](https://github.com/gorenje/erlang-red/blob/aa447d67d3f1893127897851750cb4e05cb5f8b8/src/nodes/ered_node_erleventhandler.erl) and [gen_statem](https://github.com/gorenje/erlang-red/blob/aa447d67d3f1893127897851750cb4e05cb5f8b8/src/nodes/ered_node_erlstatemachine.erl) behaviours. Both of these make use of the [module node](https://github.com/gorenje/erlang-red/blob/aa447d67d3f1893127897851750cb4e05cb5f8b8/src/nodes/ered_node_erlmodule.erl). The module node can be used to implement complete Erlang modules in Erlang-Red. These modules can then be used to define the behaviour of the gen_event and gen_statem nodes.
+    
+    The event handler is completely dynamic with modules being added as handlers at runtime, the state machine is static with a module being added at design time. A state machine handler can however dynamically replace the handler if so desired. 
+    
+    The event handler will need some more TLC to make it static and dynamic. The overhead of configuring the event handler at runtime is strictly speaking not necessary. The corresponding test cases: [eventhandler](https://flows.red-erik.org/f/b70a7ce34819e4d5) and [state machine](https://flows.red-erik.org/f/5672fa442b2b881d).
+
+    When I started out on this project (all of 2.5 months ago!), I intended to implement Node-RED features and nodes in Erlang. Now having created the Erlang-only nodes which implement these behaviours, I'm thinking that wouldn't it be nice to create Node-RED equivalent nodes. Half the work is done: these nodes are all packaged into an [Node-RED node package](https://flows.nodered.org/node/@gregoriusrippenstein/erlang-red-supervisor-node) and can be installed into Node-RED, only there they do nothing. However having a supervisor to ensure that things get restarted in NodeJS can be, perhaps, just maybe, also useful.
+
+    The [assert nodes](https://flows.nodered.org/node/@gregoriusrippenstein/erlang-red-unittest) that I created actually do work with Node-RED and Erlang-Red, so these are the first ever nodes that are cross platform.
+
+    The deeper philosophical point I'm trying to make here is that a visual flow-based programming approach can lead to cross pollination of programming ideas. It can also lead to interesting learnings around programming paradigms. But for those sceptical about visual programming and the benefits of it - especially how can a "serious" application be developed visually in a browser - go back to using punch cards. We came from giant mechanical calculators, went to punch cards then to keyboards and now we're stuck at Artificial Intelligence and typing in prompts to get code we might or might quite understand. Amazing, awesome, I'm so excited - truly. As programmers, we haven't started to use the true benefits of visually constructing our programs and applications, instead we claim that the keyboard is the only instrument for creating instructions for a piece of metal with many wires and many CPUs. Somehow it does remind me of knocking two stones together to make fire and the amazement when someone comes along with an Artificial Stone in the form of lighter.
+
+3. Improved documentation using the Flow2UML node
+
+    I dislike writing technical documentation. I consider code enough documentation - make the code read like a good murder mystery and presto it's a clear whodunnit. But Erlang code is damn compact and even I don't understand why and what I did two months ago. Not good. The second thing I dislike is creating flow diagrams - either visually or textually. But there is no way around it. If I want to be able to understand how things work in six months time, I have to create documentation.
+
+    Mermaid seems to be the tool of choice for such things so back in the good days of Node-RED, I created a node package for converting [flows to Mermaid-UML-like](https://flows.nodered.org/node/@gregoriusrippenstein/node-red-contrib-flow2uml) diagrams, i.e. a flowchart. That flowchart, being defined in Mermaid syntax, can be embedded and displayed in Node-RED flow documentation - neat! But because I wanted extra features, I created the `mermaid-flowchart` node for creating more complex flowcharts.
+
+    Some examples are [here](https://flows.red-erik.org/f/6316ee59f55d37bf), [here](https://flowhub.org/f/4c19635d7c95e596) and [here](https://flowhub.org/f/ee56b79ce65025e8). And inside Erlang-Red:
+
+    ![creating flowcharts](.images/flow2uml-creating.gif)
+
+    But creation is one thing, usage is another - how I do use these diagrams? Well Node-RED supports embedded mermaid diagrams and by extension, so does Erlang-Red:
+
+    ![using mermaid diagrams in Erlang-Red](.images/flow2uml-using.gif)
+
+    That's the nice thing, the documentation of a flow is *embedded* in the flow and goes wherever the flow goes. I created red-erik.org to host that documentation in a webpage. So for example,  the gif above is [online](https://flows.red-erik.org/f/c4c29c2fd5665ed9) at red-erik.org.
+    
+    For any Node-RED readers: the original flow2UML package also contains the new mermaid flowchart node. So it's possible to create these complex flowcharts in Node-RED also.
+
+4. Timeout support for function and link-call nodes
+
+    This might seem minor, but both required a complete re-think of the Erlang architecture. The function node now creates up to two Erlang processes *per* Erlang-Red message received. The Erlang architecture for the function node is [documented](https://flows.red-erik.org/f/1fd621a674360b5d) and describes why this needs to be.
+
+    Timeout for the link-call node was much simpler since it can be implemented using the Erlang-Red message object. Basically an `erlang:start_timer` is set when the Erlang-Red message is passed onto the link-in node. If the message comes back before the timer is triggered, the timer is cancelled. If on the other hand, the message isn't received, the timer is triggered and a timeout error is raised. In creating the [unit test](https://flows.red-erik.org/f/b6d4e4592b27a344) for this feature, I realised that the message - once it arrived - is *still* passed on! That is Node-RED behaviour, so Erlang-RED copied that. IMHO that doesn't make sense since the message timed-out, however I can understand that if the message makes it back, then why lose the data - obviously took a long time to get it, so don't waste it!
+
+5. Better documentation describing the Erlang architecture
+
+    I am starting to be happy with the Erlang architecture so I've started to document it. Starting with the [supervisor node](https://flows.red-erik.org/f/211405fa9e8a6f9b), a technical description of how it interacts with the Erlang code base to implement Erlang-Red node supervision using Erlang process supervision. There is technical description of how the [link call](https://flows.red-erik.org/f/43e8af136f4d0fbe) node works.
+    
+    Once I'm through with documenting everything, I will probably end up modifying everything again - programming is truly a Sisyphusian activity.
+
 *Milestone Four - m4*
 
 1. Supervisor Node
@@ -46,13 +108,13 @@ Milestones
     Erlang heals systems by restarting processes if they fail. It is assumed the system is stable until something fails. Perhaps the complete inverse of what NodeJS does.
 
     By removing the catch block on the function node, I'm moving away from the NodeJS way of doing things and moving towards a more Erlang-like approach.
-    
+
     Ironically the problem with catching errors in something as generic as the function node (which takes straight up Erlang code and executes the code) is that: how to deal with the exceptions? All I was doing was pushing it to the debug panel ... but I could do that far more descriptively by using a catch node connected to a debug node.
-    
+
     Its only a minor change yet  it represents a major step forward for Erlang-Red because it allows Erlang folks to think in terms of Erlang when using Erlang-Red.
-    
+
     Additionally Erlang-Red now has two nodes for error handling: catch node for catching exceptions and the supervisor node for restarting failing processes. As they say in German: *twice holds better*!
-    
+
 5. Erlang, Elixir, BEAM?
 
     Tried but [failed](https://github.com/gorenje/erlang-red/issues/15) to get Erlang-Red compiling in an Elixir environment. It does so but then Erlang-Red won't compile in an Erlang environment. I decided to focus on the Erlang path - after all its Erlang-Red not [BEAM-Red](https://github.com/gorenje/erlang-red/discussions/14). My experience is not up to getting Erlang-Red to compile for both Elixir and Erlang, perhaps someone else will make in-roads there.
