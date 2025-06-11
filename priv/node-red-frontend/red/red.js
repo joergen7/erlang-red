@@ -39161,6 +39161,12 @@ RED.editor = (function() {
 ;;(function() {
 
     RED.editor.registerEditPane("editor-tab-flow-properties", function(node) {
+        let previewHandler = () => {
+           let tabNode = RED.nodes.createExportableNodeSet([RED.nodes.workspace(RED.workspaces.active())])[0];
+           tabNode.info = window.currentTabflowEditor.getValue();
+           RED.sidebar.info.refresh(tabNode);
+        };
+
         return {
             label: RED._("editor-tab.properties"),
             name: RED._("editor-tab.properties"),
@@ -39173,7 +39179,7 @@ RED.editor = (function() {
                   '</div>').appendTo(dialogForm);
 
                 var row = $('<div class="form-row node-text-editor-row">'+
-                            '<label for="node-input-info" data-i18n="editor:workspace.info" style="width:300px;"></label>'+
+                            '<label for="node-input-info" data-i18n="editor:workspace.info" style="width:300px;"></label><a href="#" style="float: right;" onclick="RED.events.emit(\'tabeditor:preview\'); return false;">preview</a>'+
                             '<div style="min-height:150px;" class="node-text-editor" id="node-input-info"></div>'+
                             '</div>').appendTo(dialogForm);
                 this.tabflowEditor = RED.editor.createEditor({
@@ -39188,15 +39194,19 @@ RED.editor = (function() {
                 $("#node-input-name").val(node.label);
                 RED.text.bidi.prepareInput($("#node-input-name"));
                 this.tabflowEditor.getSession().setValue(node.info || "", -1);
+                window.currentTabflowEditor = this.tabflowEditor;
+                RED.events.on("tabeditor:preview", previewHandler );
             },
             resize: function(size) {
                 $("#node-input-info").css("height", (size.height-70)+"px");
                 this.tabflowEditor.resize();
             },
             close: function() {
+                RED.events.off("tabeditor:preview", previewHandler );
                 this.tabflowEditor.destroy();
             },
             apply: function(editState) {
+                RED.events.off("tabeditor:preview", previewHandler );
                 var label = $( "#node-input-name" ).val();
 
                 if (node.label != label) {
