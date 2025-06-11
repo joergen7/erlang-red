@@ -10055,7 +10055,7 @@ RED.utils = (function() {
 
     renderer.code = function (code, lang) {
         if(lang === "mermaid") {
-            return `<pre class='mermaid'>${code}</pre>`;
+            return `<pre style='word-break: unset;' data-c64='${btoa(code)}' class='mermaid'>${code}</pre>`;
         } else {
             return "<pre><code>" +code +"</code></pre>";
         }
@@ -42422,7 +42422,7 @@ RED.editor = (function() {
 
             nodes.forEach(async node => {
                 if (!node.getAttribute('mermaid-processed')) {
-                    const mermaidContent = node.innerText
+                    const mermaidContent = atob($(node).data('c64'))
                     node.setAttribute('mermaid-processed', true)
                     try {
                         const { svg } = await mermaid.render('mermaid-render-'+Date.now()+'-'+(diagramIds++), mermaidContent);
