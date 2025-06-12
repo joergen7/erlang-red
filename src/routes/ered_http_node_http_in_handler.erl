@@ -128,7 +128,7 @@ init(Req, State) ->
 %%
 %% This is called from the http response node. There is little we can do
 %% to ensure that this the right response for the right connection since
-%% the initial routing is down when the process is initiated. Routing here
+%% the initial routing is done when the process is initiated. Routing here
 %% means to the correct node process that should be handling this
 %% request - by Method & WsName & Path
 info({reply, StatusCode, Headers, WsName, Body}, Req, State) ->
@@ -172,10 +172,14 @@ push_out_msg(Req, HttpInPid, WsName) ->
     {ok, Body, Req2} = read_entire_body(Req),
 
     ReqObj = #{
+        url => cowboy_req:path(Req2),
+        uri => iolist_to_binary(cowboy_req:uri(Req2)),
         body => Body,
-        params => cowboy_req:bindings(Req),
-        cookies => cowboy_req:parse_cookies(Req),
-        query => to_map_with_atoms(cowboy_req:parse_qs(Req))
+        method => cowboy_req:method(Req2),
+        headers => cowboy_req:headers(Req2),
+        params => cowboy_req:bindings(Req2),
+        cookies => cowboy_req:parse_cookies(Req2),
+        query => to_map_with_atoms(cowboy_req:parse_qs(Req2))
     },
     Msg3 = maps:put(req, ReqObj, Msg2),
 
