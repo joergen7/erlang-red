@@ -27,7 +27,8 @@
     unsupported/3
 ]).
 -import(ered_msg_handling, [
-    decode_json/1
+    decode_json/1,
+    encode_json/1
 ]).
 %%
 %%
@@ -55,7 +56,7 @@ action_to_content(Val, <<"obj">>, _Pretty) ->
     {ok, decode_json(Val)};
 action_to_content(Val, <<"str">>, _Pretty) ->
     %% convert to object to Javascript string
-    {ok, json:encode(Val)};
+    {ok, iolist_to_binary(encode_json(Val))};
 action_to_content(_, _, _) ->
     unsupported.
 
@@ -68,6 +69,7 @@ handle_event(_, NodeDef) ->
 %%
 handle_msg({incoming, Msg}, NodeDef) ->
     {ok, Prop} = maps:find(property, NodeDef),
+    %% TODO replace this with a call to msg_handling:get_prop/2
     case maps:find(binary_to_atom(Prop), Msg) of
         {ok, Val} ->
             {ok, Action} = maps:find(action, NodeDef),
@@ -76,17 +78,27 @@ handle_msg({incoming, Msg}, NodeDef) ->
             try
                 case action_to_content(Val, Action, Pretty) of
                     {ok, Response} ->
-                        Msg2 = maps:put(payload, Response, Msg),
+                        %% TODO this needs to be done smarter --> prop
+                        %% TODO can be a nested propery name
+                        Msg2 = maps:put(binary_to_atom(Prop), Response, Msg),
                         send_msg_to_connected_nodes(NodeDef, Msg2),
                         {handled, NodeDef, Msg2};
                     unsupported ->
                         ErrMsg = jstr("Unsupported Action: ~p", [Action]),
                         unsupported(NodeDef, Msg, ErrMsg),
+                        {handled, NodeDef, Msg};
+                    What ->
+                        post_exception_or_debug(
+                            NodeDef, Msg, jstr("What?: ~p", [What])
+                        ),
                         {handled, NodeDef, Msg}
                 end
             catch
-                E:F ->
-                    ErrMsg2 = io_lib:format("Exception: ~p ~p", [E, F]),
+                E:F:S ->
+                    ErrMsg2 = jstr(
+                        "Exception: ~p:~p Stack: {{ ~p }}",
+                        [E, F, S]
+                    ),
                     post_exception_or_debug(NodeDef, Msg, ErrMsg2),
                     {handled, NodeDef, Msg}
             end;

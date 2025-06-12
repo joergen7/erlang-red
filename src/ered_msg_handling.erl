@@ -6,6 +6,7 @@
     create_outgoing_msg/1,
     decode_json/1,
     delete_prop/2,
+    encode_json/1,
     escape_specials/1,
     get_prop/2,
     is_same/2,
@@ -113,6 +114,28 @@ decode_json(Val) ->
     {Obj, _, _} = json:decode(Val, ok, #{object_push => AtomizeKeys}),
     Obj.
 
+%%
+%%
+%% This is json:encode except that Pids are converted to strings. Used for
+%% the contents of debug messages - that may certainly contain a Pid or two.
+%% Tuples are also a foe of JSON - convert them to lists.
+%%
+encoder({K, V}, Encode) ->
+    json:encode_value([K, V], Encode);
+encoder([{_, _} | _] = Value, Encode) ->
+    json:encode_key_value_list(Value, Encode);
+encoder(Other, Encode) when is_tuple(Other) ->
+    json:encode_value(tuple_to_list(Other), Encode);
+encoder(Other, Encode) when is_reference(Other) ->
+    json:encode_value(list_to_binary(ref_to_list(Other)), Encode);
+encoder(Other, Encode) when is_pid(Other) ->
+    json:encode_value(list_to_binary(pid_to_list(Other)), Encode);
+encoder(Other, Encode) ->
+    json:encode_value(Other, Encode).
+%%
+encode_json(Value2) ->
+    json:encode(Value2, fun(Value, Encode) -> encoder(Value, Encode) end).
+
 any_to_atom(V) when is_atom(V) ->
     V;
 any_to_atom(V) when is_binary(V) ->
@@ -145,7 +168,11 @@ any_to_atom(V) ->
 %%    {undefined, Prop}
 %%
 get_prop({ok, Prop}, Msg) ->
+    %% TODO see test id# 4d9e38557d6fbd2d --> this needs to support array
+    %% TODO access to key names ==> "req["headers"]["x-forwarded-proto"]" -->
+    %% TODO that's a Javascript thing that needs supporting.
     KeyNames = lists:map(fun any_to_atom/1, string:split(Prop, ".", all)),
+    %% io:format("KeyNames: {{ ~p }} ~n",[KeyNames]),
     case mapz:deep_find(KeyNames, Msg) of
         {ok, V} ->
             {ok, V, Prop};
