@@ -189,13 +189,13 @@ create_children(MyNodeDefs, SupNodeDef, WsName) ->
     StartChild = fun(NodeDef) ->
         #{
             id => binary_to_atom(
-                    list_to_binary(
-                      io_lib:format(
+                list_to_binary(
+                    io_lib:format(
                         "child_~s_~s",
                         [SupNodeId, maps:get(id, NodeDef)]
-                       )
-                     )
-                   ),
+                    )
+                )
+            ),
             start => {
                 ered_nodes, spin_up_and_link_node, [NodeDef, WsName]
             },
