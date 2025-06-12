@@ -19,7 +19,7 @@
   0},
  {<<"erlang_red_jsonata">>,
   {git,"https://github.com/gorenje/erlang-red-jsonata",
-       {ref,"ce0c77dfed048460f279ea60d76fb8589cb360e1"}},
+       {ref,"1febc915b62d1259bb02282a4da92df2deca0a7c"}},
   0},
  {<<"erlexec">>,{pkg,<<"erlexec">>,<<"2.2.0">>},0},
  {<<"erlydtl">>,{pkg,<<"erlydtl">>,<<"0.14.0">>},0},
