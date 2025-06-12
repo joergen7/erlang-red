@@ -65,9 +65,10 @@ retrieve_status_code(NodeDef, Msg) ->
 %% erlfmt:ignore alignment
 retrieve_headers(NodeDef, Msg) ->
     Hdrs = case {maps:find(headers, Msg), maps:find(headers, NodeDef)} of
-               {{ok, _}, {ok, NdHdrs}} -> NdHdrs;
-               {_,       {ok, NdHdrs}} -> NdHdrs;
-               {{ok, MsgHdrs}, _}      -> MsgHdrs;
-               {_, _}                  -> #{}
+               {{ok, MsgHdrs}, {ok, #{}}}    -> MsgHdrs;
+               {{ok, _},       {ok, NdHdrs}} -> NdHdrs;
+               {_,             {ok, NdHdrs}} -> NdHdrs;
+               {{ok, MsgHdrs}, _}            -> MsgHdrs;
+               {_, _}                        -> #{}
            end,
     map_keys_to_binary(Hdrs).

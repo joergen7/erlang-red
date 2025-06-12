@@ -175,6 +175,8 @@ push_out_msg(Req, HttpInPid, WsName) ->
         url => cowboy_req:path(Req2),
         uri => iolist_to_binary(cowboy_req:uri(Req2)),
         body => Body,
+        hostname => cowboy_req:host(Req2),
+        originalUrl => cowboy_req:path(Req2),
         method => cowboy_req:method(Req2),
         headers => cowboy_req:headers(Req2),
         params => cowboy_req:bindings(Req2),
