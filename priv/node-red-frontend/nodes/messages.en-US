@@ -14,7 +14,8 @@
     "@gregoriusrippenstein/erlang-red-supervisor-node/erlmodule": {
         "erlmodule": {
             "label": {
-                "name": "Module Name",
+                "module_name": "Module Name",
+                "name": "Name",
                 "statusset": "Status Set",
                 "tab": {
                     "code": "Code",

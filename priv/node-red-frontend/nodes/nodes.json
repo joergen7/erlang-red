@@ -670,7 +670,7 @@
             "erlsupervisor"
         ],
         "user": false,
-        "version": "0.1.7"
+        "version": "0.1.8"
     },
     {
         "enabled": true,
@@ -682,7 +682,7 @@
             "erlmodule"
         ],
         "user": false,
-        "version": "0.1.7"
+        "version": "0.1.8"
     },
     {
         "enabled": true,
@@ -694,7 +694,7 @@
             "erlstatemachine"
         ],
         "user": false,
-        "version": "0.1.7"
+        "version": "0.1.8"
     },
     {
         "enabled": true,
@@ -706,6 +706,6 @@
             "erleventhandler"
         ],
         "user": false,
-        "version": "0.1.7"
+        "version": "0.1.8"
     }
 ]

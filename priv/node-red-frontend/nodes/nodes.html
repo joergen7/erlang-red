@@ -12263,7 +12263,7 @@ msg.cookies = {
         validate: RED.validators.regex(/^[a-z0-9_]+$/)
       },
       code: {
-        value: "",
+        value: "-module()\n\n-export()\n\n",
         required: true
       }
     },
@@ -12288,28 +12288,6 @@ msg.cookies = {
 
     oneditprepare: function() {
       var node = this;
-
-      var tabs = RED.tabs.create({
-        id: "erlmodule-tabs",
-        onchange: function (tab) {
-          $("#erlmodule-tabs-content").children().hide();
-          $("#" + tab.id).show();
-        }
-      });
-
-      tabs.addTab({
-        id: "erlmodule-tab-config",
-        iconClass: "fa fa-cog",
-        label: node._("erlmodule.label.tab.config")
-      });
-
-      tabs.addTab({
-        id: "erlmodule-tab-code",
-        iconClass: "fa fa-cog",
-        label: node._("erlmodule.label.tab.code")
-      });
-
-      tabs.activateTab("erlmodule-tab-code");
 
       this.editor = RED.editor.createEditor({
         id: 'node-input-erlmodule-editor',
@@ -12343,30 +12321,18 @@ msg.cookies = {
 
 <script type="text/html" data-template-name="erlmodule">
   <div class="form-row">
-    <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
-    <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
+    <label for="node-input-module_name"><i class="fa fa-tag"></i> <span data-i18n="erlmodule.label.module_name"></span></label>
+    <input type="text" id="node-input-module_name" data-i18n="[placeholder]erlmodule.label.module_name">
   </div>
 
-  <div class="form-row func-tabs-row">
-    <ul style="min-width: 400px; margin-bottom: 20px;" id="erlmodule-tabs"></ul>
+  <div class="form-row">
+      <div style="height: 73vh; min-height:150px;" class="node-text-editor" id="node-input-erlmodule-editor"></div>
   </div>
 
-  <div id="erlmodule-tabs-content" style="min-height: calc(100% - 95px);">
-
-    <div id="erlmodule-tab-config" style="display:none">
-      <div class="form-row">
-        <label for="node-input-module_name"><i class="fa fa-tag"></i> <span data-i18n="erlmodule.label.name"></span></label>
-        <input type="text" id="node-input-module_name" data-i18n="[placeholder]erlmodule.label.name">
-      </div>
-    </div>
-
-    <div id="erlmodule-tab-code" style="display:none">
-      <div class="form-row">
-         <div style="height: 600px; min-height:150px;" class="node-text-editor" id="node-input-erlmodule-editor"></div>
-      </div>
-    </div>
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="erlmodule.label.name"></span></label>
+    <input type="text" id="node-input-name" data-i18n="[placeholder]erlmodule.label.name">
   </div>
-
 </script>
 <script type="text/html" data-help-name="erlmodule">
   <p>Node for encapsulating erlang module code.</p>
@@ -12565,6 +12531,9 @@ See <a href="https://www.erlang.org/doc/apps/stdlib/gen_statem">OTP Docu</a> for
 A handler can only be of type <code>erlmodule</code>.
 </p>
 
+<p>
+  <a href='https://flows.red-erik.org/f/5672fa442b2b881d' target='_blank'>Example</a>
+</p>
 </script>
 
 <!-- --- [red-module:@gregoriusrippenstein/erlang-red-supervisor-node/erleventhandler] --- -->
@@ -12580,6 +12549,9 @@ A handler can only be of type <code>erlmodule</code>.
       name: {
         value:"",
       },
+      handlers: {
+        value: [{ nodeid: ""}]
+      }
     },
 
     inputs: 1,
@@ -12601,12 +12573,38 @@ A handler can only be of type <code>erlmodule</code>.
     },
 
     oneditprepare: function() {
+      let allModules = [ ["", "-- select module --"], ...RED.nodes.filterNodes({ type: "erlmodule" }).map( d => [d.id, d.module_name] )]
+
+      this.handlers.sort((a, b) => a.nodeid < b.nodeid).forEach(currVal => {
+        var sltObj = $('<select>', { class: 'erleventhandler-erlmodule' })
+
+        for (var idx = 0; idx < allModules.length; idx++) {
+          let val = allModules[idx]
+          let selected = val[0] == currVal.nodeid ? { selected: "selected" } : {}
+
+          sltObj.append($("<option>", { value: val[0], ...selected }).append(val[1]))
+        }
+
+        var container = $("<div>", { class: "form-row" });
+
+        container.append('<a href="#" style="float: right; color: red;" onclick="$(this).parent().remove(); return false;"><i class="fa fa-close"></i></a>')
+        container.append('<a href="#" style="float: right; margin-right: 10px; color: green;" onclick="$(\'#erleventhandler-handler-config-container\').append($(this).parent().clone()); return false;"><i class="fa fa-plus"></i></a>')
+
+        container.append(sltObj)
+
+        container.appendTo($('#erleventhandler-handler-config-container'))
+      })
     },
 
     oneditcancel: function() {
     },
 
     oneditsave: function() {
+      let result = []
+      $($('#erleventhandler-handler-config-container').find('.erleventhandler-erlmodule')).each((idx, elem) => {
+        result.push({ nodeid: $(elem).val() })
+      })
+      this.handlers = result
     },
 
     oneditresize: function(size) {
@@ -12623,12 +12621,30 @@ A handler can only be of type <code>erlmodule</code>.
     <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
     <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
   </div>
+
+  <div class="form-row">
+    <span>Select a static selection of event handlers. <br>
+       Need to define Erlang Module node first else <br>
+      this selection will be empty.</span>
+
+    <p>
+    <span>This can be dynamically extended at runtime <br>
+    using the <b>add_handler</b> message type.</span>
+  </div>
+
+  <div class="form-row">
+    <div id="erleventhandler-handler-config-container"></div>
+  </div>
 </script>
 <script type="text/html" data-help-name="erleventhandler">
   <p>Implements that event handler behaviour.</p>
   Implements the Erlang event behaviour.
 
 See <a href="https://www.erlang.org/doc/apps/stdlib/gen_event.html">OTP Docu</a> for more details.
+
+<p>
+<a href='https://flows.red-erik.org/f/b70a7ce34819e4d5' target="_blank">Example</a>.
+</p>
 
 </script>
 
