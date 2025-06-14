@@ -75,7 +75,14 @@ init([]) ->
                     module => [ered_msgtracer_manager]
                 },
                 #{
-                    id => ered_ch9_red_web,
+                    id => ered_ch9_erlmodule_exchange,
+                    start => {ered_erlmodule_exchange, start_link, []},
+                    restart => permanent,
+                    type => worker,
+                    module => [ered_erlmodule_exchange]
+                },
+                #{
+                    id => ered_ch10_red_web,
                     start => {ered_webserver, start, []},
                     restart => permanent,
                     type => worker,
