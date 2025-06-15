@@ -136,19 +136,6 @@ encoder(Other, Encode) ->
 encode_json(Value2) ->
     json:encode(Value2, fun(Value, Encode) -> encoder(Value, Encode) end).
 
-any_to_atom(V) when is_atom(V) ->
-    V;
-any_to_atom(V) when is_binary(V) ->
-    binary_to_atom(V);
-any_to_atom(V) when is_list(V) ->
-    list_to_atom(V);
-any_to_atom(V) when is_integer(V) ->
-    list_to_atom(integer_to_list(V));
-any_to_atom(V) when is_float(V) ->
-    list_to_atom(float_to_list(V, [short]));
-any_to_atom(V) ->
-    V.
-
 %%
 %% get prop can used to retrieve a nestd value from the Msg map, i.e.,
 %%    msg.payload.key1.key2.key3
@@ -168,16 +155,16 @@ any_to_atom(V) ->
 %%    {undefined, Prop}
 %%
 get_prop({ok, Prop}, Msg) ->
-    %% TODO see test id# 4d9e38557d6fbd2d --> this needs to support array
-    %% TODO access to key names ==> "req["headers"]["x-forwarded-proto"]" -->
-    %% TODO that's a Javascript thing that needs supporting.
-    KeyNames = lists:map(fun any_to_atom/1, string:split(Prop, ".", all)),
-    %% io:format("KeyNames: {{ ~p }} ~n",[KeyNames]),
-    case mapz:deep_find(KeyNames, Msg) of
-        {ok, V} ->
-            {ok, V, Prop};
-        error ->
-            {undefined, Prop}
+    case erl_attributeparser:attrbutes_to_array(Prop) of
+        {ok, KeyNames} ->
+            case mapz:deep_find(KeyNames, Msg) of
+                {ok, V} ->
+                    {ok, V, Prop};
+                error ->
+                    {undefined, Prop}
+            end;
+        Error ->
+            Error
     end.
 
 %%
@@ -196,13 +183,17 @@ retrieve_prop_value(PropName, Msg) ->
 -spec set_prop_value(PropName :: string(), Msg :: map(), Value :: any()) ->
     map().
 set_prop_value(PropName, Msg, Value) ->
-    KeyNames = lists:map(fun any_to_atom/1, string:split(PropName, ".", all)),
-    %% silently ignore any key that isn't available
-    try
-        mapz:deep_put(KeyNames, Value, Msg)
-    catch
-        error:_Error ->
-            Msg
+    case erl_attributeparser:attrbutes_to_array(PropName) of
+        {ok, KeyNames} ->
+            %% silently ignore any key that isn't available
+            try
+                mapz:deep_put(KeyNames, Value, Msg)
+            catch
+                error:_Error ->
+                    Msg
+            end;
+        Error ->
+            Error
     end.
 
 %%
@@ -213,22 +204,26 @@ set_prop_value(PropName, Msg, Value) ->
 delete_prop({ok, PropName}, Msg) ->
     delete_prop(PropName, Msg);
 delete_prop(PropName, Msg) ->
-    KeyNames = lists:map(fun any_to_atom/1, string:split(PropName, ".", all)),
-    %% silently ignore any key that isn't available
-
-    %% deep_remove seems to delete keeps if other keys don't exist, so this
-    %% pre-check ensures there is a value
-    %% see: https://github.com/eproxus/mapz/issues/1
-    %% TODO remove this if deep_remove is fixed
-    case mapz:deep_find(KeyNames, Msg) of
-        {ok, _} ->
-            try
-                mapz:deep_remove(KeyNames, Msg)
-            catch
-                error:_Error ->
+    case erl_attributeparser:attrbutes_to_array(PropName) of
+        {ok, KeyNames} ->
+            %% silently ignore any key that isn't available
+            %% deep_remove seems to delete keeps if other keys don't exist,
+            %% so this pre-check ensures there is a value
+            %% see: https://github.com/eproxus/mapz/issues/1
+            %% TODO remove this if deep_remove is fixed
+            case mapz:deep_find(KeyNames, Msg) of
+                {ok, _} ->
+                    try
+                        mapz:deep_remove(KeyNames, Msg)
+                    catch
+                        error:_Error ->
+                            Msg
+                    end;
+                _ ->
                     Msg
             end;
-        _ ->
+        _Error ->
+            % silently ignore errors.
             Msg
     end.
 
