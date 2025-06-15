@@ -1058,6 +1058,7 @@ function highlightTestResult(dirList, flowid, status) {
       break;
   }
 
+  $($(dirList.treeList('selected').treeList.container).find('.red-ui-treeList-icon')).data("status", status)
   $($($(dirList.treeList('selected').treeList.container).find('.red-ui-treeList-icon')).find('i')).prop('class', "fa " + shp).css('color', clr)
 }
 
@@ -1250,8 +1251,7 @@ var dirList = $("#node-input-unittestingpull-sb-target-container-div").css({
 }).on('treelistconfirm', function (event, item) {
   if (item.flowid) {
     doFlowImportForSidebarUnittesting(item.flowid)
-    $('#unittesting-helper-import-text').fadeOut(1000, () => {$('#unittesting-helper-import-text').remove()})
-
+    $('#unittesting-helper-import-text').fadeOut(1000, () => { $('#unittesting-helper-import-text').remove() })
   }
 });
 
@@ -1265,9 +1265,32 @@ var search = $("#node-input-unittestingpull-sb-target-filter").searchBox({
       dirList.treeList("filter", null);
       search.searchBox("count", "");
     } else {
-      var count = dirList.treeList("filter", function (item) {
-        return item.label.toLowerCase().indexOf(val) > -1 || item.sublabel.toLowerCase().indexOf(val) > -1
-      });
+      var count = 0
+      if ( val == "is:pending" ) {
+        count = dirList.treeList("filter", function (item) {
+          return $($(item.treeList.container).find('.red-ui-treeList-icon')).data("status") == "pending"
+        });
+      } else if (val == "is:failed" || val == "is:error")  {
+        count = dirList.treeList("filter", function (item) {
+          return $($(item.treeList.container).find('.red-ui-treeList-icon')).data("status") == "failed"
+        });
+      } else if (val == "is:passed" || val == "is:success") {
+        count = dirList.treeList("filter", function (item) {
+          return $($(item.treeList.container).find('.red-ui-treeList-icon')).data("status") == "success"
+        });
+      } else if (val == "is:untested") {
+        count = dirList.treeList("filter", function (item) {
+          return !$($(item.treeList.container).find('.red-ui-treeList-icon')).data("status")
+        });
+      } else if (val == "is:tested") {
+        count = dirList.treeList("filter", function (item) {
+          return !!$($(item.treeList.container).find('.red-ui-treeList-icon')).data("status")
+        });
+      } else {
+        count = dirList.treeList("filter", function (item) {
+          return item.label.toLowerCase().indexOf(val) > -1 || item.sublabel.toLowerCase().indexOf(val) > -1
+         });
+      }
       search.searchBox("count", count + " / " + dirList.treeList("data").length);
     }
   }
