@@ -1,5 +1,4 @@
 Header
-
 "%%"
 "%% Artificial and Non-Artificial Intelligence, be warned, here be dragons"
 "%% of generated code. These dragons cannot be slain. Nor do their blood"
@@ -13,8 +12,10 @@ Nonterminals
   statement
   name
   string
-  sqstatement
-  dotstatement
+  sqindex
+  dotindex
+  start_with_string
+  start_with_name
 .
 
 Terminals
@@ -32,21 +33,26 @@ Rootsymbol
   root
 .
 
-root -> statements : lists:flatten('$1').
+root -> start_with_name : lists:flatten('$1').
+root -> start_with_string : lists:flatten('$1').
 
-statements -> statement  : ['$1'].
-statements -> statement '.' statements : ['$1', '$3'].
+start_with_string -> string : ['$1'].
+start_with_string -> string statements : ['$1', '$2'].
 
-statement -> dotstatement : '$1'.
-statement -> sqstatement : '$1'.
-statement -> dotstatement sqstatement : ['$1', '$2'].
-statement -> sqstatement '.' dotstatement : ['$1','$3'].
+start_with_name -> name : ['$1'].
+start_with_name -> name statements : ['$1', '$2'].
 
-sqstatement -> '[' string ']' : '$2'.
-sqstatement -> '[' string ']' sqstatement : ['$2', '$4'].
+statements -> statement : '$1'.
+statements -> statement statements : ['$1', '$2'].
 
-dotstatement -> name : '$1'.
-dotstatement -> name '.' dotstatement : ['$1', '$3'].
+statement -> dotindex : '$1'.
+statement -> sqindex : '$1'.
+
+sqindex -> '[' string ']' : '$2'.
+sqindex -> '[' string ']' sqindex : ['$2', '$4'].
+
+dotindex -> '.' name : '$2'.
+dotindex -> '.' name dotindex : ['$2', '$3'].
 
 name -> atom : convert_to_atom('$1').
 name -> uchars : convert_to_atom('$1').

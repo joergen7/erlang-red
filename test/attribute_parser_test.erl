@@ -32,23 +32,18 @@ foreach_parser_test_() ->
        [key, key1, key2]
       },
       {
-       even_keys_are_single_double_quotes,
-       "[\"key\"]",
+       double_quotes_allowed,
+       "\"key\"",
        [<<"key">>]
       },
       {
-       even_keys_are_single_single_quotes,
-       "['key-1-2']",
+       single_quote_starts_allowed,
+       "'key-1-2'",
        ['key-1-2']
       },
       {
        even_keys_are_single,
        "key",
-       [key]
-      },
-      {
-       single_bracket,
-       "['key']",
        [key]
       },
       {
@@ -78,20 +73,61 @@ foreach_parser_test_() ->
       },
       {
        all_numbers,
-       "[\"123\"]['456'][\"789\"]",
-       [<<"123">>,'456',<<"789">>]
+       "\"123\"[\"123\"]['456'][\"789\"]",
+       [<<"123">>,<<"123">>,'456',<<"789">>]
       },
       {
        all_array_access,
-       "[\"abc\"]['def'][\"ghi\"]['H']['I']",
-       [<<"abc">>,'def',<<"ghi">>,'H','I']
+       "abc[\"abc\"]['def'][\"ghi\"]['H']['I']",
+       [abc,<<"abc">>,'def',<<"ghi">>,'H','I']
       },
       {
        collection_of_dots,
        "abcd.a121.b2.c4.d5.e6.f7.g8.h9.i10",
        [abcd,a121,b2,c4,d5,e6,f7,g8,h9,i10]
+      },
+      {
+       mixing_as_much_as_possible,
+       "abcd['a121'].b2['c4'].d5['e6'].f7['g8'].h9['i10']",
+       [abcd,a121,b2,c4,d5,e6,f7,g8,h9,i10]
+      },
+      {
+       mixing_as_much_as_possible_double_quotes,
+       "abcd[\"a121\"].b2['c4'].d5[\"e6\"].f7['g8'].h9[\"i10\"]",
+       [abcd,<<"a121">>,b2,c4,d5,<<"e6">>,f7,g8,h9,<<"i10">>]
+      },
+      {
+       mixing_as_much_as_possible_double_quotes_starting_with_string,
+       "\"fubar\".abcd[\"a121\"].b2['c4'].d5[\"e6\"].f7['g8'].h9[\"i10\"]",
+       [<<"fubar">>,abcd,<<"a121">>,b2,c4,d5,<<"e6">>,f7,g8,h9,<<"i10">>]
+      },
+      {
+       can_start_with_string,
+       "\"eee\".fff[\"ggg\"]",
+       [<<"eee">>,fff,<<"ggg">>]
+      },
+      {
+       single_quote_start_is_also_possible,
+       "'ddd'.ddd.eee",
+       [ddd,ddd,eee]
+      },
+      {
+       single_quote_start,
+       "'ddd'[\"eee\"].de",
+       [ddd,<<"eee">>,de]
+      },
+      {
+       single_quote_start_no_bracket,
+       "'ddd'.de",
+       [ddd,de]
+      },
+      {
+       square_brackets_all_the_way_down,
+       "\"ddd\"[\"dd\"][\"ff\"][\"gg\"][\"hh\"]",
+       [<<"ddd">>,<<"dd">>,<<"ff">>,<<"gg">>,<<"hh">>]
       }
     ],
+
 
     TestList = [{
       atom_to_binary(TestCaseName),
@@ -109,6 +145,14 @@ foreach_parser_test_() ->
 
 foreach_parser_failure_test_() ->
     Tests = [
+      {
+       starting_with_bracket,
+       "[\"key\"]"
+      },
+      {
+       starting_with_bracket_single_quote,
+       "['key']"
+      },
       {
        dot_bracket_does_not_work,
        "key.['ddd']"
@@ -136,6 +180,38 @@ foreach_parser_failure_test_() ->
       {
        missing_brackets,
        "key['ddd'fubar]"
+      },
+      {
+       no_bracket_after_dot,
+       "\"eee\".[\"ddd\"]"
+      },
+      {
+       no_bracket_after_dot_single_quote,
+       "\"eee\".['ddd']"
+      },
+      {
+       no_bracket_after_dot_single_quote,
+       "'eee'.['ddd']"
+      },
+      {
+       string_dot_string_not_possible,
+       "\"sadasd\".\"asdsad\""
+      },
+      {
+       string_string_not_possible,
+       "\"sadasd\"\"asdsad\""
+      },
+      {
+       single_quote_string_dot_string_not_possible,
+       "'sadasd'.'asdsad'"
+      },
+      {
+       single_quote_string_string_not_possible,
+       "'sadasd''asdsad'"
+      },
+      {
+       mixing_as_much_as_possible_but_not_incorrectly,
+       "abcd['a121'].b2.['c4'].d5.['e6'].f7.['g8'].h9.['i10']"
       }
     ],
 

@@ -153,6 +153,8 @@ encode_json(Value2) ->
 %%    {ok, Value, Prop}
 %% or
 %%    {undefined, Prop}
+%% or
+%%    {error, ErrorMsg}
 %%
 get_prop({ok, Prop}, Msg) ->
     case erl_attributeparser:attrbutes_to_array(Prop) of
@@ -210,7 +212,7 @@ delete_prop(PropName, Msg) ->
             %% deep_remove seems to delete keeps if other keys don't exist,
             %% so this pre-check ensures there is a value
             %% see: https://github.com/eproxus/mapz/issues/1
-            %% TODO remove this if deep_remove is fixed
+            %% TODO remove this if deep_remove is ever fixed
             case mapz:deep_find(KeyNames, Msg) of
                 {ok, _} ->
                     try
