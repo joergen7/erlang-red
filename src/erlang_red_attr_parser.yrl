@@ -54,20 +54,20 @@ sqindex -> '[' string ']' sqindex : ['$2', '$4'].
 dotindex -> '.' name : '$2'.
 dotindex -> '.' name dotindex : ['$2', '$3'].
 
-name -> atom : convert_to_atom('$1').
-name -> uchars : convert_to_atom('$1').
-name -> lchars : convert_to_atom('$1').
+name -> atom : convert_to_binary('$1').
+name -> uchars : convert_to_binary('$1').
+name -> lchars : convert_to_binary('$1').
 
-string -> dqstring : convert_to_binary('$1').
-string -> sqstring : convert_to_binary('$1').
+string -> dqstring : convert_string_to_binary('$1').
+string -> sqstring : convert_string_to_atom('$1').
 
 %%
 %%
 Erlang code.
 
-convert_to_binary({_,_, [$'|V]}) ->
-    list_to_atom(lists:reverse(remove_quote(lists:reverse(V))));
-convert_to_binary({_,_, [$"|V]}) ->
+convert_string_to_atom({_,_, [$'|V]}) ->
+    list_to_atom(lists:reverse(remove_quote(lists:reverse(V)))).
+convert_string_to_binary({_,_, [$"|V]}) ->
     list_to_binary(lists:reverse(remove_quote(lists:reverse(V)))).
 
 remove_quote([$"|V]) ->
@@ -75,5 +75,5 @@ remove_quote([$"|V]) ->
 remove_quote([$'|V]) ->
     V.
 
-convert_to_atom({_,_,V}) ->
-    list_to_atom(V).
+convert_to_binary({_,_,V}) ->
+    list_to_binary(V).

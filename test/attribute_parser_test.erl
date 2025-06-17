@@ -9,27 +9,27 @@ foreach_parser_test_() ->
       {
        single_char_also_works,
        "k",
-       [k]
+       [<<"k">>]
       },
       {
        single_capital_char_also_works,
        "K",
-       ['K']
+       [<<"K">>]
       },
       {
        multiple_mixed_case_char_also_works,
        "K.l.M",
-       ['K',l,'M']
+       [<<"K">>,<<"l">>,<<"M">>]
       },
       {
        multiple_mixed_case_char_also_works_lower_first,
        "k.L.m",
-       [k,'L',m]
+       [<<"k">>,<<"L">>,<<"m">>]
       },
       {
        simple_atomised_string,
        "key.key1.key2",
-       [key, key1, key2]
+       [<<"key">>, <<"key1">>, <<"key2">>]
       },
       {
        double_quotes_allowed,
@@ -44,32 +44,32 @@ foreach_parser_test_() ->
       {
        even_keys_are_single,
        "key",
-       [key]
+       [<<"key">>]
       },
       {
        even_capital_keys_are_single,
        "Key",
-       ['Key']
+       [<<"Key">>]
       },
       {
        mix_of_quites_and_dots,
        "Key['Key-2-'].Fubar.snafu[\"ddd\"]",
-       ['Key', 'Key-2-', 'Fubar', snafu, <<"ddd">>]
+       [<<"Key">>, 'Key-2-', <<"Fubar">>, <<"snafu">>, <<"ddd">>]
       },
       {
        another_combination,
        "req.headers[\"x-proto-forward-for\"]",
-       [req, headers, <<"x-proto-forward-for">>]
+       [<<"req">>, <<"headers">>, <<"x-proto-forward-for">>]
       },
       {
        quoted_brackets,
        "req['[fubar]'].snafu",
-       [req, '[fubar]', snafu]
+       [<<"req">>, '[fubar]', <<"snafu">>]
       },
       {
        quoted_with_double_quotes_brackets,
        "req[\"[fubar]\"].snafu",
-       [req,<<"[fubar]">>,snafu]
+       [<<"req">>,<<"[fubar]">>,<<"snafu">>]
       },
       {
        all_numbers,
@@ -79,47 +79,50 @@ foreach_parser_test_() ->
       {
        all_array_access,
        "abc[\"abc\"]['def'][\"ghi\"]['H']['I']",
-       [abc,<<"abc">>,'def',<<"ghi">>,'H','I']
+       [<<"abc">>,<<"abc">>,'def',<<"ghi">>,'H','I']
       },
       {
        collection_of_dots,
        "abcd.a121.b2.c4.d5.e6.f7.g8.h9.i10",
-       [abcd,a121,b2,c4,d5,e6,f7,g8,h9,i10]
+       [<<"abcd">>,<<"a121">>,<<"b2">>,<<"c4">>,<<"d5">>,
+        <<"e6">>,<<"f7">>,<<"g8">>,<<"h9">>,<<"i10">>]
       },
       {
        mixing_as_much_as_possible,
        "abcd['a121'].b2['c4'].d5['e6'].f7['g8'].h9['i10']",
-       [abcd,a121,b2,c4,d5,e6,f7,g8,h9,i10]
+       [<<"abcd">>,a121,<<"b2">>,c4,<<"d5">>,e6,<<"f7">>,g8,<<"h9">>,i10]
       },
       {
        mixing_as_much_as_possible_double_quotes,
        "abcd[\"a121\"].b2['c4'].d5[\"e6\"].f7['g8'].h9[\"i10\"]",
-       [abcd,<<"a121">>,b2,c4,d5,<<"e6">>,f7,g8,h9,<<"i10">>]
+       [<<"abcd">>,<<"a121">>,<<"b2">>,c4,<<"d5">>,<<"e6">>,<<"f7">>,
+        g8,<<"h9">>,<<"i10">>]
       },
       {
        mixing_as_much_as_possible_double_quotes_starting_with_string,
        "\"fubar\".abcd[\"a121\"].b2['c4'].d5[\"e6\"].f7['g8'].h9[\"i10\"]",
-       [<<"fubar">>,abcd,<<"a121">>,b2,c4,d5,<<"e6">>,f7,g8,h9,<<"i10">>]
+       [<<"fubar">>,<<"abcd">>,<<"a121">>,<<"b2">>,c4,<<"d5">>,
+        <<"e6">>,<<"f7">>,g8,<<"h9">>,<<"i10">>]
       },
       {
        can_start_with_string,
        "\"eee\".fff[\"ggg\"]",
-       [<<"eee">>,fff,<<"ggg">>]
+       [<<"eee">>,<<"fff">>,<<"ggg">>]
       },
       {
        single_quote_start_is_also_possible,
        "'ddd'.ddd.eee",
-       [ddd,ddd,eee]
+       [ddd,<<"ddd">>,<<"eee">>]
       },
       {
        single_quote_start,
        "'ddd'[\"eee\"].de",
-       [ddd,<<"eee">>,de]
+       [ddd,<<"eee">>,<<"de">>]
       },
       {
        single_quote_start_no_bracket,
        "'ddd'.de",
-       [ddd,de]
+       [ddd,<<"de">>]
       },
       {
        square_brackets_all_the_way_down,
