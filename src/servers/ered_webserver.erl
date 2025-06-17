@@ -37,6 +37,7 @@ unregister_http_in(Path, Method, WsName) ->
     gen_server:call(?MODULE, {del_route, Path, Method, WsName}).
 
 %%
+%% remove a route for the http in handler
 %%
 handle_call({del_route, Path, Method, WsName}, _From, State) ->
     NwR =
@@ -44,8 +45,11 @@ handle_call({del_route, Path, Method, WsName}, _From, State) ->
             false ->
                 maps:get(http_in_routes, State);
             {Path, Handler, Ary} ->
+                % remove any existing handler for the method & websocket name
                 Ary2 = lists:filter(
-                    fun({M, _P, W}) -> M =/= Method andalso W =/= WsName end,
+                    fun({M, _P, W}) ->
+                        M =/= Method orelse W =/= WsName
+                    end,
                     Ary
                 ),
                 lists:keyreplace(
@@ -57,29 +61,41 @@ handle_call({del_route, Path, Method, WsName}, _From, State) ->
         end,
 
     restart_dispatcher(NwR ++ maps:get(floweditor_routes, State)),
-    {reply, ok, maps:put(http_in_routes, NwR, State)};
+    {reply, ok, State#{http_in_routes => NwR}};
+%%
+%% add a route for the http_in handler
+%%
 handle_call({add_route, Path, Method, {Pid, WsName}}, _From, State) ->
     ExtraRoutes =
         case lists:keyfind(Path, 1, maps:get(http_in_routes, State)) of
             false ->
                 [
-                    {Path, ered_http_node_http_in_handler, [
-                        {Method, Pid, WsName}
-                    ]}
+                    {
+                        Path,
+                        ered_http_node_http_in_handler,
+                        [{Method, Pid, WsName}]
+                    }
                     | maps:get(http_in_routes, State)
                 ];
             {Path, Handler, Ary} ->
-                %% TODO here check for duplication and ensure that its replaced
-                %% TODO with the current handler. I.e. Tuple {Path, Method,
-                %% TODO WsName} should be unique and map to exactly one pid.
-                [
-                    {Path, Handler, [{Method, Pid, WsName} | Ary]}
-                    | lists:keydelete(Path, 1, maps:get(http_in_routes, State))
-                ]
+                Ary2 = lists:filter(
+                    fun({M, _P, W}) ->
+                        M =/= Method orelse W =/= WsName
+                    end,
+                    Ary
+                ),
+                lists:keyreplace(
+                    Path,
+                    1,
+                    maps:get(http_in_routes, State),
+                    {Path, Handler, [{Method, Pid, WsName} | Ary2]}
+                )
         end,
 
     restart_dispatcher(ExtraRoutes ++ maps:get(floweditor_routes, State)),
     {reply, ok, maps:put(http_in_routes, ExtraRoutes, State)};
+%%
+%%
 handle_call(_Msg, _From, State) ->
     {reply, State, State}.
 
@@ -128,12 +144,13 @@ herd_up_the_cattle(State) ->
                     maps:get(http_in_routes, State)}
         ]),
 
-    %% setup cowboy.
+    persistent_term:put(my_app_dispatch, Dispatch),
+
     {ok, _} = cowboy:start_clear(
         erlang_red_listener,
         [{port, Port}],
         #{
-            env => #{dispatch => Dispatch},
+            env => #{dispatch => {persistent_term, my_app_dispatch}},
             middlewares => [ered_http_auth, cowboy_router, cowboy_handler]
         }
     ).
@@ -238,4 +255,4 @@ flow_editor_routes() ->
 %%
 restart_dispatcher(Routes) ->
     Dispatch = cowboy_router:compile([{'_', Routes}]),
-    cowboy:set_env(erlang_red_listener, dispatch, Dispatch).
+    persistent_term:put(my_app_dispatch, Dispatch).
