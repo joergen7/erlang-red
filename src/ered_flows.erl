@@ -14,7 +14,7 @@
 %% an entire flow should be here.
 %%
 
--import(ered_msg_handling, [
+-import(ered_messages, [
     decode_json/1
 ]).
 

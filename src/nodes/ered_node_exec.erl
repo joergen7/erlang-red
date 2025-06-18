@@ -51,7 +51,7 @@
     post_exception_or_debug/3,
     send_msg_to_connected_nodes/2
 ]).
--import(ered_msg_handling, [
+-import(ered_messages, [
     convert_to_num/1,
     convert_units_to_milliseconds/2,
     to_bool/1

@@ -41,7 +41,7 @@
 -import(ered_message_exchange, [
     post_completed/2
 ]).
--import(ered_msg_handling, [
+-import(ered_messages, [
     retrieve_prop_value/2
 ]).
 

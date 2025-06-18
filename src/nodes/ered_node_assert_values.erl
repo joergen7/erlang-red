@@ -25,7 +25,7 @@
     send_msg_to_connected_nodes/2,
     this_should_not_happen/2
 ]).
--import(ered_msg_handling, [
+-import(ered_messages, [
     convert_to_num/1,
     decode_json/1,
     escape_specials/1,

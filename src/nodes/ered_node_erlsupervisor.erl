@@ -43,7 +43,7 @@
     ws_from/1
 ]).
 
--import(ered_msg_handling, [
+-import(ered_messages, [
     convert_to_num/1,
     create_outgoing_msg/1
 ]).

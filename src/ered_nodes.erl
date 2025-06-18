@@ -50,7 +50,7 @@
     send_out_debug_error/2,
     ws_from/1
 ]).
--import(ered_msg_handling, [
+-import(ered_messages, [
     create_outgoing_msg/1
 ]).
 -import(ered_message_exchange, [

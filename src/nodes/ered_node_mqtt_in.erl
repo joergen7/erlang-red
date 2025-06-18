@@ -63,7 +63,7 @@
     node_status/5,
     ws_from/1
 ]).
--import(ered_msg_handling, [
+-import(ered_messages, [
     create_outgoing_msg/1,
     convert_to_num/1,
     to_bool/1

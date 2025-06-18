@@ -50,12 +50,9 @@
     post_completed/2
 ]).
 
--import(ered_msg_handling, [
+-import(ered_messages, [
+    get_prop/2,
     retrieve_prop_value/2
-]).
-
--import(ered_msg_handling, [
-    get_prop/2
 ]).
 
 %%

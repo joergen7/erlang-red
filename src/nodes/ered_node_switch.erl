@@ -27,7 +27,7 @@
 -import(ered_message_exchange, [
     post_completed/2
 ]).
--import(ered_msg_handling, [
+-import(ered_messages, [
     convert_to_num/1,
     get_prop/2,
     is_not_same/2,

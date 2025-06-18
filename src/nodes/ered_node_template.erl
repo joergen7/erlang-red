@@ -31,7 +31,7 @@
     this_should_not_happen/2
 ]).
 
--import(ered_msg_handling, [
+-import(ered_messages, [
     decode_json/1,
     set_prop_value/3,
     map_keys_to_lists/1

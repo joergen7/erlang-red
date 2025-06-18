@@ -26,7 +26,7 @@
     ws_from/1,
     unsupported/3
 ]).
--import(ered_msg_handling, [
+-import(ered_messages, [
     decode_json/1,
     encode_json/1,
     get_prop/2,

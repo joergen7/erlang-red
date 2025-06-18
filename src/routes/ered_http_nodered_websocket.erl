@@ -17,7 +17,7 @@
     get_websocket_name/0
 ]).
 
--import(ered_msg_handling, [
+-import(ered_messages, [
     encode_json/1
 ]).
 

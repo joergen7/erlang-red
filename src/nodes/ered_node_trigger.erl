@@ -22,7 +22,7 @@
 %%       "outputs": 1,  --> 1 or 2 --> second messages either goes out on 1 or 2
 %%
 
--import(ered_msg_handling, [
+-import(ered_messages, [
     convert_to_num/1,
     convert_units_to_milliseconds/2
 ]).

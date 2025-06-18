@@ -44,7 +44,7 @@
     post_completed/2
 ]).
 
--import(ered_msg_handling, [
+-import(ered_messages, [
     convert_to_num/1,
     to_bool/1
 ]).

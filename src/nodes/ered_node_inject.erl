@@ -22,7 +22,7 @@
 -import(ered_nodered_comm, [
     unsupported/3
 ]).
--import(ered_msg_handling, [
+-import(ered_messages, [
     convert_to_num/1,
     decode_json/1,
     get_prop/2,

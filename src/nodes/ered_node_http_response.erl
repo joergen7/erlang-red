@@ -18,7 +18,7 @@
     unsupported/3,
     ws_from/1
 ]).
--import(ered_msg_handling, [
+-import(ered_messages, [
     convert_to_num/1,
     map_keys_to_binary/1
 ]).

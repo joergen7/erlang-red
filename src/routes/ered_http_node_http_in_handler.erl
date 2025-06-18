@@ -22,7 +22,7 @@
 -import(ered_nodered_comm, [
     websocket_name_from_request/1
 ]).
--import(ered_msg_handling, [
+-import(ered_messages, [
     create_outgoing_msg/1
 ]).
 

@@ -24,7 +24,7 @@
     ws_from/1
 ]).
 
--import(ered_msg_handling, [
+-import(ered_messages, [
     to_bool/1
 ]).
 

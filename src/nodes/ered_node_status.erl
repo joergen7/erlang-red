@@ -27,7 +27,7 @@
 -import(ered_ws_event_exchange, [
     subscribe/4
 ]).
--import(ered_msg_handling, [
+-import(ered_messages, [
     create_outgoing_msg/1
 ]).
 -import(ered_nodes, [

@@ -30,7 +30,7 @@
     create_pid_for_node/2,
     get_node_name/2
 ]).
--import(ered_msg_handling, [
+-import(ered_messages, [
     decode_json/1
 ]).
 

@@ -1,4 +1,4 @@
--module(ered_msg_handling).
+-module(ered_messages).
 
 -export([
     convert_to_num/1,

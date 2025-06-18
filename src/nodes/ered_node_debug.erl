@@ -24,7 +24,7 @@
     get_prop_value_from_map/3,
     jstr/2
 ]).
--import(ered_msg_handling, [
+-import(ered_messages, [
     retrieve_prop_value/2
 ]).
 

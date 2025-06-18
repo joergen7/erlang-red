@@ -24,7 +24,7 @@
     send_msg_on/2
 ]).
 
--import(ered_msg_handling, [
+-import(ered_messages, [
     to_bool/1
 ]).
 
