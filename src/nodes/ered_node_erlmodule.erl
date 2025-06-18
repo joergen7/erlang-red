@@ -16,13 +16,10 @@
 %% This does not nothing except for install code into the BEAM.
 %%
 
--import(ered_nodes, [
-    post_exception_or_debug/3
-]).
-
 -import(ered_nodered_comm, [
     node_status/5,
-    node_status_clear/2
+    node_status_clear/2,
+    post_exception_or_debug/3
 ]).
 
 %%

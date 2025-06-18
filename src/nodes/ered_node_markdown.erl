@@ -15,8 +15,11 @@
 
 -import(ered_nodes, [
     jstr/2,
-    post_exception_or_debug/3,
     send_msg_to_connected_nodes/2
+]).
+
+-import(ered_nodered_comm, [
+    post_exception_or_debug/3
 ]).
 
 %%

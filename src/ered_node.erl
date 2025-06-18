@@ -39,7 +39,6 @@
 -import(ered_nodes, [
     add_state/2,
     bump_counter/2,
-    post_exception_or_debug/3,
     this_should_not_happen/2
 ]).
 

@@ -17,12 +17,12 @@
 
 -import(ered_nodes, [
     jstr/2,
-    post_exception_or_debug/3,
     send_msg_to_connected_nodes/2
 ]).
 -import(ered_nodered_comm, [
     debug/3,
     debug_string/2,
+    post_exception_or_debug/3,
     ws_from/1,
     unsupported/3
 ]).

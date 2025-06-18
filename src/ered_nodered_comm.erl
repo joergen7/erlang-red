@@ -16,6 +16,7 @@
     get_websocket_name/0,
     node_status_clear/2,
     node_status/5,
+    post_exception_or_debug/3,
     send_on_if_ws/2,
     send_out_debug_msg/4,
     send_out_debug_error/2,
@@ -33,6 +34,10 @@
     get_prop_value_from_map/3,
     jstr/1,
     this_should_not_happen/2
+]).
+
+-import(ered_message_exchange, [
+    post_exception/3
 ]).
 
 send_on_if_ws(none, Msg) ->
@@ -200,6 +205,19 @@ assert_failure(NodeDef, WsName, ErrMsg) ->
 
     debug(WsName, Data, error),
     node_status(WsName, NodeDef, "assert failed", "red", "dot").
+
+%%
+%% Since exceptions are either handled by a catch node or posted in the
+%% debug panel if they don't get caught.
+post_exception_or_debug(NodeDef, Msg, ErrMsg) ->
+    case post_exception(NodeDef, Msg, jstr(ErrMsg)) of
+        dealt_with ->
+            ok;
+        _ ->
+            send_out_debug_error(
+                NodeDef, maps:put(<<"error_msg">>, ErrMsg, Msg)
+            )
+    end.
 
 %%
 %%

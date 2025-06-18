@@ -21,7 +21,6 @@
 
 -import(ered_nodes, [
     jstr/2,
-    post_exception_or_debug/3,
     send_msg_on/2
 ]).
 -import(ered_message_exchange, [
@@ -34,8 +33,8 @@
     is_same/2,
     to_bool/1
 ]).
-
 -import(ered_nodered_comm, [
+    post_exception_or_debug/3,
     unsupported/3
 ]).
 %%

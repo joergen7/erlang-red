@@ -102,7 +102,10 @@
 
 -import(ered_nodes, [
     jstr/1,
-    jstr/2,
+    jstr/2
+]).
+
+-import(ered_nodered_comm, [
     post_exception_or_debug/3
 ]).
 

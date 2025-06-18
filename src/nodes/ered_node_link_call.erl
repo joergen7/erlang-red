@@ -14,7 +14,6 @@
 -import(ered_nodes, [
     generate_id/1,
     jstr/2,
-    post_exception_or_debug/3,
     send_msg_on/2,
     send_msg_on_by_pids/2,
     send_msg_to_connected_nodes/2,
@@ -24,6 +23,7 @@
     debug/3,
     debug_string/2,
     node_status/5,
+    post_exception_or_debug/3,
     unsupported/3,
     ws_from/1
 ]).

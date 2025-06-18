@@ -21,6 +21,7 @@
 ]).
 -import(ered_nodered_comm, [
     node_status/5,
+    post_exception_or_debug/3,
     ws_from/1
 ]).
 -import(ered_messages, [
@@ -28,8 +29,7 @@
     to_bool/1
 ]).
 -import(ered_nodes, [
-    jstr/1,
-    post_exception_or_debug/3
+    jstr/1
 ]).
 
 -define(STATUS(EM, CLR, SHP), node_status(WsName, NodeDef, EM, CLR, SHP)).

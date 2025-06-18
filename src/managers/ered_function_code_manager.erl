@@ -24,17 +24,17 @@
 %% because the code could exit unexpectedly by having an "exit(...)" statement
 %% or could timeout because it took too long or it could have an badarg exception
 %% because it failed something else. These conditions need to be caught here
-%% and communicated back to the original node process that start this manager.
+%% and communicated back to the original node process that started this manager.
 %%
 -import(ered_nodes, [
     jstr/1,
     jstr/2,
-    post_exception_or_debug/3,
     send_msg_on/2
 ]).
 
 -import(ered_nodered_comm, [
     node_status/5,
+    post_exception_or_debug/3,
     ws_from/1
 ]).
 

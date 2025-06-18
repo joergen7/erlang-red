@@ -16,10 +16,10 @@
     get_prop_value_from_map/3,
     jstr/1,
     jstr/2,
-    post_exception_or_debug/3,
     send_msg_to_connected_nodes/2
 ]).
 -import(ered_nodered_comm, [
+    post_exception_or_debug/3,
     unsupported/3
 ]).
 -import(ered_messages, [

@@ -14,7 +14,6 @@
 -import(ered_nodes, [
     jstr/1,
     jstr/2,
-    post_exception_or_debug/3,
     send_msg_to_connected_nodes/2,
     this_should_not_happen/2,
     unpriv/1
@@ -22,6 +21,7 @@
 -import(ered_nodered_comm, [
     debug/3,
     send_out_debug_msg/4,
+    post_exception_or_debug/3,
     ws_from/1
 ]).
 

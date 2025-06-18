@@ -20,7 +20,6 @@
     get_prop_value_from_map/3,
     jstr/1,
     jstr/2,
-    post_exception_or_debug/3,
     send_msg_on/2
 ]).
 
@@ -29,6 +28,7 @@
 ]).
 
 -import(ered_nodered_comm, [
+    post_exception_or_debug/3,
     ws_from/1
 ]).
 

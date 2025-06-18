@@ -42,13 +42,13 @@
 -import(ered_nodered_comm, [
     node_status/5,
     node_status_clear/2,
+    post_exception_or_debug/3,
     unsupported/3,
     ws_from/1
 ]).
 -import(ered_nodes, [
     get_prop_value_from_map/3,
     jstr/2,
-    post_exception_or_debug/3,
     send_msg_to_connected_nodes/2
 ]).
 -import(ered_messages, [
