@@ -130,7 +130,7 @@ create_test_for_flow_file([FileName | MoreFileNames], Acc) ->
 
         [
             ered_nodes:trigger_outgoing_messages(
-                maps:find(type, ND), maps:find(id, ND), WsName
+                maps:get(<<"type">>, ND), maps:get(<<"id">>, ND), WsName
             )
          || ND <- Ary
         ],
