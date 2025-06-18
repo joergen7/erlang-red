@@ -40,8 +40,8 @@ do_move({ok, <<"msg">>}, {ok, <<"msg">>}, {ok, FromProp}, {ok, ToProp}, Msg, _) 
         {ok, Val, _} ->
             set_prop_value(
                 ToProp,
-                delete_prop(FromProp, Msg),
-                Val
+                Val,
+                delete_prop(FromProp, Msg)
             );
         _ ->
             Msg
@@ -78,7 +78,6 @@ do_change_str({ok, Prop}, {ok, FromStr}, {ok, ToStr}, Msg) ->
         {ok, Val, _} ->
             set_prop_value(
                 Prop,
-                Msg,
                 list_to_binary(
                     lists:flatten(
                         string:replace(
@@ -88,7 +87,8 @@ do_change_str({ok, Prop}, {ok, FromStr}, {ok, ToStr}, Msg) ->
                             all
                         )
                     )
-                )
+                ),
+                Msg
             );
         _ ->
             Msg
@@ -97,23 +97,23 @@ do_change_str({ok, Prop}, {ok, FromStr}, {ok, ToStr}, Msg) ->
 %%
 %%
 do_set_value(Prop, Value, <<"num">>, Msg, _NodeDef) ->
-    set_prop_value(Prop, Msg, convert_to_num(Value));
+    set_prop_value(Prop, convert_to_num(Value), Msg);
 do_set_value(Prop, _Value, <<"date">>, Msg, _NodeDef) ->
-    set_prop_value(Prop, Msg, timestamp());
+    set_prop_value(Prop, timestamp(), Msg);
 do_set_value(Prop, Value, <<"str">>, Msg, _NodeDef) ->
-    set_prop_value(Prop, Msg, Value);
+    set_prop_value(Prop, Value, Msg);
 do_set_value(Prop, Value, <<"bool">>, Msg, _NodeDef) ->
-    set_prop_value(Prop, Msg, to_bool(Value));
+    set_prop_value(Prop, to_bool(Value), Msg);
 do_set_value(Prop, Value, <<"json">>, Msg, _NodeDef) ->
-    set_prop_value(Prop, Msg, decode_json(Value));
+    set_prop_value(Prop, decode_json(Value), Msg);
 do_set_value(Prop, Value, <<"msg">>, Msg, _NodeDef) ->
     %% set a propery on the message to the value of another
     %% property on the message
     case get_prop({ok, Value}, Msg) of
         {ok, Val, _} ->
-            set_prop_value(Prop, Msg, Val);
+            set_prop_value(Prop, Val, Msg);
         _ ->
-            set_prop_value(Prop, Msg, <<>>)
+            set_prop_value(Prop, <<>>, Msg)
     end;
 do_set_value(Prop, Value, <<"jsonata">>, Msg, NodeDef) ->
     %% "t": "set",
@@ -123,7 +123,7 @@ do_set_value(Prop, Value, <<"jsonata">>, Msg, NodeDef) ->
     %% "tot": "jsonata"
     case erlang_red_jsonata:execute(Value, Msg) of
         {ok, Result} ->
-            set_prop_value(Prop, Msg, Result);
+            set_prop_value(Prop, Result, Msg);
         {error, Error} ->
             unsupported(
                 NodeDef,

@@ -42,26 +42,26 @@ start(NodeDef, _WsName) ->
 %%
 %%
 value_for_proptype(<<"date">>, _Val, Prop, _NodeDef, Msg) ->
-    set_prop_value(Prop, Msg, timestamp());
+    set_prop_value(Prop, timestamp(), Msg);
 value_for_proptype(<<"json">>, Val, Prop, _NodeDef, Msg) ->
-    set_prop_value(Prop, Msg, decode_json(Val));
+    set_prop_value(Prop, decode_json(Val), Msg);
 value_for_proptype(<<"str">>, Val, Prop, _NodeDef, Msg) ->
-    set_prop_value(Prop, Msg, Val);
+    set_prop_value(Prop, Val, Msg);
 value_for_proptype(<<"num">>, Val, Prop, _NodeDef, Msg) ->
-    set_prop_value(Prop, Msg, convert_to_num(Val));
+    set_prop_value(Prop, convert_to_num(Val), Msg);
 value_for_proptype(<<"bool">>, Val, Prop, _NodeDef, Msg) ->
-    set_prop_value(Prop, Msg, to_bool(Val));
+    set_prop_value(Prop, to_bool(Val), Msg);
 value_for_proptype(<<"msg">>, Val, Prop, _NodeDef, Msg) ->
     case get_prop({ok, Val}, Msg) of
         {ok, Value, _} ->
-            set_prop_value(Prop, Msg, Value);
+            set_prop_value(Prop, Value, Msg);
         _ ->
-            set_prop_value(Prop, Msg, <<>>)
+            set_prop_value(Prop, <<>>, Msg)
     end;
 value_for_proptype(<<"jsonata">>, Val, Prop, NodeDef, Msg) ->
     case erlang_red_jsonata:execute(Val, Msg) of
         {ok, Result} ->
-            set_prop_value(Prop, Msg, Result);
+            set_prop_value(Prop, Result, Msg);
         {error, Error} ->
             unsupported(
                 NodeDef,

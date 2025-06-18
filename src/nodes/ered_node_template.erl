@@ -38,15 +38,15 @@
 ]).
 
 doit(Prop, <<"msg">>, Template, <<"plain">>, <<"str">>, Msg) ->
-    {ok, set_prop_value(Prop, Msg, Template)};
+    {ok, set_prop_value(Prop, Template, Msg)};
 doit(Prop, <<"msg">>, Template, <<"mustache">>, <<"str">>, Msg) ->
     MustachedRendered = bbmustache:render(Template, map_keys_to_lists(Msg)),
-    {ok, set_prop_value(Prop, Msg, MustachedRendered)};
+    {ok, set_prop_value(Prop, MustachedRendered, Msg)};
 doit(Prop, <<"msg">>, Template, <<"plain">>, <<"json">>, Msg) ->
-    {ok, set_prop_value(Prop, Msg, decode_json(Template))};
+    {ok, set_prop_value(Prop, decode_json(Template), Msg)};
 doit(Prop, <<"msg">>, Template, <<"mustache">>, <<"json">>, Msg) ->
     MustachedRendered = bbmustache:render(Template, map_keys_to_lists(Msg)),
-    {ok, set_prop_value(Prop, Msg, decode_json(MustachedRendered))};
+    {ok, set_prop_value(Prop, decode_json(MustachedRendered), Msg)};
 doit(_, _, _, _, _, _) ->
     unsupported.
 
@@ -83,7 +83,7 @@ handle_incoming(NodeDef, Msg) ->
             %% be an error but not supporting formatting is kind of ...
             %% an error really but since I don't raise an error here, set
             %% the content in the msg.
-            Msg2 = set_prop_value(Prop, Msg, Template),
+            Msg2 = set_prop_value(Prop, Template, Msg),
 
             send_msg_to_connected_nodes(NodeDef, Msg2),
             {NodeDef, Msg2}

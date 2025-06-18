@@ -78,7 +78,7 @@ handle_msg({incoming, Msg}, NodeDef) ->
             try
                 case action_to_content(Val, Action, Pretty) of
                     {ok, Response} ->
-                        Msg2 = set_prop_value(Prop, Msg, Response),
+                        Msg2 = set_prop_value(Prop, Response, Msg),
                         send_msg_to_connected_nodes(NodeDef, Msg2),
                         {handled, NodeDef, Msg2};
                     unsupported ->

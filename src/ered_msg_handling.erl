@@ -179,9 +179,9 @@ retrieve_prop_value(PropName, Msg) ->
 
 %% Set a value in a nested map. This supports using nesting parameters to
 %% set a value somewhere in a map.
--spec set_prop_value(PropName :: string(), Msg :: map(), Value :: any()) ->
+-spec set_prop_value(PropName :: string(), Value :: any(), Msg :: map()) ->
     map().
-set_prop_value(PropName, Msg, Value) ->
+set_prop_value(PropName, Value, Msg) ->
     case erl_attributeparser:attrbutes_to_array(PropName) of
         {ok, KeyNames} ->
             %% silently ignore any key that isn't available
