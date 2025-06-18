@@ -1,6 +1,8 @@
 Development Strategy - Flow Driven Development
 ---
 
+**NOTE** Code examples in this document may be outdated, refer to the current codebase for corrections.
+
 Node-RED being a flow based visual programming environment, there is no escaping the need to have flows to test functionality. Test flows provide a development guide to what needs implementation, what is broken and what was broken by new code.
 
 But creating flows by using a text editor would be error prone and, in a word, insane! There is only one possibility: use the Node-RED flow editor to create and test flows - visually.
@@ -9,9 +11,9 @@ What I describe here is how to create flows, how to test them from within the No
 
 *Terminology*
 
-Node-RED consists of two parts: 
+Node-RED consists of two parts:
 
-- the flow editor that runs in the browser (jQuery + Javascript), and 
+- the flow editor that runs in the browser (jQuery + Javascript), and
 - the backend which executes flows (NodeJS).
 
 The flow editor communicates with backend via a set of [API calls](https://flowhub.org/f/15cc9fb0e94d56cd). To make the flow editor work with a different backend, these API calls need to be emulated. That is what this [cowboy code](src/http) does. Note: *cowboy* is the name of the Erlang [web framework](https://ninenines.eu/docs/en/cowboy/2.13/guide/), not the style of coding!
@@ -185,7 +187,7 @@ Also the [NodeJS](https://github.com/node-red/node-red/tree/master/packages/node
 
 ***Step 3: Creating test flows***
 
-The flow editor included here has been extended to include easy test case creation. I did this to simplify my development process and because I wanted to avoid browser-terminal-browser-terminal-browser... context switching. 
+The flow editor included here has been extended to include easy test case creation. I did this to simplify my development process and because I wanted to avoid browser-terminal-browser-terminal-browser... context switching.
 
 To do this, I added a "Create Test Case" button on the export panel from above:
 
@@ -256,7 +258,7 @@ src
  |---> erlang-red.erl # the main starter
 test
  |---> flow_file_test.erl # eunit test that runs all flow test cases
-``` 
+```
 
 Each node implements "a kind of behaviour" (I haven't codified this):
 
@@ -278,7 +280,7 @@ to_binary_if_not_binary(Obj) ->
     Obj.
 
 %% if tostatus is sent, send a status update to the flow
-%% editor. this message is then shown underneath the 
+%% editor. this message is then shown underneath the
 %% corresponding debug node.
 handle_status_setting({ok,true},{ok,<<"counter">>},NodeDef,_Msg) ->
     Cnt = nodes:get_prop_value_from_map('_mc_incoming',NodeDef),
@@ -336,4 +338,3 @@ Also I haven't implemented any error handling for crashes, i.e., I don't use the
 ---
 
 That's my development process at the moment, from flow.json to Erlang code in five easy steps! :)
-
