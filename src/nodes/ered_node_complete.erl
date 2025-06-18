@@ -47,7 +47,7 @@ start(NodeDef, _WsName) ->
 %% nodes), we mark the messages we handle and ignore those that come
 %% back to us - like a bad boomarang ready to hit us in the head.
 mark_msg(NodeDef, Msg) ->
-    {ok, ThisId} = maps:find(id, NodeDef),
+    {ok, ThisId} = maps:find(<<"id">>, NodeDef),
 
     case maps:find('_complete_list', Msg) of
         {ok, Ary} ->
@@ -72,8 +72,8 @@ handle_event(_, NodeDef) ->
 %%
 %%
 handle_completed_msg(NodeDef, FromDef, Msg) ->
-    {ok, FromId} = maps:find(id, FromDef),
-    {ok, Scope} = maps:find(scope, NodeDef),
+    {ok, FromId} = maps:find(<<"id">>, FromDef),
+    {ok, Scope} = maps:find(<<"scope">>, NodeDef),
 
     case lists:member(FromId, Scope) of
         true ->

@@ -33,7 +33,9 @@ start(NodeDef, _WsName) ->
 %%
 %%
 handle_event({stop, _WsName}, NodeDef) ->
-    ered_erlmodule_exchange:remove_module_for_nodeid(maps:get(id, NodeDef)),
+    ered_erlmodule_exchange:remove_module_for_nodeid(
+        maps:get(<<"id">>, NodeDef)
+    ),
     NodeDef;
 handle_event(_, NodeDef) ->
     NodeDef.
@@ -46,8 +48,8 @@ handle_msg(_, NodeDef) ->
 %%
 %%
 install(NodeDef, WsName) ->
-    ModuleName = binary_to_atom(maps:get(module_name, NodeDef)),
-    ModuleCode = maps:get(code, NodeDef),
+    ModuleName = binary_to_atom(maps:get(<<"module_name">>, NodeDef)),
+    ModuleCode = maps:get(<<"code">>, NodeDef),
 
     FileName = binary_to_list(
         list_to_binary(
@@ -60,11 +62,11 @@ install(NodeDef, WsName) ->
     case compile:file(FileName, [binary, return_errors, return_warnings]) of
         {ok, ModuleName, Binary, _} ->
             node_status(WsName, NodeDef, "installed", "green", "dot"),
-            NodeId = #{id => maps:get(id, NodeDef)},
+            NodeId = #{<<"id">> => maps:get(<<"id">>, NodeDef)},
             spawn(fun() -> clear_status_after_one_sec(WsName, NodeId) end),
             {module, ModuleName} = code:load_binary(ModuleName, [], Binary),
             ered_erlmodule_exchange:add_module(
-                maps:get(id, NodeDef),
+                maps:get(<<"id">>, NodeDef),
                 ModuleName
             );
         {error, ErrorList, WarnList} ->

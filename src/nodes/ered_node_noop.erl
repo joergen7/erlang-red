@@ -1,5 +1,7 @@
 -module(ered_node_noop).
 
+-include("ered_nodes.hrl").
+
 -behaviour(ered_node).
 
 -export([start/2]).
@@ -26,25 +28,9 @@
 %%
 %%
 start(NodeDef, WsName) ->
-    {ok, TypeStr} = maps:find(type, NodeDef),
+    {ok, TypeStr} = maps:find(<<"type">>, NodeDef),
     debug(WsName, create_data_for_debug(NodeDef, TypeStr), warning),
     ered_node:start(NodeDef, ?MODULE).
-
-%% erlfmt:ignore equals and arrows should line up here.
-create_data_for_debug(NodeDef,TypeStr) ->
-    IdStr   = get_prop_value_from_map(id,   NodeDef),
-    ZStr    = get_prop_value_from_map(z,    NodeDef),
-    NameStr = get_prop_value_from_map(name, NodeDef, TypeStr),
-
-    #{
-       id       => IdStr,
-       z        => ZStr,
-       path     => ZStr,
-       name     => NameStr,
-       topic    => <<"">>,
-       msg      => jstr("node type '~s' is not implemented", [TypeStr]),
-       format   => <<"string">>
-    }.
 
 %%
 %%
@@ -53,9 +39,8 @@ handle_event(_, NodeDef) ->
 
 %%
 %%
-handle_incoming(NodeDef, Msg) ->
-    {ok, IdStr} = maps:find(id, NodeDef),
-    {ok, TypeStr} = maps:find(type, NodeDef),
+handle_msg({incoming, Msg}, NodeDef) ->
+    {IdStr, TypeStr} = ?NODE_ID_AND_TYPE(NodeDef),
 
     %%
     %% This output is for eunit testing. This does in fact does end
@@ -78,13 +63,12 @@ handle_incoming(NodeDef, Msg) ->
     %% again for node red, show a status value for the corresponding node.
     node_status(ws_from(Msg), NodeDef, "type not implemented", "grey", "dot"),
 
-    {handled, NodeDef, Msg}.
+    {handled, NodeDef, Msg};
 
 %%
 %%
-handle_outgoing(NodeDef, Msg) ->
-    {ok, IdStr} = maps:find(id, NodeDef),
-    {ok, TypeStr} = maps:find(type, NodeDef),
+handle_msg({outgoing, Msg}, NodeDef) ->
+    {IdStr, TypeStr} = ?NODE_ID_AND_TYPE(NodeDef),
 
     %%
     %% This output is for eunit testing. This does in fact does end
@@ -107,13 +91,21 @@ handle_outgoing(NodeDef, Msg) ->
     %% again for node red, show a status value for the corresponding node.
     node_status(ws_from(Msg), NodeDef, "type not implemented", "grey", "dot"),
 
-    {handled, NodeDef, Msg}.
+    {handled, NodeDef, Msg};
 
 %%
 %%
-handle_msg({incoming, Msg}, NodeDef) ->
-    handle_incoming(NodeDef, Msg);
-handle_msg({outgoing, Msg}, NodeDef) ->
-    handle_outgoing(NodeDef, Msg);
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
+
+
+%%
+%% erlfmt:ignore equals and arrows should line up here.
+create_data_for_debug(NodeDef, TypeStr) ->
+    D = ?BASE_DATA,
+
+    D#{
+       <<"topic">>  => <<"">>,
+       <<"msg">>    => jstr("node type '~s' is not implemented", [TypeStr]),
+       <<"format">> => <<"string">>
+    }.

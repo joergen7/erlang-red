@@ -38,7 +38,7 @@ start(NodeDef, _WsName) ->
 %%
 %%
 handle_event({registered, WsName, Pid}, NodeDef) ->
-    case maps:find(scope, NodeDef) of
+    case maps:find(<<"scope">>, NodeDef) of
         {ok, null} ->
             subscribe_to_exception_entire_flow(NodeDef, WsName, Pid);
         {ok, NodeIds} ->
@@ -55,25 +55,24 @@ handle_event(_, NodeDef) ->
 
 %%
 %%
-handle_exception(NodeDef, FromDef, Msg, ErrMsg) ->
+% erlfmt:ignore - alignment
+handle_msg({exception, FromDef, Msg, ErrMsg}, NodeDef) ->
     ErrObj = #{
-        message => ErrMsg,
-        source => #{
-            id => get_prop_value_from_map(id, FromDef),
-            type => get_prop_value_from_map(type, FromDef),
-            name => jstr(get_prop_value_from_map(name, FromDef)),
-            count => get_prop_value_from_map('_mc_exception', NodeDef)
-        },
-        stack => ErrMsg
+        <<"message">> => ErrMsg,
+        <<"stack">>   => ErrMsg,
+        <<"source">>  => #{
+            <<"id">>    => get_prop_value_from_map(<<"id">>,        FromDef),
+            <<"type">>  => get_prop_value_from_map(<<"type">>,      FromDef),
+            <<"name">>  => jstr(get_prop_value_from_map(<<"name">>, FromDef)),
+            <<"count">> => maps:get('_mc_exception', NodeDef, 1)
+        }
     },
-    Msg2 = maps:put(error, ErrObj, Msg),
+
+    Msg2 = maps:put(<<"error">>, ErrObj, Msg),
     send_msg_to_connected_nodes(NodeDef, Msg2),
-    {NodeDef, Msg2}.
+    {handled, NodeDef, Msg2};
 
 %%
 %%
-handle_msg({exception, From, Msg, ErrMsg}, NodeDef) ->
-    {NodeDef2, Msg2} = handle_exception(NodeDef, From, Msg, ErrMsg),
-    {handled, NodeDef2, Msg2};
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.

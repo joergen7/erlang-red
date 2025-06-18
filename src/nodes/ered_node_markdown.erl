@@ -32,12 +32,12 @@ handle_event(_, NodeDef) ->
 %%
 %%
 handle_msg({incoming, Msg}, NodeDef) ->
-    Bcontent = ensure_binary(maps:get(payload, Msg)),
+    Bcontent = ensure_binary(maps:get(<<"payload">>, Msg)),
 
     try
         case 'Elixir.ErlangRedHelpers':markdown_to_html(Bcontent) of
             {ok, HtmlC, _} ->
-                Msg2 = maps:put(payload, HtmlC, Msg),
+                Msg2 = maps:put(<<"payload">>, HtmlC, Msg),
                 send_msg_to_connected_nodes(NodeDef, Msg2),
                 {handled, NodeDef, Msg2};
             Error ->

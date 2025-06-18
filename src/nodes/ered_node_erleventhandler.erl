@@ -35,7 +35,7 @@ start(NodeDef, WsName) ->
 %%
 handle_event({registered, WsName, _MyPid}, NodeDef) ->
     {ok, {Pid, _Ref}} = gen_event:start_monitor(),
-    case add_handlers(Pid, maps:find(handlers, NodeDef)) of
+    case add_handlers(Pid, maps:find(<<"handlers">>, NodeDef)) of
         ok ->
             node_status(WsName, NodeDef, "started", "green", "dot");
         {error, ErrorList} ->
@@ -58,27 +58,27 @@ handle_event(_, NodeDef) ->
 %%
 handle_msg({incoming, Msg}, NodeDef) ->
     EventHandlerPid = maps:get('_eventh_pid', NodeDef),
-    case maps:find(action, Msg) of
+    case maps:find(<<"action">>, Msg) of
         {ok, <<"add_handler">>} ->
             R = gen_event:add_handler(
                 EventHandlerPid,
-                binary_to_atom(maps:get(payload, Msg)),
+                binary_to_atom(maps:get(<<"payload">>, Msg)),
                 []
             ),
-            Msg2 = Msg#{payload => R},
+            Msg2 = Msg#{<<"payload">> => R},
             send_msg_to_connected_nodes(NodeDef, Msg2);
         {ok, <<"delete_handler">>} ->
             R = gen_event:delete_handler(
                 EventHandlerPid,
-                binary_to_atom(maps:get(payload, Msg)),
+                binary_to_atom(maps:get(<<"payload">>, Msg)),
                 []
             ),
-            Msg2 = Msg#{payload => R},
+            Msg2 = Msg#{<<"payload">> => R},
             send_msg_to_connected_nodes(NodeDef, Msg2);
         _ ->
             %% debatable - use 'payload' as event name or use a separate
             %% attribute is being done now. I guess my preference is clear.
-            case maps:find(event, Msg) of
+            case maps:find(<<"event">>, Msg) of
                 {ok, EventName} ->
                     gen_event:notify(
                         EventHandlerPid, {EventName, Msg, NodeDef}
@@ -109,7 +109,7 @@ add_handlers(_EventHandlerPid, {ok, []}, ErrorList) ->
     % empty handler list and empty error list, all done
     {error, ErrorList};
 add_handlers(EventHandlerPid, {ok, [Hndlr | MoreHndlrs]}, ErrorList) ->
-    NodeId = maps:get(nodeid, Hndlr),
+    NodeId = maps:get(<<"nodeid">>, Hndlr),
 
     case ered_erlmodule_exchange:find_module(NodeId) of
         not_found ->

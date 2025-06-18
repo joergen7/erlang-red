@@ -54,7 +54,7 @@ start(NodeDef, _WsName) ->
 %%
 %% this must return a millisecond value.
 compute_pause({ok, <<"delay">>}, NodeDef, Msg) ->
-    ConversionResult = ?TO_MILLIS(timeout, timeoutUnits),
+    ConversionResult = ?TO_MILLIS(<<"timeout">>, <<"timeoutUnits">>),
     case ConversionResult of
         {ok, V} ->
             V;
@@ -63,7 +63,7 @@ compute_pause({ok, <<"delay">>}, NodeDef, Msg) ->
             0
     end;
 compute_pause({ok, <<"delayv">>}, NodeDef, Msg) ->
-    case maps:find(delay, Msg) of
+    case maps:find(<<"delay">>, Msg) of
         {ok, V} ->
             %% msg.delay is assumed to be milliseconds --> RTFM.
             convert_to_num(V);
@@ -72,8 +72,8 @@ compute_pause({ok, <<"delayv">>}, NodeDef, Msg) ->
             compute_pause({ok, <<"delay">>}, NodeDef, Msg)
     end;
 compute_pause({ok, <<"random">>}, NodeDef, Msg) ->
-    Val1 = ?TO_MILLIS(randomFirst, randomUnits),
-    Val2 = ?TO_MILLIS(randomLast, randomUnits),
+    Val1 = ?TO_MILLIS(<<"randomFirst">>, <<"randomUnits">>),
+    Val2 = ?TO_MILLIS(<<"randomLast">>, <<"randomUnits">>),
 
     case {Val1, Val2} of
         {{ok, V1}, {ok, V2}} ->
@@ -105,7 +105,7 @@ handle_msg({delay_push_out, Msg}, NodeDef) ->
     {handled, maps:put('_delay_counter', DelayCnt, NodeDef), Msg};
 handle_msg({incoming, Msg}, NodeDef) ->
     DelayCnt = maps:get('_delay_counter', NodeDef) + 1,
-    PauseFor = compute_pause(maps:find(pauseType, NodeDef), NodeDef, Msg),
+    PauseFor = compute_pause(maps:find(<<"pauseType">>, NodeDef), NodeDef, Msg),
     NodePid = self(),
     spawn(fun() -> delay_sending(Msg, PauseFor, NodePid) end),
     ?CNTSTATUS(integer_to_binary(DelayCnt)),

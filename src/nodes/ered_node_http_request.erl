@@ -41,46 +41,51 @@ handle_event(_, NodeDef) ->
 %%
 %%
 handle_msg({incoming, Msg}, NodeDef) ->
-    case {maps:find(headers, NodeDef), maps:find(headers, Msg)} of
+    case {maps:find(<<"headers">>, NodeDef), maps:find(<<"headers">>, Msg)} of
         {{ok, []}, {ok, []}} ->
             no_headers_set;
         {{ok, []}, error} ->
             no_headers_set;
         {{ok, []}, {ok, [_ | _]}} ->
-            unsupported(NodeDef, Msg, "message: headers unsupported");
+            unsupported(NodeDef, Msg,
+                        jstr("message: headers unsupported"));
         {{ok, [_ | _]}, {ok, []}} ->
-            unsupported(NodeDef, Msg, "node definition: headers unsupported");
+            unsupported(NodeDef, Msg,
+                        jstr("node definition: headers unsupported"));
         {{ok, [_ | _]}, error} ->
-            unsupported(NodeDef, Msg, "node definition: headers unsupported");
+            unsupported(NodeDef, Msg,
+                        jstr("node definition: headers unsupported"));
         {{ok, [_ | _]}, {ok, [_ | _]}} ->
-            unsupported(NodeDef, Msg, "node definition: headers unsupported"),
-            unsupported(NodeDef, Msg, "message: headers unsupported")
+            unsupported(NodeDef, Msg,
+                        jstr("node definition: headers unsupported")),
+            unsupported(NodeDef, Msg,
+                        jstr("message: headers unsupported"))
     end,
 
-    Url = get_prop_from_nodedef_or_msg(url, NodeDef, Msg),
+    Url = get_prop_from_nodedef_or_msg(<<"url">>, NodeDef, Msg),
     Method =
-        case maps:get(method, NodeDef) of
+        case maps:get(<<"method">>, NodeDef) of
             <<"use">> ->
-                get_prop_value_from_map(method, Msg);
+                get_prop_value_from_map(<<"method">>, Msg);
             _ ->
-                get_prop_from_nodedef_or_msg(method, NodeDef, Msg)
+                get_prop_from_nodedef_or_msg(<<"method">>, NodeDef, Msg)
         end,
 
     case {Method, Url} of
         {[], []} ->
-            post_exception_or_debug(NodeDef, Msg, "url and method not set"),
+            post_exception_or_debug(NodeDef, Msg, <<"url and method not set">>),
             {handled, NodeDef, Msg};
         {[], _} ->
-            post_exception_or_debug(NodeDef, Msg, "method not set"),
+            post_exception_or_debug(NodeDef, Msg, <<"method not set">>),
             {handled, NodeDef, Msg};
         {_, []} ->
-            post_exception_or_debug(NodeDef, Msg, "url not set"),
+            post_exception_or_debug(NodeDef, Msg, <<"url not set">>),
             {handled, NodeDef, Msg};
         _ ->
             case perform_request(Method, Url, NodeDef, Msg) of
                 {ok, {{_, StatusCode, _ReasonPhrase}, _, Body}} ->
-                    Msg2 = maps:put(statusCode, StatusCode, Msg),
-                    Msg3 = maps:put(payload, jstr(Body), Msg2),
+                    Msg2 = maps:put(<<"statusCode">>, StatusCode, Msg),
+                    Msg3 = maps:put(<<"payload">>, jstr(Body), Msg2),
                     send_msg_to_connected_nodes(NodeDef, Msg3),
                     {handled, NodeDef, Msg3};
                 {error, Reason} ->
@@ -112,7 +117,7 @@ get_prop_from_nodedef_or_msg(PropName, NodeDef, Msg) ->
     end.
 
 perform_request(Method = <<"POST">>, Url, _NodeDef, Msg) ->
-    case maps:find(payload, Msg) of
+    case maps:find(<<"payload">>, Msg) of
         {ok, Payload} ->
             httpc:request(
                 mth_to_atom(Method),
@@ -137,7 +142,7 @@ perform_request(Method = <<"POST">>, Url, _NodeDef, Msg) ->
             )
     end;
 perform_request(Method = <<"GET">>, Url, NodeDef, Msg) ->
-    case maps:find(paytoqs, NodeDef) of
+    case maps:find(<<"paytoqs">>, NodeDef) of
         {ok, <<"ignore">>} ->
             httpc:request(
                 mth_to_atom(Method),
@@ -152,5 +157,5 @@ perform_request(Method = <<"GET">>, Url, NodeDef, Msg) ->
             post_exception_or_debug(NodeDef, Msg, ErrMsg)
     end;
 perform_request(_Method, _Url, NodeDef, Msg) ->
-    unsupported(NodeDef, Msg, "unsuported method"),
+    unsupported(NodeDef, Msg, jstr("unsuported method")),
     {error, unsupported_method}.

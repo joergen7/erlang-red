@@ -36,12 +36,12 @@ start(NodeDef, _WsName) ->
     ered_node:start(NodeDef, ?MODULE).
 
 do_move({ok, <<"msg">>}, {ok, <<"msg">>}, {ok, FromProp}, {ok, ToProp}, Msg, _) ->
-    case maps:find(binary_to_atom(FromProp), Msg) of
-        {ok, Val} ->
-            maps:put(
-                binary_to_atom(ToProp),
-                Val,
-                maps:remove(binary_to_atom(FromProp), Msg)
+    case get_prop({ok, FromProp}, Msg) of
+        {ok, Val, _} ->
+            set_prop_value(
+                ToProp,
+                delete_prop(FromProp, Msg),
+                Val
             );
         _ ->
             Msg
@@ -58,9 +58,9 @@ do_move(A, B, C, D, Msg, NodeDef) ->
 %% first type check ...
 do_change({ok, <<"msg">>}, {ok, <<"str">>}, {ok, <<"str">>}, Rule, Msg, _) ->
     do_change_str(
-        maps:find(p, Rule),
-        maps:find(from, Rule),
-        maps:find(to, Rule),
+        maps:find(<<"p">>, Rule),
+        maps:find(<<"from">>, Rule),
+        maps:find(<<"to">>, Rule),
         Msg
     );
 do_change(A, B, C, _, Msg, NodeDef) ->
@@ -74,10 +74,11 @@ do_change(A, B, C, _, Msg, NodeDef) ->
 %%
 %%
 do_change_str({ok, Prop}, {ok, FromStr}, {ok, ToStr}, Msg) ->
-    case maps:find(binary_to_atom(Prop), Msg) of
-        {ok, Val} ->
-            maps:put(
-                binary_to_atom(Prop),
+    case get_prop({ok, Prop}, Msg) of
+        {ok, Val, _} ->
+            set_prop_value(
+                Prop,
+                Msg,
                 list_to_binary(
                     lists:flatten(
                         string:replace(
@@ -87,8 +88,7 @@ do_change_str({ok, Prop}, {ok, FromStr}, {ok, ToStr}, Msg) ->
                             all
                         )
                     )
-                ),
-                Msg
+                )
             );
         _ ->
             Msg
@@ -144,7 +144,7 @@ do_set_value(_, _, Tot, Msg, NodeDef) ->
 handle_rules([], Msg, _NodeDef) ->
     Msg;
 handle_rules([Rule | MoreRules], Msg, NodeDef) ->
-    {ok, RuleType} = maps:find(t, Rule),
+    {ok, RuleType} = maps:find(<<"t">>, Rule),
     handle_rules(
         MoreRules,
         handle_rule(RuleType, Rule, Msg, NodeDef),
@@ -156,11 +156,11 @@ handle_rule(<<"set">>, Rule, Msg, NodeDef) ->
     %% pt can be many things (flow,global,...) we only support
     %% msg - at least until this comment gets removed.
     %%
-    case maps:find(pt, Rule) of
+    case maps:find(<<"pt">>, Rule) of
         {ok, <<"msg">>} ->
-            {ok, Prop} = maps:find(p, Rule),
-            {ok, Value} = maps:find(to, Rule),
-            {ok, ToType} = maps:find(tot, Rule),
+            {ok, Prop} = maps:find(<<"p">>, Rule),
+            {ok, Value} = maps:find(<<"to">>, Rule),
+            {ok, ToType} = maps:find(<<"tot">>, Rule),
             do_set_value(Prop, Value, ToType, Msg, NodeDef);
         PropType ->
             unsupported(
@@ -171,9 +171,9 @@ handle_rule(<<"set">>, Rule, Msg, NodeDef) ->
             Msg
     end;
 handle_rule(<<"delete">>, Rule, Msg, NodeDef) ->
-    case maps:find(pt, Rule) of
+    case maps:find(<<"pt">>, Rule) of
         {ok, <<"msg">>} ->
-            delete_prop(maps:find(p, Rule), Msg);
+            delete_prop(maps:find(<<"p">>, Rule), Msg);
         PropType ->
             unsupported(
                 NodeDef,
@@ -184,18 +184,18 @@ handle_rule(<<"delete">>, Rule, Msg, NodeDef) ->
     end;
 handle_rule(<<"move">>, Rule, Msg, NodeDef) ->
     do_move(
-        maps:find(pt, Rule),
-        maps:find(tot, Rule),
-        maps:find(p, Rule),
-        maps:find(to, Rule),
+        maps:find(<<"pt">>, Rule),
+        maps:find(<<"tot">>, Rule),
+        maps:find(<<"p">>, Rule),
+        maps:find(<<"to">>, Rule),
         Msg,
         NodeDef
     );
 handle_rule(<<"change">>, Rule, Msg, NodeDef) ->
     do_change(
-        maps:find(pt, Rule),
-        maps:find(fromt, Rule),
-        maps:find(tot, Rule),
+        maps:find(<<"pt">>, Rule),
+        maps:find(<<"fromt">>, Rule),
+        maps:find(<<"tot">>, Rule),
         Rule,
         Msg,
         NodeDef
@@ -212,7 +212,7 @@ handle_event(_, NodeDef) ->
 %%
 %%
 handle_msg({incoming, Msg}, NodeDef) ->
-    {ok, Rules} = maps:find(rules, NodeDef),
+    {ok, Rules} = maps:find(<<"rules">>, NodeDef),
     try
         Msg2 = handle_rules(Rules, Msg, NodeDef),
         send_msg_to_connected_nodes(NodeDef, Msg2),

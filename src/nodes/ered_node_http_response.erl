@@ -39,9 +39,11 @@ handle_event(_, NodeDef) ->
 handle_msg({incoming, Msg}, NodeDef) ->
     StatusCode = retrieve_status_code(NodeDef, Msg),
     Headers = retrieve_headers(NodeDef, Msg),
-    {ok, ReqPid} = maps:find(reqpid, Msg),
+    {ok, ReqPid} = maps:find(<<"reqpid">>, Msg),
 
-    ReqPid ! {reply, StatusCode, Headers, ws_from(Msg), maps:get(payload, Msg)},
+    ReqPid !
+        {reply, StatusCode, Headers, ws_from(Msg),
+            maps:get(<<"payload">>, Msg)},
 
     {handled, NodeDef, Msg};
 handle_msg(_, NodeDef) ->
@@ -51,7 +53,8 @@ handle_msg(_, NodeDef) ->
 %% Retrieve statusCode either from Msg or from NodeDef, NodeDef has preference.
 %% erlfmt:ignore alignment
 retrieve_status_code(NodeDef, Msg) ->
-    case {maps:find(statusCode, Msg), maps:find(statusCode, NodeDef)} of
+    case {maps:find(<<"statusCode">>, Msg),
+          maps:find(<<"statusCode">>, NodeDef)} of
         {{ok, MsgSC}, {ok, <<>>}} -> convert_to_num(MsgSC);
         {{ok, _},     {ok, NdSC}} -> convert_to_num(NdSC);
         {{ok, MsgSC}, _}          -> convert_to_num(MsgSC);
@@ -64,7 +67,8 @@ retrieve_status_code(NodeDef, Msg) ->
 %% Retrieve headers from either the NodeDef or Msg, NodeDef has preference.
 %% erlfmt:ignore alignment
 retrieve_headers(NodeDef, Msg) ->
-    Hdrs = case {maps:find(headers, Msg), maps:find(headers, NodeDef)} of
+    Hdrs = case {maps:find(<<"headers">>, Msg),
+                 maps:find(<<"headers">>, NodeDef)} of
                {{ok, MsgHdrs}, {ok, #{}}}    -> MsgHdrs;
                {{ok, _},       {ok, NdHdrs}} -> NdHdrs;
                {_,             {ok, NdHdrs}} -> NdHdrs;

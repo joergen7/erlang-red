@@ -46,7 +46,9 @@ handle_msg({incoming, Msg}, NodeDef) ->
     % If no flowid is configured, take it from the Msg, if there is none
     % there also, then silently ignore the message.
     FlowId = get_prop_value_from_map(
-        flowid, NodeDef, get_prop_value_from_map(flowid, Msg, undefined)
+        <<"flowid">>,
+        NodeDef,
+        get_prop_value_from_map(<<"flowid">>, Msg, undefined)
     ),
 
     case FlowId of
@@ -63,13 +65,13 @@ handle_msg({incoming, Msg}, NodeDef) ->
                 {ok, FileData} ->
                     % node has two ports, therefore wires is
                     %   [ [WiresPort1], [WiresPort2] ]
-                    [WiresPort1 | _] = maps:get(wires, NodeDef),
+                    [WiresPort1 | _] = maps:get(<<"wires">>, NodeDef),
 
-                    Msg2 = maps:put(payload, FileData, Msg),
+                    Msg2 = maps:put(<<"payload">>, FileData, Msg),
                     send_msg_on(WiresPort1, Msg2),
 
                     % should we install the flow?
-                    case to_bool(maps:get(install_flow, Msg, false)) of
+                    case to_bool(maps:get(<<"install_flow">>, Msg, false)) of
                         true ->
                             Ary = ered_flows:parse_flow_file(FileName),
                             ered_nodes:create_pid_for_node(Ary, ws_from(Msg));

@@ -50,6 +50,14 @@
     post_completed/2
 ]).
 
+-import(ered_msg_handling, [
+    retrieve_prop_value/2
+]).
+
+-import(ered_msg_handling, [
+    get_prop/2
+]).
+
 %%
 %%
 start(NodeDef, _WsName) ->
@@ -80,11 +88,11 @@ route_and_handle_val(Val, NodeDef, Msg) ->
 generate_array_part(Cnt,TotalCnt) ->
     %% index starts from zero so the last element will have Cnt == TotalCnt-1
     #{
-      id    => generate_id(),
-      type  => <<"array">>, %% TODO figure out what this means
-      len   => 1,           %% TODO figure out what this means
-      count => TotalCnt,
-      index => Cnt
+      <<"id">>    => generate_id(),
+      <<"type">>  => <<"array">>, %% TODO figure out what this means
+      <<"len">>   => 1,           %% TODO figure out what this means
+      <<"count">> => TotalCnt,
+      <<"index">> => Cnt
      }.
 
 %%
@@ -103,8 +111,8 @@ split_array([], _Cnt, _TotalLength, NodeDef, Msg) ->
     post_completed(NodeDef, Msg);
 split_array([Val | MoreVals], Cnt, TotalCnt, NodeDef, Msg) ->
     Msg2 = maps:put('_msgid', generate_id(), Msg),
-    Msg3 = maps:put(payload, Val, Msg2),
-    Msg4 = maps:put(parts, generate_array_part(Cnt, TotalCnt), Msg3),
+    Msg3 = maps:put(<<"payload">>, Val, Msg2),
+    Msg4 = maps:put(<<"parts">>, generate_array_part(Cnt, TotalCnt), Msg3),
 
     send_msg_to_connected_nodes(NodeDef, Msg4),
 
@@ -124,12 +132,10 @@ handle_event(_, NodeDef) ->
 %%
 %%
 handle_incoming(NodeDef, Msg) ->
-    {ok, Prop} = maps:find(property, NodeDef),
-
-    case maps:find(binary_to_atom(Prop), Msg) of
-        {ok, Val} ->
+    case get_prop(maps:find(<<"property">>, NodeDef), Msg) of
+        {ok, Val, _} ->
             route_and_handle_val(Val, NodeDef, Msg);
-        _ ->
+        {undefined, Prop} ->
             ErrMsg = jstr(
                 "Unable to find property value: ~p in ~p",
                 [Prop, Msg]

@@ -118,7 +118,7 @@ handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
                                 gen_server:call(
                                     MqttMgrPid,
                                     {subscribe, #{}, [
-                                        {maps:get(topic, NodeDef), [
+                                        {maps:get(<<"topic">>, NodeDef), [
                                             {qos, 1}
                                         ]}
                                     ]}
@@ -132,7 +132,7 @@ handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
                                     self(),
                                     {connect_to_broker, MqttMgrPid}
                                 ),
-                                maps:put('_timer', TRef, NodeDef)
+                                maps:put(<<"'_timer'">>, TRef, NodeDef)
                         end
                     catch
                         exit:_ ->
@@ -194,7 +194,7 @@ copy_attributes([], Msg, _MqttDataPacket) ->
 copy_attributes([Attr | Attrs], Msg, MqttDataPacket) ->
     copy_attributes(
         Attrs,
-        maps:put(Attr, maps:get(Attr, MqttDataPacket), Msg),
+        maps:put(atom_to_binary(Attr), maps:get(Attr, MqttDataPacket), Msg),
         MqttDataPacket
     ).
 
@@ -212,21 +212,21 @@ add_to_nodedef(NodeDef, EmqttPid, WsName, TimerRef) ->
 %% erlfmt:ignore alignment
 create_mqtt_manager(Cfg) ->
     Options = [
-        {host,        maps:get(broker,               Cfg)},
-        {port,        maps:get(port,              Cfg)},
-        {ssl,         maps:get(usetls,          Cfg)},
-        {clean_start, maps:get(cleansession,    Cfg)},
-        {proto_ver,   maps:get(protocolVersion,   Cfg)},
-        {keepalive,   maps:get(keepalive,            Cfg)},
-        {will_topic,  maps:get(willTopic,              Cfg)},
-        {will_qos,    convert_to_num(maps:get(willQos, Cfg))},
-        {will_retain, to_bool(maps:get(willRetain,    Cfg))},
-        {will_props,  maps:get(willMsg,             Cfg)},
+        {host,        maps:get(<<"broker">>,               Cfg)},
+        {port,        maps:get(<<"port">>,              Cfg)},
+        {ssl,         maps:get(<<"usetls">>,          Cfg)},
+        {clean_start, maps:get(<<"cleansession">>,    Cfg)},
+        {proto_ver,   maps:get(<<"protocolVersion">>,   Cfg)},
+        {keepalive,   maps:get(<<"keepalive">>,            Cfg)},
+        {will_topic,  maps:get(<<"willTopic">>,              Cfg)},
+        {will_qos,    convert_to_num(maps:get(<<"willQos">>,  Cfg))},
+        {will_retain, to_bool(maps:get(<<"willRetain">>,       Cfg))},
+        {will_props,  maps:get(<<"willMsg">>,                 Cfg)},
         {force_ping,  true}
         %% TODO respect the client id but we don't
-        %% {clientid, maps:get(clientid, Cfg)},
-        %% {will_payload, maps:get(willPayload, Cfg)},
-        %% {properties, maps:get(userProps, Cfg)}
+        %% {clientid, maps:get(<<"clientid">>, Cfg)},
+        %% {will_payload, maps:get(<<"willPayload">>, Cfg)},
+        %% {properties, maps:get(<<"userProps">>, Cfg)}
     ],
 
     {ok, MqttMgrPid} = ered_mqtt_manager:start(self(), Options),
@@ -234,7 +234,7 @@ create_mqtt_manager(Cfg) ->
     MqttMgrPid.
 
 setup_mqtt_manager(NodeDef, WsName) ->
-    case maps:find(broker, NodeDef) of
+    case maps:find(<<"broker">>, NodeDef) of
         {ok, CfgNodeId} ->
             case retrieve_config_node(CfgNodeId) of
                 {ok, Cfg} ->

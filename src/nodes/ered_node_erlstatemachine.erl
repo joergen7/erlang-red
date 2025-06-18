@@ -29,7 +29,11 @@
 ]).
 
 -define(SEND_MSG(NodeDef, Msg, Result, Action, CurrS, PrevS),
-    Msg2 = Msg#{payload => Result, states => [PrevS, CurrS], action => Action},
+    Msg2 = Msg#{
+        <<"payload">> => Result,
+        <<"states">> => [PrevS, CurrS],
+        <<"action">> => Action
+    },
     send_msg_to_connected_nodes(NodeDef, Msg2),
     {handled, NodeDef, Msg2}
 ).
@@ -45,7 +49,7 @@ start(NodeDef, _WsName) ->
     ered_node:start(
         NodeDef#{
             '_func_send_msg' =>
-                case to_bool(maps:get(emit_on_state_change, NodeDef)) of
+                case to_bool(maps:get(<<"emit_on_state_change">>, NodeDef)) of
                     true ->
                         fun send_message_on_state_change/6;
                     false ->
@@ -58,7 +62,7 @@ start(NodeDef, _WsName) ->
 %%
 %%
 handle_event({registered, WsName, _MyPid}, NodeDef) ->
-    ModuleName = binary_to_atom(maps:get(module_name, NodeDef)),
+    ModuleName = binary_to_atom(maps:get(<<"module_name">>, NodeDef)),
 
     {ok, {Pid, _Ref}} = gen_statem:start_monitor(ModuleName, [], []),
 
@@ -82,7 +86,7 @@ handle_msg({incoming, Msg}, NodeDef) ->
     WsName = ws_from(Msg),
 
     PrevState = element(1, sys:get_state(Pid)),
-    #{payload := Action} = Msg,
+    #{<<"payload">> := Action} = Msg,
     Result = gen_statem:call(Pid, binary_to_atom(Action)),
     CurrState = element(1, sys:get_state(Pid)),
 

@@ -44,7 +44,7 @@ start(NodeDef, _WsName) ->
 %%
 handle_event({registered, WsName, _Pid}, NodeDef) ->
     {ok, NodePid} = maps:find('_node_pid_', NodeDef),
-    {ok, NodesToListenTo} = maps:find(scope, NodeDef),
+    {ok, NodesToListenTo} = maps:find(<<"scope">>, NodeDef),
 
     [
         ered_ws_event_exchange:subscribe(
@@ -68,13 +68,13 @@ handle_websocket({status, WsName, NodeId, Txt, Clr, Shp}, NodeDef) ->
     %% TODO but on the other hand, with the node id, the frontend can
     %% TODO do that itself.
     MsgWithSrc = maps:put(
-        source,
-        #{id => NodeId, type => "", name => ""},
+        <<"source">>,
+        #{<<"id">> => NodeId, <<"type">> => "", <<"name">> => ""},
         Msg
     ),
     FinalMsg = maps:put(
-        status,
-        #{fill => jstr(Clr), shape => jstr(Shp), text => Txt},
+        <<"status">>,
+        #{<<"fill">> => jstr(Clr), <<"shape">> => jstr(Shp), <<"text">> => Txt},
         MsgWithSrc
     ),
     send_msg_to_connected_nodes(NodeDef, FinalMsg),

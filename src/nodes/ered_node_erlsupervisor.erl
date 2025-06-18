@@ -51,7 +51,7 @@
 -define(SEND_STATUS(Status),
     send_msg_to_connected_nodes(
         NodeDef,
-        maps:put(status, Status, element(2, create_outgoing_msg(WsName)))
+        maps:put(<<"status">>, Status, element(2, create_outgoing_msg(WsName)))
     )
 ).
 
@@ -158,7 +158,7 @@ handle_event(_, NodeDef) ->
 handle_msg({incoming, Msg}, NodeDef) ->
     WsName = ws_from(Msg),
 
-    case maps:get(action, Msg) of
+    case maps:get(<<"action">>, Msg) of
         <<"restart">> ->
             case maps:find('_my_node_defs', NodeDef) of
                 {ok, MyNodeDefs} ->
@@ -192,7 +192,7 @@ create_children(MyNodeDefs, SupNodeDef, WsName) ->
                 list_to_binary(
                     io_lib:format(
                         "child_~s_~s",
-                        [SupNodeId, maps:get(id, NodeDef)]
+                        [SupNodeId, maps:get(<<"id">>, NodeDef)]
                     )
                 )
             ),
@@ -200,15 +200,15 @@ create_children(MyNodeDefs, SupNodeDef, WsName) ->
                 ered_nodes, spin_up_and_link_node, [NodeDef, WsName]
             },
             restart => cf_child_restart(
-                maps:get(child_restart, SupNodeDef)
+                maps:get(<<"child_restart">>, SupNodeDef)
             ),
             shutdown => cf_child_shutdown(
-                maps:get(child_shutdown, SupNodeDef),
-                maps:get(child_shutdown_timeout, SupNodeDef),
+                maps:get(<<"child_shutdown">>, SupNodeDef),
+                maps:get(<<"child_shutdown_timeout">>, SupNodeDef),
                 NodeDef
             ),
             type => cf_child_type(
-                maps:get(child_type, SupNodeDef),
+                maps:get(<<"child_type">>, SupNodeDef),
                 NodeDef
             )
         }
@@ -261,9 +261,9 @@ create_children(MyNodeDefs, SupNodeDef, WsName) ->
 %%
 check_config(NodeDef) ->
     check_config(
-        maps:get(strategy, NodeDef),
-        maps:get(auto_shutdown, NodeDef),
-        maps:get(supervisor_type, NodeDef)
+        maps:get(<<"strategy">>, NodeDef),
+        maps:get(<<"auto_shutdown">>, NodeDef),
+        maps:get(<<"supervisor_type">>, NodeDef)
     ).
 
 check_config(_Strategy, <<"any_significant">>, _SupervisorType) ->
@@ -299,7 +299,9 @@ filter_nodedefs_by_ids(LstOfNodeIds, [], RestNodes, MyNodes) ->
     % is for rest-for-one restart policy important.
     case {length(MyNodes), length(LstOfNodeIds)} of
         {Same, Same} ->
-            Lookup = lists:map(fun(E) -> {maps:get(id, E), E} end, MyNodes),
+            Lookup = lists:map(
+                fun(E) -> {maps:get(<<"id">>, E), E} end, MyNodes
+            ),
             OrderMyNodes = lists:map(
                 fun(E) ->
                     element(2, lists:keyfind(E, 1, Lookup))
@@ -316,7 +318,7 @@ filter_nodedefs_by_ids(
     RestNodes,
     MyNodes
 ) ->
-    case lists:member(maps:get(id, NodeDef), LstOfNodeIds) of
+    case lists:member(maps:get(<<"id">>, NodeDef), LstOfNodeIds) of
         true ->
             filter_nodedefs_by_ids(
                 LstOfNodeIds,
@@ -352,7 +354,7 @@ extract_nodes(SupNodeDef, NodeDefs, WsName) ->
             ),
             {error, NodeDefs};
         _ ->
-            case filter_nodedefs(maps:get(scope, SupNodeDef), NodeDefs) of
+            case filter_nodedefs(maps:get(<<"scope">>, SupNodeDef), NodeDefs) of
                 {ok, {RestNodeDefs, MyNodeDefs}} ->
                     SupNodeDefWithNodes =
                         maps:put(

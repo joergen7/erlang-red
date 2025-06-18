@@ -125,7 +125,7 @@
         _ ->
             post_exception_or_debug(
                 NodeDef,
-                maps:put(cause, Why, Msg),
+                maps:put(<<"cause">>, Why, Msg),
                 <<"unexpected exit">>
             )
     end
@@ -137,23 +137,23 @@ start(NodeDef, _WsName) ->
     % Ensure timeout value is set to a number and converted to milliseconds
     % or infinity if the value is negative or zero.
     ered_node:start(
-        case maps:find(timeout, NodeDef) of
+        case maps:find(<<"timeout">>, NodeDef) of
             {ok, Val} ->
                 try
                     case binary_to_integer(Val) * 1000 of
                         N when N < 0 ->
-                            NodeDef#{timeout => infinity};
+                            NodeDef#{<<"timeout">> => infinity};
                         N when N =:= 0 ->
-                            NodeDef#{timeout => infinity};
+                            NodeDef#{<<"timeout">> => infinity};
                         N ->
-                            NodeDef#{timeout => N}
+                            NodeDef#{<<"timeout">> => N}
                     end
                 catch
                     _E:_F:_S ->
-                        NodeDef#{timeout => infinity}
+                        NodeDef#{<<"timeout">> => infinity}
                 end;
             _ ->
-                NodeDef#{timeout => infinity}
+                NodeDef#{<<"timeout">> => infinity}
         end,
         ?MODULE
     ).
@@ -161,7 +161,7 @@ start(NodeDef, _WsName) ->
 %%
 %% Execute the "On Start" code once this node has been regisgtered
 handle_event({registered, WsName, _Pid}, NodeDef) ->
-    case maps:find(initialize, NodeDef) of
+    case maps:find(<<"initialize">>, NodeDef) of
         {ok, <<>>} ->
             NodeDef;
         {ok, Code} ->
@@ -177,7 +177,7 @@ handle_event({registered, WsName, _Pid}, NodeDef) ->
 %% TODO: each time this node is killed by a supervisor - for example - I don't
 %% TODO: think that happens at the moment).
 handle_event({stop, WsName}, NodeDef) ->
-    case maps:find(finalize, NodeDef) of
+    case maps:find(<<"finalize">>, NodeDef) of
         {ok, <<>>} ->
             NodeDef;
         {ok, Code} ->

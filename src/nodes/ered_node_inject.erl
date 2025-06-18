@@ -89,19 +89,19 @@ value_for_proptype(PropType, _Val, PropName, NodeDef, Msg) ->
 %% string value iff the type is "str" otherwise the value is set on
 %% the property defintion, i.e. 'v'.
 obtain_topic_value(NodeDef, _Prop, <<"str">>) ->
-    get_prop_value_from_map(topic, NodeDef);
+    get_prop_value_from_map(<<"topic">>, NodeDef);
 obtain_topic_value(_NodeDef, Prop, _) ->
-    get_prop_value_from_map(v, Prop).
+    get_prop_value_from_map(<<"v">>, Prop).
 
 %%
 %%
 parse_props([], _, Msg) ->
     Msg;
 parse_props([Prop | RestProps], NodeDef, Msg) ->
-    case maps:find(p, Prop) of
+    case maps:find(<<"p">>, Prop) of
         {ok, <<"payload">>} ->
-            Val = get_prop_value_from_map(payload, NodeDef),
-            PropType = get_prop_value_from_map(payloadType, NodeDef),
+            Val = get_prop_value_from_map(<<"payload">>, NodeDef),
+            PropType = get_prop_value_from_map(<<"payloadType">>, NodeDef),
 
             parse_props(
                 RestProps,
@@ -109,7 +109,7 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
                 value_for_proptype(PropType, Val, <<"payload">>, NodeDef, Msg)
             );
         {ok, <<"topic">>} ->
-            PropType = get_prop_value_from_map(vt, Prop),
+            PropType = get_prop_value_from_map(<<"vt">>, Prop),
             Val = obtain_topic_value(NodeDef, Prop, PropType),
 
             parse_props(
@@ -118,8 +118,8 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
                 value_for_proptype(PropType, Val, <<"topic">>, NodeDef, Msg)
             );
         {ok, PropName} ->
-            Val = get_prop_value_from_map(v, Prop),
-            PropType = get_prop_value_from_map(vt, Prop),
+            Val = get_prop_value_from_map(<<"v">>, Prop),
+            PropType = get_prop_value_from_map(<<"vt">>, Prop),
             parse_props(
                 RestProps,
                 NodeDef,
@@ -139,7 +139,7 @@ handle_event(_, NodeDef) ->
 %% outgoing messages are triggered by button presses on the UI
 %%
 handle_msg({outgoing, Msg}, NodeDef) ->
-    case maps:find(props, NodeDef) of
+    case maps:find(<<"props">>, NodeDef) of
         {ok, Val} ->
             Props = Val;
         _ ->

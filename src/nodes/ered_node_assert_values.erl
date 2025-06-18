@@ -1,5 +1,7 @@
 -module(ered_node_assert_values).
 
+-include("ered_nodes.hrl").
+
 -behaviour(ered_node).
 
 -export([start/2]).
@@ -37,25 +39,17 @@
 start(NodeDef, _WsName) ->
     ered_node:start(NodeDef, ?MODULE).
 
-%% erlfmt:ignore equals and arrows should line up here.
 debug_data(NodeDef, ErrMsg) ->
-    IdStr   = get_prop_value_from_map(id,   NodeDef),
-    ZStr    = get_prop_value_from_map(z,    NodeDef),
-    NameStr = get_prop_value_from_map(name, NodeDef, <<"Assert Values">>),
-
-    #{
-       id       => IdStr,
-       z        => ZStr,
-       path     => ZStr,
-       name     => NameStr,
-       msg      => ErrMsg,
-       format   => <<"string">>
+    D = ?BASE_DATA,
+    D#{
+       <<"msg">> => ErrMsg,
+       <<"format">> => <<"string">>
     }.
 
 %%
 %%
 check_rule_against_msg(<<"notset">>, <<"msg">>, Rule, Msg) ->
-    case get_prop(maps:find(p, Rule), Msg) of
+    case get_prop(maps:find(<<"p">>, Rule), Msg) of
         {ok, _, Prop} ->
             {failed,
                 jstr(
@@ -66,7 +60,7 @@ check_rule_against_msg(<<"notset">>, <<"msg">>, Rule, Msg) ->
             true
     end;
 check_rule_against_msg(<<"set">>, <<"msg">>, Rule, Msg) ->
-    case get_prop(maps:find(p, Rule), Msg) of
+    case get_prop(maps:find(<<"p">>, Rule), Msg) of
         {ok, _, _} ->
             true;
         {undefined, Prop} ->
@@ -77,9 +71,9 @@ check_rule_against_msg(<<"set">>, <<"msg">>, Rule, Msg) ->
                 )}
     end;
 check_rule_against_msg(<<"noteql">>, <<"msg">>, Rule, Msg) ->
-    case get_prop(maps:find(p, Rule), Msg) of
+    case get_prop(maps:find(<<"p">>, Rule), Msg) of
         {ok, Val, Prop} ->
-            {ok, ReqVal} = maps:find(to, Rule),
+            {ok, ReqVal} = maps:find(<<"to">>, Rule),
             case is_same(ReqVal, Val) of
                 true ->
                     {failed,
@@ -96,21 +90,20 @@ check_rule_against_msg(<<"noteql">>, <<"msg">>, Rule, Msg) ->
 %% eql operator on the msg - about the only thing that is
 %% supported at the time of writing this comment.
 check_rule_against_msg(<<"eql">>, <<"msg">>, Rule, Msg) ->
-    {ok, Prop} = maps:find(p, Rule),
-    {ok, ToType} = maps:find(tot, Rule),
-    {ok, ReqVal} = maps:find(to, Rule),
+    {ok, ToType} = maps:find(<<"tot">>, Rule),
+    {ok, ReqVal} = maps:find(<<"to">>, Rule),
 
-    case get_prop(maps:find(p, Rule), Msg) of
+    case get_prop(maps:find(<<"p">>, Rule), Msg) of
         {ok, Val, Prop} ->
             eql_msg_op(Prop, Val, ToType, ReqVal, Msg);
         {undefined, Prop} ->
-            {failed, jstr("Prop not set on msg: '~p'", [Prop])}
+            {failed, jstr("Prop not found on msg: '~p'", [Prop])}
     end;
 check_rule_against_msg(<<"mth">>, <<"msg">>, Rule, Msg) ->
-    {ok, ToType} = maps:find(tot, Rule),
-    {ok, ReqVal} = maps:find(to, Rule),
+    {ok, ToType} = maps:find(<<"tot">>, Rule),
+    {ok, ReqVal} = maps:find(<<"to">>, Rule),
 
-    case get_prop(maps:find(p, Rule), Msg) of
+    case get_prop(maps:find(<<"p">>, Rule), Msg) of
         {ok, PropVal, Prop} ->
             case re:compile(ReqVal) of
                 {ok, ReqPattern} ->
@@ -126,7 +119,7 @@ check_rule_against_msg(<<"mth">>, <<"msg">>, Rule, Msg) ->
                     {failed, jstr("Match not RegExp: '~p'", [ReqVal])}
             end;
         {undefined, Prop} ->
-            {failed, jstr("Propery not set on Msg: '~p'", [Prop])}
+            {failed, jstr("Propery unfound on Msg: '~p'", [Prop])}
     end;
 check_rule_against_msg(_Operator, _ObjectType, _, _) ->
     unsupported.
@@ -272,18 +265,22 @@ check_rules(Rules, NodeDef, Msg) ->
 
 check_rules([], NodeDef, Msg, 0, _Failures) ->
     node_status(ws_from(Msg), NodeDef, <<"assert succeed">>, "green", "ring"),
-    maps:put(assert_succeed, true, maps:remove(assert_failures, Msg));
+    maps:put(
+        <<"assert_succeed">>,
+        true,
+        maps:remove(<<"assert_failures">>, Msg)
+    );
 check_rules([], NodeDef, Msg, FCnt, Failures) ->
     ErrMsg = jstr("~p check(s) failed", [FCnt]),
     node_status(ws_from(Msg), NodeDef, ErrMsg, "red", "dot"),
     maps:put(
-        assert_succeed,
+        <<"assert_succeed">>,
         false,
-        maps:put(assert_failures, Failures, Msg)
+        maps:put(<<"assert_failures">>, Failures, Msg)
     );
 check_rules([H | T], NodeDef, Msg, FCnt, Failures) ->
-    {ok, Op} = maps:find(t, H),
-    {ok, Pt} = maps:find(pt, H),
+    {ok, Op} = maps:find(<<"t">>, H),
+    {ok, Pt} = maps:find(<<"pt">>, H),
 
     case check_rule_against_msg(Op, Pt, H, Msg) of
         true ->
@@ -321,12 +318,10 @@ check_rules([H | T], NodeDef, Msg, FCnt, Failures) ->
 
 %%
 %%
-%% erlfmt:ignore stars are aligned
 handle_event({stop, WsName}, NodeDef) ->
     case maps:find('_mc_incoming',NodeDef) of
         {ok,0} ->
-            {ok, IdStr}   = maps:find(id,NodeDef),
-            {ok, TypeStr} = maps:find(type,NodeDef),
+            {IdStr, TypeStr} = ?NODE_ID_AND_TYPE(NodeDef),
 
             this_should_not_happen(
               NodeDef,
@@ -335,17 +330,11 @@ handle_event({stop, WsName}, NodeDef) ->
                 [TypeStr,IdStr])
             ),
 
-            IdStr   = get_prop_value_from_map(id,   NodeDef),
-            ZStr    = get_prop_value_from_map(z,    NodeDef),
-            NameStr = get_prop_value_from_map(name, NodeDef,
-                                                         TypeStr),
-            Data = #{
-                     id       => IdStr,
-                     z        => ZStr,
-                     path     => ZStr,
-                     name     => NameStr,
-                     msg      => <<"Assert Values Not Reached">>,
-                     format   => <<"string">>
+            D = ?BASE_DATA,
+
+            Data = D#{
+                <<"msg">> => <<"Assert Values Not Reached">>,
+                <<"format">> => <<"string">>
             },
 
             debug(WsName, Data, error),
@@ -361,7 +350,7 @@ handle_event(_, NodeDef) ->
 %%
 %%
 handle_msg({incoming, Msg}, NodeDef) ->
-    case maps:find(rules, NodeDef) of
+    case maps:find(<<"rules">>, NodeDef) of
         {ok, Ary} ->
             Msg2 = check_rules(Ary, NodeDef, Msg),
             send_msg_to_connected_nodes(NodeDef, Msg2),

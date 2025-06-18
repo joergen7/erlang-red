@@ -33,7 +33,6 @@
 
 -import(ered_nodes, [
     jstr/2,
-    get_prop_value_from_map/2,
     send_msg_to_connected_nodes/2
 ]).
 -import(ered_nodered_comm, [
@@ -49,10 +48,10 @@
 %%
 %%
 start(NodeDef, WsName) ->
-    {ok, Mode} = maps:find(mode, NodeDef),
-    {ok, Build} = maps:find(build, NodeDef),
-    {ok, Count} = maps:find(count, NodeDef),
-    {ok, PropType} = maps:find(propertyType, NodeDef),
+    Mode = maps:get(<<"mode">>, NodeDef),
+    Build = maps:get(<<"build">>, NodeDef),
+    Count = maps:get(<<"count">>, NodeDef),
+    PropType = maps:get(<<"propertyType">>, NodeDef),
 
     NodeDef2 =
         case use_manual(Mode, Build, PropType, Count, NodeDef) of
@@ -100,7 +99,7 @@ use_manual(<<"custom">>, <<"array">>, <<"msg">>, Count, NodeDef) ->
             {ok,
                 maps:put(
                     '_is_manually_collecting',
-                    {ok, Cnt, maps:find(property, NodeDef), []},
+                    {ok, Cnt, maps:find(<<"property">>, NodeDef), []},
                     NodeDef
                 )};
         _ ->
@@ -140,7 +139,7 @@ handle_incoming(NodeDef, Msg) ->
             %% Need to reverse the order of the returned array - because
             %% we've been pushing onto the head and not the tail.
             Msg2 = maps:put(
-                payload,
+                <<"payload">>,
                 [V || {V, _} <- lists:reverse(Lst2)],
                 Msg
             ),
@@ -154,7 +153,7 @@ handle_incoming(NodeDef, Msg) ->
 
             send_msg_to_connected_nodes(NodeDef, Msg2),
 
-            {ok, Count} = maps:find(count, NodeDef),
+            {ok, Count} = maps:find(<<"count">>, NodeDef),
             {ok, Cnt} = convert_to_int(Count),
             NodeDef2 = maps:put(
                 '_is_manually_collecting',
@@ -183,7 +182,7 @@ handle_incoming(NodeDef, Msg) ->
 
             %% Need to reverse the order of the returned array - because
             %% we've been pushing onto the head and not the tail.
-            Msg2 = maps:put(payload, lists:reverse(Lst2), Msg),
+            Msg2 = maps:put(<<"payload">>, lists:reverse(Lst2), Msg),
 
             %% now that we are ready to send out our message, we are completed
             %% with the message that make up that message (!!) so those
@@ -194,7 +193,7 @@ handle_incoming(NodeDef, Msg) ->
 
             send_msg_to_connected_nodes(NodeDef, Msg2),
 
-            {ok, Count} = maps:find(count, NodeDef),
+            {ok, Count} = maps:find(<<"count">>, NodeDef),
             {ok, Cnt} = convert_to_int(Count),
 
             NodeDef2 = maps:put(

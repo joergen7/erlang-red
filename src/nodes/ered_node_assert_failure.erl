@@ -1,5 +1,7 @@
 -module(ered_node_assert_failure).
 
+-include("ered_nodes.hrl").
+
 -behaviour(ered_node).
 
 -export([start/2]).
@@ -46,9 +48,8 @@ handle_event(_, NodeDef) ->
     NodeDef.
 
 %% erlfmt:ignore equals and arrows should line up here.
-handle_incoming(NodeDef,Msg) ->
-    {ok, IdStr}   = maps:find(id,NodeDef),
-    {ok, TypeStr} = maps:find(type,NodeDef),
+handle_incoming(NodeDef, Msg) ->
+    {IdStr, TypeStr} = ?NODE_ID_AND_TYPE(NodeDef),
 
     this_should_not_happen(
       NodeDef,
@@ -57,25 +58,20 @@ handle_incoming(NodeDef,Msg) ->
         [TypeStr,IdStr,Msg])
     ),
 
-    IdStr    = get_prop_value_from_map(id,    NodeDef),
-    ZStr     = get_prop_value_from_map(z,     NodeDef),
-    NameStr  = get_prop_value_from_map(name,  NodeDef, TypeStr),
-    TopicStr = get_prop_value_from_map(topic, Msg, ""),
+    D = ?BASE_DATA,
 
-    Data = #{
-             id       => IdStr,
-             z        => ZStr,
-             '_alias' => IdStr,
-             path     => ZStr,
-             name     => NameStr,
-             topic    => to_binary_if_not_binary(TopicStr),
-             msg      => Msg,
-             format   => <<"object">>
-            },
+    TopicStr = get_prop_value_from_map(<<"topic">>, Msg, ""),
+
+    Data = D#{
+       <<"_alias">> => IdStr,
+       <<"topic">>  => to_binary_if_not_binary(TopicStr),
+       <<"msg">>    => Msg,
+       <<"format">> => <<"object">>
+    },
 
     debug(ws_from(Msg), Data, error),
 
-    node_status(ws_from(Msg),NodeDef,"assert failed","red","dot"),
+    node_status(ws_from(Msg), NodeDef, "assert failed", "red", "dot"),
 
     {NodeDef, Msg}.
 

@@ -31,15 +31,15 @@ is_same(_, _) -> false.
 %%
 %%
 handle_event({registered, WsName, _Pid}, NodeDef) ->
-    case maps:find(nodeid, NodeDef) of
+    case maps:find(<<"nodeid">>, NodeDef) of
         {ok, TgtNodeId} ->
-            {ok, MsgType} = maps:find(msgtype, NodeDef),
+            {ok, MsgType} = maps:find(<<"msgtype">>, NodeDef),
             {ok, NodePid} = maps:find('_node_pid_', NodeDef),
             %%
             %% inverse means that there should be **no** debug message, this
             %% means that this node needs to subscribe too all types of debug
             %% messages.
-            case maps:find(inverse, NodeDef) of
+            case maps:find(<<"inverse">>, NodeDef) of
                 {ok, true} ->
                     ered_ws_event_exchange:subscribe(
                         WsName,
@@ -64,9 +64,9 @@ handle_event({registered, WsName, _Pid}, NodeDef) ->
 handle_event({stop, WsName}, NodeDef) ->
     case maps:find('_mc_websocket', NodeDef) of
         {ok, 0} ->
-            case maps:find(inverse, NodeDef) of
+            case maps:find(<<"inverse">>, NodeDef) of
                 {ok, false} ->
-                    {ok, NodeId} = maps:find(nodeid, NodeDef),
+                    {ok, NodeId} = maps:find(<<"nodeid">>, NodeDef),
                     ErrMsg = jstr("Expected debug from ~p\n", [NodeId]),
                     assert_failure(NodeDef, WsName, ErrMsg);
                 _ ->
@@ -86,12 +86,12 @@ handle_event(_, NodeDef) ->
 %%
 %%
 handle_websocket({debug, WsName, NodeId, Type, _Data}, NodeDef) ->
-    case maps:find(inverse, NodeDef) of
+    case maps:find(<<"inverse">>, NodeDef) of
         {ok, true} ->
             ErrMsg = jstr("No debug expected from ~p\n", [NodeId]),
             assert_failure(NodeDef, WsName, ErrMsg);
         _ ->
-            {ok, ExpType} = maps:find(msgtype, NodeDef),
+            {ok, ExpType} = maps:find(<<"msgtype">>, NodeDef),
 
             case is_same(binary_to_atom(ExpType), Type) of
                 true ->

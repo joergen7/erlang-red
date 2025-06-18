@@ -32,7 +32,9 @@
 ]).
 
 -define(SET_TIMER,
-    erlang:start_timer(maps:get(timeout, NodeDef), self(), {msg_timed_out, Msg})
+    erlang:start_timer(
+        maps:get(<<"timeout">>, NodeDef), self(), {msg_timed_out, Msg}
+    )
 ).
 
 %%
@@ -40,21 +42,21 @@
 start(NodeDef, _WsName) ->
     % Ensure timeout value is set to a number and converted to milliseconds
     ered_node:start(
-        case maps:find(timeout, NodeDef) of
+        case maps:find(<<"timeout">>, NodeDef) of
             {ok, Val} ->
                 try
                     case binary_to_integer(Val) * 1000 of
                         N when N < 0 ->
-                            NodeDef#{timeout => 0};
+                            NodeDef#{<<"timeout">> => 0};
                         N ->
-                            NodeDef#{timeout => N}
+                            NodeDef#{<<"timeout">> => N}
                     end
                 catch
                     _E:_F:_S ->
-                        NodeDef#{timeout => 30_000}
+                        NodeDef#{<<"timeout">> => 30_000}
                 end;
             _ ->
-                NodeDef#{timeout => 30_000}
+                NodeDef#{<<"timeout">> => 30_000}
         end,
         ?MODULE
     ).
@@ -70,9 +72,9 @@ handle_event(_, NodeDef) ->
 %%
 %%
 handle_msg({incoming, Msg}, NodeDef) ->
-    case maps:find(linkType, NodeDef) of
+    case maps:find(<<"linkType">>, NodeDef) of
         {ok, <<"dynamic">>} ->
-            case maps:find(target, Msg) of
+            case maps:find(<<"target">>, Msg) of
                 {ok, Target} ->
                     case obtain_link_node_pid(Target, ws_from(Msg)) of
                         [] ->
@@ -103,7 +105,7 @@ handle_msg({incoming, Msg}, NodeDef) ->
                     post_exception_or_debug(NodeDef, Msg, ErrMsg)
             end;
         {ok, <<"static">>} ->
-            case maps:find(links, NodeDef) of
+            case maps:find(<<"links">>, NodeDef) of
                 {ok, Links} ->
                     send_msg_on(
                         Links,
@@ -147,8 +149,8 @@ handle_msg(_, NodeDef) ->
 %%
 %%
 update_linksource(NodeDef, Msg) ->
-    {ok, IdStr} = maps:find(id, NodeDef),
-    LinkBack = #{id => generate_id(32), node => IdStr},
+    {ok, IdStr} = maps:find(<<"id">>, NodeDef),
+    LinkBack = #{<<"id">> => generate_id(32), <<"node">> => IdStr},
 
     case maps:find('_linkSource', Msg) of
         {ok, Ary} ->

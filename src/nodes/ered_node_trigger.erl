@@ -44,7 +44,7 @@ handle_event(_, NodeDef) ->
     NodeDef.
 
 compute_delay(NodeDef, Msg, {ok, true}) ->
-    case maps:find(delay, Msg) of
+    case maps:find(<<"delay">>, Msg) of
         {ok, Delay} ->
             %% msg.delay is assumed to be milliseconds --> RTFM.
             convert_to_num(Delay);
@@ -53,8 +53,8 @@ compute_delay(NodeDef, Msg, {ok, true}) ->
     end;
 compute_delay(NodeDef, Msg, {ok, false}) ->
     ConversionResult = convert_units_to_milliseconds(
-        maps:find(units, NodeDef),
-        maps:find(duration, NodeDef)
+        maps:find(<<"units">>, NodeDef),
+        maps:find(<<"duration">>, NodeDef)
     ),
     case ConversionResult of
         {ok, V} ->
@@ -65,7 +65,7 @@ compute_delay(NodeDef, Msg, {ok, false}) ->
     end.
 
 compute_delay(NodeDef, Msg) ->
-    compute_delay(NodeDef, Msg, maps:find(overrideDelay, NodeDef)).
+    compute_delay(NodeDef, Msg, maps:find(<<"overrideDelay">>, NodeDef)).
 
 %%
 %% payload value for opX
@@ -106,8 +106,8 @@ send_msg_based_on_output_count(Msg, [Wires | _], send_second_msg, 1) ->
 handle_msg({incoming, Msg}, NodeDef) ->
     case
         opx_to_payload(
-            maps:find(op1, NodeDef),
-            maps:find(op1type, NodeDef)
+            maps:find(<<"op1">>, NodeDef),
+            maps:find(<<"op1type">>, NodeDef)
         )
     of
         {dontsend, _} ->
@@ -118,13 +118,13 @@ handle_msg({incoming, Msg}, NodeDef) ->
             timer:apply_after(Delay, Fun),
             {handled, NodeDef, Msg};
         {ok, Value} ->
-            Msg2 = maps:put(payload, Value, Msg),
+            Msg2 = maps:put(<<"payload">>, Value, Msg),
             node_status(ws_from(Msg), NodeDef, "", "blue", "dot"),
             send_msg_based_on_output_count(
                 Msg2,
-                maps:get(wires, NodeDef),
+                maps:get(<<"wires">>, NodeDef),
                 send_first_msg,
-                maps:get(outputs, NodeDef)
+                maps:get(<<"outputs">>, NodeDef)
             ),
             Delay = compute_delay(NodeDef, Msg2),
             ThisPid = self(),
@@ -141,19 +141,19 @@ handle_msg({outgoing, Msg}, NodeDef) ->
     node_status_clear(ws_from(Msg), NodeDef),
     case
         opx_to_payload(
-            maps:find(op2, NodeDef),
-            maps:find(op2type, NodeDef)
+            maps:find(<<"op2">>, NodeDef),
+            maps:find(<<"op2type">>, NodeDef)
         )
     of
         {dontsend, _} ->
             {handled, NodeDef, Msg};
         {ok, Value} ->
-            Msg2 = maps:put(payload, Value, Msg),
+            Msg2 = maps:put(<<"payload">>, Value, Msg),
             send_msg_based_on_output_count(
                 Msg2,
-                maps:get(wires, NodeDef),
+                maps:get(<<"wires">>, NodeDef),
                 send_second_msg,
-                maps:get(outputs, NodeDef)
+                maps:get(<<"outputs">>, NodeDef)
             ),
             {handled, NodeDef, Msg2};
         {error, ErrMsg} ->

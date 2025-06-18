@@ -128,13 +128,13 @@ handle_event(_, NodeDef) ->
 handle_msg({incoming, Msg}, NodeDef) ->
     case maps:find('_mqtt_mgr_id', NodeDef) of
         {ok, Pid} ->
-            {ok, Topic} = maps:find(topic, NodeDef),
-            {ok, QoS} = maps:find(qos, NodeDef),
-            {ok, Retain} = maps:find(retain, NodeDef),
+            {ok, Topic} = maps:find(<<"topic">>, NodeDef),
+            {ok, QoS} = maps:find(<<"qos">>, NodeDef),
+            {ok, Retain} = maps:find(<<"retain">>, NodeDef),
 
             Data = {
                 publish_payload,
-                maps:get(payload, Msg),
+                maps:get(<<"payload">>, Msg),
                 Topic,
                 convert_to_num(QoS),
                 to_bool(Retain)
@@ -182,21 +182,21 @@ add_to_nodedef(NodeDef, EmqttPid, WsName, TimerRef) ->
 %% erlfmt:ignore alignment
 create_mqtt_manager(Cfg) ->
     Options = [
-        {host,        maps:get(broker,               Cfg)},
-        {port,        maps:get(port,              Cfg)},
-        {ssl,         maps:get(usetls,          Cfg)},
-        {clean_start, maps:get(cleansession,    Cfg)},
-        {proto_ver,   maps:get(protocolVersion,   Cfg)},
-        {keepalive,   maps:get(keepalive,            Cfg)},
-        {will_topic,  maps:get(willTopic,              Cfg)},
-        {will_qos,    convert_to_num(maps:get(willQos, Cfg))},
-        {will_retain, to_bool(maps:get(willRetain,    Cfg))},
-        {will_props,  maps:get(willMsg,             Cfg)},
+        {host,        maps:get(<<"broker">>,               Cfg)},
+        {port,        maps:get(<<"port">>,              Cfg)},
+        {ssl,         maps:get(<<"usetls">>,          Cfg)},
+        {clean_start, maps:get(<<"cleansession">>,    Cfg)},
+        {proto_ver,   maps:get(<<"protocolVersion">>,   Cfg)},
+        {keepalive,   maps:get(<<"keepalive">>,             Cfg)},
+        {will_topic,  maps:get(<<"willTopic">>,               Cfg)},
+        {will_qos,    convert_to_num(maps:get(<<"willQos">>,  Cfg))},
+        {will_retain, to_bool(maps:get(<<"willRetain">>,     Cfg))},
+        {will_props,  maps:get(<<"willMsg">>,              Cfg)},
         {force_ping,  true}
         %% TODO respect the client id but we don't
-        %% {clientid, maps:get(clientid, Cfg)},
-        %% {will_payload, maps:get(willPayload, Cfg)},
-        %% {properties, maps:get(userProps, Cfg)}
+        %% {clientid, maps:get(<<"clientid">>, Cfg)},
+        %% {will_payload, maps:get(<<"willPayload">>, Cfg)},
+        %% {properties, maps:get(<<"userProps">>, Cfg)}
     ],
 
     {ok, MqttMgrPid} = ered_mqtt_manager:start(self(), Options),
@@ -204,7 +204,7 @@ create_mqtt_manager(Cfg) ->
     MqttMgrPid.
 
 setup_mqtt_manager(NodeDef, WsName) ->
-    case maps:find(broker, NodeDef) of
+    case maps:find(<<"broker">>, NodeDef) of
         {ok, CfgNodeId} ->
             case retrieve_config_node(CfgNodeId) of
                 {ok, Cfg} ->

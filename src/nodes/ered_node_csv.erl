@@ -64,14 +64,14 @@ handle_event(_, NodeDef) ->
 handle_msg({incoming, Msg}, NodeDef) ->
     case
         {
-            maps:get(include_empty_strings, NodeDef),
-            maps:get(include_null_values, NodeDef)
+            maps:get(<<"include_empty_strings">>, NodeDef),
+            maps:get(<<"include_null_values">>, NodeDef)
         }
     of
         {<<>>, <<>>} ->
-            case maps:get(spec, NodeDef) of
+            case maps:get(<<"spec">>, NodeDef) of
                 <<"rfc">> ->
-                    case maps:get(sep, NodeDef) of
+                    case maps:get(<<"sep">>, NodeDef) of
                         <<>> ->
                             unsupported(
                                 NodeDef,
@@ -80,7 +80,7 @@ handle_msg({incoming, Msg}, NodeDef) ->
                             ),
                             {handled, NodeDef, dont_send_complete_msg};
                         Sep ->
-                            case maps:get(payload, Msg, <<>>) of
+                            case maps:get(<<"payload">>, Msg, <<>>) of
                                 <<>> ->
                                     {handled, NodeDef, Msg};
                                 Payload when is_binary(Payload) ->
@@ -88,7 +88,7 @@ handle_msg({incoming, Msg}, NodeDef) ->
                                 Payload ->
                                     handle_encode(
                                         Sep,
-                                        maps:get(ret, NodeDef),
+                                        maps:get(<<"ret">>, NodeDef),
                                         Payload,
                                         NodeDef,
                                         Msg
@@ -121,7 +121,7 @@ handle_encode(Sep, <<"\\r\\n">>, Payload, NodeDef, Msg) ->
 % Payload is a list of lists - good!
 handle_encode(Sep, LineSep, Payload = [H | _T], NodeDef, Msg) when is_list(H) ->
     Msg2 = maps:put(
-        payload,
+        <<"payload">>,
         list_to_binary(
             ered_csv_parser_store:encode_something(
                 Payload,
@@ -161,25 +161,25 @@ handle_rfc(NodeDef, Msg, Payload, Sep) ->
     % that a line of content can also be used as a header line.
     DataStrings = skip_rows(
         DataOrig,
-        convert_to_num(maps:get(skip, NodeDef))
+        convert_to_num(maps:get(<<"skip">>, NodeDef))
     ),
 
     % remove the first line if necessary
     {ColNames, HeadlessData} = obtain_columns(
         DataStrings,
-        maps:get(hdrin, NodeDef)
+        maps:get(<<"hdrin">>, NodeDef)
     ),
 
     % convert things to numeric values if necessary
-    NumericData = parse_nums(HeadlessData, maps:get(strings, NodeDef)),
+    NumericData = parse_nums(HeadlessData, maps:get(<<"strings">>, NodeDef)),
 
-    case maps:get(multi, NodeDef) of
+    case maps:get(<<"multi">>, NodeDef) of
         <<"one">> ->
             %% send_one_msg_per_row also generates a {handle, ...} tuple
             send_one_msg_per_row(
                 NodeDef,
                 maps:put(
-                    columns,
+                    <<"columns">>,
                     create_columns_values(ColNames),
                     Msg
                 ),
@@ -190,10 +190,10 @@ handle_rfc(NodeDef, Msg, Payload, Sep) ->
             FinalContent = create_maps(NumericData, ColNames),
 
             Msg2 = maps:put(
-                payload,
+                <<"payload">>,
                 FinalContent,
                 maps:put(
-                    columns,
+                    <<"columns">>,
                     create_columns_values(ColNames),
                     Msg
                 )
@@ -210,7 +210,7 @@ create_maps(Data, ColNames) ->
 %%
 %%
 generate_parts(Cnt, TotalCnt, MsgId) ->
-    #{id => MsgId, count => TotalCnt, index => Cnt}.
+    #{<<"id">> => MsgId, <<"count">> => TotalCnt, <<"index">> => Cnt}.
 
 %%
 %%
@@ -221,11 +221,15 @@ send_one_msg_per_row(NodeDef, Msg, [], _A, _B, _C) ->
     {handled, NodeDef, Msg};
 send_one_msg_per_row(NodeDef, Msg, [Row | MoreRows], ColNames, Idx, Len) ->
     Msg2 = maps:put(
-        parts,
+        <<"parts">>,
         generate_parts(Idx, Len, maps:get('_msgid', Msg)),
         Msg
     ),
-    Msg3 = maps:put(payload, maps:from_list(lists:zip(ColNames, Row)), Msg2),
+    Msg3 = maps:put(
+        <<"payload">>,
+        maps:from_list(lists:zip(ColNames, Row)),
+        Msg2
+    ),
     send_msg_to_connected_nodes(NodeDef, Msg3),
     post_completed(NodeDef, Msg3),
     send_one_msg_per_row(NodeDef, Msg, MoreRows, ColNames, Idx + 1, Len).
@@ -233,17 +237,17 @@ send_one_msg_per_row(NodeDef, Msg, [Row | MoreRows], ColNames, Idx, Len) ->
 %%
 %%
 create_columns_values(Row) ->
-    list_to_binary(lists:join(",", [atom_to_binary(R) || R <- Row])).
+    list_to_binary(lists:join(",", Row)).
 
 obtain_columns([FirstRow | HeadlessData], true) ->
-    {[binary_to_atom(F) || F <- FirstRow], HeadlessData};
-obtain_columns(All = [FirstRow | _RestData], _HdrIn) ->
+    {[F || F <- FirstRow], HeadlessData};
+obtain_columns([FirstRow | _RestData] = AllRows, _HdrIn) ->
     {
         [
-            binary_to_atom(list_to_binary(io_lib:format("col~p", [Idx])))
+            list_to_binary(io_lib:format("col~p", [Idx]))
          || Idx <- lists:seq(1, length(FirstRow))
         ],
-        All
+        AllRows
     }.
 %%
 %%

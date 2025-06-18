@@ -12,8 +12,6 @@
 %%
 
 -import(ered_nodes, [
-    get_prop_value_from_map/2,
-    get_prop_value_from_map/3,
     jstr/1,
     jstr/2,
     post_exception_or_debug/3,
@@ -25,6 +23,10 @@
     debug/3,
     send_out_debug_msg/4,
     ws_from/1
+]).
+
+-import(ered_msg_handling, [
+    get_prop/2
 ]).
 
 %%
@@ -52,10 +54,15 @@ debug_msg(NodeDef, Msg, {no_file_specified}) ->
 %%   "allProps": false,
 %%
 get_filename(<<"str">>, NodeDef, _Msg) ->
-    maps:find(filename, NodeDef);
+    maps:find(<<"filename">>, NodeDef);
 get_filename(<<"msg">>, NodeDef, Msg) ->
-    {ok, PropName} = maps:find(filename, NodeDef),
-    maps:find(binary_to_atom(PropName), Msg);
+    case get_prop(maps:find(<<"filename">>, NodeDef), Msg) of
+        {ok, V, _} ->
+            %% simulate the return value of maps:find/2
+            {ok, V};
+        E ->
+            E
+    end;
 get_filename(FileNameType, NodeDef, Msg) ->
     debug_msg(NodeDef, Msg, {filename_type_not_supported, FileNameType}),
     failed.
@@ -66,7 +73,7 @@ handle_event(_, NodeDef) ->
     NodeDef.
 
 handle_incoming(NodeDef, Msg) ->
-    {ok, FileNameType} = maps:find(filenameType, NodeDef),
+    {ok, FileNameType} = maps:find(<<"filenameType">>, NodeDef),
 
     case get_filename(FileNameType, NodeDef, Msg) of
         {ok, <<>>} ->
@@ -75,7 +82,7 @@ handle_incoming(NodeDef, Msg) ->
         {ok, FileName} ->
             case file:read_file(unpriv(FileName)) of
                 {ok, FileData} ->
-                    Msg2 = maps:put(payload, FileData, Msg),
+                    Msg2 = maps:put(<<"payload">>, FileData, Msg),
                     send_msg_to_connected_nodes(NodeDef, Msg2),
                     {NodeDef, Msg2};
                 _ ->
@@ -85,12 +92,12 @@ handle_incoming(NodeDef, Msg) ->
             end;
         failed ->
             {NodeDef, Msg};
-        _ ->
+        Error ->
             this_should_not_happen(
                 NodeDef,
                 io_lib:format(
-                    "file in error in obtaining filename [~p] (~p)\n",
-                    [NodeDef, Msg]
+                    "file in error in obtaining filename [~p] (~p) --> {{ ~p }}",
+                    [NodeDef, Msg, Error]
                 )
             ),
             {NodeDef, Msg}

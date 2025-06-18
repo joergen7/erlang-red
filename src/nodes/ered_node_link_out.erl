@@ -60,9 +60,9 @@ handle_event(_, NodeDef) ->
 %%
 %%
 handle_incoming(NodeDef, Msg) ->
-    case maps:find(mode, NodeDef) of
+    case maps:find(<<"mode">>, NodeDef) of
         {ok, <<"link">>} ->
-            case maps:find(links, NodeDef) of
+            case maps:find(<<"links">>, NodeDef) of
                 {ok, Links} ->
                     %% this are all link in nodes and they have no incoming
                     %% wires so we can send them their messages using the
@@ -82,7 +82,7 @@ handle_incoming(NodeDef, Msg) ->
                             ignore;
                         {ok, LinkBack, NewAry} ->
                             send_to_link_call(
-                                maps:find(node, LinkBack),
+                                maps:find(<<"node">>, LinkBack),
                                 maps:put('_linkSource', NewAry, Msg)
                             )
                     end;

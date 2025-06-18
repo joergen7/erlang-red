@@ -142,7 +142,7 @@ handle_check_all_rules(
     Msg,
     HadMatch
 ) ->
-    {ok, Op} = maps:find(t, Rule),
+    {ok, Op} = maps:find(<<"t">>, Rule),
     %% else operator has no vt nor v values.
     case {Op, HadMatch} of
         {<<"else">>, false} ->
@@ -161,7 +161,7 @@ handle_check_all_rules(
 handle_check_all_rules(
     [Rule | Rules], Val, [Wires | MoreWires], NodeDef, Msg, HadMatch
 ) ->
-    {ok, Op} = maps:find(t, Rule),
+    {ok, Op} = maps:find(<<"t">>, Rule),
 
     %% else, true, false, null empty, ...  operators have no vt nor v values.
     case {Op, HadMatch} of
@@ -250,8 +250,8 @@ handle_check_all_rules(
                 Rules, Val, MoreWires, NodeDef, Msg, Val =/= null
             );
         _ ->
-            {ok, Type} = maps:find(vt, Rule),
-            {ok, OpVal} = maps:find(v, Rule),
+            {ok, Type} = maps:find(<<"vt">>, Rule),
+            {ok, OpVal} = maps:find(<<"v">>, Rule),
 
             case does_rule_match(Op, Type, OpVal, Val, NodeDef, Msg) of
                 true ->
@@ -278,7 +278,7 @@ handle_stop_after_one([], _, _, _, _) ->
 handle_stop_after_one(
     [Rule | Rules], not_defined_on_msg = Val, [Wires | MoreWires], NodeDef, Msg
 ) ->
-    {ok, Op} = maps:find(t, Rule),
+    {ok, Op} = maps:find(<<"t">>, Rule),
     case Op of
         <<"null">> ->
             send_msg_on(Wires, Msg);
@@ -288,7 +288,7 @@ handle_stop_after_one(
             handle_stop_after_one(Rules, Val, MoreWires, NodeDef, Msg)
     end;
 handle_stop_after_one([Rule | Rules], Val, [Wires | MoreWires], NodeDef, Msg) ->
-    {ok, Op} = maps:find(t, Rule),
+    {ok, Op} = maps:find(<<"t">>, Rule),
 
     %% else, true, false, null empty, ...  operators have no vt nor v values.
     case Op of
@@ -346,8 +346,8 @@ handle_stop_after_one([Rule | Rules], Val, [Wires | MoreWires], NodeDef, Msg) ->
                     send_msg_on(Wires, Msg)
             end;
         _ ->
-            {ok, Type} = maps:find(vt, Rule),
-            {ok, OpVal} = maps:find(v, Rule),
+            {ok, Type} = maps:find(<<"vt">>, Rule),
+            {ok, OpVal} = maps:find(<<"v">>, Rule),
 
             case does_rule_match(Op, Type, OpVal, Val, NodeDef, Msg) of
                 true ->
@@ -394,25 +394,25 @@ handle_event(_, NodeDef) ->
 %%
 handle_msg({incoming, Msg}, NodeDef) ->
     %% flag unsupported features - recreate message sequence whatever that does
-    case maps:find(repair, NodeDef) of
+    case maps:find(<<"repair">>, NodeDef) of
         {ok, true} ->
             unsupported(NodeDef, Msg, "recreate message sequence");
         _ ->
             ignore
     end,
 
-    {ok, Rules} = maps:find(rules, NodeDef),
-    {ok, Wires} = maps:find(wires, NodeDef),
+    {ok, Rules} = maps:find(<<"rules">>, NodeDef),
+    {ok, Wires} = maps:find(<<"wires">>, NodeDef),
 
     case
         obtain_compare_to_value(
-            maps:find(propertyType, NodeDef),
-            maps:find(property, NodeDef),
+            maps:find(<<"propertyType">>, NodeDef),
+            maps:find(<<"property">>, NodeDef),
             Msg
         )
     of
         {ok, Val} ->
-            case maps:find(checkall, NodeDef) of
+            case maps:find(<<"checkall">>, NodeDef) of
                 {ok, <<"true">>} ->
                     %% last flag indicates that nothing has yet matched -
                     %% required for the otherwise ('else') operator.
@@ -434,7 +434,7 @@ handle_msg({incoming, Msg}, NodeDef) ->
                     )
             end;
         property_not_found_on_msg ->
-            case maps:find(checkall, NodeDef) of
+            case maps:find(<<"checkall">>, NodeDef) of
                 {ok, <<"true">>} ->
                     %% last flag indicates that nothing has yet matched -
                     %% required for the otherwise ('else') operator.

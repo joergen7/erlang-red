@@ -28,7 +28,9 @@
 ]).
 -import(ered_msg_handling, [
     decode_json/1,
-    encode_json/1
+    encode_json/1,
+    get_prop/2,
+    set_prop_value/3
 ]).
 %%
 %%
@@ -68,19 +70,15 @@ handle_event(_, NodeDef) ->
 %%
 %%
 handle_msg({incoming, Msg}, NodeDef) ->
-    {ok, Prop} = maps:find(property, NodeDef),
-    %% TODO replace this with a call to msg_handling:get_prop/2
-    case maps:find(binary_to_atom(Prop), Msg) of
-        {ok, Val} ->
-            {ok, Action} = maps:find(action, NodeDef),
-            {ok, Pretty} = maps:find(pretty, NodeDef),
+    case get_prop(maps:find(<<"property">>, NodeDef), Msg) of
+        {ok, Val, Prop} ->
+            {ok, Action} = maps:find(<<"action">>, NodeDef),
+            {ok, Pretty} = maps:find(<<"pretty">>, NodeDef),
 
             try
                 case action_to_content(Val, Action, Pretty) of
                     {ok, Response} ->
-                        %% TODO this needs to be done smarter --> prop
-                        %% TODO can be a nested propery name
-                        Msg2 = maps:put(binary_to_atom(Prop), Response, Msg),
+                        Msg2 = set_prop_value(Prop, Msg, Response),
                         send_msg_to_connected_nodes(NodeDef, Msg2),
                         {handled, NodeDef, Msg2};
                     unsupported ->
@@ -102,7 +100,7 @@ handle_msg({incoming, Msg}, NodeDef) ->
                     post_exception_or_debug(NodeDef, Msg, ErrMsg2),
                     {handled, NodeDef, Msg}
             end;
-        _ ->
+        {undefined, Prop} ->
             ErrMsg = jstr("Property not defined on Msg: ~p --> ~p", [Prop, Msg]),
             post_exception_or_debug(NodeDef, Msg, ErrMsg),
             {handled, NodeDef, Msg}
