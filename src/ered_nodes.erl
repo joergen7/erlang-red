@@ -1,5 +1,7 @@
 -module(ered_nodes).
 
+-include("ered_nodes.hrl").
+
 -export([
     add_state/2,
     create_pid_for_node/2,
@@ -63,7 +65,9 @@ post_exception_or_debug(NodeDef, Msg, ErrMsg) ->
         dealt_with ->
             ok;
         _ ->
-            send_out_debug_error(NodeDef, maps:put(error_msg, ErrMsg, Msg))
+            send_out_debug_error(
+                NodeDef, maps:put(<<"error_msg">>, ErrMsg, Msg)
+            )
     end.
 
 %%
@@ -92,15 +96,15 @@ jstr(Str) ->
 %%
 %%
 this_should_not_happen(NodeDef, Arg) ->
-    {ok, TabId} = maps:find(z, NodeDef),
+    {ok, TabId} = maps:find(<<"z">>, NodeDef),
     ErrCollector = tabid_to_error_collector(TabId),
 
     case whereis(ErrCollector) of
         undefined ->
             io:format("TSNH: ~s\n", [Arg]);
         _ ->
-            {ok, IdStr} = maps:find(id, NodeDef),
-            {ok, ZStr} = maps:find(z, NodeDef),
+            {ok, IdStr} = maps:find(<<"id">>, NodeDef),
+            {ok, ZStr} = maps:find(<<"z">>, NodeDef),
             ErrCollector ! {it_happened, {IdStr, ZStr}, Arg}
     end.
 
@@ -214,13 +218,16 @@ install_module_node_code([NodeDef | ModeNodeDefs], WsName) ->
 %%
 %% internal message counters, get updated automagically in
 %% enter_receivership ==> 'mc' is message counter.
+%% erlfmt:ignore
 add_state(NodeDef, NodePid) ->
-    NodeDef1 = maps:put('_node_pid_', NodePid, NodeDef),
-    NodeDef2 = maps:put('_mc_incoming', 0, NodeDef1),
-    NodeDef3 = maps:put('_mc_link_return', 0, NodeDef2),
-    NodeDef4 = maps:put('_mc_websocket', 0, NodeDef3),
-    NodeDef5 = maps:put('_mc_outgoing', 0, NodeDef4),
-    maps:put('_mc_exception', 0, NodeDef5).
+    NodeDef#{
+       '_node_pid_'      => NodePid,
+       '_mc_incoming'    => 0,
+       '_mc_link_return' => 0,
+       '_mc_websocket'   => 0,
+       '_mc_outgoing'    => 0,
+       '_mc_exception'   => 0
+    }.
 
 %%
 %%
@@ -230,7 +237,7 @@ extract_supervisors(NodeDefs) ->
 extract_supervisors([], Supervisors, Nodes) ->
     {Nodes, Supervisors};
 extract_supervisors([NodeDef | MoreNodeDefs], Supervisors, Nodes) ->
-    case {is_supervisor(maps:get(type, NodeDef)), disabled(NodeDef)} of
+    case {is_supervisor(maps:get(<<"type">>, NodeDef)), disabled(NodeDef)} of
         {_, true} ->
             %% drop any disabled nodes from the list of nodes
             extract_supervisors(MoreNodeDefs, Supervisors, Nodes);
@@ -311,8 +318,7 @@ supervisor_filter_nodes(
 %%
 %% This can be used by a supervisor to revive a dead process.
 spin_up_node(NodeDef, WsName) ->
-    {ok, IdStr} = maps:find(id, NodeDef),
-    {ok, TypeStr} = maps:find(type, NodeDef),
+    {IdStr, TypeStr} = ?NODE_ID_AND_TYPE(NodeDef),
 
     %% here have to respect the 'd' (disabled) attribute. if true, then
     %% the node does not need to have a Pid created for it.
@@ -356,10 +362,10 @@ spin_up_and_link_node(NodeDef, WsName) ->
 store_config_nodes([], _WsName) ->
     ok;
 store_config_nodes([NodeDef | OtherNodeDefs], WsName) ->
-    case is_config_node(maps:get(type, NodeDef)) of
+    case is_config_node(maps:get(<<"type">>, NodeDef)) of
         true ->
             ered_config_store:store_config_node(
-                maps:get(id, NodeDef),
+                maps:get(<<"id">>, NodeDef),
                 NodeDef
             );
         _ ->
@@ -370,11 +376,11 @@ store_config_nodes([NodeDef | OtherNodeDefs], WsName) ->
 %%
 %% tab node usses 'disabled', everything else 'd'.
 disabled(NodeDef) ->
-    case maps:find(d, NodeDef) of
+    case maps:find(<<"d">>, NodeDef) of
         {ok, V} ->
             V;
         _ ->
-            case maps:find(disabled, NodeDef) of
+            case maps:find(<<"disabled">>, NodeDef) of
                 {ok, V} ->
                     V;
                 _ ->
@@ -390,7 +396,7 @@ disabled(NodeDef) ->
 %% exactly one array. This is the [Val] case and is the most common case.
 %%
 send_msg_to_connected_nodes(NodeDef, Msg) ->
-    case maps:find(wires, NodeDef) of
+    case maps:find(<<"wires">>, NodeDef) of
         {ok, [Val]} ->
             send_msg_on(Val, Msg);
         {ok, Val} ->
@@ -400,8 +406,8 @@ send_msg_to_connected_nodes(NodeDef, Msg) ->
 %%
 %% Avoid having to create the same case all the time.
 %%
-get_prop_value_from_map(Prop, Map, Default) when is_binary(Prop) ->
-    get_prop_value_from_map(binary_to_atom(Prop), Map, Default);
+get_prop_value_from_map(Prop, Map, Default) when is_atom(Prop) ->
+    get_prop_value_from_map(atom_to_binary(Prop), Map, Default);
 get_prop_value_from_map(Prop, Map, Default) ->
     case maps:find(Prop, Map) of
         {ok, Val} ->
@@ -461,7 +467,7 @@ node_type_to_module(Type, _) ->
 %%
 %% erlfmt:ignore alignment.
 node_type_to_module(NodeDef) when is_map(NodeDef) ->
-    node_type_to_module(maps:get(type,NodeDef));
+    node_type_to_module(maps:get(<<"type">>,NodeDef));
 node_type_to_module(<<"inject">>)            -> ered_node_inject;
 node_type_to_module(<<"switch">>)            -> ered_node_switch;
 node_type_to_module(<<"debug">>)             -> ered_node_debug;
@@ -522,7 +528,7 @@ node_type_to_module(Unknown) ->
 %% A list of all nodes that support outgoing messages, this was originally
 %% only the inject node but then I realised that for testing purposes there
 %% are in fact more.
-trigger_outgoing_messages({ok, <<"inject">>}, {ok, IdStr}, WsName) ->
+trigger_outgoing_messages(<<"inject">>, IdStr, WsName) ->
     case nodeid_to_pid(WsName, IdStr) of
         {ok, Pid} ->
             gen_server:cast(Pid, create_outgoing_msg(WsName));
@@ -546,7 +552,7 @@ is_config_node(_)                        -> false.
 %%
 %% this is also used by the supervisor node, hence the extra support.
 is_supervisor(NodeDef) when is_map(NodeDef) ->
-    is_supervisor(maps:get(type, NodeDef));
+    is_supervisor(maps:get(<<"type">>, NodeDef));
 is_supervisor(<<"erlsupervisor">>) ->
     true;
 is_supervisor(_) ->
@@ -556,7 +562,7 @@ is_supervisor(_) ->
 %% module nodes are started before everything else because they define
 %% code modules needed for the statemachine node (for example).
 is_module_node(NodeDef) when is_map(NodeDef) ->
-    is_module_node(maps:get(type, NodeDef));
+    is_module_node(maps:get(<<"type">>, NodeDef));
 is_module_node(<<"erlmodule">>) ->
     true;
 is_module_node(_) ->

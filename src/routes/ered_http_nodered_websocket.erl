@@ -236,7 +236,7 @@ terminate(_Reason, _Req, State) ->
 %%
 %%
 send_debug_down_the_pipe(Data, State, Level) ->
-    Data2 = maps:put(timestamp, erlang:system_time(millisecond), Data),
+    Data2 = maps:put(<<"timestamp">>, erlang:system_time(millisecond), Data),
     ered_ws_event_exchange:debug_msg(maps:find(wsname, State), Level, Data2),
     {reply, {text, encode_json([#{topic => debug, data => Data2}])}, State}.
 

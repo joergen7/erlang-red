@@ -25,9 +25,9 @@
 -spec register_link_in(NodeDef :: map(), WsName :: string(), Pid :: pid()) ->
     ok | {error, ErrMsg :: string()}.
 register_link_in(NodeDef, WsName, Pid) ->
-    {ok, Name} = maps:find(name, NodeDef),
+    {ok, Name} = maps:find(<<"name">>, NodeDef),
     pg:join(pg_link_node_name(Name, WsName), Pid),
-    {ok, NodeId} = maps:find(id, NodeDef),
+    {ok, NodeId} = maps:find(<<"id">>, NodeDef),
     pg:join(pg_link_node_name(NodeId, WsName), Pid),
     ok.
 
@@ -45,9 +45,9 @@ obtain_link_node_pid(Name, WsName) ->
 %% same named link in nodes ... just don't do it!
 -spec unregister_link_in(NodeDef :: map(), WsName :: string()) -> ok.
 unregister_link_in(NodeDef, WsName) ->
-    {ok, Name} = maps:find(name, NodeDef),
+    {ok, Name} = maps:find(<<"name">>, NodeDef),
     clear_pg_group(pg_link_node_name(Name, WsName)),
-    {ok, NodeId} = maps:find(id, NodeDef),
+    {ok, NodeId} = maps:find(<<"id">>, NodeDef),
     clear_pg_group(pg_link_node_name(NodeId, WsName)),
     ok.
 

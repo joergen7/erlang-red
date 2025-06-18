@@ -89,7 +89,7 @@ handle_json_body(Req, State) ->
                     WsName
                 },
                 #{
-                    nodeids => maps:get(<<"nodesSelected">>, TaskData),
+                    <<"nodeids">> => maps:get(<<"nodesSelected">>, TaskData),
                     '_ws' => WsName
                 }
             );
@@ -108,7 +108,7 @@ handle_json_body(Req, State) ->
                     WsName
                 },
                 #{
-                    nodeids => maps:get(<<"nodesSelected">>, TaskData),
+                    <<"nodeids">> => maps:get(<<"nodesSelected">>, TaskData),
                     '_ws' => WsName
                 }
             );

@@ -94,23 +94,26 @@ handle_info({'DOWN', MachPid, process, _ErlangPid, Status}, State) ->
     Status2 =
         case Status of
             normal ->
-                #{pid => MachPid, code => 0};
+                #{<<"pid">> => MachPid, <<"code">> => 0};
             {exit_status, Num} ->
-                #{pid => MachPid, code => Num};
+                #{<<"pid">> => MachPid, <<"code">> => Num};
             _ ->
                 io:format("ExecMgs: Unknown Status: ~p~n", [Status]),
-                #{pid => MachPid, code => jstr("Unknown: ~p", [Status])}
+                #{
+                    <<"pid">> => MachPid,
+                    <<"code">> => jstr("Unknown: ~p", [Status])
+                }
         end,
     gen_server:cast(
-        ?NODEPID, {exec_process_died, maps:put(payload, Status2, ?MSG)}
+        ?NODEPID, {exec_process_died, maps:put(<<"payload">>, Status2, ?MSG)}
     ),
-    send_msg_on(?DONEWIRES, maps:put(payload, Status2, ?MSG)),
+    send_msg_on(?DONEWIRES, maps:put(<<"payload">>, Status2, ?MSG)),
     {stop, normal, State};
 handle_info({stdout, _Pid, Payload}, State) ->
-    send_msg_on(?STDOUTWIRES, maps:put(payload, Payload, ?MSG)),
+    send_msg_on(?STDOUTWIRES, maps:put(<<"payload">>, Payload, ?MSG)),
     {noreply, State};
 handle_info({stderr, _Pid, Payload}, State) ->
-    send_msg_on(?STDERRWIRES, maps:put(payload, Payload, ?MSG)),
+    send_msg_on(?STDERRWIRES, maps:put(<<"payload">>, Payload, ?MSG)),
     {noreply, State};
 handle_info(Msg, State) ->
     io:format("Exec Manager Unknown Info: ~p~n", [Msg]),

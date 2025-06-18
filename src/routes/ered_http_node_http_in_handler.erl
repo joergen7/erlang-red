@@ -28,8 +28,8 @@
 
 -define(FATALERROR(M, P, C),
     io:format(
-        "FATAL ERROR: No handler {{{ ~p }}} to {{{ ~p }}} C: {{{ ~p }}}~n",
-        [M, P, C]
+        "FATAL ERROR: No handler ~p {{{ ~p }}} to {{{ ~p }}} C: {{{ ~p }}}~n",
+        [self(), M, P, C]
     )
 ).
 
@@ -113,6 +113,7 @@ init(Req, State) ->
                             %% This is basically a stale cookie, no handler
                             %% but the client has an old websocket cookie
                             %% set - ignore cookie value.
+                            ?FATALERROR(Method, Path, "Stale Cookie"),
                             {cowboy_loop, push_out_msg(Req, HttpInPid, WsName),
                                 State, hibernate};
                         {_, HttpInPidForCookie, CookieWsName} ->
@@ -153,41 +154,44 @@ read_body(Req0, Acc) ->
         {more, Data, Req} -> read_body(Req, <<Acc/binary, Data/binary>>)
     end.
 
-to_map_with_atoms(Ary) ->
-    to_map_with_atoms(Ary, #{}).
-to_map_with_atoms([], Map) ->
-    Map;
-to_map_with_atoms([{Key, Value} | Values], Map) ->
-    to_map_with_atoms(Values, maps:put(binary_to_atom(Key), Value, Map)).
+%%
+%%
+to_binary_keys(Map) ->
+    to_binary_keys(maps:to_list(Map), []).
+to_binary_keys([], NewList) ->
+    maps:from_list(NewList);
+to_binary_keys([H | T], Lst) ->
+    to_binary_keys(T, [{atom_to_binary(element(1, H)), element(2, H)} | Lst]).
 
+% erlfmt:ignore - alignment
 push_out_msg(Req, HttpInPid, WsName) ->
-    %% create a base Msg with _msgid and _ws as attributes
-    {outgoing, Msg} = create_outgoing_msg(WsName),
-
-    %% add the this pid so that a reply can be sent to the client
-    Msg2 = maps:put(reqpid, self(), Msg),
-
     %% add the bindings of any parameters in the path plus other stuff
     %% into the req object
     {ok, Body, Req2} = read_entire_body(Req),
 
     ReqObj = #{
-        url => cowboy_req:path(Req2),
-        uri => iolist_to_binary(cowboy_req:uri(Req2)),
-        body => Body,
-        hostname => cowboy_req:host(Req2),
-        originalUrl => cowboy_req:path(Req2),
-        method => cowboy_req:method(Req2),
-        headers => cowboy_req:headers(Req2),
-        params => cowboy_req:bindings(Req2),
-        cookies => cowboy_req:parse_cookies(Req2),
-        query => to_map_with_atoms(cowboy_req:parse_qs(Req2))
+        <<"url">>         => cowboy_req:path(Req2),
+        <<"uri">>         => iolist_to_binary(cowboy_req:uri(Req2)),
+        <<"body">>        => Body,
+        <<"hostname">>    => cowboy_req:host(Req2),
+        <<"originalUrl">> => cowboy_req:path(Req2),
+        <<"method">>      => cowboy_req:method(Req2),
+        <<"headers">>     => cowboy_req:headers(Req2),
+        <<"params">>      => to_binary_keys(cowboy_req:bindings(Req2)),
+        <<"cookies">>     => cowboy_req:parse_cookies(Req2),
+        <<"query">>       => maps:from_list(cowboy_req:parse_qs(Req2))
     },
-    Msg3 = maps:put(req, ReqObj, Msg2),
 
-    %% add the body as payload
-    Msg4 = maps:put(payload, Body, Msg3),
+    %% create a base Msg with _msgid and _ws as attributes
+    {outgoing, Msg} = create_outgoing_msg(WsName),
 
-    gen_server:cast(HttpInPid, {outgoing, Msg4}),
+    %% add the this pid so that a reply can be sent to the client
+    Msg2 = Msg#{
+        <<"reqpid">>  => self(),
+        <<"req">>     => ReqObj,
+        <<"payload">> => Body
+    },
+
+    gen_server:cast(HttpInPid, {outgoing, Msg2}),
 
     Req2.

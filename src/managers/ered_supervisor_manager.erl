@@ -28,12 +28,13 @@ start_link(NodePid, NodeDef, Children) ->
     NodePid ! {supervisor_node, {supervisor_started, Pid}},
     {ok, Pid}.
 
+% erlfmt:ignore - alignment
 init([_NodePid, NodeDef, Children]) ->
     SupOpts = #{
-        strategy => binary_to_atom(maps:get(strategy, NodeDef)),
-        intensity => binary_to_integer(maps:get(intensity, NodeDef)),
-        period => binary_to_integer(maps:get(period, NodeDef)),
-        auto_shutdown => binary_to_atom(maps:get(auto_shutdown, NodeDef))
+        strategy      => binary_to_atom(maps:get(<<"strategy">>,      NodeDef)),
+        intensity     => binary_to_integer(maps:get(<<"intensity">>,  NodeDef)),
+        period        => binary_to_integer(maps:get(<<"period">>,     NodeDef)),
+        auto_shutdown => binary_to_atom(maps:get(<<"auto_shutdown">>, NodeDef))
     },
     {ok, {SupOpts, Children}}.
 

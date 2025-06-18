@@ -108,11 +108,7 @@ timestamp() ->
 decode_json(Val) when is_list(Val) ->
     decode_json(list_to_binary(Val));
 decode_json(Val) ->
-    AtomizeKeys = fun(Key, Value, Acc) ->
-        [{binary_to_atom(Key), Value} | Acc]
-    end,
-    {Obj, _, _} = json:decode(Val, ok, #{object_push => AtomizeKeys}),
-    Obj.
+    json:decode(Val).
 
 %%
 %%
@@ -166,6 +162,7 @@ get_prop({ok, Prop}, Msg) ->
                     {undefined, Prop}
             end;
         Error ->
+            io:format("ERROR get_prop {{{ ~p }}}~n", [Error]),
             Error
     end.
 
@@ -191,11 +188,16 @@ set_prop_value(PropName, Msg, Value) ->
             try
                 mapz:deep_put(KeyNames, Value, Msg)
             catch
-                error:_Error ->
+                error:Error ->
+                    io:format(
+                        "ERROR setting value: ~p =.=> ~p~n",
+                        [PropName, Error]
+                    ),
                     Msg
             end;
         Error ->
-            Error
+            io:format("ERROR setting value: ~p ==> ~p~n", [PropName, Error]),
+            Msg
     end.
 
 %%

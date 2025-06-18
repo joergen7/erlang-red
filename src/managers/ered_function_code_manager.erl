@@ -98,7 +98,7 @@ handle_info(perform_func_code, {NodeDef, Msg, From, undefined}) ->
     % went down and the restart policy is "one for all" or "rest for one".
     erlang:monitor(process, From),
 
-    case maps:get(timeout, NodeDef) of
+    case maps:get(<<"timeout">>, NodeDef) of
         infinity ->
             ignore;
         Timeout ->
@@ -169,7 +169,7 @@ terminate(_, _State) ->
 %%
 %%
 perform_func_code(NodeDef, Msg, From) ->
-    case maps:find(func, NodeDef) of
+    case maps:find(<<"func">>, NodeDef) of
         {ok, <<>>} ->
             ?POST_MISSING_CODE(<<"empty function code, doing nothing">>);
         {ok, Code} ->
@@ -179,7 +179,9 @@ perform_func_code(NodeDef, Msg, From) ->
                 Msg
             ),
 
-            case send_message_on_ports(maps:get(wires, NodeDef), NewMsg) of
+            case
+                send_message_on_ports(maps:get(<<"wires">>, NodeDef), NewMsg)
+            of
                 unacceptable_response ->
                     Msg2 = Msg#{failed_content => NewMsg},
                     post_exception_or_debug(

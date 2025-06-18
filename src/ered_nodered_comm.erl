@@ -1,5 +1,7 @@
 -module(ered_nodered_comm).
 
+-include("ered_nodes.hrl").
+
 %%
 %% Module for sending various websocket messages to Node-RED frontend
 %%
@@ -48,14 +50,14 @@ send_on_if_ws(WsName, Msg) ->
 %%
 %% clear a previous node status value.
 node_status_clear(WsName, NodeDef) ->
-    {ok, NodeId} = maps:find(id, NodeDef),
+    {ok, NodeId} = maps:find(<<"id">>, NodeDef),
     send_on_if_ws(WsName, {status, NodeId, clear}).
 
 node_status(WsName, NodeDef, Txt, Clr, Shp) when is_integer(Txt) ->
     TxtStr = io_lib:format("~p", [Txt]),
     node_status(WsName, NodeDef, TxtStr, Clr, Shp);
 node_status(WsName, NodeDef, Txt, Clr, Shp) ->
-    {ok, NodeId} = maps:find(id, NodeDef),
+    {ok, NodeId} = maps:find(<<"id">>, NodeDef),
     send_on_if_ws(WsName, {status, NodeId, Txt, Clr, Shp}).
 
 debug(WsName, Data, error) ->
@@ -85,58 +87,34 @@ unittest_result(WsName, FlowId, success) ->
 unsupported(NodeDef, {websocket, WsName}, ErrMsg) ->
     unsupported(NodeDef, #{ '_ws' => WsName}, ErrMsg);
 unsupported(NodeDef, Msg, ErrMsg) ->
-    Type     = get_prop_value_from_map(type, NodeDef),
-    IdStr    = get_prop_value_from_map(id,   NodeDef),
-    ZStr     = get_prop_value_from_map(z,    NodeDef),
-    NameStr  = get_prop_value_from_map(name, NodeDef, Type),
-
-    Data = #{
-      id     => IdStr,
-      z      => ZStr,
-      path   => ZStr,
-      name   => NameStr,
-      msg    => list_to_binary(
-                  io_lib:format(
-                    "Unsupported Feature: ~s NodeDef: ~p Msg: ~p",
-                    [ErrMsg, NodeDef, Msg])
-                 ),
-      format => <<"string">>
+    D = ?BASE_DATA,
+    Data = D#{
+      <<"msg">> => list_to_binary(
+                     io_lib:format(
+                       "Unsupported Feature: ~s NodeDef: ~p Msg: ~p",
+                       [ErrMsg, NodeDef, Msg])
+                    ),
+      <<"format">> => <<"string">>
      },
 
     debug(ws_from(Msg), Data, notice).
 
 %% erlfmt:ignore lined up and to attention
 send_out_debug_msg(NodeDef, Msg, ErrMsg, DebugType) ->
-    TypeStr  = get_prop_value_from_map(type,  NodeDef),
-    IdStr    = get_prop_value_from_map(id,    NodeDef),
-    ZStr     = get_prop_value_from_map(z,     NodeDef),
-    NameStr  = get_prop_value_from_map(name,  NodeDef, TypeStr),
-
-    Data = #{
-      id     => IdStr,
-      z      => ZStr,
-      path   => ZStr,
-      name   => NameStr,
-      msg    => ErrMsg,
-      format => <<"string">>
+    D = ?BASE_DATA,
+    Data = D#{
+      <<"msg">>    => ErrMsg,
+      <<"format">> => <<"string">>
      },
 
     debug(ws_from(Msg), Data, DebugType).
 
 %% erlfmt:ignore lined up and to attention
 send_out_debug_error(NodeDef, Msg) ->
-    TypeStr  = get_prop_value_from_map(type,  NodeDef),
-    IdStr    = get_prop_value_from_map(id,    NodeDef),
-    ZStr     = get_prop_value_from_map(z,     NodeDef),
-    NameStr  = get_prop_value_from_map(name,  NodeDef, TypeStr),
-
-    Data = #{
-      id     => IdStr,
-      z      => ZStr,
-      path   => ZStr,
-      name   => NameStr,
-      msg    => Msg,
-      format => <<"object">>
+    D = ?BASE_DATA,
+    Data = D#{
+      <<"msg">>    => Msg,
+      <<"format">> => <<"object">>
      },
 
     debug(ws_from(Msg), Data, error).
@@ -145,25 +123,19 @@ send_out_debug_error(NodeDef, Msg) ->
 %%
 %% erlfmt:ignore equals and arrows should line up here.
 send_to_debug_sidebar(NodeDef,Msg) ->
-    Type     = get_prop_value_from_map(type,  NodeDef),
-    IdStr    = get_prop_value_from_map(id,    NodeDef),
-    ZStr     = get_prop_value_from_map(z,     NodeDef),
-    NameStr  = get_prop_value_from_map(name,  NodeDef, Type),
-    TopicStr = get_prop_value_from_map(topic, Msg,     ""),
+    D = ?BASE_DATA,
+
+    TopicStr = get_prop_value_from_map(<<"topic">>, Msg, ""),
 
     %% format is important here.
     %% Triggery for large files and I don't know what. Using format
     %% of "object" as opposed to "Object" (capital-o) causes less
     %% breakage. Definitely something to investigate.
     %% See info for test id: c4690c0a085d6ef5 for more details.
-    Data = #{
-      id     => IdStr,
-      z      => ZStr,
-      path   => ZStr,
-      name   => NameStr,
-      topic  => to_binary_if_not_binary(TopicStr),
-      msg    => Msg,
-      format => <<"object">>
+    Data = D#{
+      <<"topic">>  => to_binary_if_not_binary(TopicStr),
+      <<"msg">>    => Msg,
+      <<"format">> => <<"object">>
      },
 
     debug(ws_from(Msg), Data, normal).
@@ -199,44 +171,32 @@ ws_from(Msg) ->
 
 %%
 %% helpers
-%% erlfmt:ignore the stars are lined up
-debug_string(NodeDef,Msg) ->
-    IdStr = get_prop_value_from_map(id,NodeDef),
-    ZStr  = get_prop_value_from_map(z,NodeDef),
-    debug_string(IdStr,ZStr,Msg).
+debug_string(NodeDef, Msg) ->
+    IdStr = get_prop_value_from_map(<<"id">>, NodeDef),
+    ZStr = get_prop_value_from_map(<<"z">>, NodeDef),
+    debug_string(IdStr, ZStr, Msg).
 
 %% erlfmt:ignore the stars are lined up
 debug_string(NodeId,TabId,Msg) ->
     #{
-      id     => NodeId,
-      z      => TabId,
-      path   => TabId,
-      name   => <<"Unit Test Notice">>,
-      topic  => <<"">>,
-      msg    => Msg,
-      format => <<"string">>
+      <<"id">>     => NodeId,
+      <<"z">>      => TabId,
+      <<"path">>   => TabId,
+      <<"name">>   => <<"Unit Test Notice">>,
+      <<"topic">>  => <<"">>,
+      <<"msg">>    => Msg,
+      <<"format">> => <<"string">>
     }.
 
-%% erlfmt:ignore equals and arrows should line up here.
-assert_failure(NodeDef,WsName,ErrMsg) ->
-    {ok, IdStr}   = maps:find(id,   NodeDef),
-    {ok, TypeStr} = maps:find(type, NodeDef),
-
+assert_failure(NodeDef, WsName, ErrMsg) ->
     this_should_not_happen(NodeDef, ErrMsg),
 
-    IdStr   = get_prop_value_from_map(id,   NodeDef),
-    ZStr    = get_prop_value_from_map(z,    NodeDef),
-    NameStr = get_prop_value_from_map(name, NodeDef, TypeStr),
+    D = ?BASE_DATA,
 
-    Data = #{
-      id       => IdStr,
-      z        => ZStr,
-      '_alias' => IdStr,
-      path     => ZStr,
-      name     => NameStr,
-      msg      => jstr(ErrMsg),
-      format   => <<"string">>
-     },
+    Data = D#{
+      <<"msg">> => jstr(ErrMsg),
+      <<"format">> => <<"string">>
+    },
 
     debug(WsName, Data, error),
     node_status(WsName, NodeDef, "assert failed", "red", "dot").
