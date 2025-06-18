@@ -111,14 +111,16 @@ handle_call({deploy, JsonStr, WsName}, _From, State) ->
 
     [
         [
-            is_process_alive(M) =/= false andalso M ! {stop, WsName}
+            (is_process_alive(M) =/= false) andalso
+                (M =/= false) andalso
+                (M ! {stop, WsName})
          || M <- pg:get_members(GrpName)
         ]
      || GrpName <- Nodes
     ],
 
     FlowMap = decode_json(JsonStr),
-    {ok, NodeAry} = maps:find(flows, FlowMap),
+    {ok, NodeAry} = maps:find(<<"flows">>, FlowMap),
     create_pid_for_node(NodeAry, WsName),
 
     {reply, <<"{\"rev\":\"fed00d06\"}">>, State};

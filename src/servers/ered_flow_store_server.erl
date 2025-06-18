@@ -103,12 +103,8 @@ handle_cast(_Msg, Store) ->
 %%
 %%
 handle_info({store_flow, FlowId, JsonText}, FlowStore) ->
-    Push = fun(Key, Value, Acc) ->
-        [{binary_to_atom(Key), Value} | Acc]
-    end,
-
-    {FlowMap, _, _} = json:decode(JsonText, ok, #{object_push => Push}),
-    {ok, NodeAry} = maps:find(flow, FlowMap),
+    FlowMap = json:decode(JsonText),
+    {ok, NodeAry} = maps:find(<<"flow">>, FlowMap),
 
     DestFileName = io_lib:format(
         "~s/testflows/~s/flows.json",
@@ -158,9 +154,9 @@ terminate(Event, _State) ->
 tab_name_or_filename([], FileName) ->
     FileName;
 tab_name_or_filename([NodeDef | MoreNodeDefs], FileName) ->
-    case maps:find(type, NodeDef) of
+    case maps:find(<<"type">>, NodeDef) of
         {ok, <<"tab">>} ->
-            {ok, Val} = maps:find(label, NodeDef),
+            {ok, Val} = maps:find(<<"label">>, NodeDef),
             Val;
         _ ->
             tab_name_or_filename(MoreNodeDefs, FileName)
@@ -203,7 +199,7 @@ compile_file_store([FileDetails | MoreFileNames], FileStore) ->
             #{
                 path => jstr(FileName),
                 id   => jstr(FlowId),
-                name => TestName
+                name => jstr(TestName)
             },
             FileStore
         )

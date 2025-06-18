@@ -50,7 +50,7 @@ start() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 debug_msg({ok, WsName}, Type, Data) ->
-    {ok, NodeId} = maps:find(id, Data),
+    NodeId = maps:get(<<"id">>, Data),
     gen_server:call(?MODULE, {debug_event, WsName, NodeId, Type, Data});
 debug_msg(_, _, _) ->
     ignore.

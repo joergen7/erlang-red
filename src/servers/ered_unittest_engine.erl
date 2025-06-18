@@ -190,7 +190,7 @@ run_the_test(FlowId, WsName, Ary) ->
             %% there are exception groups for nodes aswell, remove those
             %% too.
             Cleaner = fun(NodeDef) ->
-                {ok, NodeId} = maps:find(id, NodeDef),
+                {ok, NodeId} = maps:find(<<"id">>, NodeDef),
                 clear_exception_group(NodeId, WsName)
             end,
             [Cleaner(NodeDef) || NodeDef <- Ary],
@@ -199,8 +199,8 @@ run_the_test(FlowId, WsName, Ary) ->
 
             [
                 trigger_outgoing_messages(
-                    maps:find(type, ND),
-                    maps:find(id, ND),
+                    maps:get(<<"type">>, ND),
+                    maps:get(<<"id">>, ND),
                     WsName
                 )
              || ND <- Ary
