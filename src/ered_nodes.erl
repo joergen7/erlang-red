@@ -4,6 +4,7 @@
 
 -export([
     add_state/2,
+    bump_counter/2,
     create_pid_for_node/2,
     get_node_name/2,
     get_prop_value_from_map/2,
@@ -56,6 +57,10 @@
     clear_pg_group/1,
     post_exception/3
 ]).
+
+-define(INC_COUNTER(CntName),
+    NodeDef#{ CntName => maps:get(CntName, NodeDef) + 1 }
+).
 
 %%
 %% Since exceptions are either handled by a catch node or posted in the
@@ -228,6 +233,17 @@ add_state(NodeDef, NodePid) ->
        '_mc_outgoing'    => 0,
        '_mc_exception'   => 0
     }.
+
+%%
+%% this needs to be in sync with ered_nodes:add_state/2
+% erlfmt:ignore - alignment
+bump_counter(exception,   NodeDef) -> ?INC_COUNTER('_mc_exception');
+bump_counter(ws_event,    NodeDef) -> ?INC_COUNTER('_mc_websocket');
+bump_counter(outgoing,    NodeDef) -> ?INC_COUNTER('_mc_outgoing');
+bump_counter(incoming,    NodeDef) -> ?INC_COUNTER('_mc_incoming');
+bump_counter(link_return, NodeDef) -> ?INC_COUNTER('_mc_link_return');
+bump_counter(_, NodeDef) ->
+    NodeDef.
 
 %%
 %%

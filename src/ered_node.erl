@@ -38,6 +38,7 @@
 
 -import(ered_nodes, [
     add_state/2,
+    bump_counter/2,
     post_exception_or_debug/3,
     this_should_not_happen/2
 ]).
@@ -257,24 +258,3 @@ bad_routing(NodeDef, Type, Msg) ->
             [Type, NodeDef, Msg]
         )
     ).
-
-%%
-%%
-increment_message_counter(NodeDef, CntName) ->
-    {ok, V} = maps:find(CntName, NodeDef),
-    maps:put(CntName, V + 1, NodeDef).
-
-%%
-%% this needs to be in sync with ered_nodes:add_state/2
-bump_counter(exception, NodeDef) ->
-    increment_message_counter(NodeDef, '_mc_exception');
-bump_counter(link_return, NodeDef) ->
-    increment_message_counter(NodeDef, '_mc_link_return');
-bump_counter(ws_event, NodeDef) ->
-    increment_message_counter(NodeDef, '_mc_websocket');
-bump_counter(outgoing, NodeDef) ->
-    increment_message_counter(NodeDef, '_mc_outgoing');
-bump_counter(incoming, NodeDef) ->
-    increment_message_counter(NodeDef, '_mc_incoming');
-bump_counter(_, NodeDef) ->
-    NodeDef.
