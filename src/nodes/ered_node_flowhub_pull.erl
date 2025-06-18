@@ -74,7 +74,7 @@ handle_msg({incoming, Msg}, NodeDef) ->
                     case to_bool(maps:get(<<"install_flow">>, Msg, false)) of
                         true ->
                             Ary = ered_flows:parse_flow_file(FileName),
-                            ered_nodes:create_pid_for_node(Ary, ws_from(Msg));
+                            ered_startup:create_pids_for_nodes(Ary, ws_from(Msg));
                         _ ->
                             ignore
                     end,

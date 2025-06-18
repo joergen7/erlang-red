@@ -32,22 +32,22 @@
 
 %%
 %%
--import(ered_nodered_comm, [
-    unsupported/3
-]).
-
 -import(ered_nodes, [
-    add_state/2,
-    bump_counter/2,
     this_should_not_happen/2
 ]).
 
 -import(ered_nodered_comm, [
+    unsupported/3,
     ws_from/1
 ]).
 
 -import(ered_message_exchange, [
     post_completed/2
+]).
+
+-import(ered_startup, [
+    add_counters/2,
+    bump_counter/2
 ]).
 
 %%
@@ -150,7 +150,7 @@ handle_cast(Msg, {Module, NodeDef}) ->
 %% Events generate by the system.
 handle_info({reload}, {Module, NodeDef}) ->
     {ok, NodePid} = maps:find('_node_pid_', NodeDef),
-    NodeDef2 = Module:handle_event(deploy, add_state(NodeDef, NodePid)),
+    NodeDef2 = Module:handle_event(deploy, add_counters(NodeDef, NodePid)),
     {noreply, {Module, NodeDef2}};
 handle_info({mqtt_disconnected, ReasonCode, Properties}, {Module, NodeDef}) ->
     NodeDef2 = Module:handle_event(
@@ -159,7 +159,7 @@ handle_info({mqtt_disconnected, ReasonCode, Properties}, {Module, NodeDef}) ->
     {noreply, {Module, NodeDef2}};
 handle_info({deploy, NewNodeDef}, {Module, NodeDef}) ->
     {ok, NodePid} = maps:find('_node_pid_', NodeDef),
-    NodeDef2 = Module:handle_event(deploy, add_state(NewNodeDef, NodePid)),
+    NodeDef2 = Module:handle_event(deploy, add_counters(NewNodeDef, NodePid)),
     {noreply, {Module, NodeDef2}};
 %%
 %% If any node decides to monitor other processes, then it will generate

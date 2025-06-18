@@ -26,12 +26,17 @@
 %% after the test.
 %%
 
+-import(ered_startup, [
+    create_pids_for_nodes/2
+]).
 -import(ered_nodes, [
-    create_pid_for_node/2,
     get_node_name/2
 ]).
 -import(ered_messages, [
     decode_json/1
+]).
+-import(ered_flows, [
+    parse_flow_file/1
 ]).
 
 start() ->
@@ -121,7 +126,7 @@ handle_call({deploy, JsonStr, WsName}, _From, State) ->
 
     FlowMap = decode_json(JsonStr),
     {ok, NodeAry} = maps:find(<<"flows">>, FlowMap),
-    create_pid_for_node(NodeAry, WsName),
+    create_pids_for_nodes(NodeAry, WsName),
 
     {reply, <<"{\"rev\":\"fed00d06\"}">>, State};
 handle_call(_Msg, _From, State) ->
@@ -148,12 +153,12 @@ handle_info({timeout, _From, {load_flowid, FlowId}}, State) ->
             ),
             ignore;
         FileName ->
-            Ary = ered_flows:parse_flow_file(FileName),
+            Ary = parse_flow_file(FileName),
             %% Websockets are scopes that identify a client using the
             %% floweditor to execute flows. If there is no floweditor
             %% frontend and a flow is loaded what then? Well it's a none
             %% websocket. Important is that a websocket name is supplied.
-            ered_nodes:create_pid_for_node(Ary, none)
+            create_pids_for_nodes(Ary, none)
     end,
     {noreply, State};
 handle_info(Msg, State) ->

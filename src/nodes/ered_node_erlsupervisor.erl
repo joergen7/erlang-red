@@ -32,9 +32,12 @@
 %% this node works,
 %%
 -import(ered_nodes, [
-    is_supervisor/1,
     jstr/1,
     send_msg_to_connected_nodes/2
+]).
+
+-import(ered_startup, [
+    is_supervisor/1
 ]).
 
 -import(ered_nodered_comm, [
@@ -197,7 +200,7 @@ create_children(MyNodeDefs, SupNodeDef, WsName) ->
                 )
             ),
             start => {
-                ered_nodes, spin_up_and_link_node, [NodeDef, WsName]
+                ered_startup, spin_up_and_link_node, [NodeDef, WsName]
             },
             restart => cf_child_restart(
                 maps:get(<<"child_restart">>, SupNodeDef)
@@ -256,7 +259,7 @@ create_children(MyNodeDefs, SupNodeDef, WsName) ->
 %% The functionality beyond here is related to configuring supervisor nodes
 %% before these are spun up. This functionality checks the configuration of the
 %% supervisor node and extracts the nodes from a list of nodes. This is called
-%% from the ered_nodes:create_pid_for_node/2 function.
+%% from the ered_startup:create_pids_for_nodes/2 function.
 %%
 %%
 check_config(NodeDef) ->

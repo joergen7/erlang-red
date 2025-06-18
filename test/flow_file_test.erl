@@ -126,7 +126,7 @@ create_test_for_flow_file([FileName | MoreFileNames], Acc) ->
         WsName = eunit_test,
         ensure_websocket_listener_is_running(WsName),
 
-        Pids = ered_nodes:create_pid_for_node(Ary, WsName),
+        Pids = ered_startup:create_pids_for_nodes(Ary, WsName),
 
         [
             ered_nodes:trigger_outgoing_messages(
