@@ -4,6 +4,7 @@
 
 -export([
     create_pids_for_nodes/2,
+    %% Spin up and link node is called by a supervisor to spin a node.
     spin_up_and_link_node/2,
     is_supervisor/1,
     add_counters/2,

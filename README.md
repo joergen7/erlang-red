@@ -38,28 +38,30 @@ An architectural diagram of this interconnectedness would be probably be just as
 
 **UPDATE**
 
-Having said the exact opposite above, here are some Erlang architectural descrptions of:
+Having said the exact opposite above, here are some Erlang architectural descrptions of nodes:
 
 - A [supervisor node](https://flows.red-erik.org/f/211405fa9e8a6f9b) supervising a function node
 - The challenges of [function node](https://flows.red-erik.org/f/1fd621a674360b5d) which must support timeouts, sub-processes and being supervised by a supervisor
-- How [link nodes](https://flows.red-erik.org/f/43e8af136f4d0fbe) deal with dynamic link calls - WIP, liable to be completed.
+- How [link nodes](https://flows.red-erik.org/f/43e8af136f4d0fbe) deal with dynamic link calls.
 
-These descrptions should be self-contained but perfection is boredom.
+And of functionality within Erlang-Red:
 
+- What happens when [flows](https://flows.red-erik.org/f/2d51a745ca17dc05) are loaded by Erlang-Red. Explains a little about the start up process and how processes are started for nodes.
 
 Supported Nodes & Features
 ---
 
 This is a non-complete list of [nodes](src/nodes/) that partially or completely work:
 
-| Node | Comment | Examples |
-| ---- | ------- | -------- |
+| Node | Comment | Example Flow |
+| ---- | ------- | ------------ |
 | [catch](src/nodes/ered_node_catch.erl) | catches exception of selected nodes and of entire flows but not groups | [Flow](https://flows.red-erik.org/f/71f65246c742cfc9) |
 | [change](src/nodes/ered_node_change.erl) | supports many operators but not all. JSONata in basic form is also supported. | [Flow](https://flows.red-erik.org/f/12572f9ac11e1786) |
 | [complete](src/nodes/ered_node_complete.erl) | is available and can be used on certain nodes, not all | [Flow](https://flows.red-erik.org/f/b723353a316fa50e) |
 | [csv](src/nodes/ered_node_csv.erl) | initial RFC4180 decoder working, supports only comma separator | [Flow](https://flows.red-erik.org/f/16b0bc0cdb0c5807) |
 | [debug](src/nodes/ered_node_debug.erl) | only debugs the entire message, individal msg properties aren't supported. msg count as status is supported. | [Flow](https://flows.red-erik.org/f/b2a67e301fabab0e) |
 | [delay](src/nodes/ered_node_delay.erl) | supported static delay not dynamic delay set via `msg.delay` | [Flow](https://flows.red-erik.org/f/9d11bfc3a6d88535) |
+| [event handler](src/nodes/ered_node_erleventhandler.erl) | Erlang-Red node for the Erlang [`gen_event`](https://www.erlang.org/doc/apps/stdlib/gen_event.html) behaviour. Supports both dynamic and static configuration of the event handler. | [Flow](https://flows.red-erik.org/f/5c8974f17ca70789) |
 | [exec](src/nodes/ered_node_exec.erl) | executing and killing commands is supported  but only for commands in spawn mode and set on the node. Appending arguments to commands isn't supported. Timeouts are supported. Kill messages are also supported. | [Flow](https://flows.red-erik.org/f/090eb2d5d71fd45f) |
 | [file in](src/nodes/ered_node_file_in.erl) | working for files located in `/priv` | [Flow](https://flows.red-erik.org/f/538be5947c639b32) |
 | [function](src/nodes/ered_node_function.erl) | working for any Erlang. Stop and start also respected. Timeout and more than one output port isn't supported. | [Flow](https://flows.red-erik.org/f/3bba732ae17b01a9) |
@@ -74,6 +76,7 @@ This is a non-complete list of [nodes](src/nodes/) that partially or completely 
 | [link in](src/nodes/ered_node_link_in.erl) | working | [Flow](https://flows.red-erik.org/f/8a627c9bfe3b4aff) |
 | [link out](src/nodes/ered_node_link_out.erl) | working | [Flow](https://flows.red-erik.org/f/bbb1fc2d47c3cd5f) |
 | [markdown](src/nodes/ered_node_markdown.erl) | working and supports whatever [earmark](https://github.com/pragdave/earmark) supports. | [Flow](https://flows.red-erik.org/f/90c1ce90f8af227f) |
+| [module](src/nodes/ered_node_erlmodule.erl) |  Erlang module for defining Erlang modules that can be used with the function, event handler and statemachine nodes. | [Flow](https://flows.red-erik.org/f/442b3bf0d630e21d) |
 | [mqtt in](src/nodes/ered_node_mqtt_in.erl) | should be working | [Flow](https://flows.red-erik.org/f/486c1412721bb241) |
 | [mqtt out](src/nodes/ered_node_mqtt_out.erl) | should be working | [Flow](https://flows.red-erik.org/f/486c1412721bb241) |
 | [noop](src/nodes/ered_node_noop.erl) | doing nothing is very much supported | [Flow](https://flows.red-erik.org/f/2c5903c9e50d0648) |
