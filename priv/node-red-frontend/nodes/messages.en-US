@@ -236,7 +236,7 @@
                     "fr-circ": "Framed Circle",
                     "fr-rect": "[[ Framed Rectangle ]]",
                     "h-cyl": "Horizontal Cylinder",
-                    "hex": "",
+                    "hex": "{{ Hexagon }}",
                     "hourglass": "Hourglass",
                     "lean-l": "Lean Left",
                     "lean-r": "Lean Right",
