@@ -68,12 +68,54 @@ create_pids_for_nodes(AryAll, WsName) ->
 
     create_pids_for_nodes(ReducedAry, [], WsName).
 
-%% erlfmt:ignore equals and arrows should line up here.
 create_pids_for_nodes([], Pids, _WsName) ->
     Pids;
 create_pids_for_nodes([NodeDef | MoreNodeDefs], Pids, WsName) ->
     {ok, Pid} = spin_up_node(NodeDef, WsName),
     create_pids_for_nodes(MoreNodeDefs, [Pid | Pids], WsName).
+
+%%
+%% This can be used by a supervisor to revive a dead process.
+spin_up_node(NodeDef, WsName) ->
+    {IdStr, TypeStr} = ?NODE_ID_AND_TYPE(NodeDef),
+
+    %% here have to respect the 'd' (disabled) attribute. if true, then
+    %% the node does not need to have a Pid created for it.
+    Module = node_type_to_module(TypeStr, disabled(NodeDef)),
+
+    GrpName = get_node_name(WsName, IdStr),
+
+    clear_pg_group(GrpName),
+
+    %% The Module:start calls the ered_node:start(..) function which registers
+    %% the PID with the corresponding pg group
+    {ok, Pid} = Module:start(add_counters(NodeDef, GrpName), WsName),
+
+    %% Perform any Post spawn activities. This is mostly registering with
+    %% collectors of events as subscribers, see catch and complete nodes
+    %% for examples. This is done after the spawn because to register
+    %% with the various servers, a Pid is needed and that is not known
+    %% when a node is initialised via the Module:start.
+    gen_server:call(Pid, {registered, WsName, Pid}),
+
+    {ok, Pid}.
+
+%% Used by the supervisor node to restart/start nodes.
+spin_up_and_link_node(NodeDef, WsName) ->
+    {ok, Pid} = spin_up_node(NodeDef, WsName),
+
+    erlang:link(Pid),
+
+    % this flag indicates that a supervisor node should fall down if
+    % its supervisor process dies, that's because the supervisor node
+    % is being started by another supervisor. that supervisor is responsible
+    % for restarting this node when it goes down. Also this function is
+    % exclusively used by supervisor nodes, so its safe to set the
+    % flag here. The top-level supervisor is started by the spin_up_nodes
+    % function and hence does not have this flag.
+    gen_server:call(Pid, {being_supervised, WsName}),
+
+    {ok, Pid}.
 
 %%
 %%
@@ -200,47 +242,6 @@ supervisor_filter_nodes(
                 Limit - 1
             )
     end.
-
-%%
-%% This can be used by a supervisor to revive a dead process.
-spin_up_node(NodeDef, WsName) ->
-    {IdStr, TypeStr} = ?NODE_ID_AND_TYPE(NodeDef),
-
-    %% here have to respect the 'd' (disabled) attribute. if true, then
-    %% the node does not need to have a Pid created for it.
-    Module = node_type_to_module(TypeStr, disabled(NodeDef)),
-
-    GrpName = get_node_name(WsName, IdStr),
-
-    clear_pg_group(GrpName),
-
-    %% The Module:start calls the ered_node:start(..) function which registers
-    %% the PID with the corresponding pg group
-    {ok, Pid} = Module:start(add_counters(NodeDef, GrpName), WsName),
-
-    %% Perform any Post spawn activities. This is mostly registering with
-    %% collectors of events as subscribers, see catch and complete nodes
-    %% for examples. This is done after the spawn because to register
-    %% with the various servers, a Pid is needed and that is not known
-    %% when a node is initialised via the Module:start.
-    gen_server:call(Pid, {registered, WsName, Pid}),
-
-    {ok, Pid}.
-
-%% Used by the supervisor node to restart/start nodes.
-spin_up_and_link_node(NodeDef, WsName) ->
-    {ok, Pid} = spin_up_node(NodeDef, WsName),
-    erlang:link(Pid),
-    % this flag indicates that a supervisor node should fall down if
-    % its supervisor process dies, that's because the supervisor node
-    % is being started by another supervisor. that supervisor is responsible
-    % for restarting this node when it goes down. Also this function is
-    % exclusively used by supervisor nodes, so its safe to set the
-    % flag here. The top-level supervisor is started by the spin_up_nodes
-    % function and hence does not have this flag.
-    gen_server:call(Pid, {being_supervised, WsName}),
-
-    {ok, Pid}.
 
 %%
 %% Squirrel away all config nodes to the config store for later retrieval
@@ -370,7 +371,7 @@ is_supervisor(_) ->
     false.
 
 %%
-%% module nodes are started before everything else because they define
+%% module nodes are started before everything else as these define
 %% code modules needed for the statemachine node (for example).
 is_module_node(NodeDef) when is_map(NodeDef) ->
     is_module_node(maps:get(<<"type">>, NodeDef));

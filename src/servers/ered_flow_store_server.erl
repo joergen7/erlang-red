@@ -156,8 +156,12 @@ tab_name_or_filename([], FileName) ->
 tab_name_or_filename([NodeDef | MoreNodeDefs], FileName) ->
     case maps:find(<<"type">>, NodeDef) of
         {ok, <<"tab">>} ->
-            {ok, Val} = maps:find(<<"label">>, NodeDef),
-            Val;
+            case maps:find(<<"label">>, NodeDef) of
+                {ok, Val} ->
+                    Val;
+                _ ->
+                    FileName
+            end;
         _ ->
             tab_name_or_filename(MoreNodeDefs, FileName)
     end.

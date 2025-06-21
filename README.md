@@ -28,25 +28,15 @@ Test flows are mirrored in a separate [repository](https://github.com/gorenje/er
 Architecture
 ----
 
-The architecture, along with a background to Flow Based Programming and Node-RED has been [written](Architecture.md).
+Erlang architecture is best described by describing various use cases:
 
-The codebase as it stands, has many interdependence because of testing flows: [assert nodes](https://github.com/gorenje/erlang-red/blob/e2bd2f324ddc1bbe611dff29216246b80151ffc0/src/nodes/ered_node_assert_status.erl#L109-L131) need to know about [web-socket communication](https://github.com/gorenje/erlang-red/blob/e2bd2f324ddc1bbe611dff29216246b80151ffc0/src/servers/ered_ws_event_exchange.erl), or because of the nature of nodes: the [complete](https://github.com/gorenje/erlang-red/blob/e2bd2f324ddc1bbe611dff29216246b80151ffc0/src/nodes/ered_node_complete.erl#L74-L89) node needs to know of [completed messages](https://github.com/gorenje/erlang-red/blob/e2bd2f324ddc1bbe611dff29216246b80151ffc0/src/exchanges/ered_message_exchange.erl#L36-L39).
+- Deploying [flows](https://flows.red-erik.org/f/2d51a745ca17dc05) to Erlang-Red. Explains the start up process and how Erlang processes are started for nodes.
 
-While the [exception node](https://github.com/gorenje/erlang-red/blob/e2bd2f324ddc1bbe611dff29216246b80151ffc0/src/nodes/ered_node_catch.erl#L40) needs to know about exceptions when they [happen](https://github.com/gorenje/erlang-red/blob/e2bd2f324ddc1bbe611dff29216246b80151ffc0/src/exchanges/ered_message_exchange.erl#L46-L56).
+- Workings of a [supervisor node](https://flows.red-erik.org/f/211405fa9e8a6f9b) supervising a function node.
 
-An architectural diagram of this interconnectedness would be probably be just as confusing as the code itself.
+- The challenges of [function node](https://flows.red-erik.org/f/1fd621a674360b5d) which must support timeouts, sub-processes and being supervised by a supervisor.
 
-**UPDATE**
-
-Having said the exact opposite above, here are some Erlang architectural descrptions of nodes:
-
-- A [supervisor node](https://flows.red-erik.org/f/211405fa9e8a6f9b) supervising a function node
-- The challenges of [function node](https://flows.red-erik.org/f/1fd621a674360b5d) which must support timeouts, sub-processes and being supervised by a supervisor
-- How [link nodes](https://flows.red-erik.org/f/43e8af136f4d0fbe) deal with dynamic link calls.
-
-And of functionality within Erlang-Red:
-
-- What happens when [flows](https://flows.red-erik.org/f/2d51a745ca17dc05) are loaded by Erlang-Red. Explains a little about the start up process and how processes are started for nodes.
+- Inner workings of [link nodes](https://flows.red-erik.org/f/43e8af136f4d0fbe) and how to deal with dynamic link calls.
 
 Supported Nodes & Features
 ---
