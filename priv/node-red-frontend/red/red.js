@@ -42384,6 +42384,11 @@ RED.editor = (function() {
         },
         postInit: function (editor, options) {
             var elem = $("#"+options.id);
+            // TODO this is the monaco editor created when the preivew tray is opened
+            // TODO spellchecker --> https://github.com/purocean/monaco-spellchecker
+            // TODO this could be the spot where a reference to the monaco editor is stored
+            // TODO for later use.
+            console.log(editor)
             initImageDrag(elem, editor);
          }
     }
