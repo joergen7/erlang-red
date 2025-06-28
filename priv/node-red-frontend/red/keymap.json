@@ -20,7 +20,6 @@
         "ctrl-alt-r": "core:show-remote-diff",
         "ctrl-alt-n": "core:new-project",
         "ctrl-alt-o": "core:open-project",
-        "ctrl-alt-e": "core:show-export-dialog",
         "ctrl-shift-d": "core:clear-debug-messages",
         "ctrl-shift-p": "core:show-action-list",
         "ctrl-shift-a": "unittesting:run-all-tests",
@@ -34,6 +33,7 @@
         "ctrl-y": "core:redo"
     },
     "red-ui-workspace": {
+        "ctrl-e": "core:show-export-dialog",
         "ctrl-shift-e": "unittesting:test-current-workspace",
         "ctrl-shift-x": "flowcompare:compare-flow-to-remote",
         "backspace": "core:delete-selection",
