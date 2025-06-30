@@ -165,6 +165,21 @@ websocket_info({status, NodeId, clear}, State) ->
 %% Clr: 'red', 'green', 'yellow', 'blue' or 'grey'
 %% Shp: 'ring' or 'dot'.
 %%
+websocket_info({status, NodeId, Txt, "", ""}, State) ->
+    Msg = #{
+        topic => jstr("status/~s", [NodeId]),
+        data => #{
+            text => jstr(Txt)
+        }
+    },
+    ered_ws_event_exchange:node_status(
+        maps:find(wsname, State),
+        NodeId,
+        Txt,
+        "",
+        ""
+    ),
+    {ok, maps:put(bulkdata, [Msg | maps:get(bulkdata, State)], State)};
 websocket_info({status, NodeId, Txt, Clr, Shp}, State) ->
     Msg = #{
         topic => jstr("status/~s", [NodeId]),
