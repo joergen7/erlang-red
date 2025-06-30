@@ -47,19 +47,34 @@ handle_msg({incoming, Msg}, NodeDef) ->
         {{ok, []}, error} ->
             no_headers_set;
         {{ok, []}, {ok, [_ | _]}} ->
-            unsupported(NodeDef, Msg,
-                        jstr("message: headers unsupported"));
+            unsupported(
+                NodeDef,
+                Msg,
+                jstr("message: headers unsupported")
+            );
         {{ok, [_ | _]}, {ok, []}} ->
-            unsupported(NodeDef, Msg,
-                        jstr("node definition: headers unsupported"));
+            unsupported(
+                NodeDef,
+                Msg,
+                jstr("node definition: headers unsupported")
+            );
         {{ok, [_ | _]}, error} ->
-            unsupported(NodeDef, Msg,
-                        jstr("node definition: headers unsupported"));
+            unsupported(
+                NodeDef,
+                Msg,
+                jstr("node definition: headers unsupported")
+            );
         {{ok, [_ | _]}, {ok, [_ | _]}} ->
-            unsupported(NodeDef, Msg,
-                        jstr("node definition: headers unsupported")),
-            unsupported(NodeDef, Msg,
-                        jstr("message: headers unsupported"))
+            unsupported(
+                NodeDef,
+                Msg,
+                jstr("node definition: headers unsupported")
+            ),
+            unsupported(
+                NodeDef,
+                Msg,
+                jstr("message: headers unsupported")
+            )
     end,
 
     Url = get_prop_from_nodedef_or_msg(<<"url">>, NodeDef, Msg),

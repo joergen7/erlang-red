@@ -96,7 +96,7 @@ unsupported(NodeDef, Msg, ErrMsg) ->
     Data = D#{
       <<"msg">> => list_to_binary(
                      io_lib:format(
-                       "Unsupported Feature: ~s NodeDef: ~p Msg: ~p",
+                       "Unsupported Feature:~n~n~s~n~nNodeDef: ~p ~n~nMsg: ~p",
                        [ErrMsg, NodeDef, Msg])
                     ),
       <<"format">> => <<"string">>
@@ -199,8 +199,8 @@ assert_failure(NodeDef, WsName, ErrMsg) ->
     D = ?BASE_DATA,
 
     Data = D#{
-      <<"msg">> => jstr(ErrMsg),
-      <<"format">> => <<"string">>
+        <<"msg">> => jstr(ErrMsg),
+        <<"format">> => <<"string">>
     },
 
     debug(WsName, Data, error),

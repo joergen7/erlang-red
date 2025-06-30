@@ -16,8 +16,10 @@
 %%
 
 -import(ered_nodes, [
-    get_prop_value_from_map/2, %% Needed for ?BASE_DATA
-    get_prop_value_from_map/3, %% Needed for ?BASE_DATA
+    %% Needed for ?BASE_DATA
+    get_prop_value_from_map/2,
+    %% Needed for ?BASE_DATA
+    get_prop_value_from_map/3,
     this_should_not_happen/2
 ]).
 -import(ered_nodered_comm, [

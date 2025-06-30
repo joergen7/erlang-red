@@ -42,8 +42,8 @@ start(NodeDef, _WsName) ->
 debug_data(NodeDef, ErrMsg) ->
     D = ?BASE_DATA,
     D#{
-       <<"msg">> => ErrMsg,
-       <<"format">> => <<"string">>
+        <<"msg">> => ErrMsg,
+        <<"format">> => <<"string">>
     }.
 
 %%
@@ -319,15 +319,16 @@ check_rules([H | T], NodeDef, Msg, FCnt, Failures) ->
 %%
 %%
 handle_event({stop, WsName}, NodeDef) ->
-    case maps:find('_mc_incoming',NodeDef) of
-        {ok,0} ->
+    case maps:find('_mc_incoming', NodeDef) of
+        {ok, 0} ->
             {IdStr, TypeStr} = ?NODE_ID_AND_TYPE(NodeDef),
 
             this_should_not_happen(
-              NodeDef,
-              io_lib:format(
-                "Assert Values Error: Node was not reached [~p](~p)\n",
-                [TypeStr,IdStr])
+                NodeDef,
+                io_lib:format(
+                    "Assert Values Error: Node was not reached [~p](~p)\n",
+                    [TypeStr, IdStr]
+                )
             ),
 
             D = ?BASE_DATA,
@@ -343,7 +344,6 @@ handle_event({stop, WsName}, NodeDef) ->
             ok
     end,
     NodeDef;
-
 handle_event(_, NodeDef) ->
     NodeDef.
 
