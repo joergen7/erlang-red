@@ -19,5 +19,6 @@
     "@gregoriusrippenstein/node-red-contrib-introspection/seeker": {},
     "@gregoriusrippenstein/node-red-contrib-introspection/sendflow": {},
     "@gregoriusrippenstein/node-red-contrib-introspection/sink": {},
+    "@gregoriusrippenstein/node-red-scratchpad/scratchpad": {},
     "node-red-node-markdown/markdown": {}
 }

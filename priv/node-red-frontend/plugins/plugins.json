@@ -58,5 +58,17 @@
         "runtime": false,
         "user": false,
         "version": "0.10.3"
+    },
+    {
+        "editor": true,
+        "enabled": true,
+        "id": "@gregoriusrippenstein/node-red-scratchpad/sidebar-plugin",
+        "local": true,
+        "module": "@gregoriusrippenstein/node-red-scratchpad",
+        "name": "sidebar-plugin",
+        "plugins": [],
+        "runtime": false,
+        "user": false,
+        "version": "0.0.7"
     }
 ]

@@ -3280,3 +3280,275 @@ RED.actions.add("unittesting:run-all-tests", () => { runAllTests(dirList) } )
       </div>
    </div>
 </script>
+<!-- --- [red-plugin:@gregoriusrippenstein/node-red-scratchpad/sidebar-plugin] --- -->
+<script src="ScratchPad/jslib/diff.min.js"></script>
+
+<script type="text/javascript">
+(function() {
+
+   var globalYourConfigNode = null;
+
+window.scratchPadResetDiff = [
+    () => {
+        $('#node-input-scratchpad-diff-content').html('')
+        $('.selected-for-compare').removeClass('selected-for-compare')
+    }
+]
+
+function generateDiff(content1, content2) {
+    let diff = Diff.diffLines(content1, content2)
+
+    const fragment = document.createDocumentFragment();
+
+    let btn = document.createElement('button')
+
+    btn.setAttribute('onclick',"window.scratchPadResetDiff.map( d => d() ); ")
+    btn.setAttribute('class','button')
+    btn.setAttribute('title','Clear')
+    let xsym = document.createElement('i')
+    xsym.setAttribute('class','fa fa-close')
+    btn.appendChild(xsym)
+    fragment.append(btn)
+    fragment.append(document.createElement('br'))
+
+    diff.forEach((part) => {
+        // green for additions, red for deletions
+        const color = part.added ? 'green' : part.removed ? 'red' : '#040506';
+
+        let span = document.createElement('pre');
+        span.setAttribute('class', 'dv-pre-elem');
+        span.style.color = color;
+        span.appendChild(document.createTextNode(part.value));
+        span.appendChild(document.createElement('br'));
+        fragment.appendChild(span);
+    });
+
+    $('#node-input-scratchpad-diff-content').html(fragment)
+}
+
+function addEventHandlers(cfgnode) {
+    let firstObj = undefined
+
+    window.scratchPadResetDiff.push( () => { firstObj = undefined })
+
+    $('.scratchpad-compare-btn').off('click')
+    $('.scratchpad-compare-btn').on('click', e => {
+        if (e) { e.preventDefault() }
+
+        let btnObj = $(e.target).closest('button')
+
+        if ( firstObj ) {
+            let content1 = $($(firstObj).closest(".scratchpad-content")).find(".scratchpad-content-field").val()
+            let content2 = $($(btnObj).closest(".scratchpad-content")).find(".scratchpad-content-field").val()
+            generateDiff(content1, content2)
+
+            $(btnObj).addClass('selected-for-compare')
+        } else {
+            firstObj = btnObj
+            $(firstObj).addClass('selected-for-compare')
+        }
+    })
+
+    $('.scratchpad-save-btn').off('click')
+    $('.scratchpad-save-btn').on('click', e => {
+        if (e) { e.preventDefault() }
+        cfgnode.scratches ||= []
+
+        $(".scratchpad-content").map((idx, obj) => {
+            cfgnode.scratches[idx] = {
+                txt: $(obj).find(".scratchpad-content-field").val(),
+                hgt: $(obj).find(".scratchpad-content-field").css('height'),
+                wdh: $(obj).find(".scratchpad-content-field").css('width')
+            }
+        })
+
+        RED.nodes.dirty(true)
+    })
+
+    $('.scratchpad-close-btn').off('click')
+    $('.scratchpad-close-btn').on('click', e => {
+        if (e) { e.preventDefault() }
+
+        $(".scratchpad-close-btn").map((idx, obj) => {
+            if (obj == e.target) {
+                delete cfgnode.scratches[idx]
+                $($(e.target).closest(".scratchpad-content")).fadeOut(300, () => {
+                    $($(e.target).closest(".scratchpad-content")).remove()
+                    RED.nodes.dirty(true)
+                })
+            }
+        })
+    })
+
+    $('.scratchpad-clear-btn').off('click')
+    $('.scratchpad-clear-btn').on('click', e => {
+        if (e) { e.preventDefault() }
+
+        $(".scratchpad-clear-btn").map((idx, obj) => {
+            if (obj == e.target) {
+                $($($(e.target).closest(".scratchpad-content")).find(".scratchpad-content-field")).val("")
+                if ( cfgnode.scratches[idx].txt !== "") {
+                    cfgnode.scratches[idx].txt = ""
+                    RED.nodes.dirty(true)
+                }
+            }
+        })
+    })
+
+}
+
+function addScratch() {
+    $('#node-input-scratchpad-fields').append(
+        $($('[data-template-name="ScratchPad-empty-field"]').html()).data("shown", true)[0].outerHTML
+    )
+}
+
+function ensureYourConfigNodeExists() {
+    // This function makes sure there is 1 instance of your config node is available, and that the globalYourConfigNode variable refers to it.
+    // Explained in the next step of this tutorial... --> https://discourse.nodered.org/t/tutorial-create-a-sidebar-plugin-and-persist-the-data-in-a-config-node/82020
+
+    // If we had found it previously, check if it has been deleted by the user behind our back
+    if (globalYourConfigNode !== null) {
+        var configNode = RED.nodes.node(globalYourConfigNode.id);
+        if (configNode === null) { globalYourConfigNode = null; }
+    }
+
+    // If not found previously, let's go find it
+    if (globalYourConfigNode === null) {
+        var configNodes = [];
+        RED.nodes.eachConfig(function (configNode) {
+            if (configNode.type === 'ScratchPadCfg') {
+                configNodes.push(configNode);
+            }
+        });
+
+        // Make sure we only have 1 config node
+        while (configNodes.length > 1) {
+            var configNode = configNodes.pop();
+            RED.nodes.remove(configNode.id);
+            RED.nodes.dirty(true);
+        }
+
+        // When we found a config node, let's use that one
+        if (configNodes.length === 1) { globalYourConfigNode = configNodes[0]; }
+    }
+
+    // When it doesn't exist yet, create it if required
+    if (globalYourConfigNode === null) {
+        // Remark: since this config node is dynamically created (and only used in this sidebar which isn't another node), the config
+        // node is in fact "unused".  But since we don't want it to appear "unused" in the "config nodes" panel, we need to set hasUsers
+        // to false (see https://github.com/node-red/node-red/blob/master/CHANGELOG.md#0161-maintenance-release).
+        // The hasUsers needs also to be specified in the RED.nodes.registerType statement!
+        globalYourConfigNode = {
+            id: RED.nodes.id(), // on the server side, this is called RED.util.generateId()
+            _def: RED.nodes.getType("ScratchPadCfg"),
+            type: "ScratchPadCfg",
+            hasUsers: false,
+            users: [],
+            name: "ScratchPad",
+            label: function () { return this.name || "ScratchPad" },
+            /* values and data defined by this config node */
+            scratches: [],
+        }
+
+        // Add the new config node to the collection of Node-RED nodes
+        RED.nodes.add(globalYourConfigNode);
+
+        // Make sure the "Deploy" button becomes active
+        RED.nodes.dirty(true);
+    }
+}
+
+
+   // Add your plugin as a new tabsheet in the right sidebar AFTER the flow editor is completely started
+   var initialiseConfigNodeOnce = () => {
+      RED.events.off('runtime-state', initialiseConfigNodeOnce);
+
+      // The html content of the sidebar has been specified below as a data-template, from where it can be loaded:
+      var content = $($('script[type="text/x-red"][data-template-name="ScratchPad"]').i18n().html());
+
+      // Add a "Your sidebar" tabsheet to the right sidebar panel, in which this sidebar panel can be displayed
+      // --> more details: https://nodered.org/docs/api/ui/sidebar/
+      RED.sidebar.addTab({
+         id: "ScratchPad",
+         label: "*scratch*", // short name for the tab
+         name: "Scratch Pad", // long name for the menu
+         content: content,
+         closeable: true,
+         enableOnEdit: true,
+         iconClass: "fa fa-pencil-square-o" // your fontawesome icon
+      });
+
+      ensureYourConfigNodeExists();
+
+      globalYourConfigNode.scratches.forEach( sth => {
+         addScratch()
+      })
+
+      $(".scratchpad-content").map( (idx,obj) => {
+         if ( typeof globalYourConfigNode.scratches[idx] === "string") {
+            globalYourConfigNode.scratches[idx] = { "txt": globalYourConfigNode.scratches[idx] }
+            RED.nodes.dirty(true)
+         }
+
+         $(obj).find(".scratchpad-content-field").val(
+            globalYourConfigNode.scratches[idx].txt
+         ).css(
+            'width', globalYourConfigNode.scratches[idx].wdh || "360px"
+         ).css(
+            'height', globalYourConfigNode.scratches[idx].hgt || "150px"
+         )
+      })
+
+      addEventHandlers(globalYourConfigNode)
+
+      $('#node-input-scratchpad-add-btn').on('click', e => {
+         if ( e ) { e.preventDefault() }
+
+         addScratch()
+         addEventHandlers(globalYourConfigNode)
+      })
+   };
+
+   RED.events.on('runtime-state', initialiseConfigNodeOnce);
+})();
+</script>
+
+<style>
+.selected-for-compare {
+    background-color: rgba(235, 108, 108, 0.387) !important;
+    color: green !important;
+}
+
+.button-icon {
+    pointer-events: none;
+}
+
+</style>
+
+<!-- The html for the right sidebar plugin screen -->
+<script type="text/x-red" data-template-name="ScratchPad-empty-field">
+   <div class="scratchpad-content">
+      <div class="form-row" style="margin-left: 10px;">
+         <textarea class="scratchpad-content-field" placeholder="*scratch*" style="width: 360px; height: 150px;"></textarea>
+      </div>
+      <div class="form-row scratchpad-content-container" style="margin-left: 10px; margin-top: -15px; margin-bottom: 20px;">
+         <button title="Clear" class="scratchpad-clear-btn button"><i class="fa fa-shower button-icon"></i></button>
+         <button title="Save" class="scratchpad-save-btn button"><i class="fa fa-save button-icon"></i></button>
+         <button title="Compare" class="scratchpad-compare-btn button"><i class="fa fa-balance-scale button-icon"></i></button>
+         <button title="Delete" class="scratchpad-close-btn button"><i class="fa fa-close button-icon"></i></button>
+      </div>
+   </div>
+</script>
+
+<script type="text/x-red" data-template-name="ScratchPad">
+   <div class="form-row" style="margin-left: 10px; margin-top: 30px;">
+      <button title="Add Scratch" class="button" id="node-input-scratchpad-add-btn"><i class="fa fa-plus"></i></button>
+   </div>
+
+   <div style="margin: 10px;" id="node-input-scratchpad-diff-content">
+   </div>
+
+   <div id="node-input-scratchpad-fields">
+   </div>
+</script>

@@ -217,6 +217,9 @@ flow_editor_routes() ->
         {"/FlowCompare/jslib/diff.min.js", cowboy_static,
             {priv_file, erlang_red, "vendor/diff.min.js"}},
 
+        {"/ScratchPad/jslib/diff.min.js", cowboy_static,
+            {priv_file, erlang_red, "vendor/diff.min.js"}},
+
         {"/FlowHubLib/jslib/diff.min.js", cowboy_static,
             {priv_file, erlang_red, "vendor/flowhub.diff.min.js"}},
 

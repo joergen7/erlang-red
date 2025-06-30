@@ -358,6 +358,7 @@ is_config_node(<<"mqtt-broker">>)        -> true;
 is_config_node(<<"FlowCompareCfg">>)     -> true;
 is_config_node(<<"Flow2MermaidCfg">>)    -> true;
 is_config_node(<<"FlowHubCfg">>)         -> true;
+is_config_node(<<"ScratchPadCfg">>)      -> true;
 is_config_node(<<"websocket-listener">>) -> true;
 is_config_node(_)                        -> false.
 
