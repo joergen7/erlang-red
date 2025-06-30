@@ -13,7 +13,10 @@ RUN apt-get update && apt-get -y install \
     git \
     inotify-tools \
     cmake \
-    mosquitto
+    mosquitto \
+    netcat-traditional \
+    sudo \
+    net-tools
 
 # create a user for docker image since erlexec complains too much
 # but give the user super-powers - erlang and the power of root
