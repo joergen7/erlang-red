@@ -34,7 +34,7 @@ init([]) ->
                 },
                 #{
                     id => ered_ch4_error_store,
-                    start => {ered_error_store, start, []},
+                    start => {ered_error_store, start_link, []},
                     restart => permanent,
                     type => worker,
                     module => [ered_error_store]

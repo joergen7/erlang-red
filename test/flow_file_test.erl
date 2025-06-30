@@ -19,7 +19,7 @@ stop_all_pids([Pid | Pids]) ->
 %%
 
 ensure_error_store_is_started(TabErrColl, TestName) ->
-    case ered_error_store:start() of
+    case ered_error_store:start_link() of
         {error, {already_started, ErrorStorePid}} ->
             Pid = spawn(?MODULE, not_happen_loop, [TestName, ErrorStorePid]),
             register(TabErrColl, Pid),
