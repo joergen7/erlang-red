@@ -12372,7 +12372,11 @@ Defines a module that can be used with a state machine and other elements of Erl
     outputs: 1,
 
     label: function() {
-      return (this.name || this._def.paletteLabel);
+      let label = this._def.paletteLabel
+      if (this.module_name) {
+        label = `M: ${this.module_name} Emit: ${this.emit_on_state_change ? "state change" : "always"}`
+      }
+      return (this.name || label );
     },
 
     labelStyle: function() {
