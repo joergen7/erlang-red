@@ -1,11 +1,11 @@
-Erlang-RED - A Node-RED backend coded in Erlang
+Erlang-Red - A Node-RED backend coded in Erlang
 =====
 
-An experiment to replace Node-REDs existing NodeJS backend with an Erlang equivalent that is 100% compatible[1] to existing flow code.
+An experiment to replace Node-REDs existing NodeJS backend with an Erlang equivalent that is 100% compatible to existing flow code.
 
 The goal is bring the advantages of low-code visual [flow-based programming](https://jpaulm.github.io/fbp/index.html) to a programming language that is designed for message passing and concurrency from the ground up, hence Erlang. More details described in the corresponding [blog post](https://blog.openmindmap.org/erlang-red).
 
-[1] = 100% won't be possible since function nodes that are coded in Javascript aren't supported (or aren't intended to be supported - unless someone has a workaround)
+Erlang-Red can be best thought of as a programming [Breadboard](https://en.wikipedia.org/wiki/Breadboard).
 
 Why?
 ---
@@ -37,6 +37,11 @@ Erlang architecture is best described by describing various use cases:
 - The challenges of [function node](https://flows.red-erik.org/f/1fd621a674360b5d) which must support timeouts, sub-processes and being supervised by a supervisor.
 
 - Inner workings of [link nodes](https://flows.red-erik.org/f/43e8af136f4d0fbe) and how to deal with dynamic link calls.
+
+Usage
+---
+
+Erlang-Red is rapidly becoming the programmming [Breadboard](https://en.wikipedia.org/wiki/Breadboard) - useful for trying various programming concepts out and getting a feel for how a [supervisor](https://flows.red-erik.org/f/83c5e1824f32abec) pattern might work. Or playing around with TCP traffic and modelling a [telnet session](https://flows.red-erik.org/f/2a95a7b40a798878).
 
 Supported Nodes & Features
 ---
@@ -82,7 +87,7 @@ This is a non-complete list of [nodes](src/nodes/) that partially or completely 
 
 - [JSONata](https://jsonata.org) has been **partially implemented** by the [Erlang JSONata Parser](https://github.com/gorenje/erlang-red-jsonata).
 
-Elixir & Erlang-RED
+Elixir & Erlang-Red
 ---
 
 Elixir helpers can be added to [erlang-red-elixir-helpers](https://github.com/gorenje/erlang-red-elixir-helpers) repository.
@@ -162,7 +167,7 @@ The image does this by setting the following ENV variables:
 - `COMPUTEFLOW`=`499288ab4007ac6a` - flow to be used. This can also be a comma separated list of flows that are all started.
 - `DISABLE_FLOWEDITOR`=`YES` - any value will do, if set the flow editor is disabled.
 
-Also be aware that Erlang-RED supports a `PORT` env variable to specifying the port upon which Cowboy will listen on for connections. The default is 8080.
+Also be aware that Erlang-Red supports a `PORT` env variable to specifying the port upon which Cowboy will listen on for connections. The default is 8080.
 
 Heroku uses this to specify the port to connect for a docker image so that its load balancer can get it right.
 
@@ -210,7 +215,7 @@ Also remember these flow tests are designed to ensure the Erlang backend is corr
 Visual Unit Testing
 ---
 
-My plan is to create test flows that represent specific NodeRED functionality that needs to be implemented by Erlang-RED. This provides regression testing and todos for the implementation.
+My plan is to create test flows that represent specific NodeRED functionality that needs to be implemented by Erlang-Red. This provides regression testing and todos for the implementation.
 
 I created a keyboard shortcut for creating and storing these test flows from the flow editor directly. However I was still use the terminal to execute tests `make eunit-test` - which  became painful. So instead I pulled this testing into Node-RED, as the gif demonstrates:
 
@@ -218,9 +223,9 @@ I created a keyboard shortcut for creating and storing these test flows from the
 
 What the gif shows is my list of unit tests, which at the press of a button, can all be tested. Notifications for each test shows the result. In addition, the tree list shows which tests failed/succeed (red 'x' or green check). Also tests can be executed individually so that failures can be checked individually.
 
-The best bit though is that all errors are pushed to the debug panel and from there I get directly to the node causing the error. Visual unit testing is completely integrated into Erlang-RED.
+The best bit though is that all errors are pushed to the debug panel and from there I get directly to the node causing the error. Visual unit testing is completely integrated into Erlang-Red.
 
-My intention is to create many small flows that represent functionality that needs to be implemented by Erlang-RED. These unit tests shows the compatibility to Node-RED and less the correctness of the Erlang code.
+My intention is to create many small flows that represent functionality that needs to be implemented by Erlang-Red. These unit tests shows the compatibility to Node-RED and less the correctness of the Erlang code.
 
 Contributing
 ---
@@ -235,13 +240,13 @@ Sibling Repos
 
 An overview of the sibling projects for both the reader and me:
 
-- [Unit test flow suite](https://github.com/gorenje/erlang-red-flow-testsuite) provides *visual* unit tests that verify the functionality being implemented here is the same as in Node-RED. Those test flows are designed to be executed in both Node-RED and Erlang-RED. [FlowHub.org](https://flowhub.org) maintains the repository and is used to synchronise flow tests between Erlang-RED and Node-RED. These tests can also be used for other projects that aim to replicate Node-RED functionality in an alternative programming language.
+- [Unit test flow suite](https://github.com/gorenje/erlang-red-flow-testsuite) provides *visual* unit tests that verify the functionality being implemented here is the same as in Node-RED. Those test flows are designed to be executed in both Node-RED and Erlang-Red. [FlowHub.org](https://flowhub.org) maintains the repository and is used to synchronise flow tests between Erlang-Red and Node-RED. These tests can also be used for other projects that aim to replicate Node-RED functionality in an alternative programming language.
 
-- [Node-RED and Erlang-RED unit testing nodes](https://github.com/gorenje/erlang-red-unittesting-nodes) are used to define and automatically ensure the correct functionality. These nodes are embedded in test flows and ensure that test flows are correct. This makes testing repeatable and reliable and fast! As an aside, these nodes are maintained in an [Node-RED flow](https://flowhub.org/f/ef91cb280e1bfd72).
+- [Node-RED and Erlang-Red unit testing nodes](https://github.com/gorenje/erlang-red-unittesting-nodes) are used to define and automatically ensure the correct functionality. These nodes are embedded in test flows and ensure that test flows are correct. This makes testing repeatable and reliable and fast! As an aside, these nodes are maintained in an [Node-RED flow](https://flowhub.org/f/ef91cb280e1bfd72).
 
-- [JSONata support for Erlang-RED](https://github.com/gorenje/erlang-red-jsonata) is implemented by an Erlang parser with a grammer that covers most of JSONata syntax, no guarantees made. Support of JSONata functionality is limited to what the test flows require. Nothing prevents others from extending the functionality themselves, it is not a priority of mine.
+- [JSONata support for Erlang-Red](https://github.com/gorenje/erlang-red-jsonata) is implemented by an Erlang parser with a grammer that covers most of JSONata syntax, no guarantees made. Support of JSONata functionality is limited to what the test flows require. Nothing prevents others from extending the functionality themselves, it is not a priority of mine.
 
-- [Elixir helper library](https://github.com/gorenje/erlang-red-elixir-helpers) allows Elixir code to be also part of Erlang-RED. Erlang-RED is not intended to be a *pure* Erlang project, it is intended to be a *pure* BEAM project. Anything that compiles down to the BEAM VM, why not include it?
+- [Elixir helper library](https://github.com/gorenje/erlang-red-elixir-helpers) allows Elixir code to be also part of Erlang-Red. Erlang-Red is not intended to be a *pure* Erlang project, it is intended to be a *pure* BEAM project. Anything that compiles down to the BEAM VM, why not include it?
 
 - [Supervisor nodes](https://github.com/gorenje/erlang-red-supervisor-node) and other Erlang behaviours as Node-RED nodes. Node package includes `gen_statem` and `gen_event` as nodes that can be used with Erlang-Red flows. These nodes can also be installed into Node-RED but there they do nothing.
 
@@ -272,7 +277,7 @@ Acknowledgement
 
 Much thanks to
 
-- [@mwmiller](https://github.com/mwmiller) for providing a fly server for running a [live version](https://ered.fly.dev/node-red) of Erlang-RED,
+- [@mwmiller](https://github.com/mwmiller) for providing a fly server for running a [live version](https://ered.fly.dev/node-red) of Erlang-Red,
 - [@joaohf](https://erlangforums.com/u/joaohf/summary) many tips on coding Erlang and structuring an Erlang project, and
 - [@Maria-12648430](https://erlangforums.com/u/maria-12648430/summary) for debugging my initial attempt to create a gen_server for nodes.
 
