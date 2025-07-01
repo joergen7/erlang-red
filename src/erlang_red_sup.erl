@@ -82,7 +82,14 @@ init([]) ->
                     module => [ered_erlmodule_exchange]
                 },
                 #{
-                    id => ered_ch10_red_web,
+                    id => ered_ch10_tcp_manager,
+                    start => {ered_tcp_manager, start_link, []},
+                    restart => permanent,
+                    type => worker,
+                    module => [ered_tcp_manager]
+                },
+                #{
+                    id => ered_ch11_red_web,
                     start => {ered_webserver, start, []},
                     restart => permanent,
                     type => worker,

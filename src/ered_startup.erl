@@ -32,10 +32,9 @@
     get_node_name/2
 ]).
 
--define(INC_COUNTER(CntName),
-    NodeDef#{ CntName => maps:get(CntName, NodeDef) + 1 }
-).
-
+-define(INC_COUNTER(CntName), NodeDef#{
+    CntName => maps:get(CntName, NodeDef) + 1
+}).
 
 %% TODO: a tab node (i.e. the tab containing a flow) also has a disabled
 %% TODO: flag but this is called 'disabled'. If it is set, then the entire
@@ -331,6 +330,8 @@ node_type_to_module(<<"erlmodule">>)         -> ered_node_erlmodule;
 node_type_to_module(<<"erlstatemachine">>)   -> ered_node_erlstatemachine;
 node_type_to_module(<<"erleventhandler">>)   -> ered_node_erleventhandler;
 node_type_to_module(<<"mermaid-flowchart">>) -> ered_node_ignore;
+node_type_to_module(<<"tcp in">>)            -> ered_node_tcp_in;
+node_type_to_module(<<"tcp out">>)           -> ered_node_tcp_out;
 %%
 %% Assert nodes for testing functionality of the nodes. These are the first
 %% Node-RED and Erlang-RED nodes - they have implmentations for both because

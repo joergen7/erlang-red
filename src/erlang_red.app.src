@@ -20,7 +20,8 @@
         ered_config_store,
         ered_csv_parser_store,
         ered_msgtracer_manager,
-        ered_erlmodule_exchange
+        ered_erlmodule_exchange,
+        ered_tcp_manager
     ]},
     {licenses, ["Apache-2.0"]},
     {links, []}
