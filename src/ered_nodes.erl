@@ -3,6 +3,7 @@
 -include("ered_nodes.hrl").
 
 -export([
+    check_config/4,
     get_node_name/2,
     get_prop_value_from_map/2,
     get_prop_value_from_map/3,
@@ -31,11 +32,28 @@
 %%
 
 -import(ered_nodered_comm, [
+    unsupported/3,
     ws_from/1
 ]).
 -import(ered_messages, [
     create_outgoing_msg/1
 ]).
+
+%%
+%% Ensure a nodes configuration is supported. This is usually used in the
+%% start(..) function of a node module. If a configuration is not supported,
+%% the node is replaced by an ignore node.
+check_config(ParaName, OnlySupportedValue, NodeDef, WsName) ->
+    case maps:get(ParaName, NodeDef) of
+        OnlySupportedValue ->
+            ok;
+        Unsupported ->
+            ErrMsg = jstr(
+                "config: attr: ~s => value: ~s",
+                [ParaName, Unsupported]
+            ),
+            unsupported(NodeDef, {websocket, WsName}, ErrMsg)
+    end.
 
 %%
 %% Map priv directory in file names
@@ -128,7 +146,6 @@ tabid_to_error_collector(IdStr) ->
             )
         )
     ).
-
 
 %%
 %% The wires attribute is an array of arrays. The toplevel
