@@ -12374,7 +12374,7 @@ Defines a module that can be used with a state machine and other elements of Erl
     label: function() {
       let label = this._def.paletteLabel
       if (this.module_name) {
-        label = `M: ${this.module_name} Emit: ${this.emit_on_state_change ? "state change" : "always"}`
+        label = `[${this.module_name}]\t${this.emit_on_state_change ? "⋮" : "➝"}`
       }
       return (this.name || label );
     },
