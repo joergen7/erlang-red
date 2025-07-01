@@ -293,6 +293,8 @@ to_bool(_) -> true.
 %% by \\r \\t \\n - this allows for test definitions that include \r and
 %% not a "return" or "tab" value.
 %%
+escape_specials(Str) when is_integer(Str) ->
+    escape_specials(integer_to_binary(Str));
 escape_specials(Str) when is_atom(Str) ->
     escape_specials(atom_to_binary(Str));
 escape_specials(Str) ->
