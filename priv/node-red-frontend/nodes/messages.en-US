@@ -190,7 +190,7 @@
                 "deepCopy": "Deep copy value",
                 "delete": "delete __property__",
                 "eql": "equal __property__",
-                "ignore_failure_if_succeed": "Ignore failure if matched once",
+                "ignore_failure_if_succeed": "Ignore failure if succeed once",
                 "move": "move __property__",
                 "mth": "match __property__",
                 "noteql": "not equal __property__",
