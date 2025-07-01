@@ -10,8 +10,40 @@
 %% Inject node should have at least one outgoing wire, if not then the
 %% needle won't hit the vein, i.e. the message won't flow through any nodes.
 %%
+%%  "id": "dc5aaefd109f64b8",
+%%  "type": "inject",
+%%  "z": "c4b44f0eb78bc401",
+%%  "g": "3e66f8d35dcccd45",
+%%  "name": "",
+%%  "props": [
+%%      {
+%%          "p": "payload"
+%%      },
+%%      {
+%%          "p": "action",
+%%          "v": "donothing",
+%%          "vt": "str"
+%%      }
+%%  ],
+%%  "repeat": "",  <<----+- if node is trigger automagically via "once",
+%%  "crontab": "", <<---/ then repeat can be used to continue the inject
+%%  "once": false, <<--/ but this isn't supported. ('once' either true or false).
+%%  "onceDelay": 0.1,
+%%  "topic": "",
+%%  "payload": "donothing",
+%%  "payloadType": "str",
+%%  "x": 218,
+%%  "y": 783.75,
+%%  "wires": [
+%%      [
+%%          "5c1cf21f1fb90b33"
+%%      ]
+%%  ]
+%%
+%%
 
 -import(ered_nodes, [
+    check_config/4,
     get_prop_value_from_map/2,
     get_prop_value_from_map/3,
     jstr/1,
@@ -36,8 +68,54 @@
 
 %%
 %%
-start(NodeDef, _WsName) ->
-    ered_node:start(NodeDef, ?MODULE).
+% erlfmt:ignore - alignment
+start(NodeDef, WsName) ->
+    %% TODO support repeat and once and crontab
+    case {
+        check_config(<<"repeat">>,  <<"">>, NodeDef, WsName),
+        check_config(<<"crontab">>, <<"">>, NodeDef, WsName),
+        check_config(<<"once">>,    false,  NodeDef, WsName)
+    } of
+        {ok,ok,ok} ->
+            ered_node:start(NodeDef, ?MODULE);
+        _ ->
+            ered_node:start(NodeDef, ered_node_ignore)
+    end.
+
+%%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
+%% outgoing messages are triggered by button presses on the UI
+%%
+handle_msg({outgoing, Msg}, NodeDef) ->
+    case maps:find(<<"props">>, NodeDef) of
+        {ok, Val} ->
+            Props = Val;
+        _ ->
+            Props = []
+    end,
+
+    try
+        Msg2 = parse_props(Props, NodeDef, Msg),
+        send_msg_to_connected_nodes(NodeDef, Msg2),
+        %% this should be done by the behaviour but it does not allow
+        %% outgoing messages to generated completed messages, so do this
+        %% here directly.
+        post_completed(NodeDef, Msg2),
+        {handled, NodeDef, Msg2}
+    catch
+        throw:dont_send_message ->
+            {handled, NodeDef, Msg}
+    end;
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.
+
+%%
+%% ------------------------ Helpers
+%%
 
 %%
 %%
@@ -129,34 +207,3 @@ parse_props([Prop | RestProps], NodeDef, Msg) ->
             unsupported(NodeDef, Msg, jstr("Prop: NoMATCH: ~p\n", [Prop])),
             parse_props(RestProps, NodeDef, Msg)
     end.
-
-%%
-%%
-handle_event(_, NodeDef) ->
-    NodeDef.
-
-%%
-%% outgoing messages are triggered by button presses on the UI
-%%
-handle_msg({outgoing, Msg}, NodeDef) ->
-    case maps:find(<<"props">>, NodeDef) of
-        {ok, Val} ->
-            Props = Val;
-        _ ->
-            Props = []
-    end,
-
-    try
-        Msg2 = parse_props(Props, NodeDef, Msg),
-        send_msg_to_connected_nodes(NodeDef, Msg2),
-        %% this should be done by the behaviour but it does not allow
-        %% outgoing messages to generated completed messages, so do this
-        %% here directly.
-        post_completed(NodeDef, Msg2),
-        {handled, NodeDef, Msg2}
-    catch
-        throw:dont_send_message ->
-            {handled, NodeDef, Msg}
-    end;
-handle_msg(_, NodeDef) ->
-    {unhandled, NodeDef}.
