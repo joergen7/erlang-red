@@ -69,8 +69,8 @@ install(NodeDef, WsName) ->
         {error, ErrorList, WarnList} ->
             Msg = #{
                 '_ws' => WsName,
-                error => compiler_list_to_list(ErrorList),
-                warning => compiler_list_to_list(WarnList)
+                error => compiler_list_to_json_list(ErrorList),
+                warning => compiler_list_to_json_list(WarnList)
             },
             node_status(WsName, NodeDef, "compile failed", "red", "dot"),
             post_exception_or_debug(NodeDef, Msg, <<"compile failed">>)
@@ -82,12 +82,21 @@ install(NodeDef, WsName) ->
 %% ErrorLists and WarnLists aren't JSON compatible therefore they need to be
 %% massaged into form.
 %% See https://www.erlang.org/doc/apps/compiler/compile.html for details.
-compiler_list_to_list([]) ->
+compiler_list_to_json_list([]) ->
     [];
-compiler_list_to_list([{_Filename, [ErrorInfo]} | Lst]) ->
-    [errorinfo_to_list(ErrorInfo) | compiler_list_to_list(Lst)].
+compiler_list_to_json_list([{_Filename, [ErrorInfo | Lst]}]) ->
+    [errorinfo_tuple_to_list(ErrorInfo) | errorinfo_list(Lst)];
+compiler_list_to_json_list([{_Filename, [ErrorInfo]} | Lst]) ->
+    [errorinfo_tuple_to_list(ErrorInfo) | compiler_list_to_json_list(Lst)].
 
-errorinfo_to_list({{Line, Char}, Module, Desc}) ->
+errorinfo_list([]) ->
+    [];
+errorinfo_list([ErrorInfo]) ->
+    [errorinfo_tuple_to_list(ErrorInfo)];
+errorinfo_list([ErrorInfo | Lst]) ->
+    [errorinfo_tuple_to_list(ErrorInfo) | errorinfo_list(Lst)].
+
+errorinfo_tuple_to_list({{Line, Char}, Module, Desc}) ->
     [
         list_to_binary(io_lib:format("Line: ~p, Char: ~p", [Line, Char])),
         Module,
