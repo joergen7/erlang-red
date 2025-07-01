@@ -68,7 +68,7 @@ start(NodeDef, WsName) ->
 
 %%
 %%
-handle_event({registered, WsName, MyPid}, NodeDef) ->
+handle_event({registered, WsName, _MyPid}, NodeDef) ->
     ModuleName = binary_to_atom(maps:get(<<"module_name">>, NodeDef)),
     case module_loaded(ModuleName) of
         false ->
