@@ -74,8 +74,10 @@ does_rule_match(<<"lt">>, OpCompVal, MsgVal) ->
     MsgVal < OpCompVal;
 does_rule_match(<<"bleq">>, OpCompVal, MsgVal) ->
     is_same(to_bool(MsgVal), OpCompVal);
+does_rule_match(<<"cont">>, OpCompVal, MsgVal) ->
+    string:find(MsgVal, OpCompVal) =/= nomatch;
 does_rule_match(Op, _, _) ->
-    {unsupported, jstr("unsupported operator ~p", [Op])}.
+    {unsupported, jstr("unsupported rule ~p", [Op])}.
 
 does_rule_match(Op, Type, OpVal, MsgVal, NodeDef, Msg) ->
     case obtain_operator_value(Type, OpVal, Msg) of
