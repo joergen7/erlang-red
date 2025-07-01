@@ -62,7 +62,7 @@
 %%
 start(NodeDef, WsName) ->
     node_status(WsName, NodeDef, "starting", "green", "ring"),
-    ered_node:start(maps:put('_ws', WsName, NodeDef), ?MODULE).
+    ered_node:start(NodeDef#{'_ws' => WsName}, ?MODULE).
 
 %% erlfmt:ignore alignment
 init(Children) ->

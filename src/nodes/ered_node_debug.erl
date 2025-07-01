@@ -91,7 +91,6 @@ handle_msg({incoming, Msg}, NodeDef) ->
     ),
 
     {handled, NodeDef, Msg};
-
 %%
 %%
 handle_msg(_, NodeDef) ->

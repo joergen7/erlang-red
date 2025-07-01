@@ -21,7 +21,6 @@
 -import(ered_nodered_comm, [
     debug/3,
     node_status/5,
-    unsupported/3,
     ws_from/1
 ]).
 
@@ -64,7 +63,6 @@ handle_msg({incoming, Msg}, NodeDef) ->
     node_status(ws_from(Msg), NodeDef, "type not implemented", "grey", "dot"),
 
     {handled, NodeDef, Msg};
-
 %%
 %%
 handle_msg({outgoing, Msg}, NodeDef) ->
@@ -92,12 +90,10 @@ handle_msg({outgoing, Msg}, NodeDef) ->
     node_status(ws_from(Msg), NodeDef, "type not implemented", "grey", "dot"),
 
     {handled, NodeDef, Msg};
-
 %%
 %%
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
-
 
 %%
 %% erlfmt:ignore equals and arrows should line up here.
