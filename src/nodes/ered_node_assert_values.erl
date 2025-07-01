@@ -11,6 +11,27 @@
 %%
 %% Assert node that checks the msg for correct values.
 %%
+%% {
+%%     "id": "40364d3053b8a4e0",
+%%     "type": "ut-assert-values",
+%%     "z": "c4b44f0eb78bc401",
+%%     "name": "",
+%%     "ignore_failure_if_succeed": true, <<--- if set, ignore failures if one succeed
+%%     "rules": [
+%%         {
+%%             "t": "eql",
+%%             "p": "payload",
+%%             "pt": "msg",
+%%             "to": "count 1",
+%%             "tot": "str"
+%%         }
+%%     ],
+%%     "x": 1115,
+%%     "y": 460.5,
+%%     "wires": [
+%%         []
+%%     ]
+%% }
 
 -import(ered_nodered_comm, [
     assert_failure/3,
@@ -37,7 +58,9 @@
 %%
 %%
 start(NodeDef, _WsName) ->
-    ered_node:start(NodeDef, ?MODULE).
+    ered_node:start(
+        NodeDef#{'_success_count' => 0, '_failures' => []}, ?MODULE
+    ).
 
 debug_data(NodeDef, ErrMsg) ->
     D = ?BASE_DATA,
@@ -261,58 +284,53 @@ eql_msg_op(_, _, _, _, _) ->
 %%
 %%
 check_rules(Rules, NodeDef, Msg) ->
-    check_rules(Rules, NodeDef, Msg, 0, []).
+    check_rules(Rules, NodeDef, Msg, 0, [], 0).
 
-check_rules([], NodeDef, Msg, 0, _Failures) ->
-    node_status(ws_from(Msg), NodeDef, <<"assert succeed">>, "green", "ring"),
-    maps:put(
-        <<"assert_succeed">>,
-        true,
-        maps:remove(<<"assert_failures">>, Msg)
-    );
-check_rules([], NodeDef, Msg, FCnt, Failures) ->
-    ErrMsg = jstr("~p check(s) failed", [FCnt]),
-    node_status(ws_from(Msg), NodeDef, ErrMsg, "red", "dot"),
-    maps:put(
-        <<"assert_succeed">>,
-        false,
-        maps:put(<<"assert_failures">>, Failures, Msg)
-    );
-check_rules([H | T], NodeDef, Msg, FCnt, Failures) ->
+check_rules([], _NodeDef, Msg, 0, _Failures, SuccessCount) ->
+    Msg#{
+        <<"assert_succeed">> => true,
+        <<"assert_failures">> => [],
+        <<"success_count">> => SuccessCount,
+        <<"failure_count">> => 0
+    };
+check_rules([], _NodeDef, Msg, FailureCount, Failures, SuccessCount) ->
+    Msg#{
+        <<"assert_succeed">> => false,
+        <<"assert_failures">> => Failures,
+        <<"success_count">> => SuccessCount,
+        <<"failure_count">> => FailureCount
+    };
+check_rules([H | T], NodeDef, Msg, FailureCount, Failures, SuccessCount) ->
     {ok, Op} = maps:find(<<"t">>, H),
     {ok, Pt} = maps:find(<<"pt">>, H),
 
     case check_rule_against_msg(Op, Pt, H, Msg) of
         true ->
-            check_rules(T, NodeDef, Msg, FCnt, Failures);
-        unsupported ->
-            ErrMsg = jstr(
-                "Assert values: unsupported Rule: '~p'",
-                [H]
-            ),
-            %%
-            %% Unlike other nodes, this is an assertion failure. Can't
-            %% be silently ignoring tests.
-            assert_failure(NodeDef, ws_from(Msg), ErrMsg),
             check_rules(
                 T,
                 NodeDef,
                 Msg,
-                FCnt + 1,
-                [{unsupported, H} | Failures]
+                FailureCount,
+                Failures,
+                SuccessCount + 1
+            );
+        unsupported ->
+            check_rules(
+                T,
+                NodeDef,
+                Msg,
+                FailureCount + 1,
+                [{unsupported, H} | Failures],
+                SuccessCount
             );
         {failed, ErrMsg} ->
-            this_should_not_happen(
-                NodeDef,
-                io_lib:format("~p ~p\n", [ErrMsg, Msg])
-            ),
-            debug(ws_from(Msg), debug_data(NodeDef, ErrMsg), error),
             check_rules(
                 T,
                 NodeDef,
                 Msg,
-                FCnt + 1,
-                [{failure, H} | Failures]
+                FailureCount + 1,
+                [{failure, H, ErrMsg} | Failures],
+                SuccessCount
             )
     end.
 
@@ -341,23 +359,105 @@ handle_event({stop, WsName}, NodeDef) ->
             debug(WsName, Data, error),
             node_status(WsName, NodeDef, "assert failed", "red", "dot");
         _ ->
-            ok
+            case maps:find(<<"ignore_failure_if_succeed">>, NodeDef) of
+                {ok, true} ->
+                    succeed_or_not(NodeDef, WsName);
+                _ ->
+                    ok
+            end
     end,
-    NodeDef;
+    NodeDef#{'_success_count' => 0, '_failures' => []};
 handle_event(_, NodeDef) ->
     NodeDef.
 
 %%
 %%
 handle_msg({incoming, Msg}, NodeDef) ->
-    case maps:find(<<"rules">>, NodeDef) of
-        {ok, Ary} ->
-            Msg2 = check_rules(Ary, NodeDef, Msg),
-            send_msg_to_connected_nodes(NodeDef, Msg2),
-            {handled, NodeDef, Msg2};
+    Msg2 = check_rules(maps:get(<<"rules">>, NodeDef), NodeDef, Msg),
+
+    %% this option is relatively new, so there are only instances of
+    %% this node that do not define this option, hence a 'maps:find' and
+    %% not a 'maps:get'
+    case maps:find(<<"ignore_failure_if_succeed">>, NodeDef) of
+        {ok, true} ->
+            #{'_success_count' := SuccCnt} = NodeDef,
+            #{'_failures' := FailureLst} = NodeDef,
+            #{<<"success_count">> := Cnt} = Msg2,
+            #{<<"assert_failures">> := Failures} = Msg2,
+            {handled,
+                NodeDef#{
+                    '_success_count' => SuccCnt + Cnt,
+                    '_failures' => [{Msg, Failures} | FailureLst]
+                },
+                Msg2};
         _ ->
-            send_msg_to_connected_nodes(NodeDef, Msg),
-            {handled, NodeDef, Msg}
+            post_failures(maps:get(<<"assert_failures">>, Msg2), NodeDef, Msg),
+            set_node_status(
+                maps:get(<<"assert_succeed">>, Msg2), NodeDef, Msg2
+            ),
+            send_msg_to_connected_nodes(NodeDef, Msg2),
+            {handled, NodeDef, Msg2}
     end;
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
+
+%%
+%% ------------- Helpers
+%%
+
+succeed_or_not(
+    #{'_success_count' := SuccCnt} = NodeDef,
+    WsName
+) when SuccCnt > 0 ->
+    node_status(WsName, NodeDef, <<"assert succeed">>, "green", "ring");
+succeed_or_not(#{'_failures' := FailureLst} = NodeDef, WsName) ->
+    case count_failures(FailureLst, 0) of
+        0 ->
+            node_status(WsName, NodeDef, <<"assert succeed">>, "green", "ring");
+        FailureCnt ->
+            ErrMsg = jstr("~p check(s) failed", [FailureCnt]),
+            node_status(WsName, NodeDef, ErrMsg, "red", "dot"),
+            post_final_failures(FailureLst, NodeDef, WsName)
+    end.
+
+%%
+%%
+post_final_failures([], _, _) ->
+    done;
+post_final_failures([{Msg, Failures} | FailureLst], NodeDef, WsName) ->
+    post_failures(Failures, NodeDef, Msg#{'_ws' => WsName}),
+    post_final_failures(FailureLst, NodeDef, WsName).
+
+%%
+%%
+count_failures([], Cnt) ->
+    Cnt;
+count_failures([{_Msg, Failures} | Lst], Cnt) ->
+    count_failures(Lst, Cnt + length(Failures)).
+
+%%
+%%
+set_node_status(true, NodeDef, Msg) ->
+    node_status(ws_from(Msg), NodeDef, <<"assert succeed">>, "green", "ring");
+set_node_status(false, NodeDef, Msg) ->
+    ErrMsg = jstr("~p check(s) failed", [maps:get(<<"failure_count">>, Msg)]),
+    node_status(ws_from(Msg), NodeDef, ErrMsg, "red", "dot").
+
+%%
+%%
+post_failures([], _, _) ->
+    done;
+post_failures([{unsupported, Rule} | Lst], NodeDef, Msg) ->
+    ErrMsg = jstr("Assert values: unsupported Rule: '~p'", [Rule]),
+    %%
+    %% Unlike other nodes (i.e. change, switch), this is an assertion
+    %% failure. Can't be silently ignoring tests.
+    assert_failure(NodeDef, ws_from(Msg), ErrMsg),
+    post_failures(Lst, NodeDef, Msg);
+post_failures([{failure, _Rule, ErrMsg} | Lst], NodeDef, Msg) ->
+    this_should_not_happen(
+        NodeDef,
+        io_lib:format("~p ~p\n", [ErrMsg, Msg])
+    ),
+    debug(ws_from(Msg), debug_data(NodeDef, ErrMsg), error),
+    post_failures(Lst, NodeDef, Msg).
