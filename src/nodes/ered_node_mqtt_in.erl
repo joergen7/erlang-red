@@ -2,6 +2,8 @@
 
 -behaviour(ered_node).
 
+-include("ered_nodes.hrl").
+
 -export([start/2]).
 -export([handle_msg/2]).
 -export([handle_event/2]).
@@ -85,26 +87,34 @@ handle_event({registered, WsName, _Pid}, NodeDef) ->
     setup_mqtt_manager(NodeDef, WsName);
 handle_event({'DOWN', _MonitorRef, _Type, _Object, _Info}, NodeDef) ->
     setup_mqtt_manager(NodeDef, ws_from(NodeDef));
-handle_event({mqtt_disconnected, _Reason, _Properties}, NodeDef) ->
-    case maps:find('_mqtt_mgr_id', NodeDef) of
-        {ok, MqttMgrPid} ->
-            case is_process_alive(MqttMgrPid) of
-                true ->
-                    TRef = erlang:start_timer(
-                        750,
-                        self(),
-                        {connect_to_broker, MqttMgrPid}
-                    ),
-                    maps:put('_timer', TRef, NodeDef);
-                _ ->
-                    setup_mqtt_manager(NodeDef, ws_from(NodeDef))
-            end;
+
+%%
+%% mqtt_disconnected event, with and without a running mqtt process
+handle_event(
+  {mqtt_disconnected, _Reason, _Properties},
+  #{ '_mqtt_mgr_id' := MqttMgrPid } = NodeDef
+) ->
+    case is_process_alive(MqttMgrPid) of
+        true ->
+            TRef = erlang:start_timer(
+                     750,
+                     self(),
+                     {connect_to_broker, MqttMgrPid}
+            ),
+            NodeDef#{'_timer' => TRef};
         _ ->
             setup_mqtt_manager(NodeDef, ws_from(NodeDef))
     end;
-handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
-    WsName = ws_from(NodeDef),
-
+handle_event(
+  {mqtt_disconnected, _Reason, _Properties},
+  NodeDef
+) ->
+    setup_mqtt_manager(NodeDef, ws_from(NodeDef));
+%%
+handle_event(
+  {connect_to_broker, MqttMgrPid},
+  #{ '_ws' := WsName } = NodeDef
+) ->
     case is_process_alive(MqttMgrPid) of
         true ->
             case gen_server:call(MqttMgrPid, start_mqtt) of
@@ -132,7 +142,7 @@ handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
                                     self(),
                                     {connect_to_broker, MqttMgrPid}
                                 ),
-                                maps:put(<<"'_timer'">>, TRef, NodeDef)
+                                NodeDef#{'_timer' => TRef}
                         end
                     catch
                         exit:_ ->
@@ -153,25 +163,27 @@ handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
                         {connect_to_broker, MqttMgrPid}
                     ),
                     ?STATUS("connecting", "yellow", "dot"),
-                    maps:put('_timer', TRef, NodeDef)
+                    NodeDef#{'_timer' => TRef}
             end;
         _ ->
             NodeDef
     end;
-handle_event({stop, _WsName}, NodeDef) ->
-    case maps:find('_timer', NodeDef) of
-        {ok, TRef} ->
-            erlang:cancel_timer(TRef);
-        _ ->
-            ignore
-    end,
-    case maps:find('_mqtt_mgr_id', NodeDef) of
-        {ok, MqttMgrPid} ->
-            gen_server:cast(MqttMgrPid, stop);
-        _ ->
-            ignore
-    end,
+%%
+%% stop event - with timer or without, with mqtt mgr process or not.
+handle_event(
+  {stop, _WsName},
+  #{'_timer' := TRef, '_mqtt_mgr_id' := MqttMgrPid} = NodeDef
+) ->
+    erlang:cancel_timer(TRef),
+    gen_server:cast(MqttMgrPid, stop),
     NodeDef;
+handle_event({stop, _WsName}, #{'_timer' := TRef} = NodeDef) ->
+    erlang:cancel_timer(TRef),
+    NodeDef;
+handle_event({stop, _WsName}, #{'_mqtt_mgr_id' := MqttMgrPid} = NodeDef) ->
+    gen_server:cast(MqttMgrPid, stop),
+    NodeDef;
+%% fall through
 handle_event(_, NodeDef) ->
     NodeDef.
 
@@ -187,6 +199,7 @@ handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
 
 %%
+%% -------------- Helpers
 %%
 
 copy_attributes([], Msg, _MqttDataPacket) ->
@@ -196,17 +209,6 @@ copy_attributes([Attr | Attrs], Msg, MqttDataPacket) ->
         Attrs,
         maps:put(atom_to_binary(Attr), maps:get(Attr, MqttDataPacket), Msg),
         MqttDataPacket
-    ).
-
-add_to_nodedef(NodeDef, EmqttPid, WsName, TimerRef) ->
-    maps:put(
-        '_timer',
-        TimerRef,
-        maps:put(
-            '_mqtt_mgr_id',
-            EmqttPid,
-            maps:put('_ws', WsName, NodeDef)
-        )
     ).
 
 %% erlfmt:ignore alignment
@@ -250,7 +252,10 @@ setup_mqtt_manager(NodeDef, WsName) ->
                         {connect_to_broker, MqttMgrPid}
                     ),
 
-                    add_to_nodedef(NodeDef, MqttMgrPid, WsName, TRef);
+                    ?PUT_WS(NodeDef#{
+                        '_timer' => TRef,
+                        '_mqtt_mgr_id' => MqttMgrPid
+                    });
                 _ ->
                     ?STATUS("connecting (no cfg)", "yellow", "dot"),
                     NodeDef

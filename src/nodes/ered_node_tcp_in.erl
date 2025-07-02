@@ -2,6 +2,8 @@
 
 -behaviour(ered_node).
 
+-include("ered_nodes.hrl").
+
 -export([start/2]).
 -export([handle_msg/2]).
 -export([handle_event/2]).
@@ -73,10 +75,7 @@ start(NodeDef, WsName) ->
         check_config(<<"newline">>,  <<"">>,       NodeDef, WsName)
     } of
         {ok, ok, ok, ok, ok, ok} ->
-            ered_node:start(
-              NodeDef#{'_ws' => WsName, conn_count => 0},
-              ?MODULE
-             );
+            ered_node:start(?PUT_WS(NodeDef#{conn_count => 0}), ?MODULE);
         _ ->
             ered_node:start(NodeDef, ered_node_ignore)
     end.

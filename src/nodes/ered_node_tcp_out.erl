@@ -2,6 +2,8 @@
 
 -behaviour(ered_node).
 
+-include("ered_nodes.hrl").
+
 -export([start/2]).
 -export([handle_msg/2]).
 -export([handle_event/2]).
@@ -51,10 +53,7 @@ start(NodeDef, WsName) ->
           check_config(<<"end">>,      false,       NodeDef, WsName)
          } of
         {ok, ok, ok, ok, ok, ok} ->
-            ered_node:start(
-              NodeDef#{'_ws' => WsName},
-              ?MODULE
-             );
+            ered_node:start(?PUT_WS(NodeDef), ?MODULE);
         _ ->
             %% seemlessly return an ignore node if the configuration doesn't
             %% match. This allows other flows and nodes to continue to work

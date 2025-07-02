@@ -2,6 +2,8 @@
 
 -behaviour(ered_node).
 
+-include("ered_nodes.hrl").
+
 -export([start/2]).
 -export([handle_msg/2]).
 -export([handle_event/2]).
@@ -62,7 +64,7 @@
 %%
 start(NodeDef, WsName) ->
     node_status(WsName, NodeDef, "starting", "green", "ring"),
-    ered_node:start(NodeDef#{'_ws' => WsName}, ?MODULE).
+    ered_node:start(?PUT_WS(NodeDef), ?MODULE).
 
 %% erlfmt:ignore alignment
 init(Children) ->

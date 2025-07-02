@@ -2,6 +2,8 @@
 
 -behaviour(ered_node).
 
+-include("ered_nodes.hrl").
+
 -export([start/2]).
 -export([handle_msg/2]).
 -export([handle_event/2]).
@@ -15,7 +17,12 @@
 
 %%
 %% See the mqtt in node for the logic behind this code.
+
 %%
+%% TODO needs to be refactored as the mqtt in node - much can be done
+%% TODO via function signature pattern matching.
+%%
+
 -import(ered_config_store, [
     retrieve_config_node/1
 ]).
@@ -106,20 +113,24 @@ handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
         _ ->
             NodeDef
     end;
-handle_event({stop, _WsName}, NodeDef) ->
-    case maps:find('_timer', NodeDef) of
-        {ok, TRef} ->
-            erlang:cancel_timer(TRef);
-        _ ->
-            ignore
-    end,
-    case maps:find('_mqtt_mgr_id', NodeDef) of
-        {ok, MqttMgrPid} ->
-            gen_server:cast(MqttMgrPid, stop);
-        _ ->
-            ignore
-    end,
+%%
+%% stop event - with timer or without, with mqtt mgr process or not.
+handle_event(
+  {stop, _WsName},
+  #{'_timer' := TRef, '_mqtt_mgr_id' := MqttMgrPid} = NodeDef
+) ->
+    erlang:cancel_timer(TRef),
+    gen_server:cast(MqttMgrPid, stop),
     NodeDef;
+handle_event({stop, _WsName}, #{'_timer' := TRef} = NodeDef) ->
+    erlang:cancel_timer(TRef),
+    NodeDef;
+handle_event({stop, _WsName}, #{'_mqtt_mgr_id' := MqttMgrPid} = NodeDef) ->
+    gen_server:cast(MqttMgrPid, stop),
+    NodeDef;
+
+%%
+%% fall through
 handle_event(_, NodeDef) ->
     NodeDef.
 
@@ -166,18 +177,8 @@ handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
 
 %%
+%% -------------- Helpers
 %%
-
-add_to_nodedef(NodeDef, EmqttPid, WsName, TimerRef) ->
-    maps:put(
-        '_timer',
-        TimerRef,
-        maps:put(
-            '_mqtt_mgr_id',
-            EmqttPid,
-            maps:put('_ws', WsName, NodeDef)
-        )
-    ).
 
 %% erlfmt:ignore alignment
 create_mqtt_manager(Cfg) ->
@@ -220,7 +221,10 @@ setup_mqtt_manager(NodeDef, WsName) ->
                         {connect_to_broker, MqttMgrPid}
                     ),
 
-                    add_to_nodedef(NodeDef, MqttMgrPid, WsName, TRef);
+                    ?PUT_WS(NodeDef#{
+                        '_timer' => TRef,
+                        '_mqtt_mgr_id' => MqttMgrPid
+                    });
                 _ ->
                     ?STATUS("connecting (no cfg)", "yellow", "dot"),
                     NodeDef

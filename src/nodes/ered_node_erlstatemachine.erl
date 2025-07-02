@@ -2,6 +2,8 @@
 
 -behaviour(ered_node).
 
+-include("ered_nodes.hrl").
+
 -export([start/2]).
 -export([handle_msg/2]).
 -export([handle_event/2]).
@@ -49,20 +51,9 @@
 %% changed, so we can set the function to handle message sending as start
 %% time, this won't change during runtime.
 %%
-%% Doing this saves doing an extra if on each message: if emit on state
-%% change is true then ....
 start(NodeDef, WsName) ->
     ered_node:start(
-        NodeDef#{
-            '_func_send_msg' =>
-                case to_bool(maps:get(<<"emit_on_state_change">>, NodeDef)) of
-                    true ->
-                        fun send_message_on_state_change/6;
-                    false ->
-                        fun always_send_message/6
-                end,
-            '_ws' => WsName
-        },
+        ?PUT_WS(NodeDef#{'_func_send_msg' => define_func_send_msg(NodeDef)}),
         ?MODULE
     ).
 
@@ -98,17 +89,10 @@ handle_event({registered, WsName, _MyPid}, NodeDef) ->
     end;
 handle_event({being_supervised, _WsName}, NodeDef) ->
     %% need this to obtain the exits when the supervisor kills this node
-    %% this then triggers a killing of the state machine process
+    %% this then triggers a killing of the state machine process - see EXIT
+    %% event below.
     process_flag(trap_exit, true),
     NodeDef;
-handle_event(
-    {stop, _WsName},
-    #{
-        '_statem_pid' := Pid
-    } = NodeDef
-) ->
-    exit(Pid, normal),
-    maps:remove('_statem_pid', NodeDef);
 handle_event(
     {'EXIT', _From, Reason},
     #{
@@ -121,6 +105,28 @@ handle_event(
     exit(Pid, Reason),
     exit(self(), Reason),
     maps:remove('_statem_pid', NodeDef);
+handle_event(
+    {stop, _WsName},
+    #{
+        '_statem_pid' := Pid
+    } = NodeDef
+) ->
+    exit(Pid, normal),
+    maps:remove('_statem_pid', NodeDef);
+%%
+%% state machine shutdown. This generally does not happen since the
+%% individual state handlers modules crash but they are isolated from
+%% the statemachine process that we're monitoring.
+handle_event(
+  {'DOWN', _Ref, process, _Pid, Reason},
+  #{
+    '_being_supervised' := true
+   } = NodeDef
+) ->
+    node_status(ws_from(NodeDef), NodeDef, "stopped", "red", "dot"),
+    exit(self(), Reason),
+    maps:remove('_statem_pid', NodeDef);
+
 handle_event(_, NodeDef) ->
     NodeDef.
 
@@ -140,10 +146,7 @@ handle_msg(
         '_func_send_msg' := SendMsgFunc
     } = NodeDef
 ) ->
-    PrevState = element(1, sys:get_state(Pid)),
-    Result = gen_statem:call(Pid, {Action, Payload}),
-    CurrState = element(1, sys:get_state(Pid)),
-
+    {PrevState, Result, CurrState} = statem_call(Pid, {Action, Payload}),
     node_status(WsName, NodeDef, CurrState, "blue", "dot"),
     SendMsgFunc(NodeDef, Msg, Result, Action, CurrState, PrevState);
 %% incoming message with only Action defined, and the state machine process
@@ -159,19 +162,25 @@ handle_msg(
         '_func_send_msg' := SendMsgFunc
     } = NodeDef
 ) ->
-    PrevState = element(1, sys:get_state(Pid)),
-    Result = gen_statem:call(Pid, Action),
-    CurrState = element(1, sys:get_state(Pid)),
-
+    {PrevState, Result, CurrState} = statem_call(Pid, Action),
     node_status(WsName, NodeDef, CurrState, "blue", "dot"),
     SendMsgFunc(NodeDef, Msg, Result, Action, CurrState, PrevState);
 %% Error situaion, no action defined for a statemachine that is running - this
 %% shouldn't happen.
 handle_msg(
     {incoming, Msg},
-    NodeDef
+    #{
+        '_statem_pid' := _Pid
+    } = NodeDef
 ) ->
     post_exception_or_debug(NodeDef, Msg, <<"no action to perform">>),
+    {handled, NodeDef, dont_send_complete_msg};
+%% Error situaion, statemachine process is dead or not defined
+handle_msg(
+    {incoming, Msg},
+    NodeDef
+) ->
+    post_exception_or_debug(NodeDef, Msg, <<"no statemachine process">>),
     {handled, NodeDef, dont_send_complete_msg};
 %%
 %%
@@ -190,3 +199,14 @@ send_message_on_state_change(NodeDef, Msg, Result, Action, CurrS, PrevS) ->
 
 always_send_message(NodeDef, Msg, Result, Action, CurrS, PrevS) ->
     ?SEND_MSG(NodeDef, Msg, Result, Action, CurrS, PrevS).
+
+statem_call(Pid, CallPayload) ->
+    { element(1, sys:get_state(Pid)),
+      gen_statem:call(Pid, CallPayload),
+      element(1, sys:get_state(Pid)) }.
+%%
+%%
+define_func_send_msg(#{<<"emit_on_state_change">> := true}) ->
+    fun send_message_on_state_change/6;
+define_func_send_msg(_NodeDef) ->
+    fun always_send_message/6.

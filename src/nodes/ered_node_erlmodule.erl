@@ -2,6 +2,8 @@
 
 -behaviour(ered_node).
 
+-include("ered_nodes.hrl").
+
 -export([start/2]).
 -export([handle_msg/2]).
 -export([handle_event/2]).
@@ -14,6 +16,11 @@
 %% Code inject modules.
 %%
 %% This does not nothing except for install code into the BEAM.
+%%
+%% The install process isn't managed by the node, instead the startup
+%% procedure does the installation. That is because there has to be an
+%% order maintained in how things happen. Another node wanting to use this
+%% code must have that code already installed.
 %%
 
 -import(ered_nodered_comm, [
@@ -29,10 +36,8 @@ start(NodeDef, _WsName) ->
 
 %%
 %%
-handle_event({stop, _WsName}, NodeDef) ->
-    ered_erlmodule_exchange:remove_module_for_nodeid(
-        maps:get(<<"id">>, NodeDef)
-    ),
+handle_event({stop, _WsName}, #{<<"id">> := NodeId} = NodeDef) ->
+    ered_erlmodule_exchange:remove_module_for_nodeid(NodeId),
     NodeDef;
 handle_event(_, NodeDef) ->
     NodeDef.
@@ -44,9 +49,15 @@ handle_msg(_, NodeDef) ->
 
 %%
 %%
-install(NodeDef, WsName) ->
-    ModuleName = binary_to_atom(maps:get(<<"module_name">>, NodeDef)),
-    ModuleCode = maps:get(<<"code">>, NodeDef),
+install(
+  #{
+    <<"module_name">> := ModBinaryName,
+    <<"code">> := ModuleCode,
+    <<"id">> := NodeId
+  } = NodeDef,
+  WsName
+) ->
+    ModuleName = binary_to_atom(ModBinaryName),
 
     FileName = binary_to_list(
         list_to_binary(
@@ -59,19 +70,14 @@ install(NodeDef, WsName) ->
     case compile:file(FileName, [binary, return_errors, return_warnings]) of
         {ok, ModuleName, Binary, _} ->
             node_status(WsName, NodeDef, "installed", "green", "dot"),
-            NodeId = #{<<"id">> => maps:get(<<"id">>, NodeDef)},
-            spawn(fun() -> clear_status_after_one_sec(WsName, NodeId) end),
+            spawn(fun() -> clear_status_after_one_sec(WsName, NodeDef) end),
             {module, ModuleName} = code:load_binary(ModuleName, [], Binary),
-            ered_erlmodule_exchange:add_module(
-                maps:get(<<"id">>, NodeDef),
-                ModuleName
-            );
+            ered_erlmodule_exchange:add_module(NodeId, ModuleName);
         {error, ErrorList, WarnList} ->
-            Msg = #{
-                '_ws' => WsName,
+            Msg = ?PUT_WS(#{
                 error => compiler_list_to_json_list(ErrorList),
                 warning => compiler_list_to_json_list(WarnList)
-            },
+            }),
             node_status(WsName, NodeDef, "compile failed", "red", "dot"),
             post_exception_or_debug(NodeDef, Msg, <<"compile failed">>)
     end,

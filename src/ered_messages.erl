@@ -1,5 +1,7 @@
 -module(ered_messages).
 
+-include("ered_nodes.hrl").
+
 -export([
     convert_to_num/1,
     convert_units_to_milliseconds/2,
@@ -234,7 +236,7 @@ delete_prop(PropName, Msg) ->
 %%
 %% Generate an empty message map with just an _msgid
 create_outgoing_msg(WsName) ->
-    {outgoing, #{'_msgid' => generate_id(), '_ws' => WsName}}.
+    {outgoing, ?PUT_WS(#{'_msgid' => generate_id()})}.
 
 %%
 %%
