@@ -62,7 +62,7 @@ init([]) ->
                 },
                 #{
                     id => ered_ch7_compute_engine,
-                    start => {ered_compute_engine, start, []},
+                    start => {ered_compute_engine, start_link, []},
                     restart => permanent,
                     type => worker,
                     module => [ered_compute_engine]

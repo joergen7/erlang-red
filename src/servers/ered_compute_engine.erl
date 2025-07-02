@@ -10,7 +10,7 @@
     handle_info/2,
     terminate/2,
     stop/0,
-    start/0
+    start_link/0
 ]).
 
 -export([
@@ -39,7 +39,7 @@
     parse_flow_file/1
 ]).
 
-start() ->
+start_link() ->
     %% trigger the loading of an initial flow file. This can be used in
     %% conjunction with DISABLE_FLOWEDITOR to have just a single flow running
     %% on the ErlangRED compute engine, i.e. a headless deployment.
@@ -82,14 +82,7 @@ handle_call({reload, WsName}, _From, State) ->
     %%
     Prefix = get_node_name(WsName, <<"">>),
     Nodes = lists:filter(
-        fun(AA) ->
-            case binary:match(AA, Prefix) of
-                nomatch ->
-                    false;
-                _ ->
-                    true
-            end
-        end,
+        fun(AA) -> binary:match(AA, Prefix) =/= nomatch end,
         pg:which_groups()
     ),
     [[M ! {reload} || M <- pg:get_members(GrpName)] || GrpName <- Nodes],
@@ -102,30 +95,30 @@ handle_call({deploy, JsonStr, WsName}, _From, State) ->
 
     Prefix = get_node_name(WsName, <<"">>),
 
+    %% TODO this list has to be sorted by type: the supervisors MUST be stopped
+    %% TODO first else they restart process that have been stopped, i.e., a node
+    %% TODO is sent a stop and then the supervisor node restarts it and then
+    %% TODO the node is restarted again during the create pid phase.
     Nodes = lists:filter(
-        fun(AA) ->
-            case binary:match(AA, Prefix) of
-                nomatch ->
-                    false;
-                _ ->
-                    true
-            end
-        end,
+        fun(AA) -> binary:match(AA, Prefix) =/= nomatch end,
         pg:which_groups()
     ),
 
-    [
-        [
-            (is_process_alive(M) =/= false) andalso
-                (M =/= false) andalso
-                (M ! {stop, WsName})
-         || M <- pg:get_members(GrpName)
-        ]
-     || GrpName <- Nodes
-    ],
+    ProcessKill = fun(Pid) ->
+        (is_process_alive(Pid) =/= false) andalso
+            (Pid =/= false) andalso
+            (Pid ! {stop, WsName})
+    end,
+
+    [[ProcessKill(M) || M <- pg:get_members(GrpName)] || GrpName <- Nodes],
+
+    %% This is a sympton of the ordering of node types -- i.e. supervisor should
+    %% be stopped first before other nodes - see comment above.
+    [timer:sleep(length(pg:get_members(GrpName)) * 550) || GrpName <- Nodes],
 
     FlowMap = decode_json(JsonStr),
     {ok, NodeAry} = maps:find(<<"flows">>, FlowMap),
+
     create_pids_for_nodes(NodeAry, WsName),
 
     {reply, <<"{\"rev\":\"fed00d06\"}">>, State};
