@@ -37,6 +37,7 @@ start(NodeDef, WsName) ->
 %%
 handle_event({registered, WsName, _MyPid}, NodeDef) ->
     {ok, {Pid, _Ref}} = gen_event:start_monitor(),
+
     case add_handlers(Pid, maps:find(<<"handlers">>, NodeDef)) of
         ok ->
             node_status(WsName, NodeDef, "started", "green", "dot");
@@ -49,8 +50,8 @@ handle_event({registered, WsName, _MyPid}, NodeDef) ->
             ],
             node_status(WsName, NodeDef, "invalid", "blue", "ring")
     end,
-    NodeDef#{'_eventh_pid' => Pid};
 
+    NodeDef#{'_eventh_pid' => Pid};
 %%
 handle_event({being_supervised, _WsName}, NodeDef) ->
     %% need this to obtain the exits when the supervisor kills this node
@@ -63,8 +64,8 @@ handle_event({being_supervised, _WsName}, NodeDef) ->
 %% also go down, i.e., the node process goes down so that the supervisor
 %% can deal with it.
 handle_event(
-  {'DOWN', _Ref, process, _Pid, Reason},
-  #{ '_being_supervised' := true } = NodeDef
+    {'DOWN', _Ref, process, _Pid, Reason},
+    #{'_being_supervised' := true} = NodeDef
 ) ->
     node_status(ws_from(NodeDef), NodeDef, "stopped", "red", "dot"),
     exit(self(), Reason),
@@ -72,8 +73,8 @@ handle_event(
 %%
 %% event handler shutdown but we're not being supervised.
 handle_event(
-  {'DOWN', _Ref, process, _Pid, _Reason},
-  NodeDef
+    {'DOWN', _Ref, process, _Pid, _Reason},
+    NodeDef
 ) ->
     node_status(ws_from(NodeDef), NodeDef, "stopped", "red", "dot"),
     maps:remove('_eventh_pid', NodeDef);
@@ -98,7 +99,6 @@ handle_event(
 ) ->
     exit(Pid, normal),
     maps:remove('_eventh_pid', NodeDef);
-
 handle_event(_, NodeDef) ->
     NodeDef.
 
@@ -106,12 +106,12 @@ handle_event(_, NodeDef) ->
 %% Add a handler to the event handler, the "payload" attribute must be the
 %% name of a loaded module.
 handle_msg(
-  {incoming,
-   #{
-      <<"action">> := <<"add_handler">>,
-      <<"payload">> := ModuleName
-    } = Msg},
-  #{'_eventh_pid' := EventHandlerPid} = NodeDef
+    {incoming,
+        #{
+            <<"action">> := <<"add_handler">>,
+            <<"payload">> := ModuleName
+        } = Msg},
+    #{'_eventh_pid' := EventHandlerPid} = NodeDef
 ) ->
     ModAtom = binary_to_atom(ModuleName),
     case code:is_loaded(ModAtom) of
@@ -125,12 +125,12 @@ handle_msg(
 %%
 %% delete a previously defined handler from an event handler.
 handle_msg(
-  {incoming,
-   #{
-      <<"action">> := <<"delete_handler">>,
-      <<"payload">> := ModuleName
-    } = Msg},
-  #{'_eventh_pid' := EventHandlerPid} = NodeDef
+    {incoming,
+        #{
+            <<"action">> := <<"delete_handler">>,
+            <<"payload">> := ModuleName
+        } = Msg},
+    #{'_eventh_pid' := EventHandlerPid} = NodeDef
 ) ->
     ModAtom = binary_to_atom(ModuleName),
     R = gen_event:delete_handler(EventHandlerPid, ModAtom, Msg),
@@ -139,15 +139,21 @@ handle_msg(
 %%
 %% handle an event
 handle_msg(
-  {incoming,
-   #{
-      <<"event">> := EventName
-    } = Msg},
-  #{'_eventh_pid' := EventHandlerPid} = NodeDef
+    {incoming,
+        #{
+            <<"event">> := EventName
+        } = Msg},
+    #{'_eventh_pid' := EventHandlerPid} = NodeDef
 ) ->
     gen_event:notify(EventHandlerPid, {EventName, Msg, NodeDef}),
     {handled, NodeDef, dont_send_complete_msg};
-
+%%
+%% event handler process is not running, handle message but do nothing with it
+handle_msg(
+    {incoming, _Msg},
+    NodeDef
+) ->
+    {handled, NodeDef, dont_send_complete_msg};
 %%
 %%
 handle_msg(_, NodeDef) ->
@@ -162,27 +168,29 @@ add_handlers(_EventHandlerPid, error) ->
     % missing list, no static configuration
     ok;
 add_handlers(EventHandlerPid, {ok, Handlers}) ->
-    add_handlers(EventHandlerPid, {ok, Handlers}, []).
+    add_handlers(EventHandlerPid, Handlers, []).
 
 %%
 %% Collect together all errors - nothing worse than fixing one error and then
 %% being confronted with the next even though the system knew that already.
-add_handlers(_EventHandlerPid, {ok, []}, []) ->
+add_handlers(_EventHandlerPid, [], []) ->
     % empty handler list and empty error list, all done
     ok;
-add_handlers(_EventHandlerPid, {ok, []}, ErrorList) ->
+add_handlers(_EventHandlerPid, [], ErrorList) ->
     % empty handler list and empty error list, all done
     {error, ErrorList};
-add_handlers(EventHandlerPid, {ok, [Hndlr | MoreHndlrs]}, ErrorList) ->
-    NodeId = maps:get(<<"nodeid">>, Hndlr),
-
+add_handlers(
+    EventHandlerPid,
+    [#{<<"nodeid">> := NodeId} | MoreHndlrs],
+    ErrorList
+) ->
     case ered_erlmodule_exchange:find_module(NodeId) of
         not_found ->
             Error = io_lib:format(
                 "Module for NodeId ~p not found",
                 [NodeId]
             ),
-            add_handlers(EventHandlerPid, {ok, MoreHndlrs}, [Error | ErrorList]);
+            add_handlers(EventHandlerPid, MoreHndlrs, [Error | ErrorList]);
         {ok, ModuleName} ->
             case code:is_loaded(ModuleName) of
                 false ->
@@ -192,7 +200,7 @@ add_handlers(EventHandlerPid, {ok, [Hndlr | MoreHndlrs]}, ErrorList) ->
                     ),
                     add_handlers(
                         EventHandlerPid,
-                        {ok, MoreHndlrs},
+                        MoreHndlrs,
                         [Error | ErrorList]
                     );
                 _ ->
@@ -201,6 +209,6 @@ add_handlers(EventHandlerPid, {ok, [Hndlr | MoreHndlrs]}, ErrorList) ->
                         ModuleName,
                         []
                     ),
-                    add_handlers(EventHandlerPid, {ok, MoreHndlrs}, ErrorList)
+                    add_handlers(EventHandlerPid, MoreHndlrs, ErrorList)
             end
     end.
