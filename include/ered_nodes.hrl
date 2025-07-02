@@ -12,3 +12,7 @@
         get_prop_value_from_map(<<"type">>, NodeDef)
     )
 }).
+
+-define(PUT_WS(Map),
+    Map#{'_ws' => WsName}
+).
