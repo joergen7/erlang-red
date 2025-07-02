@@ -115,20 +115,19 @@ handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
     end;
 %%
 %% stop event - with timer or without, with mqtt mgr process or not.
+% erlfmt:ignore - long line
 handle_event(
-  {stop, _WsName},
-  #{'_timer' := TRef, '_mqtt_mgr_id' := MqttMgrPid} = NodeDef
+    {stop, _}, #{'_timer' := TRef, '_mqtt_mgr_id' := MqttMgrPid} = NodeDef
 ) ->
     erlang:cancel_timer(TRef),
     gen_server:cast(MqttMgrPid, stop),
     NodeDef;
-handle_event({stop, _WsName}, #{'_timer' := TRef} = NodeDef) ->
+handle_event({stop, _}, #{'_timer' := TRef} = NodeDef) ->
     erlang:cancel_timer(TRef),
     NodeDef;
-handle_event({stop, _WsName}, #{'_mqtt_mgr_id' := MqttMgrPid} = NodeDef) ->
+handle_event({stop, _}, #{'_mqtt_mgr_id' := MqttMgrPid} = NodeDef) ->
     gen_server:cast(MqttMgrPid, stop),
     NodeDef;
-
 %%
 %% fall through
 handle_event(_, NodeDef) ->
@@ -136,37 +135,42 @@ handle_event(_, NodeDef) ->
 
 %%
 %%
-handle_msg({incoming, Msg}, NodeDef) ->
-    case maps:find('_mqtt_mgr_id', NodeDef) of
-        {ok, Pid} ->
-            {ok, Topic} = maps:find(<<"topic">>, NodeDef),
-            {ok, QoS} = maps:find(<<"qos">>, NodeDef),
-            {ok, Retain} = maps:find(<<"retain">>, NodeDef),
+handle_msg(
+    {incoming, Msg},
+    #{
+        <<"topic">> := Topic,
+        <<"qos">> := QoS,
+        <<"retain">> := Retain,
+        '_mqtt_mgr_id' := Pid
+    } = NodeDef
+) ->
+    Data = {
+        publish_payload,
+        maps:get(<<"payload">>, Msg),
+        Topic,
+        convert_to_num(QoS),
+        to_bool(Retain)
+    },
 
-            Data = {
-                publish_payload,
-                maps:get(<<"payload">>, Msg),
-                Topic,
-                convert_to_num(QoS),
-                to_bool(Retain)
-            },
+    gen_server:cast(Pid, Data),
 
-            gen_server:cast(Pid, Data),
+    update_status(
+        is_process_alive(Pid), NodeDef, "connecting", "yellow", "dot"
+    ),
 
-            case is_process_alive(Pid) of
-                false ->
-                    node_status(
-                        ws_from(NodeDef), NodeDef, "connecting", "yellow", "dot"
-                    );
-                _ ->
-                    ignore
-            end,
-            {handled, NodeDef, Msg};
-        _ ->
-            ErrMsg = jstr("no connection available"),
-            post_exception_or_debug(NodeDef, Msg, ErrMsg),
-            {handled, NodeDef, dont_send_complete_msg}
-    end;
+    {handled, NodeDef, Msg};
+%%
+handle_msg(
+    {incoming, Msg},
+    #{
+        <<"topic">> := _Topic,
+        <<"qos">> := _QoS,
+        <<"retain">> := _Retain
+    } = NodeDef
+) ->
+    ErrMsg = jstr("no connection available"),
+    post_exception_or_debug(NodeDef, Msg, ErrMsg),
+    {handled, NodeDef, dont_send_complete_msg};
 handle_msg({mqtt_not_sent, Msg}, NodeDef) ->
     %% TODO these are messages that were sent out using the publish_payload
     %% TODO but because the broker went away, the message has come back
@@ -179,6 +183,11 @@ handle_msg(_, NodeDef) ->
 %%
 %% -------------- Helpers
 %%
+
+update_status(true, NodeDef, Txt, Clr, Shp) ->
+    node_status(ws_from(NodeDef), NodeDef, Txt, Clr, Shp);
+update_status(_, _, _, _, _) ->
+    ignore.
 
 %% erlfmt:ignore alignment
 create_mqtt_manager(Cfg) ->
@@ -204,32 +213,35 @@ create_mqtt_manager(Cfg) ->
 
     MqttMgrPid.
 
-setup_mqtt_manager(NodeDef, WsName) ->
-    case maps:find(<<"broker">>, NodeDef) of
-        {ok, CfgNodeId} ->
-            case retrieve_config_node(CfgNodeId) of
-                {ok, Cfg} ->
-                    ?STATUS("connecting", "yellow", "dot"),
+%%
+%%
+setup_mqtt_manager(
+    #{<<"broker">> := CfgNodeId} = NodeDef, WsName
+) ->
+    case retrieve_config_node(CfgNodeId) of
+        {ok, Cfg} ->
+            ?STATUS("connecting", "yellow", "dot"),
 
-                    MqttMgrPid = create_mqtt_manager(Cfg),
+            MqttMgrPid = create_mqtt_manager(Cfg),
 
-                    erlang:monitor(process, MqttMgrPid),
+            erlang:monitor(process, MqttMgrPid),
 
-                    TRef = erlang:start_timer(
-                        750,
-                        self(),
-                        {connect_to_broker, MqttMgrPid}
-                    ),
+            TRef = erlang:start_timer(
+                750,
+                self(),
+                {connect_to_broker, MqttMgrPid}
+            ),
 
-                    ?PUT_WS(NodeDef#{
-                        '_timer' => TRef,
-                        '_mqtt_mgr_id' => MqttMgrPid
-                    });
-                _ ->
-                    ?STATUS("connecting (no cfg)", "yellow", "dot"),
-                    NodeDef
-            end;
+            ?PUT_WS(NodeDef#{
+                '_timer' => TRef,
+                '_mqtt_mgr_id' => MqttMgrPid
+            });
         _ ->
-            ?STATUS("connecting (no broker)", "yellow", "dot"),
+            ?STATUS("connecting (no cfg)", "yellow", "dot"),
             NodeDef
-    end.
+    end;
+setup_mqtt_manager(
+    NodeDef, WsName
+) ->
+    ?STATUS("connecting (no broker)", "yellow", "dot"),
+    NodeDef.

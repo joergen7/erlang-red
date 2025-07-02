@@ -258,7 +258,7 @@ bad_routing(NodeDef, Type, Msg) ->
     this_should_not_happen(
         NodeDef,
         io_lib:format(
-            "Unhandled message type [~p] Node: [~p, ~p] Msg: ~p\n",
+            "Unhandled message type [~p] ~n~nNode: [~p, ~p]~n~nMsg: ~p\n",
             [
                 Type,
                 maps:get(<<"id">>, NodeDef),

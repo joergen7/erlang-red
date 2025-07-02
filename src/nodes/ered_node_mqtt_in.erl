@@ -87,33 +87,32 @@ handle_event({registered, WsName, _Pid}, NodeDef) ->
     setup_mqtt_manager(NodeDef, WsName);
 handle_event({'DOWN', _MonitorRef, _Type, _Object, _Info}, NodeDef) ->
     setup_mqtt_manager(NodeDef, ws_from(NodeDef));
-
 %%
 %% mqtt_disconnected event, with and without a running mqtt process
 handle_event(
-  {mqtt_disconnected, _Reason, _Properties},
-  #{ '_mqtt_mgr_id' := MqttMgrPid } = NodeDef
+    {mqtt_disconnected, _Reason, _Properties},
+    #{'_mqtt_mgr_id' := MqttMgrPid} = NodeDef
 ) ->
     case is_process_alive(MqttMgrPid) of
         true ->
             TRef = erlang:start_timer(
-                     750,
-                     self(),
-                     {connect_to_broker, MqttMgrPid}
+                750,
+                self(),
+                {connect_to_broker, MqttMgrPid}
             ),
             NodeDef#{'_timer' => TRef};
         _ ->
             setup_mqtt_manager(NodeDef, ws_from(NodeDef))
     end;
 handle_event(
-  {mqtt_disconnected, _Reason, _Properties},
-  NodeDef
+    {mqtt_disconnected, _Reason, _Properties},
+    NodeDef
 ) ->
     setup_mqtt_manager(NodeDef, ws_from(NodeDef));
 %%
 handle_event(
-  {connect_to_broker, MqttMgrPid},
-  #{ '_ws' := WsName } = NodeDef
+    {connect_to_broker, MqttMgrPid},
+    #{'_ws' := WsName} = NodeDef
 ) ->
     case is_process_alive(MqttMgrPid) of
         true ->
@@ -171,8 +170,8 @@ handle_event(
 %%
 %% stop event - with timer or without, with mqtt mgr process or not.
 handle_event(
-  {stop, _WsName},
-  #{'_timer' := TRef, '_mqtt_mgr_id' := MqttMgrPid} = NodeDef
+    {stop, _WsName},
+    #{'_timer' := TRef, '_mqtt_mgr_id' := MqttMgrPid} = NodeDef
 ) ->
     erlang:cancel_timer(TRef),
     gen_server:cast(MqttMgrPid, stop),
