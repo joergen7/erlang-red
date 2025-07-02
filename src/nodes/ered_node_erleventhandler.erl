@@ -2,6 +2,8 @@
 
 -behaviour(ered_node).
 
+-include("ered_nodes.hrl").
+
 -export([start/2]).
 -export([handle_msg/2]).
 -export([handle_event/2]).
@@ -29,7 +31,7 @@
 %%
 %%
 start(NodeDef, WsName) ->
-    ered_node:start(NodeDef#{'_ws' => WsName}, ?MODULE).
+    ered_node:start(?PUT_WS(NodeDef), ?MODULE).
 
 %%
 %%
@@ -48,51 +50,114 @@ handle_event({registered, WsName, _MyPid}, NodeDef) ->
             node_status(WsName, NodeDef, "invalid", "blue", "ring")
     end,
     NodeDef#{'_eventh_pid' => Pid};
-handle_event({'DOWN', _Ref, process, _Pid, shutdown}, NodeDef) ->
+
+%%
+handle_event({being_supervised, _WsName}, NodeDef) ->
+    %% need this to obtain the exits when the supervisor kills this node
+    %% this then triggers a killing of the state machine process - see EXIT
+    %% event below.
+    process_flag(trap_exit, true),
+    NodeDef;
+%%
+%% if the event handler goes down and we're being supervised, then we
+%% also go down, i.e., the node process goes down so that the supervisor
+%% can deal with it.
+handle_event(
+  {'DOWN', _Ref, process, _Pid, Reason},
+  #{ '_being_supervised' := true } = NodeDef
+) ->
+    node_status(ws_from(NodeDef), NodeDef, "stopped", "red", "dot"),
+    exit(self(), Reason),
+    maps:remove('_eventh_pid', NodeDef);
+%%
+%% event handler shutdown but we're not being supervised.
+handle_event(
+  {'DOWN', _Ref, process, _Pid, _Reason},
+  NodeDef
+) ->
     node_status(ws_from(NodeDef), NodeDef, "stopped", "red", "dot"),
     maps:remove('_eventh_pid', NodeDef);
+%%
+handle_event(
+    {'EXIT', _From, Reason},
+    #{
+        '_eventh_pid' := Pid,
+        '_ws' := WsName,
+        '_being_supervised' := true
+    } = NodeDef
+) ->
+    node_status(WsName, NodeDef, "killed", "red", "ring"),
+    exit(Pid, Reason),
+    exit(self(), Reason),
+    maps:remove('_eventh_pid', NodeDef);
+handle_event(
+    {stop, _WsName},
+    #{
+        '_eventh_pid' := Pid
+    } = NodeDef
+) ->
+    exit(Pid, normal),
+    maps:remove('_eventh_pid', NodeDef);
+
 handle_event(_, NodeDef) ->
     NodeDef.
 
 %%
-%%
-handle_msg({incoming, Msg}, NodeDef) ->
-    EventHandlerPid = maps:get('_eventh_pid', NodeDef),
-    case maps:find(<<"action">>, Msg) of
-        {ok, <<"add_handler">>} ->
-            R = gen_event:add_handler(
-                EventHandlerPid,
-                binary_to_atom(maps:get(<<"payload">>, Msg)),
-                []
-            ),
-            Msg2 = Msg#{<<"payload">> => R},
-            send_msg_to_connected_nodes(NodeDef, Msg2);
-        {ok, <<"delete_handler">>} ->
-            R = gen_event:delete_handler(
-                EventHandlerPid,
-                binary_to_atom(maps:get(<<"payload">>, Msg)),
-                []
-            ),
-            Msg2 = Msg#{<<"payload">> => R},
-            send_msg_to_connected_nodes(NodeDef, Msg2);
+%% Add a handler to the event handler, the "payload" attribute must be the
+%% name of a loaded module.
+handle_msg(
+  {incoming,
+   #{
+      <<"action">> := <<"add_handler">>,
+      <<"payload">> := ModuleName
+    } = Msg},
+  #{'_eventh_pid' := EventHandlerPid} = NodeDef
+) ->
+    ModAtom = binary_to_atom(ModuleName),
+    case code:is_loaded(ModAtom) of
+        false ->
+            post_exception_or_debug(NodeDef, Msg, <<"module not loaded">>);
         _ ->
-            %% debatable - use 'payload' as event name or use a separate
-            %% attribute is being done now. I guess my preference is clear.
-            case maps:find(<<"event">>, Msg) of
-                {ok, EventName} ->
-                    gen_event:notify(
-                        EventHandlerPid, {EventName, Msg, NodeDef}
-                    );
-                _ ->
-                    ignore
-            end
+            R = gen_event:add_handler(EventHandlerPid, ModAtom, Msg),
+            send_msg_to_connected_nodes(NodeDef, Msg#{<<"payload">> => R})
     end,
     {handled, NodeDef, dont_send_complete_msg};
+%%
+%% delete a previously defined handler from an event handler.
+handle_msg(
+  {incoming,
+   #{
+      <<"action">> := <<"delete_handler">>,
+      <<"payload">> := ModuleName
+    } = Msg},
+  #{'_eventh_pid' := EventHandlerPid} = NodeDef
+) ->
+    ModAtom = binary_to_atom(ModuleName),
+    R = gen_event:delete_handler(EventHandlerPid, ModAtom, Msg),
+    send_msg_to_connected_nodes(NodeDef, Msg#{<<"payload">> => R}),
+    {handled, NodeDef, dont_send_complete_msg};
+%%
+%% handle an event
+handle_msg(
+  {incoming,
+   #{
+      <<"event">> := EventName
+    } = Msg},
+  #{'_eventh_pid' := EventHandlerPid} = NodeDef
+) ->
+    gen_event:notify(EventHandlerPid, {EventName, Msg, NodeDef}),
+    {handled, NodeDef, dont_send_complete_msg};
+
+%%
+%%
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
 
 %%
+%% ------------------- Helpers
 %%
+%%
+%% add handlers is used for the static configuration of the event handler.
 add_handlers(_EventHandlerPid, error) ->
     % missing list, no static configuration
     ok;
