@@ -50,12 +50,12 @@ handle_msg(_, NodeDef) ->
 %%
 %%
 install(
-  #{
-    <<"module_name">> := ModBinaryName,
-    <<"code">> := ModuleCode,
-    <<"id">> := NodeId
-  } = NodeDef,
-  WsName
+    #{
+        <<"module_name">> := ModBinaryName,
+        <<"code">> := ModuleCode,
+        <<"id">> := NodeId
+    } = NodeDef,
+    WsName
 ) ->
     ModuleName = binary_to_atom(ModBinaryName),
 
@@ -74,12 +74,12 @@ install(
             {module, ModuleName} = code:load_binary(ModuleName, [], Binary),
             ered_erlmodule_exchange:add_module(NodeId, ModuleName);
         {error, ErrorList, WarnList} ->
-            Msg = ?PUT_WS(#{
+            Msg = #{
                 error => compiler_list_to_json_list(ErrorList),
                 warning => compiler_list_to_json_list(WarnList)
-            }),
+            },
             node_status(WsName, NodeDef, "compile failed", "red", "dot"),
-            post_exception_or_debug(NodeDef, Msg, <<"compile failed">>)
+            post_exception_or_debug(NodeDef, ?PUT_WS(Msg), <<"compile failed">>)
     end,
 
     file:delete(FileName).

@@ -118,15 +118,14 @@ handle_event(
 %% individual state handlers modules crash but they are isolated from
 %% the statemachine process that we're monitoring.
 handle_event(
-  {'DOWN', _Ref, process, _Pid, Reason},
-  #{
-    '_being_supervised' := true
-   } = NodeDef
+    {'DOWN', _Ref, process, _Pid, Reason},
+    #{
+        '_being_supervised' := true
+    } = NodeDef
 ) ->
     node_status(ws_from(NodeDef), NodeDef, "stopped", "red", "dot"),
     exit(self(), Reason),
     maps:remove('_statem_pid', NodeDef);
-
 handle_event(_, NodeDef) ->
     NodeDef.
 
@@ -201,9 +200,11 @@ always_send_message(NodeDef, Msg, Result, Action, CurrS, PrevS) ->
     ?SEND_MSG(NodeDef, Msg, Result, Action, CurrS, PrevS).
 
 statem_call(Pid, CallPayload) ->
-    { element(1, sys:get_state(Pid)),
-      gen_statem:call(Pid, CallPayload),
-      element(1, sys:get_state(Pid)) }.
+    {
+        element(1, sys:get_state(Pid)),
+        gen_statem:call(Pid, CallPayload),
+        element(1, sys:get_state(Pid))
+    }.
 %%
 %%
 define_func_send_msg(#{<<"emit_on_state_change">> := true}) ->

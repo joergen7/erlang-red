@@ -20,7 +20,7 @@
 %%     "84927e2b99bfc27b"
 %% ],
 %% "supervisor_type": "static", <<--- or "dynamic"
-%% "strategy": "one_for_all", <<--+- as desribed in the OTP docu
+%% "strategy": "one_for_all", <<--+-- as desribed in the OTP docu
 %% "auto_shutdown": "never", <<--/
 %% "intensity": "5",     <<-----/
 %% "period": "30",     <<------/
@@ -100,7 +100,6 @@ handle_event({stop, WsName}, NodeDef) ->
     case maps:find('_super_ref', NodeDef) of
         {ok, SupRef} ->
             is_process_alive(SupRef) andalso exit(SupRef, normal),
-
             maps:remove('_super_ref', NodeDef);
         _ ->
             NodeDef
@@ -120,27 +119,41 @@ handle_event({'EXIT', _From, shutdown}, NodeDef) ->
 %%
 %% DOWN events come from the supervisor doing the supervision of the
 %% children, not the supervisor defined here.
-handle_event({'DOWN', _, process, _Pid, shutdown}, NodeDef) ->
-    % Our supervisor died, i.e., the children misbehaved and the supervisor
-    % packed up. This is literally the supervisor hitting the intensity wall.
-    WsName = ws_from(NodeDef),
-
+handle_event(
+    {'DOWN', _, process, _Pid, Reason},
+    #{'_ws' := WsName, '_sup_pid_' := SupPid, '_being_supervised' := true} =
+        NodeDef
+) ->
     node_status(WsName, NodeDef, "dead", "blue", "ring"),
     ?SEND_STATUS(<<"dead">>),
-
-    case maps:find('_sup_pid_', NodeDef) of
-        {ok, SupPid} ->
-            is_process_alive(SupPid) andalso exit(SupPid, normal);
-        _ ->
-            ignore
-    end,
-
-    case maps:find('_being_supervised', NodeDef) of
-        {ok, true} ->
-            self() ! {stop, WsName};
-        _ ->
-            ignore
-    end,
+    is_process_alive(SupPid) andalso exit(SupPid, Reason),
+    self() ! {stop, WsName},
+    NodeDef;
+%%
+handle_event(
+    {'DOWN', _, process, _Pid, Reason},
+    #{'_ws' := WsName, '_sup_pid_' := SupPid} = NodeDef
+) ->
+    node_status(WsName, NodeDef, "dead", "blue", "ring"),
+    ?SEND_STATUS(<<"dead">>),
+    is_process_alive(SupPid) andalso exit(SupPid, Reason),
+    NodeDef;
+%%
+handle_event(
+    {'DOWN', _, process, _Pid, _Reason},
+    #{'_ws' := WsName, '_being_supervised' := true} = NodeDef
+) ->
+    node_status(WsName, NodeDef, "dead", "blue", "ring"),
+    ?SEND_STATUS(<<"dead">>),
+    self() ! {stop, WsName},
+    NodeDef;
+%%
+handle_event(
+    {'DOWN', _, process, _Pid, _Reason},
+    #{'_ws' := WsName} = NodeDef
+) ->
+    node_status(WsName, NodeDef, "dead", "blue", "ring"),
+    ?SEND_STATUS(<<"dead">>),
     NodeDef;
 %%
 %% Supervisor started comes from the ered_supervisor_manager process
@@ -249,11 +262,7 @@ create_children(MyNodeDefs, SupNodeDef, WsName) ->
         }
     ]),
 
-    maps:put(
-        '_sup_pid_',
-        SuperPid,
-        maps:put('_my_node_defs', MyNodeDefs, SupNodeDef)
-    ).
+    SupNodeDef#{'_sup_pid_' => SuperPid, '_my_node_defs' => MyNodeDefs}.
 
 %%
 %% ------------- pre spin up configuration setup
