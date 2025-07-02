@@ -13,6 +13,4 @@
     )
 }).
 
--define(PUT_WS(Map),
-    Map#{'_ws' => WsName}
-).
+-define(PUT_WS(Map), Map#{'_ws' => WsName}).
