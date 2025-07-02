@@ -33,7 +33,7 @@ Erlang architecture is best described by describing various use cases:
 - The challenges of [function node](https://flows.red-erik.org/f/1fd621a674360b5d) which must support timeouts, sub-processes and being supervised by a supervisor.
 - Inner workings of [link nodes](https://flows.red-erik.org/f/43e8af136f4d0fbe) and how to deal with dynamic link calls.
 
-Usage
+Programming Breadboard
 ---
 
 Erlang-Red is rapidly becoming the programmming [Breadboard](https://en.wikipedia.org/wiki/Breadboard) - useful for trying various programming concepts out and getting a feel for how a [supervisor](https://flows.red-erik.org/f/83c5e1824f32abec) pattern might work. Or playing around with TCP traffic and modelling a [telnet session](https://flows.red-erik.org/f/2a95a7b40a798878).
@@ -301,9 +301,9 @@ Much thanks to
 - [@joaohf](https://erlangforums.com/u/joaohf/summary) many tips on coding Erlang and structuring an Erlang project, and
 - [@Maria-12648430](https://erlangforums.com/u/maria-12648430/summary) for debugging my initial attempt to create a gen_server for nodes.
 
-Disclaimer
+Human Intelligence
 ---
 
 No Artificial Intelligence was harmed in the creation of this codebase. This codebase is old skool search engine (ddg), stackoverflow, blog posts and RTFM technology.
 
-Also be aware that this project partly uses the *Don't do Evil* un-enforceable license. The point of the license is not to be enforceable but to make the reader think about what is evil. After all, Pope Leo (the new one) did say ["evil will not prevail"](https://eu.usatoday.com/story/news/world/2025/05/08/pope-leo-xiv-first-speech-message-text/83519162007/) - what does that *even* mean?
+AI contributions can be made according to the rules defined in [.aiignore](.aiignore).

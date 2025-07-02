@@ -1,0 +1,8 @@
+*.erl
+*.hrl
+*.xrl
+*.yrl
+*.yml
+*.sh
+.aiignore
+Dockerfile.*
