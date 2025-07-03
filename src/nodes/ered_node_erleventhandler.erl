@@ -28,6 +28,8 @@
     send_msg_to_connected_nodes/2
 ]).
 
+-define(EVENTHANDLER_PID, '_eventh_pid' := EventHandlerPid).
+
 %%
 %%
 start(NodeDef, WsName) ->
@@ -65,39 +67,33 @@ handle_event({being_supervised, _WsName}, NodeDef) ->
 %% can deal with it.
 handle_event(
     {'DOWN', _Ref, process, _Pid, Reason},
-    #{'_being_supervised' := true} = NodeDef
+    #{?BEING_SUPERVISED, ?GET_WS} = NodeDef
 ) ->
-    node_status(ws_from(NodeDef), NodeDef, "stopped", "red", "dot"),
+    node_status(WsName, NodeDef, "stopped", "red", "dot"),
     exit(self(), Reason),
     maps:remove('_eventh_pid', NodeDef);
 %%
 %% event handler shutdown but we're not being supervised.
 handle_event(
     {'DOWN', _Ref, process, _Pid, _Reason},
-    NodeDef
+    #{?GET_WS} = NodeDef
 ) ->
-    node_status(ws_from(NodeDef), NodeDef, "stopped", "red", "dot"),
+    node_status(WsName, NodeDef, "stopped", "red", "dot"),
     maps:remove('_eventh_pid', NodeDef);
 %%
 handle_event(
     {'EXIT', _From, Reason},
-    #{
-        '_eventh_pid' := Pid,
-        '_ws' := WsName,
-        '_being_supervised' := true
-    } = NodeDef
+    #{?BEING_SUPERVISED, ?EVENTHANDLER_PID, ?GET_WS} = NodeDef
 ) ->
     node_status(WsName, NodeDef, "killed", "red", "ring"),
-    exit(Pid, Reason),
+    exit(EventHandlerPid, Reason),
     exit(self(), Reason),
     maps:remove('_eventh_pid', NodeDef);
 handle_event(
     {stop, _WsName},
-    #{
-        '_eventh_pid' := Pid
-    } = NodeDef
+    #{?EVENTHANDLER_PID} = NodeDef
 ) ->
-    exit(Pid, normal),
+    exit(EventHandlerPid, normal),
     maps:remove('_eventh_pid', NodeDef);
 handle_event(_, NodeDef) ->
     NodeDef.
@@ -111,7 +107,7 @@ handle_msg(
             <<"action">> := <<"add_handler">>,
             <<"payload">> := ModuleName
         } = Msg},
-    #{'_eventh_pid' := EventHandlerPid} = NodeDef
+    #{?EVENTHANDLER_PID} = NodeDef
 ) ->
     ModAtom = binary_to_atom(ModuleName),
     case code:is_loaded(ModAtom) of
@@ -130,7 +126,7 @@ handle_msg(
             <<"action">> := <<"delete_handler">>,
             <<"payload">> := ModuleName
         } = Msg},
-    #{'_eventh_pid' := EventHandlerPid} = NodeDef
+    #{?EVENTHANDLER_PID} = NodeDef
 ) ->
     ModAtom = binary_to_atom(ModuleName),
     R = gen_event:delete_handler(EventHandlerPid, ModAtom, Msg),
@@ -143,7 +139,7 @@ handle_msg(
         #{
             <<"event">> := EventName
         } = Msg},
-    #{'_eventh_pid' := EventHandlerPid} = NodeDef
+    #{?EVENTHANDLER_PID} = NodeDef
 ) ->
     gen_event:notify(EventHandlerPid, {EventName, Msg, NodeDef}),
     {handled, NodeDef, dont_send_complete_msg};

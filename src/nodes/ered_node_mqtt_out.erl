@@ -3,6 +3,7 @@
 -behaviour(ered_node).
 
 -include("ered_nodes.hrl").
+-include("ered_mqtt.hrl").
 
 -export([start/2]).
 -export([handle_msg/2]).
@@ -39,8 +40,6 @@
     jstr/1
 ]).
 
--define(STATUS(EM, CLR, SHP), node_status(WsName, NodeDef, EM, CLR, SHP)).
-
 %%
 %%
 start(NodeDef, _WsName) ->
@@ -48,27 +47,34 @@ start(NodeDef, _WsName) ->
 
 %%
 %%
-handle_event({registered, WsName, _Pid}, NodeDef) ->
+handle_event({registered, WsName, _NodePid}, NodeDef) ->
     setup_mqtt_manager(NodeDef, WsName);
-handle_event({'DOWN', _MonitorRef, _Type, _Object, _Info}, NodeDef) ->
-    setup_mqtt_manager(NodeDef, ws_from(NodeDef));
-handle_event({mqtt_disconnected, _Reason, _Properties}, NodeDef) ->
-    case maps:find('_mqtt_mgr_id', NodeDef) of
-        {ok, MqttMgrPid} ->
-            case is_process_alive(MqttMgrPid) of
-                true ->
-                    TRef = erlang:start_timer(
-                        750,
-                        self(),
-                        {connect_to_broker, MqttMgrPid}
-                    ),
-                    maps:put('_timer', TRef, NodeDef);
-                _ ->
-                    setup_mqtt_manager(NodeDef, ws_from(NodeDef))
-            end;
+%%
+%% mqtt manager pid is available
+handle_event(
+  {mqtt_disconnected, _Reason, _Properties},
+  #{?MQTT_MGR_PID} = NodeDef
+) ->
+    case is_process_alive(MqttMgrPid) of
+        true ->
+            TRef = erlang:start_timer(
+                750,
+                self(),
+                {connect_to_broker, MqttMgrPid}
+            ),
+            maps:put('_timer', TRef, NodeDef);
         _ ->
             setup_mqtt_manager(NodeDef, ws_from(NodeDef))
     end;
+%%
+%% No mqtt manager pid
+handle_event(
+  {mqtt_disconnected, _Reason, _Properties},
+  NodeDef
+) ->
+    setup_mqtt_manager(NodeDef, ws_from(NodeDef));
+%%
+%%
 handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
     WsName = ws_from(NodeDef),
 
@@ -87,7 +93,7 @@ handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
                                     self(),
                                     {connect_to_broker, MqttMgrPid}
                                 ),
-                                maps:put('_timer', TRef, NodeDef)
+                                NodeDef#{'_timer' => TRef}
                         end
                     catch
                         exit:_ ->
@@ -108,24 +114,25 @@ handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
                         {connect_to_broker, MqttMgrPid}
                     ),
                     ?STATUS("connecting", "yellow", "dot"),
-                    maps:put('_timer', TRef, NodeDef)
+                    NodeDef#{'_timer' => TRef}
             end;
         _ ->
             NodeDef
     end;
 %%
+%%
+handle_event({'DOWN', _MonitorRef, _Type, _Object, _Info}, NodeDef) ->
+    setup_mqtt_manager(NodeDef, ws_from(NodeDef));
+%%
 %% stop event - with timer or without, with mqtt mgr process or not.
-% erlfmt:ignore - long line
-handle_event(
-    {stop, _}, #{'_timer' := TRef, '_mqtt_mgr_id' := MqttMgrPid} = NodeDef
-) ->
+handle_event(?MSG_STOP, #{?TIMER, ?MQTT_MGR_PID} = NodeDef) ->
     erlang:cancel_timer(TRef),
     gen_server:cast(MqttMgrPid, stop),
     NodeDef;
-handle_event({stop, _}, #{'_timer' := TRef} = NodeDef) ->
+handle_event(?MSG_STOP, #{?TIMER} = NodeDef) ->
     erlang:cancel_timer(TRef),
     NodeDef;
-handle_event({stop, _}, #{'_mqtt_mgr_id' := MqttMgrPid} = NodeDef) ->
+handle_event(?MSG_STOP, #{?MQTT_MGR_PID} = NodeDef) ->
     gen_server:cast(MqttMgrPid, stop),
     NodeDef;
 %%
@@ -135,13 +142,14 @@ handle_event(_, NodeDef) ->
 
 %%
 %%
+%% MQTT manager process id is available
 handle_msg(
-    {incoming, Msg},
+    ?MSG_INCOMING,
     #{
         <<"topic">> := Topic,
         <<"qos">> := QoS,
         <<"retain">> := Retain,
-        '_mqtt_mgr_id' := Pid
+        ?MQTT_MGR_PID
     } = NodeDef
 ) ->
     Data = {
@@ -152,21 +160,18 @@ handle_msg(
         to_bool(Retain)
     },
 
-    gen_server:cast(Pid, Data),
+    gen_server:cast(MqttMgrPid, Data),
 
     update_status(
-        is_process_alive(Pid), NodeDef, "connecting", "yellow", "dot"
+        is_process_alive(MqttMgrPid), NodeDef, "connecting", "yellow", "dot"
     ),
 
     {handled, NodeDef, Msg};
 %%
+%% No MQTT manager process id
 handle_msg(
-    {incoming, Msg},
-    #{
-        <<"topic">> := _Topic,
-        <<"qos">> := _QoS,
-        <<"retain">> := _Retain
-    } = NodeDef
+    ?MSG_INCOMING,
+    NodeDef
 ) ->
     ErrMsg = jstr("no connection available"),
     post_exception_or_debug(NodeDef, Msg, ErrMsg),

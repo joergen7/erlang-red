@@ -36,7 +36,7 @@ start(NodeDef, _WsName) ->
 
 %%
 %%
-handle_event({stop, _WsName}, #{<<"id">> := NodeId} = NodeDef) ->
+handle_event(?MSG_STOP, #{<<"id">> := NodeId} = NodeDef) ->
     ered_erlmodule_exchange:remove_module_for_nodeid(NodeId),
     NodeDef;
 handle_event(_, NodeDef) ->
@@ -74,12 +74,12 @@ install(
             {module, ModuleName} = code:load_binary(ModuleName, [], Binary),
             ered_erlmodule_exchange:add_module(NodeId, ModuleName);
         {error, ErrorList, WarnList} ->
-            Msg = #{
+            Msg = ?PUT_WS(#{
                 error => compiler_list_to_json_list(ErrorList),
                 warning => compiler_list_to_json_list(WarnList)
-            },
+            }),
             node_status(WsName, NodeDef, "compile failed", "red", "dot"),
-            post_exception_or_debug(NodeDef, ?PUT_WS(Msg), <<"compile failed">>)
+            post_exception_or_debug(NodeDef, Msg, <<"compile failed">>)
     end,
 
     file:delete(FileName).

@@ -13,4 +13,22 @@
     )
 }).
 
--define(PUT_WS(Map), Map#{'_ws' => WsName}).
+%%
+%% Avoid a "Warning: expression updates a literal" warning when using this
+%% macro on a Hash directly, i.e., ?PUT_WS(#{....})
+%% inspired by
+%%     https://github.com/WhatsApp/erlfmt/issues/353#issuecomment-1957166129
+-define(PUT_WS(Map), begin Map end#{'_ws' => WsName}).
+-define(GET_WS, '_ws' := WsName).
+
+%%
+%% Check for supervision
+-define(BEING_SUPERVISED, '_being_supervised' := true).
+
+%%
+%% Message types
+%%
+-define(MSG_STOP, {stop, _WsName}).
+-define(MSG_STOP_WS, {stop, WsName}).
+-define(MSG_INCOMING, {incoming, Msg}).
+-define(MSG_REGISTERED, {registered, WsName, NodePid}).

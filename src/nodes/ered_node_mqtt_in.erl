@@ -3,6 +3,7 @@
 -behaviour(ered_node).
 
 -include("ered_nodes.hrl").
+-include("ered_mqtt.hrl").
 
 -export([start/2]).
 -export([handle_msg/2]).
@@ -74,8 +75,6 @@
     send_msg_to_connected_nodes/2
 ]).
 
--define(STATUS(EM, CLR, SHP), node_status(WsName, NodeDef, EM, CLR, SHP)).
-
 %%
 %%
 start(NodeDef, _WsName) ->
@@ -83,7 +82,7 @@ start(NodeDef, _WsName) ->
 
 %%
 %%
-handle_event({registered, WsName, _Pid}, NodeDef) ->
+handle_event({registered, WsName, _NodePid}, NodeDef) ->
     setup_mqtt_manager(NodeDef, WsName);
 handle_event({'DOWN', _MonitorRef, _Type, _Object, _Info}, NodeDef) ->
     setup_mqtt_manager(NodeDef, ws_from(NodeDef));
@@ -91,7 +90,7 @@ handle_event({'DOWN', _MonitorRef, _Type, _Object, _Info}, NodeDef) ->
 %% mqtt_disconnected event, with and without a running mqtt process
 handle_event(
     {mqtt_disconnected, _Reason, _Properties},
-    #{'_mqtt_mgr_id' := MqttMgrPid} = NodeDef
+    #{?MQTT_MGR_PID} = NodeDef
 ) ->
     case is_process_alive(MqttMgrPid) of
         true ->
@@ -104,6 +103,7 @@ handle_event(
         _ ->
             setup_mqtt_manager(NodeDef, ws_from(NodeDef))
     end;
+%% no mqtt manager is running
 handle_event(
     {mqtt_disconnected, _Reason, _Properties},
     NodeDef
@@ -112,7 +112,7 @@ handle_event(
 %%
 handle_event(
     {connect_to_broker, MqttMgrPid},
-    #{'_ws' := WsName} = NodeDef
+    #{?GET_WS} = NodeDef
 ) ->
     case is_process_alive(MqttMgrPid) of
         true ->
@@ -169,17 +169,14 @@ handle_event(
     end;
 %%
 %% stop event - with timer or without, with mqtt mgr process or not.
-handle_event(
-    {stop, _WsName},
-    #{'_timer' := TRef, '_mqtt_mgr_id' := MqttMgrPid} = NodeDef
-) ->
+handle_event(?MSG_STOP, #{?TIMER, ?MQTT_MGR_PID} = NodeDef) ->
     erlang:cancel_timer(TRef),
     gen_server:cast(MqttMgrPid, stop),
     NodeDef;
-handle_event({stop, _WsName}, #{'_timer' := TRef} = NodeDef) ->
+handle_event(?MSG_STOP, #{?TIMER} = NodeDef) ->
     erlang:cancel_timer(TRef),
     NodeDef;
-handle_event({stop, _WsName}, #{'_mqtt_mgr_id' := MqttMgrPid} = NodeDef) ->
+handle_event(?MSG_STOP, #{?MQTT_MGR_PID} = NodeDef) ->
     gen_server:cast(MqttMgrPid, stop),
     NodeDef;
 %% fall through
