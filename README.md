@@ -5,7 +5,14 @@ An experiment to replace Node-REDs existing NodeJS backend with an Erlang equiva
 
 The goal is bring the advantages of low-code visual [flow-based programming](https://jpaulm.github.io/fbp/index.html) to a programming language that is designed for message passing and concurrency from the ground up, hence Erlang. More details described in the corresponding [blog post](https://blog.openmindmap.org/erlang-red).
 
-Erlang-Red can be best thought of as a programming [Breadboard](https://en.wikipedia.org/wiki/Breadboard).
+Programming Breadboard
+---
+
+[Breadboards](https://en.wikipedia.org/wiki/Breadboard) are prototyping devices found in electronics. Erlang-Red can be best thought of as a programming [breadboard](https://blog.openmindmap.org/blog/breadboard-programming).
+
+What are some tools for *software* prototyping? Besides AI and VScode. Software developers *create* prototypes but they don't *prototype* software.
+
+A [telnet session](https://flows.red-erik.org/f/bff27e059752cb60) flow describes how breadboard programming can be done using Erlang-Red. That flow *prototypes* a possible *software* solution starting with a simple concurrent approach until a first final approach is found. All solutions are testable and usable - instantly and all solutions build on previous solutions - simply copy and paste the flows. That's prototyping.
 
 Why?
 ---
@@ -32,11 +39,6 @@ Erlang architecture is best described by describing various use cases:
 - Workings of a [supervisor node](https://flows.red-erik.org/f/211405fa9e8a6f9b) supervising a function node.
 - The challenges of [function node](https://flows.red-erik.org/f/1fd621a674360b5d) which must support timeouts, sub-processes and being supervised by a supervisor.
 - Inner workings of [link nodes](https://flows.red-erik.org/f/43e8af136f4d0fbe) and how to deal with dynamic link calls.
-
-Programming Breadboard
----
-
-Erlang-Red is rapidly becoming the programmming [Breadboard](https://en.wikipedia.org/wiki/Breadboard) - useful for trying various programming concepts out and getting a feel for how a [supervisor](https://flows.red-erik.org/f/83c5e1824f32abec) pattern might work. Or playing around with TCP traffic and modelling a [telnet session](https://flows.red-erik.org/f/2a95a7b40a798878).
 
 Supported Nodes & Features
 ---
