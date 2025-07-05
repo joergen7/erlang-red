@@ -47,6 +47,12 @@ check-testflows:
        grep -v 777bee1d06741240 | grep -v 9d3f5506aa810b22 | \
        grep -v 05a47f94321ed67e || true
 
+## http://1194online.com/
+tcp-beacon:
+	nc -lk -p 1194 -c "while date ; do sleep 1 ; done"
+tcp-bidirectional-beacon:
+	(while date ; do sleep 1 ; done) | nc -lk -p 1194
+
 ##
 ## The following are done inside the docker container - after running
 ## make enter-docker-shell
