@@ -52,8 +52,8 @@ handle_event({registered, WsName, _NodePid}, NodeDef) ->
 %%
 %% mqtt manager pid is available
 handle_event(
-  {mqtt_disconnected, _Reason, _Properties},
-  #{?MQTT_MGR_PID} = NodeDef
+    {mqtt_disconnected, _Reason, _Properties},
+    #{?MQTT_MGR_PID} = NodeDef
 ) ->
     case is_process_alive(MqttMgrPid) of
         true ->
@@ -69,8 +69,8 @@ handle_event(
 %%
 %% No mqtt manager pid
 handle_event(
-  {mqtt_disconnected, _Reason, _Properties},
-  NodeDef
+    {mqtt_disconnected, _Reason, _Properties},
+    NodeDef
 ) ->
     setup_mqtt_manager(NodeDef, ws_from(NodeDef));
 %%

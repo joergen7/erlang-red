@@ -18,7 +18,11 @@
 %% macro on a Hash directly, i.e., ?PUT_WS(#{....})
 %% inspired by
 %%     https://github.com/WhatsApp/erlfmt/issues/353#issuecomment-1957166129
--define(PUT_WS(Map), begin Map end#{'_ws' => WsName}).
+-define(PUT_WS(Map), begin
+    Map
+end#{
+    '_ws' => WsName
+}).
 -define(GET_WS, '_ws' := WsName).
 
 %%
