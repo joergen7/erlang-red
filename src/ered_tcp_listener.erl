@@ -35,10 +35,10 @@ server(ListenSocket, Port, Router) ->
             %% Session Id is a Node-RED thing: each connection is uniquely
             %% identified by a "session id" even though it is actually a
             %% connection between peer and server
-            SessionId = session_id(),
+            SessionId = ered_tcp_manager:session_id(),
             {ok, {InterfaceIp, Port}} = inet:sockname(S),
             IpStr = list_to_binary(inet:ntoa(InterfaceIp)),
-            Router ! {new_session, {SessionId, self(), Port, IpStr}},
+            Router ! {new_session, {SessionId, self(), {list, Port, IpStr}}},
             handler(S, {Port, Router, SessionId, IpStr});
         Other ->
             io:format("accept returned ~w - goodbye!~n", [Other]),
@@ -55,40 +55,18 @@ handler(S, {Port, Router, SessionId, InterfaceIp} = Details) ->
             handler(S, Details);
         {tcp, S, Data} ->
             io:format("Received ~w ==> [~p]~n", [inet:sockname(S), Data]),
-            Router ! {route, {Port, Data, SessionId, InterfaceIp}},
+            Router ! {route, {list, SessionId, Port, InterfaceIp, Data}},
             handler(S, Details);
         {tcp_passive, S} ->
             handler(S, Details);
         {ered_done_with_socket} ->
             inet:close(S),
             io:format("Socket closed by server~n", []),
-            Router ! {del_session, {SessionId, Port, InterfaceIp}};
+            Router ! {del_session, {list, SessionId, Port, InterfaceIp}};
         {tcp_error, S, Reason} ->
             io:format("Socket error ~w closed [~w] ~p~n", [S, self(), Reason]),
-            Router ! {del_session, {SessionId, Port, InterfaceIp}};
+            Router ! {del_session, {list, SessionId, Port, InterfaceIp}};
         {tcp_closed, S} ->
             io:format("Socket ~w closed [~w]~n", [S, self()]),
-            Router ! {del_session, {SessionId, Port, InterfaceIp}}
+            Router ! {del_session, {list, SessionId, Port, InterfaceIp}}
     end.
-
-%%
-%%
-session_id(Length) ->
-    IntLen = erlang:list_to_integer(
-        erlang:float_to_list(Length / 2, [{decimals, 0}])
-    ),
-    string:lowercase(
-        list_to_binary(
-            [
-                io_lib:format(
-                    "~2.16.0B",
-                    [X]
-                )
-             || <<X>> <= crypto:strong_rand_bytes(IntLen)
-            ]
-        )
-    ).
-
-%% generate an id in a form that is conform with NodeRED ids: 16 hexadecimal.
-session_id() ->
-    session_id(16).
