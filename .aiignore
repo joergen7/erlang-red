@@ -1,8 +1,10 @@
+*.sh
 *.erl
 *.hrl
 *.xrl
 *.yrl
 *.yml
-*.sh
+*.html
+*.json
 .aiignore
 Dockerfile.*
