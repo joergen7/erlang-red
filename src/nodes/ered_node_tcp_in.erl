@@ -64,6 +64,7 @@
 ]).
 
 -define(AllChecksOK, {ok, ok, ok, ok, ok}).
+-define(AllFourChecksOK, {ok, ok, ok, ok}).
 
 -define(IsServer, <<"server">> := <<"server">>).
 -define(IsClient, <<"server">> := <<"client">>).
@@ -81,11 +82,10 @@ start(#{?IsServer} = NodeDef, WsName) ->
     case {
         check_config(<<"tls">>,      <<"">>,       NodeDef, WsName),
         check_config(<<"host">>,     <<"">>,       NodeDef, WsName),
-        check_config(<<"datatype">>, <<"utf8">>,   NodeDef, WsName),
         check_config(<<"datamode">>, <<"stream">>, NodeDef, WsName),
         check_config(<<"newline">>,  <<"">>,       NodeDef, WsName)
     } of
-        ?AllChecksOK ->
+        ?AllFourChecksOK ->
             ered_node:start(?PUT_WS(NodeDef#{conn_count => 0}), ?MODULE);
         _ ->
             ered_node:start(NodeDef, ered_node_ignore)
