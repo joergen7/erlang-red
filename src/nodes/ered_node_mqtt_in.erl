@@ -210,16 +210,16 @@ copy_attributes([Attr | Attrs], Msg, MqttDataPacket) ->
 %% erlfmt:ignore alignment
 create_mqtt_manager(Cfg) ->
     Options = [
-        {host,        maps:get(<<"broker">>,               Cfg)},
-        {port,        maps:get(<<"port">>,              Cfg)},
-        {ssl,         maps:get(<<"usetls">>,          Cfg)},
-        {clean_start, maps:get(<<"cleansession">>,    Cfg)},
-        {proto_ver,   maps:get(<<"protocolVersion">>,   Cfg)},
-        {keepalive,   maps:get(<<"keepalive">>,            Cfg)},
-        {will_topic,  maps:get(<<"willTopic">>,              Cfg)},
+        {host,        maps:get(<<"broker">>,             Cfg)},
+        {port,        convert_to_num(maps:get(<<"port">>, Cfg))},
+        {ssl,         maps:get(<<"usetls">>,                Cfg)},
+        {clean_start, maps:get(<<"cleansession">>,            Cfg)},
+        {proto_ver,   maps:get(<<"protocolVersion">>,           Cfg)},
+        {keepalive,   convert_to_num(maps:get(<<"keepalive">>,  Cfg))},
+        {will_topic,  maps:get(<<"willTopic">>,                 Cfg)},
         {will_qos,    convert_to_num(maps:get(<<"willQos">>,  Cfg))},
-        {will_retain, to_bool(maps:get(<<"willRetain">>,       Cfg))},
-        {will_props,  maps:get(<<"willMsg">>,                 Cfg)},
+        {will_retain, to_bool(maps:get(<<"willRetain">>,     Cfg))},
+        {will_props,  maps:get(<<"willMsg">>,               Cfg)},
         {force_ping,  true}
         %% TODO respect the client id but we don't
         %% {clientid, maps:get(<<"clientid">>, Cfg)},
