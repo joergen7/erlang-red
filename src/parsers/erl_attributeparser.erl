@@ -1,7 +1,7 @@
 -module(erl_attributeparser).
 
 -export([
-   attrbutes_to_array/1
+   attributes_to_array/1
 ]).
 
 %%
@@ -30,9 +30,9 @@
 %%       thing), anything starting with a bracket (as the two examples above)
 %%       is illegal. An expression can start with quotes or atoms.
 %%
-attrbutes_to_array(Str) when is_binary(Str) ->
-    attrbutes_to_array(binary_to_list(Str));
-attrbutes_to_array(Str) ->
+attributes_to_array(Str) when is_binary(Str) ->
+    attributes_to_array(binary_to_list(Str));
+attributes_to_array(Str) ->
     case erlang_red_attr_leex:string(Str) of
         {ok, Tokens, _} ->
             case erlang_red_attr_parser:parse(Tokens) of

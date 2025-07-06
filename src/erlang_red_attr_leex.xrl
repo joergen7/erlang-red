@@ -18,6 +18,7 @@ DSTRING    = ["][^\"]*["]
 SSTRING    = \'[^\']+\'
 UCHARS     = [A-Z][a-z0-9A-Z_-]*
 LCHARS     = [a-z][a-z0-9A-Z_-]*
+NUMS       = [0-9]+
 
 Rules.
 
@@ -28,6 +29,7 @@ Rules.
 {SSTRING}     : {token, {sqstring, TokenLine, TokenChars}}.
 {UCHARS}      : {token, {uchars, TokenLine, TokenChars}}.
 {LCHARS}      : {token, {lchars, TokenLine, TokenChars}}.
+{NUMS}        : {token, {nums, TokenLine, TokenChars}}.
 
 \.    : {token, {'.', TokenLine}}.
 \[    : {token, {'[', TokenLine}}.

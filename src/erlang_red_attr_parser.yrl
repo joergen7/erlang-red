@@ -22,6 +22,7 @@ Terminals
   '.'
   '['
   ']'
+  nums
   atom
   uchars
   lchars
@@ -49,6 +50,7 @@ statement -> dotindex : '$1'.
 statement -> sqindex : '$1'.
 
 sqindex -> '[' string ']' : '$2'.
+sqindex -> '[' nums ']' : {idx,list_to_integer(element(3,'$2'))}.
 sqindex -> '[' string ']' sqindex : ['$2', '$4'].
 
 dotindex -> '.' name : '$2'.
@@ -57,6 +59,7 @@ dotindex -> '.' name dotindex : ['$2', '$3'].
 name -> atom : convert_to_binary('$1').
 name -> uchars : convert_to_binary('$1').
 name -> lchars : convert_to_binary('$1').
+name -> nums : {idx,list_to_integer(element(3,'$1'))}.
 
 string -> dqstring : convert_string_to_binary('$1').
 string -> sqstring : convert_string_to_atom('$1').

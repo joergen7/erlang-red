@@ -7,6 +7,16 @@
 foreach_parser_test_() ->
     Tests = [
       {
+       array_indicies_have_to_work,
+       "key.123.456",
+       [<<"key">>,{idx,123},{idx,456}]
+      },
+      {
+       array_indicies_have_to_work_also,
+       "key[123].456",
+       [<<"key">>,{idx,123},{idx,456}]
+      },
+      {
        single_char_also_works,
        "k",
        [<<"k">>]
@@ -239,10 +249,6 @@ foreach_leex_failure_test_() ->
       {
        uncomplete_double_quote,
        "key[\"ddd]fubar"
-      },
-      {
-       unquoted_numbers_wont_fly,
-       "key.123.456"
       }
     ],
 

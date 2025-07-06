@@ -53,6 +53,7 @@ is_not_same(_, _) ->
 %%
 %% convert to num - a num can be a integer or float, so to convert a string
 %% to one of these inluding the negativity that is minus.
+%% It can also contain hexadecimal or binary values.
 convert_to_num(V) when is_binary(V) ->
     convert_to_num(binary_to_list(V));
 convert_to_num(V) when is_number(V) ->
@@ -60,19 +61,11 @@ convert_to_num(V) when is_number(V) ->
 convert_to_num(V) when is_integer(V) ->
     V;
 convert_to_num(V) when is_list(V) ->
-    case string:to_float(V) of
-        {error, _} ->
-            case string:to_integer(V) of
-                {error, _} ->
-                    {error,
-                        jstr("WARNING: Value ~p cannot be convereted to num", [
-                            V
-                        ])};
-                {V2, _} ->
-                    V2
-            end;
-        {V3, _} ->
-            V3
+    case erl_numparser:to_number(V) of
+        {error, Reason} ->
+            {error, jstr("Value '~p' not number: ~p", [V, Reason])};
+        {ok, Number} ->
+            Number
     end.
 
 %%
@@ -135,6 +128,36 @@ encode_json(Value2) ->
     json:encode(Value2, fun(Value, Encode) -> encoder(Value, Encode) end).
 
 %%
+%% Node-RED has array indicies in property names. Need to support those too.
+%%
+deep_find_with_arrays([], error) ->
+    error;
+deep_find_with_arrays([], {ok, Value}) ->
+    {ok, Value};
+deep_find_with_arrays([_Key|_Keys], []) ->
+    error;
+deep_find_with_arrays([_Key|_Keys], error) ->
+    error;
+
+deep_find_with_arrays([{idx,Idx}|Keys], {ok, Value}) when is_list(Value) ->
+    deep_find_with_arrays(Keys, {ok, lists:nth(Idx + 1, Value)});
+
+deep_find_with_arrays([{idx, _Idx}|_Keys], {ok, Value}) when is_map(Value) ->
+    error;
+
+deep_find_with_arrays([Key|Keys], {ok, Value}) when is_map(Value) ->
+    deep_find_with_arrays(Keys, maps:find(Key, Value));
+
+deep_find_with_arrays([Key|Keys], {ok, Value}) when is_list(Value) ->
+    case convert_to_num(Key) of
+        {error,_} ->
+            error;
+        V ->
+            deep_find_with_arrays(Keys, {ok, lists:nth(V+1, Value)})
+    end.
+
+
+%%
 %% get prop can used to retrieve a nestd value from the Msg map, i.e.,
 %%    msg.payload.key1.key2.key3
 %% from this:
@@ -155,9 +178,9 @@ encode_json(Value2) ->
 %%    {error, ErrorMsg}
 %%
 get_prop({ok, Prop}, Msg) ->
-    case erl_attributeparser:attrbutes_to_array(Prop) of
+    case erl_attributeparser:attributes_to_array(Prop) of
         {ok, KeyNames} ->
-            case mapz:deep_find(KeyNames, Msg) of
+            case deep_find_with_arrays(KeyNames, {ok, Msg}) of
                 {ok, V} ->
                     {ok, V, Prop};
                 error ->
@@ -184,7 +207,11 @@ retrieve_prop_value(PropName, Msg) ->
 -spec set_prop_value(PropName :: string(), Value :: any(), Msg :: map()) ->
     map().
 set_prop_value(PropName, Value, Msg) ->
-    case erl_attributeparser:attrbutes_to_array(PropName) of
+    %%
+    %% TODO need to support array indicies tuples ==> {idx,Idx} which can
+    %% TODO potentially be part of the KeyNames array.
+    %%
+    case erl_attributeparser:attributes_to_array(PropName) of
         {ok, KeyNames} ->
             %% silently ignore any key that isn't available
             try
@@ -210,7 +237,10 @@ set_prop_value(PropName, Value, Msg) ->
 delete_prop({ok, PropName}, Msg) ->
     delete_prop(PropName, Msg);
 delete_prop(PropName, Msg) ->
-    case erl_attributeparser:attrbutes_to_array(PropName) of
+    %%
+    %% TOOO support index tuples: {idx, Idx} for array access
+    %%
+    case erl_attributeparser:attributes_to_array(PropName) of
         {ok, KeyNames} ->
             %% silently ignore any key that isn't available
             %% deep_remove seems to delete keeps if other keys don't exist,
