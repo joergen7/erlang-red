@@ -1,7 +1,7 @@
 -module(erl_attributeparser).
 
 -export([
-   attributes_to_array/1
+    attributes_to_array/1
 ]).
 
 %%

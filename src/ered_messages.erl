@@ -134,28 +134,23 @@ deep_find_with_arrays([], error) ->
     error;
 deep_find_with_arrays([], {ok, Value}) ->
     {ok, Value};
-deep_find_with_arrays([_Key|_Keys], []) ->
+deep_find_with_arrays([_Key | _Keys], []) ->
     error;
-deep_find_with_arrays([_Key|_Keys], error) ->
+deep_find_with_arrays([_Key | _Keys], error) ->
     error;
-
-deep_find_with_arrays([{idx,Idx}|Keys], {ok, Value}) when is_list(Value) ->
+deep_find_with_arrays([{idx, Idx} | Keys], {ok, Value}) when is_list(Value) ->
     deep_find_with_arrays(Keys, {ok, lists:nth(Idx + 1, Value)});
-
-deep_find_with_arrays([{idx, _Idx}|_Keys], {ok, Value}) when is_map(Value) ->
+deep_find_with_arrays([{idx, _Idx} | _Keys], {ok, Value}) when is_map(Value) ->
     error;
-
-deep_find_with_arrays([Key|Keys], {ok, Value}) when is_map(Value) ->
+deep_find_with_arrays([Key | Keys], {ok, Value}) when is_map(Value) ->
     deep_find_with_arrays(Keys, maps:find(Key, Value));
-
-deep_find_with_arrays([Key|Keys], {ok, Value}) when is_list(Value) ->
+deep_find_with_arrays([Key | Keys], {ok, Value}) when is_list(Value) ->
     case convert_to_num(Key) of
-        {error,_} ->
+        {error, _} ->
             error;
         V ->
-            deep_find_with_arrays(Keys, {ok, lists:nth(V+1, Value)})
+            deep_find_with_arrays(Keys, {ok, lists:nth(V + 1, Value)})
     end.
-
 
 %%
 %% get prop can used to retrieve a nestd value from the Msg map, i.e.,

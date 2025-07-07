@@ -40,7 +40,7 @@
 %%
 
 -spec to_number(Value :: list()) ->
-          {error, Reason :: any()} | {ok, Number :: float() | integer()}.
+    {error, Reason :: any()} | {ok, Number :: float() | integer()}.
 to_number(Value) when is_binary(Value) ->
     to_number(binary_to_list(Value));
 to_number(Value) ->
@@ -49,7 +49,7 @@ to_number(Value) ->
             case erlang_red_num_parser:parse(Tokens) of
                 {ok, Result} ->
                     {ok, Result};
-                 {error, _} = ParserError ->
+                {error, _} = ParserError ->
                     ParserError
             end;
         {error, _} = LeexError ->

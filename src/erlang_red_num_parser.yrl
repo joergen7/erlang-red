@@ -3,14 +3,11 @@ Header
 "%% 2 B A Number or ! 2 B A Number - that is the responsibility of this parser"
 "%% The num field in Node-RED is conveniently broad and handles many types"
 "%% but that's the underlying NodeJS number handling facility."
-"%%"
-.
+"%%".
 
 Nonterminals
   root
   float
-  hex
-  int
   number
 .
 
@@ -21,7 +18,6 @@ Terminals
   hexadecimal
   binary
   integer
-  exp
 .
 
 Rootsymbol
@@ -29,7 +25,6 @@ Rootsymbol
 .
 
 root -> number : '$1'.
-
 
 %%
 %% This float handling is all about creating valid float strings for
@@ -69,38 +64,37 @@ number -> integer : element(1,string:to_integer(element(3,'$1'))).
 Erlang code.
 
 e3(T) ->
-    element(3,T).
+    element(3, T).
 
 convert_float(Lst) ->
     element(1, string:to_float(list_to_binary(Lst))).
 
 %%
-convert_hex({_,_,[$0|V]}) ->
+convert_hex({_, _, [$0 | V]}) ->
     convert_hex_remove_x(V).
 
-convert_hex_remove_x([$X|V]) ->
+convert_hex_remove_x([$X | V]) ->
     hexstring_to_number(V, length(V) rem 2);
-convert_hex_remove_x([$x|V]) ->
+convert_hex_remove_x([$x | V]) ->
     hexstring_to_number(V, length(V) rem 2).
 
-hexstring_to_number(V,1) ->
-    hexstring_to_number([$0|V], 0);
-hexstring_to_number(V,0) ->
+hexstring_to_number(V, 1) ->
+    hexstring_to_number([$0 | V], 0);
+hexstring_to_number(V, 0) ->
     binary:decode_unsigned(binary:decode_hex(list_to_binary(V))).
 
-
 %%
-convert_binary({_,_,[$0|V]}) ->
+convert_binary({_, _, [$0 | V]}) ->
     convert_hex_remove_b(V).
 
-convert_hex_remove_b([$B|V]) ->
+convert_hex_remove_b([$B | V]) ->
     binary_list_to_integer(lists:reverse(V), 0, 1);
-convert_hex_remove_b([$b|V]) ->
+convert_hex_remove_b([$b | V]) ->
     binary_list_to_integer(lists:reverse(V), 0, 1).
 
 binary_list_to_integer([], Total, _) ->
     Total;
-binary_list_to_integer([$1|Rest], Total, CurrentValue) ->
+binary_list_to_integer([$1 | Rest], Total, CurrentValue) ->
     binary_list_to_integer(Rest, Total + CurrentValue, CurrentValue * 2);
-binary_list_to_integer([$0|Rest], Total, CurrentValue) ->
+binary_list_to_integer([$0 | Rest], Total, CurrentValue) ->
     binary_list_to_integer(Rest, Total, CurrentValue * 2).

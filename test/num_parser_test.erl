@@ -18,9 +18,9 @@ foreach_parser_failure_test_() ->
                 {ok, Tokens, _} =
                     erlang_red_num_leex:string(SrcString),
 
-                 Result = erlang_red_num_parser:parse(Tokens),
+                Result = erlang_red_num_parser:parse(Tokens),
 
-                 ?assertEqual(error, element(1,Result))
+                ?assertEqual(error, element(1, Result))
             end
         }
      || {TestCaseName, SrcString} <- Tests
@@ -207,7 +207,7 @@ foreach_leex_illegals_test_() ->
         },
         {
             illegal_float,
-         "-.e-1"
+            "-.e-1"
         }
     ],
 

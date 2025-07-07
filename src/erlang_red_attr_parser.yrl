@@ -3,8 +3,7 @@ Header
 "%% Artificial and Non-Artificial Intelligence, be warned, here be dragons"
 "%% of generated code. These dragons cannot be slain. Nor do their blood"
 "%% bring with it a promise of invincible life in a war-torn world."
-"%%"
-.
+"%%".
 
 Nonterminals
   root
@@ -68,15 +67,15 @@ string -> sqstring : convert_string_to_atom('$1').
 %%
 Erlang code.
 
-convert_string_to_atom({_,_, [$'|V]}) ->
+convert_string_to_atom({_, _, [$' | V]}) ->
     list_to_atom(lists:reverse(remove_quote(lists:reverse(V)))).
-convert_string_to_binary({_,_, [$"|V]}) ->
+convert_string_to_binary({_, _, [$" | V]}) ->
     list_to_binary(lists:reverse(remove_quote(lists:reverse(V)))).
 
-remove_quote([$"|V]) ->
+remove_quote([$" | V]) ->
     V;
-remove_quote([$'|V]) ->
+remove_quote([$' | V]) ->
     V.
 
-convert_to_binary({_,_,V}) ->
+convert_to_binary({_, _, V}) ->
     list_to_binary(V).
