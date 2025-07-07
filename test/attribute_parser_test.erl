@@ -7,6 +7,16 @@
 foreach_parser_test_() ->
     Tests = [
       {
+       name_after_bracket,
+       "key['ddd']fubar",
+       [<<"key">>,ddd,<<"fubar">>]
+      },
+      {
+       array_indicies_dot_after_square_bracket,
+       "key['ddd']fubar['d'].123.12",
+       [<<"key">>,ddd,<<"fubar">>,d,{idx,123},{idx,12}]
+      },
+      {
        array_indicies_have_to_work,
        "key.123.456",
        [<<"key">>,{idx,123},{idx,456}]
@@ -15,6 +25,21 @@ foreach_parser_test_() ->
        array_indicies_have_to_work_also,
        "key[123].456",
        [<<"key">>,{idx,123},{idx,456}]
+      },
+      {
+       array_hash_name_after_brackets,
+       "payload.key[1]key2",
+       [<<"payload">>,<<"key">>,{idx,1},<<"key2">>]
+      },
+      {
+       array_hash_name_after_brackets_in_quotes,
+       "payload.key[1]'key2'",
+       [<<"payload">>,<<"key">>,{idx,1},key2]
+      },
+      {
+       array_hash_name_after_brackets_in_dbl_quotes,
+       "payload.key[1]\"key2\"",
+       [<<"payload">>,<<"key">>,{idx,1},<<"key2">>]
       },
       {
        single_char_also_works,
@@ -169,10 +194,6 @@ foreach_parser_failure_test_() ->
       {
        dot_bracket_does_not_work,
        "key.['ddd']"
-      },
-      {
-       name_after_bracket,
-       "key['ddd']fubar"
       },
       {
        double_dots,

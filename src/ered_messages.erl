@@ -128,31 +128,6 @@ encode_json(Value2) ->
     json:encode(Value2, fun(Value, Encode) -> encoder(Value, Encode) end).
 
 %%
-%% Node-RED has array indicies in property names. Need to support those too.
-%%
-deep_find_with_arrays([], error) ->
-    error;
-deep_find_with_arrays([], {ok, Value}) ->
-    {ok, Value};
-deep_find_with_arrays([_Key | _Keys], []) ->
-    error;
-deep_find_with_arrays([_Key | _Keys], error) ->
-    error;
-deep_find_with_arrays([{idx, Idx} | Keys], {ok, Value}) when is_list(Value) ->
-    deep_find_with_arrays(Keys, {ok, lists:nth(Idx + 1, Value)});
-deep_find_with_arrays([{idx, _Idx} | _Keys], {ok, Value}) when is_map(Value) ->
-    error;
-deep_find_with_arrays([Key | Keys], {ok, Value}) when is_map(Value) ->
-    deep_find_with_arrays(Keys, maps:find(Key, Value));
-deep_find_with_arrays([Key | Keys], {ok, Value}) when is_list(Value) ->
-    case convert_to_num(Key) of
-        {error, _} ->
-            error;
-        V ->
-            deep_find_with_arrays(Keys, {ok, lists:nth(V + 1, Value)})
-    end.
-
-%%
 %% get prop can used to retrieve a nestd value from the Msg map, i.e.,
 %%    msg.payload.key1.key2.key3
 %% from this:
@@ -173,18 +148,7 @@ deep_find_with_arrays([Key | Keys], {ok, Value}) when is_list(Value) ->
 %%    {error, ErrorMsg}
 %%
 get_prop({ok, Prop}, Msg) ->
-    case erl_attributeparser:attributes_to_array(Prop) of
-        {ok, KeyNames} ->
-            case deep_find_with_arrays(KeyNames, {ok, Msg}) of
-                {ok, V} ->
-                    {ok, V, Prop};
-                error ->
-                    {undefined, Prop}
-            end;
-        Error ->
-            io:format("ERROR get_prop {{{ ~p }}}~n", [Error]),
-            Error
-    end.
+    ered_nested_maps:find(Prop, Msg).
 
 %%
 %% Retrieve a nested parameters from the Msg map.
@@ -202,61 +166,29 @@ retrieve_prop_value(PropName, Msg) ->
 -spec set_prop_value(PropName :: string(), Value :: any(), Msg :: map()) ->
     map().
 set_prop_value(PropName, Value, Msg) ->
-    %%
-    %% TODO need to support array indicies tuples ==> {idx,Idx} which can
-    %% TODO potentially be part of the KeyNames array.
-    %%
-    case erl_attributeparser:attributes_to_array(PropName) of
-        {ok, KeyNames} ->
-            %% silently ignore any key that isn't available
-            try
-                mapz:deep_put(KeyNames, Value, Msg)
-            catch
-                error:Error ->
-                    io:format(
-                        "ERROR setting value: ~p =.=> ~p~n",
-                        [PropName, Error]
-                    ),
-                    Msg
-            end;
-        Error ->
-            io:format("ERROR setting value: ~p ==> ~p~n", [PropName, Error]),
+    case ered_nested_maps:update(PropName, Msg, Value) of
+        {ok, NewMsg, _Path} ->
+            NewMsg;
+        R ->
+            io:format(
+                "ERROR setting value: ~p =.=> ~p~n",
+                [PropName, R]
+            ),
+            %% silently ignore errors
             Msg
     end.
 
 %%
 %% remove an property that happens to match the nested path provided.
 -spec delete_prop(
-    PropName :: string() | {ok, PropName :: string()}, Msg :: map()
-) -> map().
+    PropName :: string() | binary() |
+                {ok, PropName :: string()} | {ok, PropName :: binary()},
+    Msg :: map()
+) -> Map :: map().
 delete_prop({ok, PropName}, Msg) ->
     delete_prop(PropName, Msg);
 delete_prop(PropName, Msg) ->
-    %%
-    %% TOOO support index tuples: {idx, Idx} for array access
-    %%
-    case erl_attributeparser:attributes_to_array(PropName) of
-        {ok, KeyNames} ->
-            %% silently ignore any key that isn't available
-            %% deep_remove seems to delete keeps if other keys don't exist,
-            %% so this pre-check ensures there is a value
-            %% see: https://github.com/eproxus/mapz/issues/1
-            %% TODO remove this if deep_remove is ever fixed
-            case mapz:deep_find(KeyNames, Msg) of
-                {ok, _} ->
-                    try
-                        mapz:deep_remove(KeyNames, Msg)
-                    catch
-                        error:_Error ->
-                            Msg
-                    end;
-                _ ->
-                    Msg
-            end;
-        _Error ->
-            % silently ignore errors.
-            Msg
-    end.
+    ered_nested_maps:delete(PropName, Msg).
 
 %%
 %% Generate an empty message map with just an _msgid
