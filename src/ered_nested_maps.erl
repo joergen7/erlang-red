@@ -273,7 +273,7 @@ deep_update(Thing, Loc, NewVal) ->
 %%
 create_empty_list(Sze) -> create_empty_list(Sze, []).
 create_empty_list(0, Lst) -> Lst;
-create_empty_list(Sze, Lst) -> create_empty_list(Sze - 1, [#{} | Lst]).
+create_empty_list(Sze, Lst) -> create_empty_list(Sze - 1, [null | Lst]).
 
 %%
 %%

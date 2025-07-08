@@ -88,7 +88,7 @@ edgecases_that_i_thought_of_test() ->
     )))),
 
     ?assertEqual(
-       #{atom => [#{},#{<<"what">> => new_value}]},
+       #{atom => [null,#{<<"what">> => new_value}]},
         element(2,ered_nested_maps:update(
         "'atom'.1[\"what\"]",
         #{},
@@ -96,7 +96,7 @@ edgecases_that_i_thought_of_test() ->
     ))),
 
     ?assertEqual(
-       #{atom => [#{},#{<<"what">> => new_value}]},
+       #{atom => [null,#{<<"what">> => new_value}]},
         element(2,ered_nested_maps:update(
         "'atom'[1][\"what\"]",
         #{},
