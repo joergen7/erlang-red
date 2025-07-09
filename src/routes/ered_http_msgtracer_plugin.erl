@@ -33,8 +33,10 @@ handle_json_body(Req, State) ->
 
     {ok, Body, Req2} = ered_http_utils:read_body(Req, <<"">>),
 
-    TaskData = json:decode(Body),
-    WsName = maps:get(<<"wsname">>, TaskData),
+    #{
+        <<"wsname">> := WsName,
+        <<"allIsOn">> := AllIsOn
+    } = TaskData = json:decode(Body),
 
     %% if this is 'on' then we readd these, of this is 'off' and then
     %% we do nothing else but either way, we remove the handlers first.
@@ -50,13 +52,31 @@ handle_json_body(Req, State) ->
             });
         <<"debug">> ->
             ered_msgtracer_manager:remove_handler({
-                ered_msgtracer_handler_debug,
-                WsName
-            }),
-            ered_msgtracer_manager:remove_handler({
                 ered_msgtracer_handler_debug_all,
                 WsName
             })
+    end,
+
+    DebugOnForNode = fun(NodeId) ->
+        ered_msgtracer_manager:add_handler(
+            {
+                ered_msgtracer_handler_debug,
+                <<WsName/bytes, NodeId/bytes>>
+            },
+            #{
+                <<"nodeids">> => [NodeId],
+                '_ws' => binary_to_atom(WsName)
+            }
+        )
+    end,
+
+    DebugOffForNode = fun(NodeId) ->
+        ered_msgtracer_manager:remove_handler(
+            {
+                ered_msgtracer_handler_debug,
+                <<WsName/bytes, NodeId/bytes>>
+            }
+        )
     end,
 
     %%
@@ -73,33 +93,29 @@ handle_json_body(Req, State) ->
     %% Both then have the options of either all nodes or a selected list of
     %% nodes for which debug or msgtracing should be applied. Hence this
     %% case has four cases...
-    case {Task, TaskState, maps:get(<<"allIsOn">>, TaskData)} of
+    case {Task, TaskState, AllIsOn} of
         {<<"debug">>, <<"on">>, true} ->
             ered_msgtracer_manager:add_handler(
                 {
                     ered_msgtracer_handler_debug_all,
                     WsName
                 },
-                #{'_ws' => WsName}
+                #{'_ws' => binary_to_atom(WsName)}
             );
+        {<<"debug">>, <<"off">>, false} ->
+            [
+                DebugOffForNode(N)
+             || N <- maps:get(<<"nodesSelected">>, TaskData)
+            ];
         {<<"debug">>, <<"on">>, false} ->
-            ered_msgtracer_manager:add_handler(
-                {
-                    ered_msgtracer_handler_debug,
-                    WsName
-                },
-                #{
-                    <<"nodeids">> => maps:get(<<"nodesSelected">>, TaskData),
-                    '_ws' => WsName
-                }
-            );
+            [DebugOnForNode(N) || N <- maps:get(<<"nodesSelected">>, TaskData)];
         {<<"msgtracing">>, <<"on">>, true} ->
             ered_msgtracer_manager:add_handler(
                 {
                     ered_msgtracer_handler_msgtracing_all,
                     WsName
                 },
-                #{'_ws' => WsName}
+                #{'_ws' => binary_to_atom(WsName)}
             );
         {<<"msgtracing">>, <<"on">>, false} ->
             ered_msgtracer_manager:add_handler(
@@ -109,7 +125,7 @@ handle_json_body(Req, State) ->
                 },
                 #{
                     <<"nodeids">> => maps:get(<<"nodesSelected">>, TaskData),
-                    '_ws' => WsName
+                    '_ws' => binary_to_atom(WsName)
                 }
             );
         _ ->

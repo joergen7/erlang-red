@@ -18,11 +18,14 @@
 init(Args) ->
     {ok, Args}.
 
-handle_event({incoming, NodeDef, _Pid, Msg}, State) ->
-    case lists:member(
-           maps:get(<<"id">>, NodeDef),
-           maps:get(<<"nodeids">>, State)
-          ) of
+handle_event(
+  {
+   incoming,
+   #{<<"id">> := NodeId} = NodeDef,
+   _Pid,
+   #{ '_ws' := WsName } = Msg
+}, #{ '_ws' := WsName, <<"nodeids">> := NodeIds } = State) ->
+    case lists:member(NodeId, NodeIds) of
         true ->
             send_off_debug(NodeDef, Msg);
         _ ->

@@ -33443,6 +33443,89 @@ RED.sidebar.help = (function() {
         RED.actions.add("core:show-help-tab", show);
         RED.actions.add("core:show-node-help", showNodeHelp)
 
+        function removeMonitorIndicator(node) {
+            let nodeId = node.id;
+            let elemId = `nodemonitorindicator-${nodeId}`
+            $(`#${elemId}`).remove()
+        }
+        function monitorIndicator(node) {
+            let nodeId = node.id;
+            let elemId = `nodemonitorindicator-${nodeId}`
+
+                $(`#${elemId}`).remove()
+
+                let grp = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                grp.setAttribute('class', 'red-ui-linkcall-link-indicator')
+                grp.setAttribute('transform', 'translate(10,-5)')
+                grp.setAttribute('id', elemId)
+
+                let crl = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                crl.setAttribute('cx', '5')
+                crl.setAttribute('cy', '5')
+                crl.setAttribute('r', '7')
+                crl.setAttribute('id', `monitordotclick-${nodeId}`)
+
+                crl.setAttribute('style', "cursor: pointer;")
+                crl.setAttribute('fill', 'lightgreen')
+
+                grp.append(crl)
+
+                $(grp).insertBefore($(`#${nodeId}`).find('.red-ui-flow-node-changed'))
+                $(`#monitordotclick-${nodeId}`).on('click', (e) => {
+                    if (e ) { e.preventDefault() }
+                    msgTracer({ id: nodeId }, false )
+                })
+
+        }
+
+        function msgTracer(node, state) {
+           if ( !node ) { return;}
+
+           $.ajax({
+               url: "MsgTracer/debug/" + (state ? "on" : "off"),
+               type: "POST",
+               contentType: "application/json; charset=utf-8",
+               data: JSON.stringify({
+                   nodesSelected: [node.id],
+                   allIsOn: false
+               }),
+
+               success: function (resp) {
+                   state ? monitorIndicator(node) : removeMonitorIndicator(node)
+                   RED.notify("Message debugging is <b>" + (state ? "on" : "off") + "</b>", {
+                       type: "success",
+                       timeout: 3000
+                   })
+               },
+
+               error: function (jqXHR, textStatus, errorThrown) {
+                   RED.notify("Message tracing failed: " + textStatus, {
+                       type: "error",
+                       timeout: 3000
+                   });
+               }
+           });
+        }
+
+        function getNode() {
+            let node = undefined;
+            const selection = RED.view.selection()
+            if (selection.nodes && selection.nodes.length > 0) {
+                node = selection.nodes.find(n => n.type !== 'group'
+                                                   && n.type !== 'junction')
+            }
+            return node
+        }
+        function monitorNodeOn(node) {
+           msgTracer(node || getNode(), true)
+        }
+
+        function unMonitorNodeOn(node) {
+           msgTracer(node || getNode(), false)
+        }
+
+        RED.actions.add("introspection:monitor-node", monitorNodeOn)
+        RED.actions.add("introspection:unmonitor-node", unMonitorNodeOn)
     }
 
     var refreshTimer;
@@ -48139,6 +48222,7 @@ RED.search = (function() {
                 if (!hasMultipleSelection && !isGroup) {
                     nodeOptions.push(
                         { onselect: 'core:show-node-help', label: RED._('menu.label.showNodeHelp') },
+                        { onselect: 'introspection:monitor-node', label: "Debug" },
                         null
                     )
                 }

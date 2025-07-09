@@ -41,19 +41,17 @@ send_off_debug(_Type, NodeDef, Msg) ->
 
 %%
 %%
-do_msgtrace_for_node(NodeDef, Pid, State) ->
-    WsName = binary_to_atom(ws_from(State)),
-
-    send_on_if_ws(WsName, {msgtracing, maps:get(<<"id">>, NodeDef)}),
+do_msgtrace_for_node(
+  #{ <<"id">> := NodeId } = NodeDef,
+  Pid,
+  #{ '_ws' := WsName } = State
+) ->
+    send_on_if_ws(WsName, {msgtracing, NodeId}),
     node_status(WsName, NodeDef, jstr("~p msg received",[Pid]), "green", "ring"),
-
-    % no need to keep the entire NodeDef when clearing the status - only
-    % need the id of the node
-    NodeId = #{ <<"id">> => maps:get(<<"id">>, NodeDef) },
     spawn(fun() -> clear_status_after_one_sec(WsName, NodeId) end).
 
 %%
 %%
 clear_status_after_one_sec(WsName, NodeId) ->
     timer:sleep(1000),
-    node_status_clear(WsName, NodeId).
+    node_status_clear(WsName, #{<<"id">> => NodeId}).

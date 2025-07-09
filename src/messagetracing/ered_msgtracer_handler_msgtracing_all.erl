@@ -18,7 +18,12 @@
 init(Args) ->
     {ok, Args}.
 
-handle_event({incoming, NodeDef, Pid, _Msg}, State) ->
+handle_event(
+  {incoming,
+   NodeDef,
+   Pid,
+   #{ '_ws' := WsName }
+}, #{ '_ws' := WsName } = State) ->
     do_msgtrace_for_node(NodeDef, Pid, State),
     {ok, State};
 

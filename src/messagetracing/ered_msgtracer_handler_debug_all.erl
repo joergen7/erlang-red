@@ -18,7 +18,13 @@
 init(Args) ->
     {ok, Args}.
 
-handle_event({incoming, NodeDef, _Pid, Msg}, State) ->
+handle_event(
+  {incoming,
+   NodeDef,
+   _Pid,
+   #{ '_ws' := WsName } = Msg
+}, #{ '_ws' := WsName } = State
+) ->
     send_off_debug(NodeDef, Msg),
     {ok, State};
 

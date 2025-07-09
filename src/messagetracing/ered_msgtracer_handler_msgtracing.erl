@@ -18,11 +18,13 @@
 init(Args) ->
     {ok, Args}.
 
-handle_event({incoming, NodeDef, Pid, _Msg}, State) ->
-    case lists:member(
-           maps:get(<<"id">>, NodeDef),
-           maps:get(<<"nodeids">>, State)
-          ) of
+handle_event(
+  {incoming,
+   #{ <<"id">> := NodeId } = NodeDef,
+   Pid,
+   #{ '_ws' := WsName }
+}, #{ '_ws' := WsName, <<"nodeids">> := NodeIds } = State) ->
+    case lists:member(NodeId, NodeIds) of
         true ->
             do_msgtrace_for_node(NodeDef, Pid, State);
         _ ->
