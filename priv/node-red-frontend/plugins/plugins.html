@@ -1364,7 +1364,7 @@ $('#node-input-unittestingpull-clear-debug-panel-but').on('click', function (e) 
 $('#node-input-unittestingpull-sb-refresh-list-but').on('click', function (e) {
   e.preventDefault();
 
-  $('#node-input-unittestingpull-sb-target-filter').val('').trigger('keyup', { keyCode: 13})
+  $('#node-input-unittestingpull-sb-target-filter').val('').trigger('keyup', { keyCode: 13 })
 
   setTimeout(() => {
     unitTestingPullUpdateFlows((lst) => {
@@ -3548,7 +3548,7 @@ function ensureYourConfigNodeExists() {
          <textarea class="scratchpad-content-field" placeholder="*scratch*" style="width: 360px; height: 150px;"></textarea>
       </div>
       <div class="form-row scratchpad-content-container" style="margin-left: 10px; margin-top: -15px; margin-bottom: 20px;">
-         <button title="Clear" class="scratchpad-clear-btn button"><i class="fa fa-shower button-icon"></i></button>
+         <button title="Clear" class="scratchpad-clear-btn button"><i class="fa fa-trash-o button-icon"></i></button>
          <button title="Save" class="scratchpad-save-btn button"><i class="fa fa-save button-icon"></i></button>
          <button title="Compare" class="scratchpad-compare-btn button"><i class="fa fa-balance-scale button-icon"></i></button>
          <button title="Delete" class="scratchpad-close-btn button"><i class="fa fa-close button-icon"></i></button>

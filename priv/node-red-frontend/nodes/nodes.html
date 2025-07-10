@@ -12069,7 +12069,7 @@ msg.cookies = {
             RED.tray.show();
           },
           filter: function (n) {
-            return n.id !== node.id;
+            return n.id !== node.id && n.type != "erlmodule";
           }
         });
       })
@@ -12355,14 +12355,9 @@ Defines a module that can be used with a state machine and other elements of Erl
       name: {
         value:"",
       },
-      module_name: {
-        value: ""
-      },
-      nodeid: {
-        value: "",
-        required: true,
-        validate: RED.validators.regex(/[a-zA-Z0-9]{16}/)
-      },
+
+      scope: { value: null, type: "*[]" },
+
       emit_on_state_change: {
         value: false
       }
@@ -12374,10 +12369,11 @@ Defines a module that can be used with a state machine and other elements of Erl
 
     label: function() {
       let label = this._def.paletteLabel
-      if (this.module_name) {
-        label = `[${this.module_name}]\t${this.emit_on_state_change ? "⋮" : "➝"}`
+      if (this.scope && this.scope.length > 0) {
+        let nodeLabels = this.scope.map( d => RED.nodes.node(d) ).map( nde => RED.utils.getNodeLabel(nde))
+        label = `[${nodeLabels.join(", ")}]\t${this.emit_on_state_change ? "⋮" : "➝"}`
       }
-      return (this.name || label );
+      return (this.name || label);
     },
 
     labelStyle: function() {
@@ -12392,6 +12388,12 @@ Defines a module that can be used with a state machine and other elements of Erl
 
     oneditprepare: function() {
       var node = this;
+      // nodeid was the old value, scope is the new. Why? Because Node-RED editor
+      // updates "scope" variable name with new node ids automagically when doing
+      // copy and paste operations.
+      if ( (!node.scope || node.scope.length == 0) && node.nodeid != "" ) {
+        node.scope = [node.nodeid]
+      }
 
       var tabs = RED.tabs.create({
         id: "erlstatemachine-tabs",
@@ -12409,7 +12411,7 @@ Defines a module that can be used with a state machine and other elements of Erl
 
       tabs.addTab({
         id: "erlstatemachine-tab-handler-config",
-        iconClass: "fa fa-cog",
+        iconClass: "fa fa-keyboard-o",
         label: node._("erlstatemachine.label.tab.handler_config")
       });
 
@@ -12462,7 +12464,7 @@ Defines a module that can be used with a state machine and other elements of Erl
           nodeid: nde.id,
           node: nde,
           sublabel: nde.type,
-          selected: nde.id == this.nodeid,
+          selected: this.scope && (this.scope.indexOf(nde.id) > -1),
           checkbox: false,
           radio: true,
           children: undefined
@@ -12476,18 +12478,15 @@ Defines a module that can be used with a state machine and other elements of Erl
     },
 
     oneditsave: function() {
-      if ($("#node-input-handler-target-container-div").treeList('selected').nodeid) {
-        this.nodeid = $("#node-input-handler-target-container-div").treeList('selected').nodeid;
-
-        let node = RED.nodes.node(this.nodeid)
-        this.module_name = node.module_name;
+      if ( $("#node-input-handler-target-container-div").treeList('selected').nodeid ) {
+        this.scope = [$("#node-input-handler-target-container-div").treeList('selected').nodeid]
+      } else {
+        this.scope = []
       }
     },
 
     oneditresize: function(size) {
     },
-
-
   });
 })();
 
@@ -12555,7 +12554,7 @@ A handler can only be of type <code>erlmodule</code>.
         value:"",
       },
       handlers: {
-        value: [{ nodeid: ""}]
+        value: [{ nodeid: "", moduleterm: ""}]
       }
     },
 
@@ -12590,12 +12589,14 @@ A handler can only be of type <code>erlmodule</code>.
           sltObj.append($("<option>", { value: val[0], ...selected }).append(val[1]))
         }
 
+        var txtObj = $('<input>', { type: "text", value: currVal.moduleterm, style: "width: 200px;", class: "erleventhandler-erlterm" })
+
         var container = $("<div>", { class: "form-row" });
 
         container.append('<a href="#" style="float: right; color: red;" onclick="$(this).parent().remove(); return false;"><i class="fa fa-close"></i></a>')
         container.append('<a href="#" style="float: right; margin-right: 10px; color: green;" onclick="$(\'#erleventhandler-handler-config-container\').append($(this).parent().clone()); return false;"><i class="fa fa-plus"></i></a>')
 
-        container.append(sltObj)
+        container.append(sltObj).append(txtObj)
 
         container.appendTo($('#erleventhandler-handler-config-container'))
       })
@@ -12607,7 +12608,7 @@ A handler can only be of type <code>erlmodule</code>.
     oneditsave: function() {
       let result = []
       $($('#erleventhandler-handler-config-container').find('.erleventhandler-erlmodule')).each((idx, elem) => {
-        result.push({ nodeid: $(elem).val() })
+        result.push({ nodeid: $(elem).val(), moduleterm: $(elem).siblings().filter(".erleventhandler-erlterm").val() })
       })
       this.handlers = result
     },
@@ -12632,9 +12633,9 @@ A handler can only be of type <code>erlmodule</code>.
        Need to define Erlang Module node first else <br>
       this selection will be empty.</span>
 
-    <p>
+    <p><p>
     <span>This can be dynamically extended at runtime <br>
-    using the <b>add_handler</b> message type.</span>
+    using the <b>add_handler</b> message.</span>
   </div>
 
   <div class="form-row">
@@ -12650,6 +12651,181 @@ See <a href="https://www.erlang.org/doc/apps/stdlib/gen_event.html">OTP Docu</a>
 <p>
 <a href='https://flows.red-erik.org/f/b70a7ce34819e4d5' target="_blank">Example</a>.
 </p>
+
+</script>
+
+<!-- --- [red-module:@gregoriusrippenstein/erlang-red-supervisor-node/erlgenserver] --- -->
+<script type="text/javascript">
+  (function(){
+    RED.nodes.registerType('erlgenserver',{
+    color: '#FFCC66',
+    icon: "font-awesome/fa-server",
+    category: 'behaviour',
+    paletteLabel: 'Generic Server',
+    defaults: {
+      name: {
+        value:"",
+      },
+
+      scope: { value: null, type: "*[]" },
+    },
+
+    inputs: 1,
+
+    outputs: 1,
+
+    label: function () {
+      let label = this._def.paletteLabel
+      if (this.scope && this.scope.length > 0) {
+        let nodes = this.scope.map( id => RED.nodes.node(id) ).map( nde => nde && RED.utils.getNodeLabel(nde) )
+        label = `[${nodes.join(", ")}]`
+      }
+      return (this.name || label);
+    },
+
+    labelStyle: function() {
+      return this.name?"node_label_italic":"";
+    },
+
+    onpaletteadd: function() {
+    },
+
+    onpaletteremove: function() {
+    },
+
+    oneditprepare: function() {
+      var node = this;
+
+      var tabs = RED.tabs.create({
+        id: "erlgenserver-tabs",
+        onchange: function (tab) {
+          $("#erlgenserver-tabs-content").children().hide();
+          $("#" + tab.id).show();
+        }
+      });
+
+      tabs.addTab({
+        id: "erlgenserver-tab-statem-config",
+        iconClass: "fa fa-cog",
+        label: node._("erlgenserver.label.tab.statem_config")
+      });
+
+      tabs.addTab({
+        id: "erlgenserver-tab-handler-config",
+        iconClass: "fa fa-keyboard-o",
+        label: node._("erlgenserver.label.tab.handler_config")
+      });
+
+      tabs.activateTab("erlgenserver-tab-handler-config");
+
+      var dirList = $("#node-input-handler-target-container-div").css({
+        width: "100%",
+        height: "calc(100%)"
+      }).treeList(
+        {
+          multi: true
+        }
+      ).on('treelistselect', function (event, item) {
+        if (item && item.nodeid) {
+          RED.view.reveal(item.nodeid);
+          RED.view.select(item.nodeid);
+        }
+      }).on('treelistconfirm', function (event, item) {
+      }).on("treelistitemmouseover", function (e, item) {
+        item.node.highlighted = true;
+        item.node.dirty = true;
+        RED.view.redraw();
+      }).on("treelistitemmouseout", function (e, item) {
+        item.node.highlighted = false;
+        item.node.dirty = true;
+        RED.view.redraw();
+      })
+
+      var search = $("#node-input-handler-target-filter").searchBox({
+        style: "compact",
+        delay: 300,
+        change: function () {
+          var val = $(this).val().trim().toLowerCase();
+          if (val === "") {
+            dirList.treeList("filter", null);
+            search.searchBox("count", "");
+          } else {
+            var count = dirList.treeList("filter", function (item) {
+              return item.label.toLowerCase().indexOf(val) > -1 || item.sublabel.toLowerCase().indexOf(val) > -1
+            });
+            search.searchBox("count", count + " / " + dirList.treeList("data").length);
+          }
+        }
+      });
+
+      let data = RED.nodes.filterNodes({ z: RED.workspaces.active() }).filter(n => n.id != this.id).filter(n => n.type == "erlmodule").map(nde => {
+        return {
+          label: RED.utils.getNodeLabel(nde),
+          icon: "",
+          nodeid: nde.id,
+          node: nde,
+          sublabel: nde.type,
+          selected: this.scope && this.scope.indexOf(nde.id) > -1,
+          checkbox: true,
+          radio: false,
+          children: undefined
+        }
+      })
+
+      dirList.treeList('data', data)
+    },
+
+    oneditcancel: function() {
+    },
+
+    oneditsave: function() {
+      this.scope = $("#node-input-handler-target-container-div").treeList('selected').map( d => d.nodeid )
+    },
+
+    oneditresize: function(size) {
+    },
+
+
+  });
+})();
+
+</script>
+
+<script type="text/html" data-template-name="erlgenserver">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+    <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
+  </div>
+
+    <div class="form-row func-tabs-row">
+      <ul style="min-width: 400px; margin-bottom: 20px;" id="erlgenserver-tabs"></ul>
+    </div>
+
+    <div id="erlgenserver-tabs-content" style="min-height: calc(100% - 95px);">
+
+      <div id="erlgenserver-tab-statem-config" style="display:none">
+        <div class="form-row">
+          No options at the moment.
+        </div>
+      </div>
+
+      <div id="erlgenserver-tab-handler-config" style="display:none">
+        <div class="form-row"
+          style="margin-left: 10px; position: relative; height: 40vh; margin-right: 15px; min-height: 5vh;">
+          <div style=" margin-bottom: 5px; width: 35%; padding-left: 60%;">
+            <input type="text" id="node-input-handler-target-filter">
+          </div>
+
+          <div id="node-input-handler-target-container-div"></div>
+        </div>
+      </div>
+    </div>
+</script>
+<script type="text/html" data-help-name="erlgenserver">
+  <p>Implements that gen_server behaviour.</p>
+  Implements the Erlang generic server behaviour.
+
+See <a href="https://www.erlang.org/doc/apps/stdlib/gen_server.html">OTP Docu</a> for more details.
 
 </script>
 
