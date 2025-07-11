@@ -15,6 +15,7 @@
     is_same/2,
     is_not_same/2,
     jsbuffer_to_binary/1,
+    jsonata_eval_or_error_msg/2,
     map_keys_to_binary/1,
     map_keys_to_lists/1,
     retrieve_prop_value/2,
@@ -31,6 +32,26 @@
     generate_id/0,
     jstr/2
 ]).
+
+%%
+%% Slim down the Jsonata call for clients.
+jsonata_eval_or_error_msg(Jsonata, Msg) ->
+    case erlang_red_jsonata:execute(Jsonata, Msg) of
+        {ok, Result} ->
+            Result;
+        {error, Error} ->
+            io:format(
+                "JSONATA ERROR: [~p] ==> [~p]~n",
+                [Jsonata, Error]
+            ),
+            jstr("jsonata error: ~p", [Jsonata]);
+        {exception, Error} ->
+            io:format(
+                "JSONATA EXCEP: [~p] ==> [~p]~n",
+                [Jsonata, Error]
+            ),
+            jstr("jsonata error: ~p", [Jsonata])
+    end.
 
 %%
 %% Used by switch and assert values nodes.
