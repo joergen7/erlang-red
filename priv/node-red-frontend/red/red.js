@@ -1214,8 +1214,11 @@ var RED = (function() {
                             "data": {}
                         }])
                     });
-                }, 1000);
+                }, 700);
             }
+            RED.events.on('unittesting:halting', () => {
+                reloadFlows()
+            })
 
             // Store all changes locally in the browser, but we still pretend
             // to send it off to the server ... hahaha it's all fake, just like
