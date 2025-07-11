@@ -68,10 +68,14 @@ does_rule_match(<<"neq">>, OpCompVal, MsgVal) ->
     is_not_same(OpCompVal, MsgVal);
 does_rule_match(<<"eq">>, OpCompVal, MsgVal) ->
     is_same(OpCompVal, MsgVal);
+does_rule_match(<<"gte">>, OpCompVal, MsgVal) ->
+    MsgVal >= OpCompVal;
 does_rule_match(<<"gt">>, OpCompVal, MsgVal) ->
     MsgVal > OpCompVal;
 does_rule_match(<<"lt">>, OpCompVal, MsgVal) ->
     MsgVal < OpCompVal;
+does_rule_match(<<"lte">>, OpCompVal, MsgVal) ->
+    MsgVal =< OpCompVal;
 does_rule_match(<<"bleq">>, OpCompVal, MsgVal) ->
     is_same(to_bool(MsgVal), OpCompVal);
 does_rule_match(<<"cont">>, OpCompVal, MsgVal) ->
