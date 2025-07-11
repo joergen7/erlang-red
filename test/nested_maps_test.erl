@@ -69,84 +69,141 @@ update_extend_existing_test() ->
     ).
 
 edgecases_that_i_thought_of_test() ->
-    ?assertEqual(new_value, maps:get(1,element(2,ered_nested_maps:update(
-        "1",
-        #{},
-        new_value
-    )))),
-
-    ?assertEqual(new_value, maps:get(<<"a">>,element(2,ered_nested_maps:update(
-        "a",
-        #{},
-        new_value
-    )))),
-
-    ?assertEqual(new_value, maps:get(atom,element(2,ered_nested_maps:update(
-        "'atom'",
-        #{},
-        new_value
-    )))),
+    ?assertEqual(
+        new_value,
+        maps:get(
+            1,
+            element(
+                2,
+                ered_nested_maps:update(
+                    "1",
+                    #{},
+                    new_value
+                )
+            )
+        )
+    ),
 
     ?assertEqual(
-       #{atom => [null,#{<<"what">> => new_value}]},
-        element(2,ered_nested_maps:update(
-        "'atom'.1[\"what\"]",
-        #{},
-        new_value
-    ))),
+        new_value,
+        maps:get(
+            <<"a">>,
+            element(
+                2,
+                ered_nested_maps:update(
+                    "a",
+                    #{},
+                    new_value
+                )
+            )
+        )
+    ),
 
     ?assertEqual(
-       #{atom => [null,#{<<"what">> => new_value}]},
-        element(2,ered_nested_maps:update(
-        "'atom'[1][\"what\"]",
-        #{},
-        new_value
-    ))),
+        new_value,
+        maps:get(
+            atom,
+            element(
+                2,
+                ered_nested_maps:update(
+                    "'atom'",
+                    #{},
+                    new_value
+                )
+            )
+        )
+    ),
 
-    ?assertEqual(#{hello => world}, element(2,ered_nested_maps:update(
-        "",
-        #{ hello => world },
-        new_value
-    ))).
+    ?assertEqual(
+        #{atom => [null, #{<<"what">> => new_value}]},
+        element(
+            2,
+            ered_nested_maps:update(
+                "'atom'.1[\"what\"]",
+                #{},
+                new_value
+            )
+        )
+    ),
+
+    ?assertEqual(
+        #{atom => [null, #{<<"what">> => new_value}]},
+        element(
+            2,
+            ered_nested_maps:update(
+                "'atom'[1][\"what\"]",
+                #{},
+                new_value
+            )
+        )
+    ),
+
+    ?assertEqual(
+        #{hello => world},
+        element(
+            2,
+            ered_nested_maps:update(
+                "",
+                #{hello => world},
+                new_value
+            )
+        )
+    ).
 
 delete_test() ->
-    ?assertEqual(#{}, ered_nested_maps:delete("d", #{ <<"d">> => "ddd"})),
+    ?assertEqual(#{}, ered_nested_maps:delete("d", #{<<"d">> => "ddd"})),
 
     % remove the first element of the list at 'b'
-    ?assertEqual(#{<<"a">> => [#{<<"b">> => []}]},
-                 ered_nested_maps:delete(
-                   "a.0.b.0",
-                   element(2, ered_nested_maps:update("a.0.b.0.c.0.0.d.e", #{}, v))
-                  )
-                ),
+    ?assertEqual(
+        #{<<"a">> => [#{<<"b">> => []}]},
+        ered_nested_maps:delete(
+            "a.0.b.0",
+            element(2, ered_nested_maps:update("a.0.b.0.c.0.0.d.e", #{}, v))
+        )
+    ),
 
     %% list too short for index
     Same = ered_nested_maps:update("a.0.b.0.c.0.0.d.e", #{}, v),
-    ?assertEqual(element(2, Same),
-                 ered_nested_maps:delete(
-                   "a.0.b.1",
-                   element(2, Same)
-                  )
-                ),
+    ?assertEqual(
+        element(2, Same),
+        ered_nested_maps:delete(
+            "a.0.b.1",
+            element(2, Same)
+        )
+    ),
 
-    ?assertEqual(#{<<"d">> => "ddd"},
-                 ered_nested_maps:delete("d.1.2", #{ <<"d">> => "ddd"})).
+    ?assertEqual(
+        #{<<"d">> => "ddd"},
+        ered_nested_maps:delete("d.1.2", #{<<"d">> => "ddd"})
+    ).
 
 delete_strings_are_lists_test() ->
     %%
     %% Ouch: strings are lists, "ddd" is a list and d[1] is remove the third
     %% 'd' from the list!
-    ?assertEqual(#{<<"d">> => "dd"},
-                 ered_nested_maps:delete("d[1]", #{ <<"d">> => "ddd"})),
-    ?assertEqual(#{<<"d">> => "dd"},
-                 ered_nested_maps:delete("d.1", #{ <<"d">> => "ddd"})).
+    ?assertEqual(
+        #{<<"d">> => "dd"},
+        ered_nested_maps:delete("d[1]", #{<<"d">> => "ddd"})
+    ),
+    ?assertEqual(
+        #{<<"d">> => "dd"},
+        ered_nested_maps:delete("d.1", #{<<"d">> => "ddd"})
+    ).
 
 delete_elemete_from_last_array_test() ->
-    {ok, Same,_} = ered_nested_maps:update("a.0.b.0.c.0.0.d.e.1", #{}, v),
+    {ok, Same, _} = ered_nested_maps:update("a.0.b.0.c.0.0.d.e.1", #{}, v),
 
-    {ok, NewSame,_} = ered_nested_maps:update("a.0.b.0.c.0.0.d.e", Same, #{}),
+    {ok, NewSame, _} = ered_nested_maps:update("a.0.b.0.c.0.0.d.e", Same, #{}),
 
-    ?assertEqual(NewSame,
-                 ered_nested_maps:delete("a.0.b.0.c.0.0.d.e.1",
-                         element(2,ered_nested_maps:update(
-                                   "a.0.b.0.c.0.0.d.e.1", #{}, v)))).
+    ?assertEqual(
+        NewSame,
+        ered_nested_maps:delete(
+            "a.0.b.0.c.0.0.d.e.1",
+            element(
+                2,
+                ered_nested_maps:update(
+                    "a.0.b.0.c.0.0.d.e.1", #{}, v
+                )
+            )
+        )
+    ).

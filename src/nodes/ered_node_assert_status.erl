@@ -1,5 +1,7 @@
 -module(ered_node_assert_status).
 
+-include("ered_nodes.hrl").
+
 -behaviour(ered_node).
 
 -export([start/2]).
@@ -22,15 +24,106 @@
     subscribe/4
 ]).
 
+-define(TestSuccess, '_failed_' := false).
+
 %%
 %%
 start(NodeDef, _WsName) ->
-    ered_node:start(NodeDef, ?MODULE).
+    ered_node:start(NodeDef#{'_failed_' => false}, ?MODULE).
 
+%%
+%%
+handle_event(
+    {registered, WsName, _Pid},
+    #{?NodePid, <<"nodeid">> := TgtNodeId} = NodeDef
+) ->
+    ered_ws_event_exchange:subscribe(WsName, TgtNodeId, status, NodePid),
+    NodeDef;
+handle_event({registered, _WsName, _Pid}, NodeDef) ->
+    NodeDef;
+%%
+handle_event(
+    {stop, WsName},
+    #{
+        '_mc_websocket' := 0,
+        <<"inverse">> := false,
+        <<"nodeid">> := NodeId,
+        ?TestSuccess,
+        ?NodePid
+    } = NodeDef
+) ->
+    ErrMsg = jstr("Expected status from ~p\n", [NodeId]),
+    assert_failure(NodeDef, WsName, ErrMsg),
+    ered_ws_event_exchange:unsubscribe(WsName, NodePid),
+    NodeDef;
+handle_event(
+    {stop, WsName},
+    #{?TestSuccess, ?NodePid} = NodeDef
+) ->
+    node_status(WsName, NodeDef, "assert succeed", "green", "ring"),
+    ered_ws_event_exchange:unsubscribe(WsName, NodePid),
+    NodeDef;
+handle_event(
+    {stop, WsName},
+    #{?NodePid} = NodeDef
+) ->
+    ered_ws_event_exchange:unsubscribe(WsName, NodePid),
+    NodeDef;
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
+%%
+handle_websocket(
+    {status, WsName, NodeId, _Txt, _Clr, _Shp},
+    #{
+        <<"inverse">> := true
+    } = NodeDef
+) ->
+    ErrMsg = jstr("No status expected from ~p\n", [NodeId]),
+    assert_failure(NodeDef, WsName, ErrMsg),
+    NodeDef#{'_failed_' => true};
+handle_websocket(
+    {status, WsName, _NodeId, Txt, Clr, Shp},
+    #{
+        <<"colour">> := ExpClr,
+        <<"shape">> := ExpShp,
+        <<"content">> := ExpTxt,
+        <<"inverse">> := false
+    } = NodeDef
+) ->
+    Errors = check_attributes(
+        {ExpClr, list_to_binary(Clr)},
+        {ExpShp, list_to_binary(Shp)},
+        {ExpTxt, Txt}
+    ),
+    case lists:flatten(Errors) of
+        [] ->
+            NodeDef;
+        _ ->
+            ErrMsg = list_to_binary(Errors),
+            assert_failure(NodeDef, WsName, ErrMsg),
+            NodeDef#{'_failed_' => true}
+    end;
+handle_websocket(_, NodeDef) ->
+    NodeDef.
+
+%%
+%%
+handle_msg({ws_event, Details}, NodeDef) ->
+    {handled, handle_websocket(Details, NodeDef), empty};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.
+
+%%
+%%  ----------------------- helpers
+%%
 is_same({A, A}) -> true;
 is_same({_, _}) -> false.
 
-check_attributes({ExpTxt, Txt}) ->
+check_attributes({ExpTxt, Txt}) when is_list(Txt) ->
+    check_attributes({ExpTxt, list_to_binary(Txt)});
+check_attributes({ExpTxt, Txt}) when is_binary(Txt) ->
     case is_same({ExpTxt, Txt}) of
         false ->
             case ExpTxt of
@@ -62,83 +155,3 @@ check_attributes(Clr, Shp, Txt) ->
         true ->
             [check_attributes(Shp, Txt)]
     end.
-
-%%
-%%
-handle_event({registered, WsName, _Pid}, NodeDef) ->
-    case maps:find(<<"nodeid">>, NodeDef) of
-        {ok, TgtNodeId} ->
-            {ok, NodePid} = maps:find('_node_pid_', NodeDef),
-            ered_ws_event_exchange:subscribe(
-                WsName, TgtNodeId, status, NodePid
-            );
-        _ ->
-            ignore_missing_value
-    end,
-    NodeDef;
-handle_event({stop, WsName}, NodeDef) ->
-    case maps:find('_mc_websocket', NodeDef) of
-        {ok, 0} ->
-            case maps:find(<<"inverse">>, NodeDef) of
-                {ok, false} ->
-                    {ok, NodeId} = maps:find(<<"nodeid">>, NodeDef),
-                    ErrMsg = jstr("Expected status from ~p\n", [NodeId]),
-                    assert_failure(NodeDef, WsName, ErrMsg);
-                _ ->
-                    node_status(
-                        WsName,
-                        NodeDef,
-                        "assert succeed",
-                        "green",
-                        "ring"
-                    )
-            end;
-        _ ->
-            node_status(
-                WsName,
-                NodeDef,
-                "assert succeed",
-                "green",
-                "ring"
-            )
-    end,
-    {ok, NodePid} = maps:find('_node_pid_', NodeDef),
-    ered_ws_event_exchange:unsubscribe(WsName, NodePid),
-    NodeDef;
-handle_event(_, NodeDef) ->
-    NodeDef.
-
-%%
-%%
-handle_websocket({status, WsName, NodeId, Txt, Clr, Shp}, NodeDef) ->
-    case maps:find(<<"inverse">>, NodeDef) of
-        {ok, true} ->
-            ErrMsg = jstr("No status expected from ~p\n", [NodeId]),
-            assert_failure(NodeDef, WsName, ErrMsg);
-        _ ->
-            {ok, ExpClr} = maps:find(<<"colour">>, NodeDef),
-            {ok, ExpShp} = maps:find(<<"shape">>, NodeDef),
-            {ok, ExpTxt} = maps:find(<<"content">>, NodeDef),
-            Errors = check_attributes(
-                {ExpClr, list_to_binary(Clr)},
-                {ExpShp, list_to_binary(Shp)},
-                {ExpTxt, list_to_binary(Txt)}
-            ),
-            case lists:flatten(Errors) of
-                [] ->
-                    success;
-                _ ->
-                    ErrMsg = list_to_binary(Errors),
-                    assert_failure(NodeDef, WsName, ErrMsg)
-            end
-    end,
-    NodeDef;
-handle_websocket(_, NodeDef) ->
-    NodeDef.
-
-%%
-%%
-handle_msg({ws_event, Details}, NodeDef) ->
-    {handled, handle_websocket(Details, NodeDef), empty};
-handle_msg(_, NodeDef) ->
-    {unhandled, NodeDef}.

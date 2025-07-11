@@ -27,12 +27,18 @@
     ws_from/1
 ]).
 
+-import(ered_messages, [
+    jsonata_eval_or_error_msg/2,
+    retrieve_prop_value/2
+]).
+
 -import(ered_nodes, [
     generate_id/0,
     generate_id/1,
     get_prop_value_from_map/2,
     get_prop_value_from_map/3,
     jstr/1,
+    jstr/2,
     this_should_not_happen/2
 ]).
 
@@ -126,22 +132,72 @@ send_out_debug_error(NodeDef, Msg) ->
 
 %%
 %%
-%% erlfmt:ignore equals and arrows should line up here.
-send_to_debug_sidebar(NodeDef,Msg) ->
-    D = ?BASE_DATA,
+send_to_debug_sidebar(
+    #{
+        <<"targetType">> := <<"jsonata">>,
+        <<"complete">> := Jsonata
+    } = NodeDef,
+    Msg
+) ->
+    %% format is important here.
+    %% Triggery for large files and I don't know what. Using format
+    %% of "object" as opposed to "Object" (capital-o) causes less
+    %% breakage. Definitely something to investigate.
+    %% See info for test id: c4690c0a085d6ef5 for more details.
+    Data = ?BASE_DATA#{
+        <<"topic">> => to_binary_if_not_binary(?TopicFromMsg),
+        <<"msg">> => jsonata_eval_or_error_msg(Jsonata, Msg),
+        <<"format">> => <<"string">>
+    },
 
-    TopicStr = get_prop_value_from_map(<<"topic">>, Msg, ""),
+    debug(ws_from(Msg), Data, normal);
+send_to_debug_sidebar(
+    #{
+        <<"targetType">> := <<"msg">>,
+        <<"complete">> := PropName
+    } = NodeDef,
+    Msg
+) ->
+    %% This isn't conform to Node-RED because it should be sending out
+    %% something like this:
+    %% {
+    %%     "topic": "debug",
+    %%     "data": {
+    %%         "id": "36f01aa9aa9d120c",
+    %%         "z": "8017c686fe4e892c",
+    %%         "path": "8017c686fe4e892c",
+    %%         "name": "debug 430",
+    %%         "topic": "",
+    %%         "property": "payload", <<---- property name
+    %%         "msg": "adasdasd",     <<---- value
+    %%         "format": "string[8]"  <<---- this is "number" or "string[x]" or
+    %%     }                                 something else again depending on
+    %% }                                     property type.
+    %% This function does not do that.
 
     %% format is important here.
     %% Triggery for large files and I don't know what. Using format
     %% of "object" as opposed to "Object" (capital-o) causes less
     %% breakage. Definitely something to investigate.
     %% See info for test id: c4690c0a085d6ef5 for more details.
-    Data = D#{
-      <<"topic">>  => to_binary_if_not_binary(TopicStr),
-      <<"msg">>    => Msg,
-      <<"format">> => <<"object">>
-     },
+    Data = ?BASE_DATA#{
+        <<"topic">> => to_binary_if_not_binary(?TopicFromMsg),
+        <<"msg">> => #{PropName => retrieve_prop_value(PropName, Msg)},
+        <<"format">> => <<"object">>
+    },
+
+    debug(ws_from(Msg), Data, normal);
+send_to_debug_sidebar(NodeDef, Msg) ->
+    %% format is important here.
+    %% Triggery for large files and I don't know what. Using format
+    %% of "object" as opposed to "Object" (capital-o) causes less
+    %% breakage. Definitely something to investigate.
+    %% See info for test id: c4690c0a085d6ef5 for more details.
+    Data = ?BASE_DATA#{
+        <<"topic">> => to_binary_if_not_binary(?TopicFromMsg),
+        <<"msg">> => Msg,
+        <<"format">> => <<"object">>
+    },
 
     debug(ws_from(Msg), Data, normal).
 

@@ -13,6 +13,27 @@
 %% MQTT In node, a node that connects to a MQTT broker and streams all messags
 %% into the flow it is embedded in.
 %%
+%%        "id": "4d0ffeae2a76b8b0",
+%%        "type": "mqtt in",
+%%        "z": "dc897f402c53697f",
+%%        "name": "MQTT In",
+%%        "topic": "",
+%%        "qos": "2",
+%%        "datatype": "auto-detect",
+%%        "broker": "da2f91c287ad12f7",
+%%        "nl": false,
+%%        "rap": true,
+%%        "rh": 0,
+%%        "inputs": 1, <<------ 1 means dynamic subscriptions, no fixed topic.
+%%        "x": 467,
+%%        "y": 585,
+%%        "wires": [
+%%            [
+%%                "9048a940e9c269d8",
+%%                "eb63f1261f783d43"
+%%            ]
+%%        ]
+%%
 %% An MQTT node is configured by a Config Node with the following properties:
 %%
 %% id => <<"97960d98b2837fa0">>,
@@ -77,8 +98,20 @@
 
 %%
 %%
-start(NodeDef, _WsName) ->
-    ered_node:start(NodeDef, ?MODULE).
+%% Dynamic subscriptions, no subscribe after initial connect.
+start(#{<<"inputs">> := 1} = NodeDef, _WsName) ->
+    F = fun(_Pid, _NodeDef) ->
+        ok
+    end,
+    ered_node:start(NodeDef#{'_after_connect' => F}, ?MODULE);
+%% Static topic, subescribe after connect.
+start(#{<<"inputs">> := 0} = NodeDef, _WsName) ->
+    F = fun(Pid, #{<<"topic">> := Topic, <<"qos">> := Qos}) ->
+        gen_server:call(
+            Pid, {subscribe, #{}, [{Topic, [{qos, convert_to_num(Qos)}]}]}
+        )
+    end,
+    ered_node:start(NodeDef#{'_after_connect' => F}, ?MODULE).
 
 %%
 %%
@@ -112,7 +145,7 @@ handle_event(
 %%
 handle_event(
     {connect_to_broker, MqttMgrPid},
-    #{?GET_WS} = NodeDef
+    #{?GET_WS, ?AFTER_CONNECT} = NodeDef
 ) ->
     case is_process_alive(MqttMgrPid) of
         true ->
@@ -121,18 +154,7 @@ handle_event(
                     try
                         case gen_server:call(MqttMgrPid, connect) of
                             {ok, _Props} ->
-                                %% in the wild, this subscribe call will
-                                %% probably fail - f2k it. This code is
-                                %% indented far enough.
-                                gen_server:call(
-                                    MqttMgrPid,
-                                    {subscribe, #{}, [
-                                        {maps:get(<<"topic">>, NodeDef), [
-                                            {qos, 1}
-                                        ]}
-                                    ]}
-                                ),
-
+                                AfterConnect(MqttMgrPid, NodeDef),
                                 ?STATUS("connected", "green", "dot"),
                                 maps:remove('_timer', NodeDef);
                             _ ->
@@ -186,11 +208,60 @@ handle_event(_, NodeDef) ->
 %%
 %%
 
-handle_msg({mqtt_incoming, MqttDataPacket}, NodeDef) ->
+handle_msg(
+    {mqtt_incoming, MqttDataPacket}, NodeDef
+) ->
     {outgoing, Msg} = create_outgoing_msg(ws_from(NodeDef)),
     Msg2 = copy_attributes([payload, topic, retain, qos], Msg, MqttDataPacket),
     send_msg_to_connected_nodes(NodeDef, Msg2),
     {handled, NodeDef, Msg2};
+handle_msg(
+    {incoming, #{<<"action">> := <<"connect">>} = Msg},
+    #{?MQTT_MGR_PID} = NodeDef
+) ->
+    R = gen_server:call(MqttMgrPid, connect),
+    send_msg_to_connected_nodes(NodeDef, Msg#{<<"payload">> => R}),
+    {handled, NodeDef, dont_send_complete_msg};
+handle_msg(
+    {incoming, #{<<"action">> := <<"subscribe">>, <<"topic">> := Topic} = Msg},
+    #{?MQTT_MGR_PID} = NodeDef
+) ->
+    R = gen_server:call(
+        MqttMgrPid,
+        {subscribe, #{}, [{Topic, [{qos, 1}]}]}
+    ),
+
+    case R of
+        {ok, _, _} ->
+            send_msg_to_connected_nodes(NodeDef, Msg#{<<"payload">> => <<"ok">>});
+        R ->
+            send_msg_to_connected_nodes(NodeDef, Msg#{<<"payload">> => R})
+    end,
+    {handled, NodeDef, dont_send_complete_msg};
+handle_msg(
+    {incoming,
+        #{<<"action">> := <<"unsubscribe">>, <<"topic">> := Topic} = Msg},
+    #{?MQTT_MGR_PID} = NodeDef
+) when is_binary(Topic) ->
+    R = gen_server:call(
+        MqttMgrPid,
+        {unsubscribe, #{}, [Topic]}
+    ),
+
+    case R of
+        {ok, _, _} ->
+            send_msg_to_connected_nodes(NodeDef, Msg#{<<"payload">> => <<"ok">>});
+        R ->
+            send_msg_to_connected_nodes(NodeDef, Msg#{<<"payload">> => R})
+    end,
+    {handled, NodeDef, dont_send_complete_msg};
+handle_msg(
+    {incoming, #{<<"action">> := <<"disconnect">>} = Msg},
+    #{?MQTT_MGR_PID} = NodeDef
+) ->
+    R = gen_server:call(MqttMgrPid, disconnect),
+    send_msg_to_connected_nodes(NodeDef, Msg#{<<"payload">> => R}),
+    {handled, NodeDef, dont_send_complete_msg};
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
 

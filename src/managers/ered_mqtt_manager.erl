@@ -67,9 +67,20 @@ handle_call(connect, _From, State) ->
         Reason ->
             {reply, Reason, State}
     end;
+handle_call(disconnect, _From, State) ->
+    ConnPid = maps:get(emqtt_client_id, State),
+    case emqtt:disconnect(ConnPid) of
+        {ok, Props} ->
+            {reply, {ok, Props}, State};
+        Reason ->
+            {reply, Reason, State}
+    end;
 handle_call({subscribe, Opts, Topics}, _From, State) ->
     ConnPid = maps:get(emqtt_client_id, State),
     {reply, emqtt:subscribe(ConnPid, Opts, Topics), State};
+handle_call({unsubscribe, Opts, Topics}, _From, State) ->
+    ConnPid = maps:get(emqtt_client_id, State),
+    {reply, emqtt:unsubscribe(ConnPid, Opts, Topics), State};
 handle_call(Msg, _From, State) ->
     io:format("MQTT Manager Call: ~p~n", [Msg]),
     {reply, ok, State}.

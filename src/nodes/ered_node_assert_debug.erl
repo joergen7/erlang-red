@@ -1,5 +1,7 @@
 -module(ered_node_assert_debug).
 
+-include("ered_nodes.hrl").
+
 -behaviour(ered_node).
 
 -export([start/2]).
@@ -22,88 +24,80 @@
     subscribe/5
 ]).
 
+-define(TestSuccess, '_failed_' := false).
+
 start(NodeDef, _WsName) ->
-    ered_node:start(NodeDef, ?MODULE).
-
-is_same(A, A) -> true;
-is_same(_, _) -> false.
+    ered_node:start(NodeDef#{'_failed_' => false}, ?MODULE).
 
 %%
 %%
-handle_event({registered, WsName, _Pid}, NodeDef) ->
-    case maps:find(<<"nodeid">>, NodeDef) of
-        {ok, TgtNodeId} ->
-            {ok, MsgType} = maps:find(<<"msgtype">>, NodeDef),
-            {ok, NodePid} = maps:find('_node_pid_', NodeDef),
-            %%
-            %% inverse means that there should be **no** debug message, this
-            %% means that this node needs to subscribe too all types of debug
-            %% messages.
-            case maps:find(<<"inverse">>, NodeDef) of
-                {ok, true} ->
-                    ered_ws_event_exchange:subscribe(
-                        WsName,
-                        TgtNodeId,
-                        debug,
-                        any,
-                        NodePid
-                    );
-                _ ->
-                    ered_ws_event_exchange:subscribe(
-                        WsName,
-                        TgtNodeId,
-                        debug,
-                        MsgType,
-                        NodePid
-                    )
-            end;
-        _ ->
-            ignore_missing_value
-    end,
+handle_event(
+    {registered, WsName, _Pid},
+    #{
+        <<"inverse">> := true, <<"nodeid">> := TgtNodeId, ?NodePid
+    } = NodeDef
+) ->
+    %% inverse means that there should be **no** debug message, this
+    %% means that this node needs to subscribe too all types of debug
+    %% messages.
+    ered_ws_event_exchange:subscribe(WsName, TgtNodeId, debug, any, NodePid),
     NodeDef;
-handle_event({stop, WsName}, NodeDef) ->
-    case maps:find('_mc_websocket', NodeDef) of
-        {ok, 0} ->
-            case maps:find(<<"inverse">>, NodeDef) of
-                {ok, false} ->
-                    {ok, NodeId} = maps:find(<<"nodeid">>, NodeDef),
-                    ErrMsg = jstr("Expected debug from ~p\n", [NodeId]),
-                    assert_failure(NodeDef, WsName, ErrMsg);
-                _ ->
-                    node_status(
-                        WsName, NodeDef, "assert succeed", "green", "ring"
-                    )
-            end;
-        _ ->
-            node_status(WsName, NodeDef, "assert succeed", "green", "ring")
-    end,
-    {ok, NodePid} = maps:find('_node_pid_', NodeDef),
+handle_event(
+    {registered, WsName, _Pid},
+    #{
+        <<"inverse">> := false,
+        <<"nodeid">> := TgtNodeId,
+        <<"msgtype">> := MsgType,
+        ?NodePid
+    } = NodeDef
+) ->
+    ered_ws_event_exchange:subscribe(
+        WsName, TgtNodeId, debug, MsgType, NodePid
+    ),
+    NodeDef;
+handle_event({registered, _WsName, _Pid}, NodeDef) ->
+    NodeDef;
+%%
+%%
+handle_event(
+    {stop, WsName},
+    #{<<"inverse">> := false, '_mc_websocket' := 0, ?NodePid} = NodeDef
+) ->
+    {ok, NodeId} = maps:find(<<"nodeid">>, NodeDef),
+    ErrMsg = jstr("Expected debug from ~p\n", [NodeId]),
+    assert_failure(NodeDef, WsName, ErrMsg),
+    ered_ws_event_exchange:unsubscribe(WsName, NodePid),
+    NodeDef;
+handle_event(
+    {stop, WsName},
+    #{?TestSuccess, ?NodePid} = NodeDef
+) ->
+    % message received, must have been correct type, test passes
+    node_status(WsName, NodeDef, "assert succeed", "green", "ring"),
+    ered_ws_event_exchange:unsubscribe(WsName, NodePid),
+    NodeDef;
+handle_event(
+    {stop, WsName},
+    #{?NodePid} = NodeDef
+) ->
+    % Test result is asserted, i.e., inverse true and message received.
     ered_ws_event_exchange:unsubscribe(WsName, NodePid),
     NodeDef;
 handle_event(_, NodeDef) ->
     NodeDef.
 
 %%
-%%
-handle_websocket({debug, WsName, NodeId, Type, _Data}, NodeDef) ->
-    case maps:find(<<"inverse">>, NodeDef) of
-        {ok, true} ->
-            ErrMsg = jstr("No debug expected from ~p\n", [NodeId]),
-            assert_failure(NodeDef, WsName, ErrMsg);
-        _ ->
-            {ok, ExpType} = maps:find(<<"msgtype">>, NodeDef),
-
-            case is_same(binary_to_atom(ExpType), Type) of
-                true ->
-                    success;
-                _ ->
-                    ErrMsg = jstr(
-                        "debug type mismatch ~s != ~p", [ExpType, Type]
-                    ),
-                    assert_failure(NodeDef, WsName, ErrMsg)
-            end
-    end,
-    NodeDef;
+%% Because the debug assert node registers for specific types,
+%% this event will only be happening if the type matches.
+%% So there is no need to check message types here.
+%% If inverse is set, then this is an error.
+handle_websocket(
+    {debug, WsName, NodeId, _Type, _Data},
+    #{<<"inverse">> := true} = NodeDef
+) ->
+    ErrMsg = jstr("No debug expected from ~p\n", [NodeId]),
+    assert_failure(NodeDef, WsName, ErrMsg),
+    NodeDef#{'_failed_' => true};
 handle_websocket(_, NodeDef) ->
     NodeDef.
 

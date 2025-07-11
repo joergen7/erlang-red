@@ -28,34 +28,41 @@ content_types_accepted(Req, State) ->
     {[{'*', handle_json_body}], Req, State}.
 
 handle_json_body(Req, State) ->
-    case {cowboy_req:binding(nodeid, Req), cowboy_req:binding(action, Req)} of
-        {undefined, _} ->
-            ok;
-        {_, undefined} ->
-            ok;
-        {IdStr, ActStr} ->
-            WsName = websocket_name_from_request(Req),
-            NodePid = nodeid_to_pid(WsName, IdStr),
+    Status =
+        case
+            {cowboy_req:binding(nodeid, Req), cowboy_req:binding(action, Req)}
+        of
+            {undefined, _} ->
+                404;
+            {_, undefined} ->
+                404;
+            {IdStr, ActStr} ->
+                WsName = websocket_name_from_request(Req),
+                NodePid = nodeid_to_pid(WsName, IdStr),
 
-            case NodePid of
-                {ok, Pid} ->
-                    %% ensure that actstr is correct, there is no checking
-                    %% of message types in the receivership code so an
-                    %% incorrect value here will kill the process.
-                    case ActStr of
-                        <<"disable">> ->
-                            gen_server:cast(Pid, {disable, WsName});
-                        <<"enable">> ->
-                            gen_server:cast(Pid, {enable, WsName});
-                        _ ->
-                            ok
-                    end;
-                {error, _} ->
-                    ignore
-            end
-    end,
+                case NodePid of
+                    {ok, Pid} ->
+                        %% ensure that actstr is correct, there is no checking
+                        %% of message types in the receivership code so an
+                        %% incorrect value here will kill the process.
+                        case ActStr of
+                            <<"disable">> ->
+                                gen_server:cast(Pid, {disable, WsName}),
+                                201;
+                            <<"enable">> ->
+                                gen_server:cast(Pid, {enable, WsName}),
+                                200;
+                            _ ->
+                                404
+                        end;
+                    {error, _} ->
+                        404
+                end
+        end,
+
     Resp = cowboy_req:set_resp_body(<<"OK">>, Req),
-    {true, Resp, State}.
+    cowboy_req:reply(Status, Resp),
+    {stop, Req, State}.
 
 format_error(Reason, Req) ->
     {

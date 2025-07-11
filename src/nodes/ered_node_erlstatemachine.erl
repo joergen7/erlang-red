@@ -61,9 +61,9 @@ start(NodeDef, WsName) ->
 %%
 handle_event({registered, WsName, _MyPid}, NodeDef) ->
     ModuleName = lists:nth(1, [
-                               element(2,ered_erlmodule_exchange:find_module(N))
-                               || N <- maps:get(<<"scope">>, NodeDef)
-                              ]),
+        element(2, ered_erlmodule_exchange:find_module(N))
+     || N <- maps:get(<<"scope">>, NodeDef)
+    ]),
 
     case module_loaded(ModuleName) of
         false ->

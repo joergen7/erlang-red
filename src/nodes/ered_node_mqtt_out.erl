@@ -144,18 +144,49 @@ handle_event(_, NodeDef) ->
 %%
 %% MQTT manager process id is available
 handle_msg(
-    ?MSG_INCOMING,
+    {incoming,
+        #{
+            <<"topic">> := MsgTopic,
+            <<"payload">> := Payload
+        } = Msg},
     #{
-        <<"topic">> := Topic,
+        <<"topic">> := NodeTopic,
         <<"qos">> := QoS,
         <<"retain">> := Retain,
         ?MQTT_MGR_PID
     } = NodeDef
-) ->
+) when NodeTopic == <<>>, MsgTopic =/= <<>> ->
     Data = {
         publish_payload,
-        maps:get(<<"payload">>, Msg),
-        Topic,
+        Payload,
+        MsgTopic,
+        convert_to_num(QoS),
+        to_bool(Retain)
+    },
+
+    gen_server:cast(MqttMgrPid, Data),
+
+    update_status(
+        is_process_alive(MqttMgrPid), NodeDef, "connecting", "yellow", "dot"
+    ),
+
+    {handled, NodeDef, Msg};
+handle_msg(
+    {incoming,
+        #{
+            <<"payload">> := Payload
+        } = Msg},
+    #{
+        <<"topic">> := NodeTopic,
+        <<"qos">> := QoS,
+        <<"retain">> := Retain,
+        ?MQTT_MGR_PID
+    } = NodeDef
+) when NodeTopic =/= <<>> ->
+    Data = {
+        publish_payload,
+        Payload,
+        NodeTopic,
         convert_to_num(QoS),
         to_bool(Retain)
     },

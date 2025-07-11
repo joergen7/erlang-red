@@ -46,7 +46,7 @@ websocket_init(State) ->
     erlang:start_timer(
         500,
         WsName,
-        json:encode([
+        encode_json([
             #{
                 topic => hb,
                 data => erlang:system_time(millisecond)
@@ -82,7 +82,7 @@ websocket_handle({text, JsonData}, State) ->
             {ok, <<"pong">>} ->
                 {reply,
                     {text,
-                        json:encode([
+                        encode_json([
                             #{
                                 topic => ping,
                                 data => erlang:system_time(millisecond)
@@ -119,7 +119,7 @@ websocket_info({timeout, _Ref, push_out_bulk_data}, State) ->
             RestartTimer(),
             {ok, State};
         _ ->
-            TxtData = json:encode(lists:reverse(BulkData)),
+            TxtData = encode_json(lists:reverse(BulkData)),
             RestartTimer(),
             {reply, {text, TxtData}, maps:put(bulkdata, [], State)}
     end;
@@ -220,7 +220,7 @@ websocket_info({unittest_results, FlowId, Status}, State) ->
 %% immediately. Separately the status updates for the nodes is sent
 %% and are bulked up.
 websocket_info({msgtracing, NodeId}, State) ->
-    Msg = json:encode([
+    Msg = encode_json([
         #{
             topic => 'msgtracer:node-received',
             data => #{
@@ -264,7 +264,7 @@ ws_send_heartbeat(Pid, State) ->
     {ok, WsName} = maps:find(wsname, State),
 
     Millis = erlang:system_time(millisecond),
-    Data_jsonb = json:encode([
+    Data_jsonb = encode_json([
         #{
             topic => hb,
             data => Millis

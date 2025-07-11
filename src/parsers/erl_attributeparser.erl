@@ -32,7 +32,8 @@
 %%
 attributes_to_array(Str) when is_binary(Str) ->
     attributes_to_array(binary_to_list(Str));
-attributes_to_array("") -> {ok, []};
+attributes_to_array("") ->
+    {ok, []};
 attributes_to_array(Str) ->
     case erlang_red_attr_leex:string(Str) of
         {ok, Tokens, _} ->
