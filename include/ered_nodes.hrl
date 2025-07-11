@@ -2,16 +2,18 @@
     maps:get(<<"id">>, NodeDef), maps:get(<<"type">>, NodeDef)
 }).
 
--define(BASE_DATA, #{
-    <<"id">> => get_prop_value_from_map(<<"id">>, NodeDef),
-    <<"z">> => get_prop_value_from_map(<<"z">>, NodeDef),
-    <<"path">> => get_prop_value_from_map(<<"z">>, NodeDef),
-    <<"name">> => get_prop_value_from_map(
-        <<"name">>,
-        NodeDef,
-        get_prop_value_from_map(<<"type">>, NodeDef)
-    )
-}).
+-define(BASE_DATA, begin
+    #{
+        <<"id">> => get_prop_value_from_map(<<"id">>, NodeDef),
+        <<"z">> => get_prop_value_from_map(<<"z">>, NodeDef),
+        <<"path">> => get_prop_value_from_map(<<"z">>, NodeDef),
+        <<"name">> => get_prop_value_from_map(
+            <<"name">>,
+            NodeDef,
+            get_prop_value_from_map(<<"type">>, NodeDef)
+        )
+    }
+end).
 
 %%
 %% Avoid a "Warning: expression updates a literal" warning when using this
@@ -36,3 +38,7 @@ end#{
 -define(MSG_STOP_WS, {stop, WsName}).
 -define(MSG_INCOMING, {incoming, Msg}).
 -define(MSG_REGISTERED, {registered, WsName, NodePid}).
+
+-define(TopicFromMsg, get_prop_value_from_map(<<"topic">>, Msg, "")).
+
+-define(NodePid, '_node_pid_' := NodePid).

@@ -2,3 +2,4 @@
 
 -define(TIMER, '_timer' := TRef).
 -define(MQTT_MGR_PID, '_mqtt_mgr_id' := MqttMgrPid).
+-define(AFTER_CONNECT, '_after_connect' := AfterConnect).
