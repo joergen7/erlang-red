@@ -4,6 +4,7 @@
 
 -export([
     convert_to_num/1,
+    convert_to_integer/1,
     convert_units_to_milliseconds/2,
     create_outgoing_msg/1,
     decode_json/1,
@@ -13,6 +14,7 @@
     get_prop/2,
     is_same/2,
     is_not_same/2,
+    jsbuffer_to_binary/1,
     map_keys_to_binary/1,
     map_keys_to_lists/1,
     retrieve_prop_value/2,
@@ -69,6 +71,28 @@ convert_to_num(V) when is_list(V) ->
     end.
 
 %%
+%% Used by Buffer fields that convert integerst to binary values.
+convert_to_integer(V) when is_binary(V) ->
+    convert_to_integer(binary_to_list(V));
+convert_to_integer(V) when is_float(V) ->
+    element(1, string:to_integer(lists:nth(1, io_lib:format("~p", [V]))));
+convert_to_integer(V) when is_list(V) ->
+    case erl_numparser:to_number(V) of
+        {error, Reason} ->
+            {error, jstr("Value '~p' not number: ~p", [V, Reason])};
+        {ok, Number} ->
+            convert_to_integer(Number)
+    end;
+convert_to_integer(V) ->
+    convert_to_num(V).
+
+%%
+%% handle a Buffer "bin" type and convert it to a binary list.
+-spec jsbuffer_to_binary(String :: binary()) -> Bin :: binary().
+jsbuffer_to_binary(Value) ->
+    list_to_binary([convert_to_integer(V) rem 256 || V <- json:decode(Value)]).
+
+%%
 %% these are from the trigger node
 convert_units_to_milliseconds({ok, <<"hr">>}, {ok, Val}) ->
     {ok, element(1, string:to_integer(Val)) * 1000 * 60 * 60};
@@ -121,11 +145,27 @@ encoder(Other, Encode) when is_reference(Other) ->
     json:encode_value(list_to_binary(ref_to_list(Other)), Encode);
 encoder(Other, Encode) when is_pid(Other) ->
     json:encode_value(list_to_binary(pid_to_list(Other)), Encode);
+encoder(Other, Encode) when is_binary(Other) ->
+    %% if not then: exception error: {invalid_byte,130}
+    %% can prevent encoding - binary data which doesn't fit is converted
+    %% to a list.
+    try
+        json:encode_value(Other, Encode)
+    catch
+        error:_ ->
+            json:encode_value(binary_to_list(Other), Encode)
+    end;
 encoder(Other, Encode) ->
     json:encode_value(Other, Encode).
 %%
-encode_json(Value2) ->
-    json:encode(Value2, fun(Value, Encode) -> encoder(Value, Encode) end).
+encode_json(Value) ->
+    try
+        json:encode(Value, fun(Val, Encode) -> encoder(Val, Encode) end)
+    catch
+        error:E ->
+            io:format("JSON ENCODING ERROR [~p] [~p]~n", [E, Value]),
+            json:encode(#{payload => "encoding error, check logs"})
+    end.
 
 %%
 %% get prop can used to retrieve a nestd value from the Msg map, i.e.,
@@ -181,8 +221,11 @@ set_prop_value(PropName, Value, Msg) ->
 %%
 %% remove an property that happens to match the nested path provided.
 -spec delete_prop(
-    PropName :: string() | binary() |
-                {ok, PropName :: string()} | {ok, PropName :: binary()},
+    PropName ::
+        string()
+        | binary()
+        | {ok, PropName :: string()}
+        | {ok, PropName :: binary()},
     Msg :: map()
 ) -> Map :: map().
 delete_prop({ok, PropName}, Msg) ->

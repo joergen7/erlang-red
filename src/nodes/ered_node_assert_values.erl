@@ -52,6 +52,7 @@
     escape_specials/1,
     get_prop/2,
     is_same/2,
+    jsbuffer_to_binary/1,
     to_bool/1
 ]).
 
@@ -176,6 +177,17 @@ match_value_on_msg(_, _, _, _, _, _) ->
 
 %%
 %%
+eql_msg_op(Prop, SrcVal, <<"bin">>, ReqVal, _Msg) ->
+    case is_same(jsbuffer_to_binary(ReqVal), SrcVal) of
+        true ->
+            true;
+        _ ->
+            {failed,
+                jstr(
+                    "Prop '~p':~n~nExp:~n~n'~p'~n~nWas:~n~n'~p'~n~n",
+                    [Prop, jsbuffer_to_binary(ReqVal), SrcVal]
+                )}
+    end;
 eql_msg_op(Prop, SrcVal, <<"json">>, ReqVal, _Msg) ->
     DecodedVal = decode_json(ReqVal),
     case is_same(DecodedVal, SrcVal) of

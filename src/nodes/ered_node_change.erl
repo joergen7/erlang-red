@@ -22,6 +22,7 @@
 ]).
 -import(ered_messages, [
     convert_to_num/1,
+    jsbuffer_to_binary/1,
     decode_json/1,
     delete_prop/2,
     get_prop/2,
@@ -96,6 +97,8 @@ do_change_str({ok, Prop}, {ok, FromStr}, {ok, ToStr}, Msg) ->
 
 %%
 %%
+do_set_value(Prop, Value, <<"bin">>, Msg, _NodeDef) ->
+    set_prop_value(Prop, jsbuffer_to_binary(Value), Msg);
 do_set_value(Prop, Value, <<"num">>, Msg, _NodeDef) ->
     set_prop_value(Prop, convert_to_num(Value), Msg);
 do_set_value(Prop, _Value, <<"date">>, Msg, _NodeDef) ->
