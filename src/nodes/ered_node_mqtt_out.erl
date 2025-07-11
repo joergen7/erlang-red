@@ -220,7 +220,7 @@ handle_msg(_, NodeDef) ->
 %% -------------- Helpers
 %%
 
-update_status(true, NodeDef, Txt, Clr, Shp) ->
+update_status(false, NodeDef, Txt, Clr, Shp) ->
     node_status(ws_from(NodeDef), NodeDef, Txt, Clr, Shp);
 update_status(_, _, _, _, _) ->
     ignore.

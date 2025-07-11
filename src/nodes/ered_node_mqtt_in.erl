@@ -225,10 +225,12 @@ handle_msg(
 handle_msg(
     {incoming, #{<<"action">> := <<"subscribe">>, <<"topic">> := Topic} = Msg},
     #{?MQTT_MGR_PID} = NodeDef
-) ->
+) when is_binary(Topic) ->
+    %% TODO topic can be an array of objects or just a single object with
+    %% TODO topic and qos properties.
     R = gen_server:call(
         MqttMgrPid,
-        {subscribe, #{}, [{Topic, [{qos, 1}]}]}
+        {subscribe, #{}, [{Topic, [{qos, 0}]}]}
     ),
 
     case R of
@@ -242,7 +244,7 @@ handle_msg(
     {incoming,
         #{<<"action">> := <<"unsubscribe">>, <<"topic">> := Topic} = Msg},
     #{?MQTT_MGR_PID} = NodeDef
-) when is_binary(Topic) ->
+) ->
     R = gen_server:call(
         MqttMgrPid,
         {unsubscribe, #{}, [Topic]}

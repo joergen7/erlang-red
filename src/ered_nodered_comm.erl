@@ -146,7 +146,7 @@ send_to_debug_sidebar(
     %% See info for test id: c4690c0a085d6ef5 for more details.
     Data = ?BASE_DATA#{
         <<"topic">> => to_binary_if_not_binary(?TopicFromMsg),
-        <<"msg">> => jsonata_eval_or_error_msg(Jsonata, Msg),
+        <<"msg">> => jstr(jsonata_eval_or_error_msg(Jsonata, Msg)),
         <<"format">> => <<"string">>
     },
 
