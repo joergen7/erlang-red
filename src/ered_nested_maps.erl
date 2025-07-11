@@ -20,7 +20,6 @@
     convert_to_num/1
 ]).
 
-
 %%
 %%
 -spec delete(
@@ -28,8 +27,10 @@
     Msg :: map()
 ) ->
     Map :: map().
-delete(<<>>, Msg) -> Msg;
-delete("", Msg) -> Msg;
+delete(<<>>, Msg) ->
+    Msg;
+delete("", Msg) ->
+    Msg;
 delete(Path, Msg) ->
     case erl_attributeparser:attributes_to_array(Path) of
         {ok, KeyNames} ->
@@ -55,8 +56,10 @@ delete(Path, Msg) ->
     {ok, Value :: any(), Path :: binary() | string()}
     | {error, Reason :: any()}
     | {undefined, Path :: binary()}.
-find(<<>> = P, _Msg) -> {undefined, P};
-find("" = P, _Msg) -> {undefined, P};
+find(<<>> = P, _Msg) ->
+    {undefined, P};
+find("" = P, _Msg) ->
+    {undefined, P};
 find(Path, Msg) ->
     case erl_attributeparser:attributes_to_array(Path) of
         {ok, KeyNames} ->
@@ -81,12 +84,14 @@ find(Path, Msg) ->
     {ok, Value :: any, Path :: binary() | string()}
     | {error, Reason :: any()}
     | {undefined, Path :: binary(), ErrorTuple :: tuple()}.
-update(<<>> = P, Msg, _NewValue) -> {ok, Msg, P};
-update("" = P, Msg, _NewValue) -> {ok, Msg, P};
+update(<<>> = P, Msg, _NewValue) ->
+    {ok, Msg, P};
+update("" = P, Msg, _NewValue) ->
+    {ok, Msg, P};
 update(Path, Msg, NewValue) ->
     case erl_attributeparser:attributes_to_array(Path) of
-        {ok, [{idx,Idx} | KeyNames]} ->
-            case deep_update(Msg, [Idx|KeyNames], NewValue) of
+        {ok, [{idx, Idx} | KeyNames]} ->
+            case deep_update(Msg, [Idx | KeyNames], NewValue) of
                 {ok, V} ->
                     {ok, V, Path};
                 {error, ErrorTuple} ->
@@ -134,16 +139,18 @@ deep_find_with_arrays([Key | Keys], {ok, Value}) when is_list(Value) ->
 %%
 deep_delete(Container, []) ->
     {ok, Container};
-deep_delete(Container, [{idx,Idx} | []]) when is_map(Container) ->
+deep_delete(Container, [{idx, Idx} | []]) when is_map(Container) ->
     {ok, maps:remove(integer_to_binary(Idx), Container)};
 deep_delete(Container, [Key | []]) when is_map(Container) ->
     {ok, maps:remove(Key, Container)};
-
-deep_delete(Container, [{idx,Idx} | []]) when is_list(Container), length(Container) =< Idx ->
+deep_delete(Container, [{idx, Idx} | []]) when
+    is_list(Container), length(Container) =< Idx
+->
     {ok, Container};
-deep_delete(Container, [{idx,Idx} | []]) when is_list(Container), length(Container) > Idx ->
+deep_delete(Container, [{idx, Idx} | []]) when
+    is_list(Container), length(Container) > Idx
+->
     {ok, removenth(Idx + 1, Container)};
-
 deep_delete(Container, [Key | []]) when is_list(Container) ->
     case convert_to_num(Key) of
         {error, _} ->
@@ -151,11 +158,14 @@ deep_delete(Container, [Key | []]) when is_list(Container) ->
         V ->
             deep_delete(Container, [{idx, V}])
     end;
-
-deep_delete(Container, [{idx, Idx} | _Path]) when is_list(Container), length(Container) =< Idx ->
+deep_delete(Container, [{idx, Idx} | _Path]) when
+    is_list(Container), length(Container) =< Idx
+->
     %% can't continue, list is too short for index - no change to be made.
     throw(made_no_change);
-deep_delete(Container, [{idx, Idx} | Path]) when is_list(Container), length(Container) > Idx ->
+deep_delete(Container, [{idx, Idx} | Path]) when
+    is_list(Container), length(Container) > Idx
+->
     Result =
         try
             deep_delete(lists:nth(Idx + 1, Container), Path)
@@ -170,8 +180,6 @@ deep_delete(Container, [{idx, Idx} | Path]) when is_list(Container), length(Cont
         _ ->
             throw(made_no_change)
     end;
-
-
 deep_delete(Container, [Key | Path]) when is_map(Container) ->
     Result =
         case maps:find(Key, Container) of
@@ -187,11 +195,9 @@ deep_delete(Container, [Key | Path]) when is_map(Container) ->
         _ ->
             throw(made_no_change)
     end;
-
 deep_delete(_Container, _Path) ->
     % doghouse again, something went horribly wrong with the type of container.
     throw(made_no_change).
-
 
 %%
 %% Deep update understands {idx,Idx} tuples for array/list access.
@@ -211,9 +217,11 @@ deep_update(Container, [{idx, Idx} | []], NewVal) when is_list(Container) ->
 %% really be an array. This being the last key, it actually remains a hash
 %% - this is Node-RED behaviour that a last idx is represented as a hash
 %% not array.
-deep_update(Container, [{idx, Idx} = Key | []], NewVal) when is_map(Container) ->
+deep_update(Container, [{idx, Idx} = Key | []], NewVal) when
+    is_map(Container)
+->
     Container2 = maps:remove(Key, Container),
-    {ok, Container2#{ integer_to_binary(Idx) => NewVal } };
+    {ok, Container2#{integer_to_binary(Idx) => NewVal}};
 deep_update(Container, [Key | []], NewVal) when is_map(Container) ->
     {ok, Container#{Key => NewVal}};
 %% list is too short for index, have to extend an existing list
@@ -283,5 +291,5 @@ setnth(I, [E | Rest], New) -> [E | setnth(I - 1, Rest, New)].
 removenth(Idx, Lst) when Idx < 1 -> Lst;
 removenth(Idx, Lst) when length(Lst) < Idx -> Lst;
 removenth(Idx, Lst) ->
-    {Front,[_|Back]} = lists:split(Idx-1, Lst),
+    {Front, [_ | Back]} = lists:split(Idx - 1, Lst),
     Front ++ Back.
