@@ -12264,7 +12264,7 @@ msg.cookies = {
         validate: RED.validators.regex(/^[a-z0-9_]+$/)
       },
       code: {
-        value: "-module()\n\n-export()\n\n",
+        value: "-module().\n\n-import(module, [\n   funct/1\n]).\n\n\n-export([\n   something/1\n]).\n\nsomething(V) ->\n  io:format(\"hello world~n\",[]).\n\n",
         required: true
       }
     },
