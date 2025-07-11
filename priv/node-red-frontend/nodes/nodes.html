@@ -12298,6 +12298,28 @@ msg.cookies = {
         height: "calc(90vh)",
         focus: true
       });
+
+      $('.template-button').on('click', (e) =>{
+        let templateCode = {
+          "module": "-module().\n\n-import(module, [\n   funct/1\n]).\n\n\n-export([\n   something/1\n]).\n\nsomething(V) ->\n  io:format(\"hello world ~p ~n\",[V]).\n\n",
+
+
+          "server": "-module().\n\n%%\n%% APIs: https://www.erlang.org/doc/apps/stdlib/gen_server.html\n%%\n\n-behaviour(gen_server).\n\n-export([\n    start_link/0,\n    init/1,\n    handle_call/3,\n    handle_cast/2,\n    handle_info/2,\n    code_change/3,\n    terminate/2,\n    stop/0\n]).\n\nstart_link() ->\n    gen_server:start_link({local, ?MODULE}, ?MODULE, #{}, []).\n\ninit(#{}) ->\n    {ok, #{}}.\n\nstop() ->\n    gen_server:cast(?MODULE, stop).\n\nterminate(normal, _State) ->\n    ok;\nterminate(_Event, _State) ->\n    ok.\n\ncode_change(_OldVersion, State, _Extra) ->\n    {ok, State}.\n\n%%\n%%\nhandle_call(_Msg, _From, State) ->\n    {reply, ok, State}.\n\n%%\n%%\nhandle_cast(stop, State) ->\n    {stop, normal, State};\nhandle_cast(_Msg, State) ->\n    {noreply, State}.\n\n%%\n%%\nhandle_info(_, State) ->\n    {noreply, State}.\n\n",
+
+
+          "event": "-module().\n\n%%\n%% APIs https://www.erlang.org/doc/apps/stdlib/gen_event.html\n%%\n\n-behaviour(gen_event).\n\n-export([\n    init/1,\n    handle_event/2,\n    handle_call/2,\n    handle_info/2,\n    terminate/2,\n    code_change/3\n]).\n\ninit(Args) ->\n    {ok, Args}.\n\nhandle_event(_Event, State) ->\n    {ok, State}.\n\nhandle_call(_Request, State) ->\n    {ok, ok, State}.\n\nhandle_info(_Info, State) ->\n    {ok, State}.\n\nterminate(_Reason, _State) ->\n    ok.\n\ncode_change(_OldVsn, State, _Extra) ->\n    {ok, State}.\n",
+
+
+          "state": "-module().\n\n%%\n%%  APIs: https://www.erlang.org/doc/apps/stdlib/gen_statem.html\n%%\n\n-behaviour(gen_statem).\n\n-export([\n    start/0,\n    init/1,\n    callback_mode/0,\n    handle_event/4,\n    code_change/4,\n    terminate/3,\n    stop/0\n]).\n\n%% WARNING: state_functions are not supported by statemachine node.\n%% callback_mode() -> state_functions.\ncallback_mode() -> handle_event_function.\n\n-define(KEEP_STATE(ReplyWith),\n    {keep_state, Data, [{reply, From, ReplyWith}]}\n).\n\nstart() ->\n    gen_statem:start({local, ?MODULE}, ?MODULE, [], []).\n\nstop() ->\n    gen_statem:stop(?MODULE).\nterminate(_Reason, _State, _Data) ->\n    void.\ncode_change(_Vsn, State, Data, _Extra) ->\n    {ok, State, Data}.\n\n%% Initial state and data\ninit([]) ->\n    State = no_state, \n    Data = 0,\n    {ok,State,Data}.\n\n%%% handle event function\n\nhandle_event(\n  {call, From},\n  <<\"push\">>,\n  off,\n  Data\n) ->\n    {next_state, on, Data + 1, [{reply, From, <<\"ok\">>}]};\n\nhandle_event(\n  {call, From},\n  <<\"push\">>,\n  on,\n  Data\n) ->\n    {next_state, off, Data, [{reply, From, <<\"ok\">>}]};\n\nhandle_event(\n  {call, From},\n  <<\"get_count\">>,\n  _CurrState,\n  Data\n) ->\n    {keep_state, Data, [{reply, From, Data}]};\n\n%%\n%% Fall through.\nhandle_event({call, From} = EventType, Stiff, State, Data) ->\n    io:format(\"TEST (call): ~p ~p ~p ~p~n\",[EventType, Stiff, State, Data]),\n    ?KEEP_STATE(<<\"not_allowed\">>);\n\nhandle_event(EventType, Stiff, State, Data) ->\n    io:format(\"TEST : ~p ~p ~p ~p~n\",[EventType, Stiff, State, Data]),\n    {keep_state, Data}.\n",
+        }
+
+        e.preventDefault()
+
+        let content = templateCode[$(e.target).data('template-type')]
+        if ($('#checkmarkconfirm').is(":checked") || confirm("Replace existing code?") ) {
+          this.editor.setValue(content)
+        }
+      })
     },
 
     oneditcancel: function() {
@@ -12331,9 +12353,18 @@ msg.cookies = {
   </div>
 
   <div class="form-row">
+    <input id="checkmarkconfirm" type="checkbox" checked style="width: 5%"></input>
+    <button type=button class="template-button ui-button" data-template-type="module">Module</button>
+    <button type=button class="template-button ui-button" data-template-type="event">Event</button>
+    <button type=button class="template-button ui-button" data-template-type="state">State</button>
+    <button type=button class="template-button ui-button" data-template-type="server">Server</button>
+  </div>
+
+  <div class="form-row" style="padding-bottom: 20px; margin-bottom: 10px;">
     <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="erlmodule.label.name"></span></label>
     <input type="text" id="node-input-name" data-i18n="[placeholder]erlmodule.label.name">
   </div>
+
 </script>
 <script type="text/html" data-help-name="erlmodule">
   <p>Node for encapsulating erlang module code.</p>
@@ -12677,8 +12708,8 @@ See <a href="https://www.erlang.org/doc/apps/stdlib/gen_event.html">OTP Docu</a>
     label: function () {
       let label = this._def.paletteLabel
       if (this.scope && this.scope.length > 0) {
-        let nodes = this.scope.map( id => RED.nodes.node(id) ).map( nde => nde && RED.utils.getNodeLabel(nde) )
-        label = `[${nodes.join(", ")}]`
+        let nodeLabels = this.scope.map( id => RED.nodes.node(id) ).map( nde => nde && RED.utils.getNodeLabel(nde) )
+        label = `[${nodeLabels.join(", ")}]`
       }
       return (this.name || label);
     },
