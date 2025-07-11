@@ -862,8 +862,8 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
             tosidebar: {value:true},
             console: {value:false},
             tostatus: {value:false},
-            complete: {value:"false", required:true},
-            targetType: {value:undefined},
+            complete: {value:"true", required:true},
+            targetType: {value:"full"},
             statusVal: {value:""},
             statusType: {value:"auto"}
         },
@@ -3757,7 +3757,7 @@ If you want every 20 minutes from now - use the <i>"interval"</i> option.</p>
                     return true;
                 }
             },
-            checkall: {value:"true", required:true},
+            checkall: {value:"false", required:true},
             repair: {value:false},
             outputs: {value:1}
         },
