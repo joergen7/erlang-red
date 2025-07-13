@@ -18,7 +18,8 @@
                 "tab": {
                     "handler_config": "Module",
                     "statem_config": "Options"
-                }
+                },
+                "use_module_name_addressing": "Use module name to send messages"
             },
             "status": {
                 "timeout": "No more time to waiting",
