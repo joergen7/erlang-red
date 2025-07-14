@@ -254,7 +254,7 @@ validate_erlang_code(#{<<"func">> := <<>>} = NodeDef, WsName) ->
     node_status(WsName, NodeDef, "empty code not possible", "red", "dot");
 validate_erlang_code(#{<<"func">> := Code} = NodeDef, WsName) ->
     case is_code_parsable(?WrapInFunction(Code)) of
-        {ok, P} ->
+        {ok, _ParsedCode} ->
             node_status(WsName, NodeDef, "parsed", "green", "dot"),
             spawn(fun() -> clear_status_after_one_sec(WsName, NodeDef) end);
         {error, {error, ErrorList}} ->
@@ -280,7 +280,7 @@ compiler_list_to_json_list([]) ->
     [];
 compiler_list_to_json_list({_Line, _Module, _Desc} = Eroro) ->
     errorinfo_tuple_to_list(Eroro);
-compiler_list_to_json_list([ErrorInfo | Lst] = Content) ->
+compiler_list_to_json_list([ErrorInfo | Lst]) ->
     [errorinfo_tuple_to_list(ErrorInfo) | compiler_list_to_json_list(Lst)].
 
 errorinfo_tuple_to_list({Line, Module, Desc}) ->

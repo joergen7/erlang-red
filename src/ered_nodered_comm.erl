@@ -61,7 +61,7 @@ send_on_if_ws(WsName, Msg) ->
 
 %%
 %% clear a previous node status value.
-node_status_clear(WsName, #{<<"id">> := NodeId} = NodeDef) ->
+node_status_clear(WsName, #{<<"id">> := NodeId}) ->
     send_on_if_ws(WsName, {status, NodeId, clear}).
 
 node_status(WsName, NodeDef, Txt, Clr, Shp) when is_integer(Txt) ->
