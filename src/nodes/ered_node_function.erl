@@ -1,5 +1,7 @@
 -module(ered_node_function).
 
+-include("ered_nodes.hrl").
+
 -behaviour(ered_node).
 
 -export([start/2]).
@@ -97,7 +99,8 @@
 %%
 
 -import(ered_function_code_manager, [
-    execute_sync/3
+    execute_sync/3,
+    is_code_parsable/1
 ]).
 
 -import(ered_nodes, [
@@ -106,12 +109,18 @@
 ]).
 
 -import(ered_nodered_comm, [
+    node_status/5,
+    node_status_clear/2,
     post_exception_or_debug/3
 ]).
 
+-define(WrapInFunction(Code),
+    io_lib:format("fun(NodeDef,Msg) -> ~n ~s ~n end.", [Code])
+).
+
 -define(EXECUTE_CODE_SYNC,
     execute_sync(
-        io_lib:format("fun(NodeDef,Msg) -> ~n ~s ~n end.", [Code]),
+        ?WrapInFunction(Code),
         NodeDef,
         #{'_ws' => WsName}
     )
@@ -163,15 +172,21 @@ start(NodeDef, _WsName) ->
 
 %%
 %% Execute the "On Start" code once this node has been regisgtered
-handle_event({registered, WsName, _Pid}, NodeDef) ->
-    case maps:find(<<"initialize">>, NodeDef) of
-        {ok, <<>>} ->
-            NodeDef;
-        {ok, Code} ->
-            ?EXECUTE_CODE_SYNC;
-        _ ->
-            NodeDef
-    end;
+handle_event(
+    {registered, WsName, _Pid},
+    #{<<"initialize">> := <<>>} = NodeDef
+) ->
+    validate_erlang_code(NodeDef, WsName),
+    NodeDef;
+handle_event(
+    {registered, WsName, _Pid},
+    #{<<"initialize">> := Code} = NodeDef
+) ->
+    %% check the validity of the code before it gets executed.
+    validate_erlang_code(NodeDef, WsName),
+    %% Start up code is **expected** to return a NodeDef map, return that
+    %% as the return value of this function.
+    ?EXECUTE_CODE_SYNC;
 %%
 %% Execute the "On Stop" code when the node is stopped. Which is the same
 %% as when this node is killed....
@@ -179,15 +194,12 @@ handle_event({registered, WsName, _Pid}, NodeDef) ->
 %% TODO: because the code gets rarely executed (it would have to be executed
 %% TODO: each time this node is killed by a supervisor - for example - I don't
 %% TODO: think that happens at the moment).
-handle_event({stop, WsName}, NodeDef) ->
-    case maps:find(<<"finalize">>, NodeDef) of
-        {ok, <<>>} ->
-            NodeDef;
-        {ok, Code} ->
-            ?EXECUTE_CODE_SYNC;
-        _ ->
-            NodeDef
-    end;
+handle_event({stop, _WsName}, #{<<"finalize">> := <<>>} = NodeDef) ->
+    NodeDef;
+handle_event({stop, WsName}, #{<<"finalize">> := Code} = NodeDef) ->
+    %% Finalise code is **expected** to return a NodeDef map, return that
+    %% as the return value of this function.
+    ?EXECUTE_CODE_SYNC;
 %%
 %% The down event is generated when the spawned process that is executing the
 %% code goes down.
@@ -234,3 +246,47 @@ handle_msg({func_completed_with, Msg}, NodeDef) ->
     {handled, NodeDef, Msg};
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
+
+%%
+%% ----------------- helpers
+%%
+validate_erlang_code(#{<<"func">> := <<>>} = NodeDef, WsName) ->
+    node_status(WsName, NodeDef, "empty code not possible", "red", "dot");
+validate_erlang_code(#{<<"func">> := Code} = NodeDef, WsName) ->
+    case is_code_parsable(?WrapInFunction(Code)) of
+        {ok, P} ->
+            node_status(WsName, NodeDef, "parsed", "green", "dot"),
+            spawn(fun() -> clear_status_after_one_sec(WsName, NodeDef) end);
+        {error, {error, ErrorList}} ->
+            Msg = ?PUT_WS(#{
+                error => compiler_list_to_json_list(ErrorList)
+            }),
+            post_exception_or_debug(NodeDef, Msg, <<"compile failed">>),
+            node_status(WsName, NodeDef, "invalid Erlang code", "red", "dot");
+        Error ->
+            io:format("ERROR : [~p] ~p ~n ", [Code, Error]),
+            node_status(WsName, NodeDef, "unknown error", "red", "dot")
+    end.
+
+clear_status_after_one_sec(WsName, NodeDef) ->
+    timer:sleep(1000),
+    node_status_clear(WsName, NodeDef).
+
+%%
+%% ErrorLists and WarnLists aren't JSON compatible therefore they need to be
+%% massaged into form.
+%% See https://www.erlang.org/doc/apps/compiler/compile.html for details.
+compiler_list_to_json_list([]) ->
+    [];
+compiler_list_to_json_list({_Line, _Module, _Desc} = Eroro) ->
+    errorinfo_tuple_to_list(Eroro);
+compiler_list_to_json_list([ErrorInfo | Lst] = Content) ->
+    [errorinfo_tuple_to_list(ErrorInfo) | compiler_list_to_json_list(Lst)].
+
+errorinfo_tuple_to_list({Line, Module, Desc}) ->
+    [
+        % subtract 2 because there is a wrapper function around the code.
+        list_to_binary(io_lib:format("Line: ~~~p", [Line - 2])),
+        Module,
+        list_to_binary(io_lib:format("~p", [Desc]))
+    ].

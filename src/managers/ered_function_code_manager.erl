@@ -15,7 +15,8 @@
 
 -export([
     execute_sync/3,
-    perform_func_code/3
+    perform_func_code/3,
+    is_code_parsable/1
 ]).
 
 %%
@@ -221,20 +222,30 @@ handle_local_function(FunctionName, Args) ->
 evaluate_erlang(Expression) when is_list(Expression) ->
     evaluate_erlang(list_to_binary(Expression));
 evaluate_erlang(Expression) ->
-    case erl_scan:string(binary_to_list(Expression)) of
+    case is_code_parsable(Expression) of
+        {ok, Parsed} ->
+            case
+                erl_eval:exprs(Parsed, [], {value, fun handle_local_function/2})
+            of
+                {value, Result, _} ->
+                    {ok, Result};
+                ResultError ->
+                    {error, ResultError}
+            end;
+        Error ->
+            Error
+    end.
+
+%%
+%% Check whether we have valid erlang code in the first place.
+is_code_parsable(ErlangCode) when is_list(ErlangCode) ->
+    is_code_parsable(list_to_binary(ErlangCode));
+is_code_parsable(ErlangCode) ->
+    case erl_scan:string(binary_to_list(ErlangCode)) of
         {ok, Tokens, _} ->
             case erl_parse:parse_exprs(Tokens) of
                 {ok, Parsed} ->
-                    case
-                        erl_eval:exprs(
-                            Parsed,
-                            [],
-                            {value, fun handle_local_function/2}
-                        )
-                    of
-                        {value, Result, _} ->
-                            {ok, Result}
-                    end;
+                    {ok, Parsed};
                 Error ->
                     {error, Error}
             end;
