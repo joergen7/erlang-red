@@ -1,6 +1,85 @@
 Milestones
 ---
 
+*Milestones Six - m6*
+
+Code Name: Milestone Six.
+
+1. New Nodes: Tcp/IP, Event handler, Generic Server
+
+    The main Erlang behaviours are now represented, `gen_server` and `gen_event` have now been included along with `gen_statem` and `supervisor`. All nodes are compatible with the supervisor node so restarts/stops can be modelled and implemented. Basically it is now possible to model complex Erlang architectures.
+
+    Tcp nodes have also made it. These are implemented as close as possible to the original nodes defined in Node-RED. Their tests are still "in progress" but with the creation of the [MQTT broker](https://flows.red-erik.org/f/dc897f402c53697f) flow, the tcp nodes have a good testbed.
+
+2. Breadboard Programming & AI ignorance
+
+    > The concept of using breadboards as a prototyping technology in software development is an innovative idea that warrants exploration.
+
+    AI thinks this is a [good idea](https://blog.openmindmap.org/breadboard-programming) so I went ahead and began using this terminology. I created two examples of what I mean by breadboard programming: [modelling a single tcp connection](https://flows.red-erik.org/f/bff27e059752cb60) and the [MQTT broker](https://flows.red-erik.org/f/dc897f402c53697f) from above.
+
+    ![breadboard logo](.images/erlang-red-logo_bb-1200.png)
+
+    For me having another analogy of what I am doing here is very helpful. It provides a little bit of a focus compared to thinking of this project as being a "visual flow based programming environment for Erlang heavily influenced by Node-RED". I dunno, breadboard programming seems to be more marketable.
+
+    Speaking of marketing, I also change the [license](https://github.com/gorenje/erlang-red/commit/b4c4dd49a611a0b445eef4f06cdaed7af75b133f) of the project to make it more "FAANG" compatible. Immediately I was [shoot down](https://discourse.nodered.org/t/node-vs-subflow-node-implementation-research/98012/14?u=gregorius) by other wisdom. F2k It: it's GPL all the way down, along with the turtles.
+
+    Speaking of f2k it, I added an [`.aiignore`](.aiignore) file to indicate which artificially intelligent contributions are willingly accepted by the project. I didn't ask AI about this idea, I just found it good. Perhaps the idea will catch on for a way to identify "stuff" that is definitely human so that humans can train AIs to be better humans.
+
+3. Better.['support'].for.["property"].access."types"
+
+    Speaking of better, Node-RED has a [wickedly](https://discourse.nodered.org/t/when-array-and-when-object-key/98011) complex possibilities of accessing properties on the message object. I noticed this when implementing the MQTT broker from an [existing Node-RED flow](https://discourse.nodered.org/t/fun-exercise-make-an-mqtt-broker-in-node-red/82229). The [author](https://discourse.nodered.org/u/cymplecy/summary) used access methods that were new to me. So I went down the rabbit hole ....
+
+    I ended up [creating](https://github.com/gorenje/erlang-red/commit/7b5af843b0378a441ec6e0fbbfd18c3ffd1f446d) a [parser](https://github.com/gorenje/erlang-red/blob/8b740c8860e78ab68ffabfdc6dc5400f97d71f90/src/erlang_red_attr_parser.yrl) for all the various possibilities and the [flow test](https://flows.red-erik.org/f/4d9e38557d6fbd2d) hopefully covers most cases ... although then there are [some edge-cases](https://flows.red-erik.org/f/459322e0f8e0b785) that I haven't yet implemented.
+
+    The weirdness comes in when considering empty message objects on which values should be set. For example `msg.key1[2].key3 = "fubar"` will create this structure *automagically*:
+
+    ```
+    msg = { key1: [undefined, undefined, { key3: "fubar" } ] }
+    ```
+
+    So that `key1` becomes an array which contains an object at index 2 and `undefined` at index 0 and 1. This Node-RED does automagically because Javascript mixes accessing methods for hash and arrays. The '2' can be interpreted as a hash key or the number 2 as array index. And so when used as a string, as in `msg.key1['2'].key3 = "fubar"`, it becomes a hash key:
+
+    ```
+    msg = { key1: { '2': { key3: "fubar" } } } }
+    ```
+
+    And that makes all the fun and games of implementing this stuff. Either way, I managed to get things working mostly, aiming to be 100% compatible to what Node-RED does. Also: single quotes and double quotes are the same in Javascript and both represent a string.
+
+    In Erlang-Red I modified that semantic to be that if a value is placed in single quotes, then it becomes and atom, so that `msg.key1['atom'].key3 = "fubar"` becomes:
+
+    ```
+    msg = #{ <<"key1">> => #{ atom => #{ <<"key3">> => <<"fubar">> } } }
+    ```
+
+    So 'atom' becomes `atom` and string keys become binaries. I decided to add atom support for accessing data that might come from an external data source or whatever. These property specifications can be used to access data as-well as setting data on the message object/map.
+
+    As part of a [previous milestone](https://github.com/gorenje/erlang-red/commit/40e057f504be3daa8f58afbb4477db76f0f71259), I decided to change all map keys to binaries instead of a mix of atoms and binaries. It was a good decision to unify the key type - both because of atom limitations and consistency. That decision made implementing this much simpler.
+
+    I do however use atoms for internal keys and that is good, since then its clear which keys are externally usable and which keys should be seen (i.e. debug log) but not touched. Most of the internal atoms also use an underscore prefix - another indication of their internalness.
+
+4. Change, switch and inject nodes now support binary and buffer values
+
+    The number field support in Node-RED is also very generous. Many forms of floating point numbers are supported and also binary and hexadecimal, both positive and [negative](https://github.com/node-red/node-red/issues/5208#issuecomment-3041138596).
+
+    Turns out that it is so complex, that I had to build another [parser](https://github.com/gorenje/erlang-red/blob/8b740c8860e78ab68ffabfdc6dc5400f97d71f90/src/erlang_red_num_parser.yrl) just for handling the number field. All that parser does is transform Node-RED floating point representation to a representation understandable to Erlang. The [test flow](https://flows.red-erik.org/f/fb50bac16667fc54) attempts to cover many of those cases.
+
+    As a consequence of creating the parser, I also began to support binary `0b1010101110110111100` values and hexadecimal `0xfeedd06` in the num field which is also a Node-RED thing. This then also lead to supporting the buffer field type which is nothing else than `JSON.parse([<<json arrray definitiona>>]).map( d => parseNumber(d) )` in [pseudo code](https://github.com/node-red/node-red/blob/a3563026a5ad5acb417ba34c7779e876cbc22451/packages/node_modules/%40node-red/nodes/core/function/15-change.js#L106) where `parseNumber` does the same as a num field above.
+
+5. Breaking with Node-RED compatibility
+
+    Having spoken of being compatible with Node-RED and aiming for magical 100% compatibility with Node-RED, I have decided that its never good to be 100%. Being the leader you lose motivation and continually look around you, worried about being overtaken. Mainstream is best, middle of the road, no need to succeed.
+
+    And therefore I made a couple of changes to the core node defaults because they have always annoyed me - 1) the debug node dumps the entire message to the debug log instead of `msg.payload` as is default in Node-RED. That is because I implemented the dumping of specific [message attributes](https://github.com/gorenje/erlang-red/commit/52edd83f87c327d7bd5b12dfe8f0dde6febe0f53) to the debug log and now the Erlang-Red debug node would also inflict this default setting on me. Why do I prefer to dump the entire message? Because mostly my problems don't lie in the payload...
+
+    Secondly the switch node has a "check all rules" by default setting. Imagine a case statement without breaks (not even but similar). Which I also dislike. I continually alter that default setting *every single time* I pull in a switch node in. So that the default in Erlang-Red is now "stop after first match" and if you want "check all rules" then you'll have to change it.
+
+    My issue with "check all rules" is that it is extremely rare that you would want to be using that - perhaps this is an IoT thing or something that one does in industry - but me, I and myself, have - honestly - never needed to use that setting.
+
+    Perhaps its also naming: *switch* for me is a switch statement, *filter* is a something else. This "check all values" makes the switch node into a filter node. Which reminds me: pity node aliases aren't supported - nice feature to be able to define a filter node that is a switch node but with a different setting. So that your personal settings can be defined as palette "nodes" but are actually just existing nodes.
+
+    So anyway, F2k It bye-bye 100% Node-RED compatibility, hello freedom of authorship and experimentalism.
+
+
 *Milestones Five - m5*
 
 1. Erlang-Red Message Tracing
@@ -22,9 +101,9 @@ Milestones
 2. Nodes for gen\_event & gen\_statem behaviours
 
     Erlang-Red has become more Erlang-like by not only implementing the supervisor behaviour but also the [gen_event](https://github.com/gorenje/erlang-red/blob/aa447d67d3f1893127897851750cb4e05cb5f8b8/src/nodes/ered_node_erleventhandler.erl) and [gen_statem](https://github.com/gorenje/erlang-red/blob/aa447d67d3f1893127897851750cb4e05cb5f8b8/src/nodes/ered_node_erlstatemachine.erl) behaviours. Both of these make use of the [module node](https://github.com/gorenje/erlang-red/blob/aa447d67d3f1893127897851750cb4e05cb5f8b8/src/nodes/ered_node_erlmodule.erl). The module node can be used to implement complete Erlang modules in Erlang-Red. These modules can then be used to define the behaviour of the gen_event and gen_statem nodes.
-    
-    The event handler is completely dynamic with modules being added as handlers at runtime, the state machine is static with a module being added at design time. A state machine handler can however dynamically replace the handler if so desired. 
-    
+
+    The event handler is completely dynamic with modules being added as handlers at runtime, the state machine is static with a module being added at design time. A state machine handler can however dynamically replace the handler if so desired.
+
     The event handler will need some more TLC to make it static and dynamic. The overhead of configuring the event handler at runtime is strictly speaking not necessary. The corresponding test cases: [eventhandler](https://flows.red-erik.org/f/b70a7ce34819e4d5) and [state machine](https://flows.red-erik.org/f/5672fa442b2b881d).
 
     When I started out on this project (all of 2.5 months ago!), I intended to implement Node-RED features and nodes in Erlang. Now having created the Erlang-only nodes which implement these behaviours, I'm thinking that wouldn't it be nice to create Node-RED equivalent nodes. Half the work is done: these nodes are all packaged into an [Node-RED node package](https://flows.nodered.org/node/@gregoriusrippenstein/erlang-red-supervisor-node) and can be installed into Node-RED, only there they do nothing. However having a supervisor to ensure that things get restarted in NodeJS can be, perhaps, just maybe, also useful.
@@ -48,7 +127,7 @@ Milestones
     ![using mermaid diagrams in Erlang-Red](.images/flow2uml-using.gif)
 
     That's the nice thing, the documentation of a flow is *embedded* in the flow and goes wherever the flow goes. I created red-erik.org to host that documentation in a webpage. So for example,  the gif above is [online](https://flows.red-erik.org/f/c4c29c2fd5665ed9) at red-erik.org.
-    
+
     For any Node-RED readers: the original flow2UML package also contains the new mermaid flowchart node. So it's possible to create these complex flowcharts in Node-RED also.
 
 4. Timeout support for function and link-call nodes
@@ -60,7 +139,7 @@ Milestones
 5. Better documentation describing the Erlang architecture
 
     I am starting to be happy with the Erlang architecture so I've started to document it. Starting with the [supervisor node](https://flows.red-erik.org/f/211405fa9e8a6f9b), a technical description of how it interacts with the Erlang code base to implement Erlang-Red node supervision using Erlang process supervision. There is technical description of how the [link call](https://flows.red-erik.org/f/43e8af136f4d0fbe) node works.
-    
+
     Once I'm through with documenting everything, I will probably end up modifying everything again - programming is truly a Sisyphusian activity.
 
 *Milestone Four - m4*
