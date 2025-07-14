@@ -26,7 +26,8 @@
 -import(ered_nodered_comm, [
     node_status/5,
     node_status_clear/2,
-    post_exception_or_debug/3
+    post_exception_or_debug/3,
+    send_out_debug_warning/2
 ]).
 
 %%
@@ -68,18 +69,38 @@ install(
     file:write_file(FileName, ModuleCode),
 
     case compile:file(FileName, [binary, return_errors, return_warnings]) of
-        {ok, ModuleName, Binary, _} ->
+        {ok, CompModuleName, Binary, []} when CompModuleName == ModuleName ->
             node_status(WsName, NodeDef, "installed", "green", "dot"),
             spawn(fun() -> clear_status_after_one_sec(WsName, NodeDef) end),
-            {module, ModuleName} = code:load_binary(ModuleName, [], Binary),
-            ered_erlmodule_exchange:add_module(NodeId, ModuleName);
+            install_compiled_module_code(NodeId, ModuleName, Binary);
+        {ok, CompModuleName, Binary, WarnList} when
+            CompModuleName == ModuleName
+        ->
+            node_status(WsName, NodeDef, "installed", "yellow", "dot"),
+            spawn(fun() -> clear_status_after_one_sec(WsName, NodeDef) end),
+            install_compiled_module_code(NodeId, ModuleName, Binary),
+            Msg = ?PUT_WS(#{
+                warning => compiler_list_to_json_list(WarnList)
+            }),
+            send_out_debug_warning(NodeDef, Msg);
+        {ok, CompModuleName, _, _} when CompModuleName =/= ModuleName ->
+            node_status(WsName, NodeDef, "module name mismatch", "red", "dot"),
+            post_exception_or_debug(
+                NodeDef,
+                ?PUT_WS(#{}),
+                <<"compile failed, module names do not match">>
+            );
         {error, ErrorList, WarnList} ->
             Msg = ?PUT_WS(#{
                 error => compiler_list_to_json_list(ErrorList),
                 warning => compiler_list_to_json_list(WarnList)
             }),
             node_status(WsName, NodeDef, "compile failed", "red", "dot"),
-            post_exception_or_debug(NodeDef, Msg, <<"compile failed">>)
+            post_exception_or_debug(NodeDef, Msg, <<"compile failed">>);
+        R ->
+            io:format("ERROR COMPILING: [~p] [~p]~n", [NodeId, R]),
+            node_status(WsName, NodeDef, "compile failed", "red", "dot"),
+            post_exception_or_debug(NodeDef, ?PUT_WS(#{}), <<"compile failed">>)
     end,
 
     file:delete(FileName).
@@ -114,3 +135,7 @@ errorinfo_tuple_to_list({{Line, Char}, Module, Desc}) ->
 clear_status_after_one_sec(WsName, NodeId) ->
     timer:sleep(1000),
     node_status_clear(WsName, NodeId).
+
+install_compiled_module_code(NodeId, ModuleName, Binary) ->
+    {module, ModuleName} = code:load_binary(ModuleName, [], Binary),
+    ered_erlmodule_exchange:add_module(NodeId, ModuleName).
