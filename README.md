@@ -5,7 +5,7 @@ An experiment to replace Node-REDs existing NodeJS backend with an Erlang equiva
 
 The goal is bring the advantages of low-code visual [flow-based programming](https://jpaulm.github.io/fbp/index.html) to a programming language that is designed for message passing and concurrency from the ground up, hence Erlang. More details described in the corresponding [blog post](https://blog.openmindmap.org/erlang-red).
 
-Programming Breadboard
+Breadboard Programming
 ---
 
 [Breadboards](https://en.wikipedia.org/wiki/Breadboard) are prototyping devices found in electronics. Erlang-Red can be best thought of as a programming [breadboard](https://blog.openmindmap.org/blog/breadboard-programming).
@@ -13,6 +13,8 @@ Programming Breadboard
 What are some tools for *software* prototyping? Besides AI and VScode. Software developers *create* prototypes but they don't *prototype* software.
 
 A [telnet session](https://flows.red-erik.org/f/bff27e059752cb60) flow describes how breadboard programming can be done using Erlang-Red. That flow *prototypes* a possible *software* solution starting with a simple concurrent approach until a first final approach is found. All solutions are testable and usable - instantly and all solutions build on previous solutions - simply copy and paste the flows. That's prototyping.
+
+Implementation of the [MQTT specs](https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html) to create an [MQTT broker](https://flows.red-erik.org/f/dc897f402c53697f) in Erlang-Red. The broker is created as a flow and at the same time, a client is created using the Erlang-Red MQTT nodes so that the broker implementation can be tested. Again a breadboard: thing of the MQTT nodes as an [oscilloscope](https://en.wikipedia.org/wiki/Oscilloscope) testing the voltage!
 
 Why?
 ---
@@ -91,8 +93,10 @@ These nodes represent specific Erlang features as nodes and as such, could be im
 | [module](src/nodes/ered_node_erlmodule.erl) |  Erlang module for defining Erlang modules that can be used with the function, event handler and statemachine nodes. | [Flow](https://flows.red-erik.org/f/442b3bf0d630e21d) |
 | [supervisor](src/nodes/ered_node_erlsupervisor.erl) | Erlang-only node that implements the [supervisor behaviour](https://www.erlang.org/doc/system/sup_princ.html). Supports supervising supervisors and ordering of processes (i.e. nodes) to ensure correct restart and shutdown sequences. | [Flow](https://flows.red-erik.org/f/83c5e1824f32abec) |
 | [statemachine](src/nodes/ered_node_erlstatemachine.erl) | Implements the [`gen_statem`](https://www.erlang.org/doc/apps/stdlib/gen_statem.html) behaviour. Requires a [module node](src/nodes/ered_node_erlmodule.erl) to define the actions of the statemachine. | [Flow](https://flows.red-erik.org/f/5672fa442b2b881d) |
+| [event handler](src/nodes/ered_node_erleventhandler.erl) | In conjunction with the module node, this node implements the [`gen_event`](https://www.erlang.org/doc/apps/stdlib/gen_event.html) behaviour. | [Flow](https://flows.red-erik.org/f/5c8974f17ca70789) |
+| [generic server](src/nodes/ered_node_erlgenserver.erl) | Implements the [`gen_server`](https://www.erlang.org/doc/apps/stdlib/gen_server.html) behaviour. Requires a [module node](src/nodes/ered_node_erlmodule.erl) to define the actions of the server. | [Flow](https://flows.red-erik.org/f/38f712d367cecffa) |
 
-These nodes can be installed using the corresponding Node-RED [node package](https://flows.nodered.org/node/@gregoriusrippenstein/erlang-red-supervisor-node).
+These nodes can be installed using the corresponding Node-RED [node package](https://flows.nodered.org/node/@gregoriusrippenstein/erlang-red-supervisor-node). In Node-RED these nodes are placebos, doing nothing.
 
 ### Unit testing nodes
 
