@@ -20,6 +20,7 @@
     send_on_if_ws/2,
     send_out_debug_msg/4,
     send_out_debug_error/2,
+    send_out_debug_warning/2,
     send_to_debug_sidebar/2,
     unittest_result/3,
     unsupported/3,
@@ -60,8 +61,7 @@ send_on_if_ws(WsName, Msg) ->
 
 %%
 %% clear a previous node status value.
-node_status_clear(WsName, NodeDef) ->
-    {ok, NodeId} = maps:find(<<"id">>, NodeDef),
+node_status_clear(WsName, #{<<"id">> := NodeId} = NodeDef) ->
     send_on_if_ws(WsName, {status, NodeId, clear}).
 
 node_status(WsName, NodeDef, Txt, Clr, Shp) when is_integer(Txt) ->
@@ -129,6 +129,15 @@ send_out_debug_error(NodeDef, Msg) ->
      },
 
     debug(ws_from(Msg), Data, error).
+
+send_out_debug_warning(NodeDef, Msg) ->
+    D = ?BASE_DATA,
+    Data = D#{
+        <<"msg">> => Msg,
+        <<"format">> => <<"object">>
+    },
+
+    debug(ws_from(Msg), Data, warning).
 
 %%
 %%
