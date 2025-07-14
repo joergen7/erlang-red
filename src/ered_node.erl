@@ -218,11 +218,16 @@ terminate(normal, _State) ->
 terminate(fake_crash, _State) ->
     % used by the supervisor test to demonstrate a non-normal exit.
     ok;
-terminate(Event, State) ->
-    io:format(
-        "Node ~p: Non-normal Termination: '~p' State: {{{ ~p }}}~n",
-        [self(), Event, State]
-    ),
+terminate(Event, {Module, NodeDef} = State) ->
+    case Module:handle_event({gen_server_terminated, Event}, NodeDef) of
+        handled ->
+            ignore;
+        _ ->
+            io:format(
+                "Node ~p: Non-normal Termination: '~p' State: {{{ ~p }}}~n",
+                [self(), Event, State]
+            )
+    end,
     ok.
 
 %%
