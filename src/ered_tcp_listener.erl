@@ -70,6 +70,8 @@ handler(S, {Port, Router, SessionId, InterfaceIp} = Details) ->
             io:format("Socket ~w closed [~w]~n", [S, self()]),
             Router ! {del_session, {list, SessionId, Port, InterfaceIp}};
         R ->
-            io:format("TCP LISTENER Socket UNEXPCTED ~p closed [~w]~n",
-                      [R, self()])
+            io:format(
+                "TCP LISTENER Socket UNEXPCTED ~p closed [~w]~n",
+                [R, self()]
+            )
     end.
