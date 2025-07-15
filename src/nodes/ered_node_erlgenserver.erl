@@ -26,12 +26,16 @@
 -define(UsePidAddressing, <<"use_module_name_addressing">> := false).
 -define(GetLookup, '_lookup' := Lookup).
 -define(CallFindDetails,
-    {ok, ModuleName, Pid} = find_module_details(ModuleNodeId, Starter),
-    %% indirectly all modules are started as being linked to this
-    %% process - this ensures that all nodes have a status update
-    %% when a module shutsdown.
-    erlang:monitor(process, Pid),
-    start_modules(Rest, NodeDef#{'_lookup' => Lookup#{ModuleName => Pid}})
+    case find_module_details(ModuleNodeId, Starter) of
+        {ok, ModuleName, Pid} ->
+            %% indirectly all modules are started as being linked to this
+            %% process - this ensures that all nodes have a status update
+            %% when a module shutsdown.
+            erlang:monitor(process, Pid),
+            start_modules(Rest, NodeDef#{'_lookup' => Lookup#{ModuleName => Pid}});
+        {error,_NodeId} ->
+            {error, modoule_not_found}
+    end
 ).
 
 %%
