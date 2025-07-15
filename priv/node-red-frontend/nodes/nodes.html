@@ -12395,7 +12395,7 @@ Defines a module that can be used with a state machine and other elements of Erl
     label: function() {
       let label = this._def.paletteLabel
       if (this.scope && this.scope.length > 0) {
-        let nodeLabels = this.scope.map( d => RED.nodes.node(d) ).map( nde => RED.utils.getNodeLabel(nde))
+        let nodeLabels = this.scope.map( d => RED.nodes.node(d) ).map( nde => nde && RED.utils.getNodeLabel(nde))
         label = `[${nodeLabels.join(", ")}]\t${this.emit_on_state_change ? "⋮" : "➝"}`
       }
       return (this.name || label);
