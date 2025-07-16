@@ -15944,6 +15944,7 @@ RED.stack = (function() {
         { value: "topic", source: ["mqtt","inject","rbe"] },
         { value: "action", source: ["mqtt", "erleventhandler"] },
         { value: "call", source: ["erlgenserver"] },
+        { value: "clientcode", source: ["ClientCode"] },
         { value: "complete", source: ["join"] },
         { value: "contentType", source: ["mqtt"] },
         { value: "cookies", source: ["http request","http response"] },

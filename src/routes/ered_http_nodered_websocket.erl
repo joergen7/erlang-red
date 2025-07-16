@@ -21,6 +21,25 @@
     encode_json/1
 ]).
 
+-define(AppendToBulkdata(Message),
+    maps:put(bulkdata, [Message | maps:get(bulkdata, State)], State)
+).
+
+%erlfmt:ignore - alignment
+-define(CreateClientCodeMsg,
+    #{
+          topic => <<"introspect:client-code-perform">>,
+          data => #{
+              msg     => <<"execfunc">>,
+              payload => Payload,
+              topic   => jstr(Topic),
+              func    => jstr(ClientCode),
+              nodeid  => NodeId,
+              '_msg'  => Msg
+          }
+     }
+).
+
 %%
 %% Websocket connection to the flow editor.
 %%
@@ -154,8 +173,10 @@ websocket_info({status, NodeId, clear}, State) ->
         topic => jstr("status/~s", [NodeId]),
         data => #{}
     },
-
-    {ok, maps:put(bulkdata, [Msg | maps:get(bulkdata, State)], State)};
+    %
+    % Note: not sent to the websocket event exchange - feature not bug.
+    %
+    {ok, ?AppendToBulkdata(Msg)};
 %%
 %% Here are the details to the possible values of the status
 %% elements.
@@ -179,7 +200,7 @@ websocket_info({status, NodeId, Txt, "", ""}, State) ->
         "",
         ""
     ),
-    {ok, maps:put(bulkdata, [Msg | maps:get(bulkdata, State)], State)};
+    {ok, ?AppendToBulkdata(Msg)};
 websocket_info({status, NodeId, Txt, Clr, Shp}, State) ->
     Msg = #{
         topic => jstr("status/~s", [NodeId]),
@@ -198,7 +219,7 @@ websocket_info({status, NodeId, Txt, Clr, Shp}, State) ->
         Shp
     ),
 
-    {ok, maps:put(bulkdata, [Msg | maps:get(bulkdata, State)], State)};
+    {ok, ?AppendToBulkdata(Msg)};
 %% -------------------- Unittests results
 %%
 %% Results of a unit test run. The details are sent via a debug message if
@@ -213,7 +234,7 @@ websocket_info({unittest_results, FlowId, Status}, State) ->
         }
     },
 
-    {ok, maps:put(bulkdata, [Msg | maps:get(bulkdata, State)], State)};
+    {ok, ?AppendToBulkdata(Msg)};
 %% -------------------- Message tracing
 %%
 %% these are msgtracing details and are important enough to be sent
@@ -229,6 +250,13 @@ websocket_info({msgtracing, NodeId}, State) ->
         }
     ]),
     {reply, {text, Msg}, State};
+%% -------------- Client Code node
+%%
+%% ClientCode node execute function in browser
+websocket_info({client_code_exec, NodeDef, Msg}, State) ->
+    {ok, ?AppendToBulkdata(client_code_exec(NodeDef, Msg))};
+%%
+%%
 websocket_info(_Info, State) ->
     {ok, State}.
 
@@ -276,3 +304,31 @@ ws_send_heartbeat(Pid, State) ->
     ]),
 
     erlang:start_timer(SInterval, Pid, Data_jsonb).
+
+%%
+%%
+%% code taken from message object
+client_code_exec(
+    #{
+        <<"id">> := NodeId,
+        <<"clientcode">> := _ClientCode
+    },
+    #{
+        <<"topic">> := Topic,
+        <<"clientcode">> := ClientCode,
+        <<"payload">> := Payload
+    } = Msg
+) ->
+    ?CreateClientCodeMsg;
+%% code taken from node defintion
+client_code_exec(
+    #{
+        <<"id">> := NodeId,
+        <<"clientcode">> := ClientCode
+    },
+    #{
+        <<"topic">> := Topic,
+        <<"payload">> := Payload
+    } = Msg
+) ->
+    ?CreateClientCodeMsg.

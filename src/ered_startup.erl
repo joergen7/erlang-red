@@ -333,6 +333,7 @@ node_type_to_module(<<"mermaid-flowchart">>) -> ered_node_ignore;
 node_type_to_module(<<"tcp in">>)            -> ered_node_tcp_in;
 node_type_to_module(<<"tcp out">>)           -> ered_node_tcp_out;
 node_type_to_module(<<"erlgenserver">>)      -> ered_node_erlgenserver;
+node_type_to_module(<<"ClientCode">>)        -> ered_node_clientcode;
 %%
 %% Assert nodes for testing functionality of the nodes. These are the first
 %% Node-RED and Erlang-RED nodes - they have implmentations for both because

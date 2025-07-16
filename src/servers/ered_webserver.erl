@@ -176,6 +176,10 @@ flow_editor_routes() ->
         %% POST handlers
         %%
 
+        %% ClientCode node backend
+        {"/ClientCode/:nodeid", ered_http_clientcode_node, []},
+        {"/ClientCode/:nodeid/:task", ered_http_clientcode_node, []},
+
         %% Message tracer API endpoint
         {"/MsgTracer/:task/:state", ered_http_msgtracer_plugin, []},
 
