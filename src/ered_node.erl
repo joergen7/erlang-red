@@ -37,6 +37,7 @@
 ]).
 
 -import(ered_nodered_comm, [
+    node_status/5,
     unsupported/3,
     ws_from/1
 ]).
@@ -134,6 +135,7 @@ handle_cast({incoming = MsgType, Msg}, {Module, NodeDef}) ->
 %%    - {delay_push_out, Msg}
 %%    - {mqtt_not_sent, Msg}
 %%    - {func_completed_with, Msg}
+%%    - {client_code, Msg}
 %% These post_completed messages, hence they differ from the more general
 %% use case.
 handle_cast({MsgType, Msg}, {Module, NodeDef}) ->
@@ -258,7 +260,15 @@ handle_msg_responder(MsgType, Msg, Module, Results, dont_post_completed) ->
 
 %%
 %%
-
+bad_routing(#{<<"id">> := _NodeId} = NodeDef, Type, #{'_ws' := WsName} = Msg) ->
+    node_status(
+        WsName,
+        NodeDef,
+        io_lib:format("unhandled [~p] message", [Type]),
+        "red",
+        "dot"
+    ),
+    bad_routing(NodeDef, Type, maps:remove('_ws', Msg));
 bad_routing(NodeDef, Type, Msg) ->
     this_should_not_happen(
         NodeDef,
