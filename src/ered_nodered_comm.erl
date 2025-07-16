@@ -67,8 +67,7 @@ node_status_clear(WsName, #{<<"id">> := NodeId}) ->
 node_status(WsName, NodeDef, Txt, Clr, Shp) when is_integer(Txt) ->
     TxtStr = io_lib:format("~p", [Txt]),
     node_status(WsName, NodeDef, TxtStr, Clr, Shp);
-node_status(WsName, NodeDef, Txt, Clr, Shp) ->
-    {ok, NodeId} = maps:find(<<"id">>, NodeDef),
+node_status(WsName, #{<<"id">> := NodeId}, Txt, Clr, Shp) ->
     send_on_if_ws(WsName, {status, NodeId, Txt, Clr, Shp}).
 
 debug(WsName, Data, error) ->

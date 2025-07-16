@@ -32,8 +32,10 @@
             %% process - this ensures that all nodes have a status update
             %% when a module shutsdown.
             erlang:monitor(process, Pid),
-            start_modules(Rest, NodeDef#{'_lookup' => Lookup#{ModuleName => Pid}});
-        {error,_NodeId} ->
+            start_modules(Rest, NodeDef#{
+                '_lookup' => Lookup#{ModuleName => Pid}
+            });
+        {error, _NodeId} ->
             {error, modoule_not_found}
     end
 ).

@@ -92,11 +92,7 @@ handle_websocket(
         <<"inverse">> := false
     } = NodeDef
 ) ->
-    Errors = check_attributes(
-        {ExpClr, list_to_binary(Clr)},
-        {ExpShp, list_to_binary(Shp)},
-        {ExpTxt, Txt}
-    ),
+    Errors = check_attributes({ExpClr, Clr}, {ExpShp, Shp}, {ExpTxt, Txt}),
     case lists:flatten(Errors) of
         [] ->
             NodeDef;
@@ -135,7 +131,9 @@ check_attributes({ExpTxt, Txt}) when is_binary(Txt) ->
             []
     end.
 
-check_attributes(Shp, Txt) ->
+check_attributes({ExpShp, IsShp}, Txt) when is_list(IsShp) ->
+    check_attributes({ExpShp, list_to_binary(IsShp)}, Txt);
+check_attributes({_ExpShp, IsShp} = Shp, Txt) when is_binary(IsShp) ->
     case is_same(Shp) of
         false ->
             [
@@ -145,7 +143,9 @@ check_attributes(Shp, Txt) ->
             [check_attributes(Txt)]
     end.
 
-check_attributes(Clr, Shp, Txt) ->
+check_attributes({ExpClr, IsClr}, Shp, Txt) when is_list(IsClr) ->
+    check_attributes({ExpClr, list_to_binary(IsClr)}, Shp, Txt);
+check_attributes({_ExpClr, IsClr} = Clr, Shp, Txt) when is_binary(IsClr) ->
     case is_same(Clr) of
         false ->
             [
