@@ -23,7 +23,22 @@
 %% },
 %% _msgid: "cb8474786455d81c"
 %%
-
+%%
+%% {
+%%     "id": "c78e4af8c2d24782",
+%%     "type": "status",
+%%     "z": "84a5a362cafe703f",
+%%     "name": "",
+%%     "scope": null,  <<<------ null an implicit "all", "group" all in group
+%%     "x": 1005,
+%%     "y": 699,
+%%     "wires": [
+%%         [
+%%             "65ead454e78ca028"
+%%         ]
+%%     ]
+%% }
+%%
 -import(ered_ws_event_exchange, [
     subscribe/4
 ]).
@@ -31,12 +46,23 @@
     create_outgoing_msg/1
 ]).
 -import(ered_nodes, [
+    check_config/4,
     jstr/1,
     send_msg_to_connected_nodes/2
 ]).
 
+-import(ered_nodered_comm, [
+    unsupported/3
+]).
+
 %%
 %%
+start(#{<<"scope">> := <<"group">>} = NodeDef, WsName) ->
+    unsupported(NodeDef, {websocket, WsName}, jstr("group scope")),
+    ered_node:start(NodeDef, ered_node_ignore);
+start(#{<<"scope">> := null} = NodeDef, WsName) ->
+    unsupported(NodeDef, {websocket, WsName}, jstr("all scope")),
+    ered_node:start(NodeDef, ered_node_ignore);
 start(NodeDef, _WsName) ->
     ered_node:start(NodeDef, ?MODULE).
 
