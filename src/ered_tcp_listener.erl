@@ -49,29 +49,41 @@ handler(S, {Port, Router, SessionId, InterfaceIp} = Details) ->
     io:format("now looping on ~p with ~w~n", [self(), S]),
     inet:setopts(S, [{active, once}]),
     receive
+        {ered_send_out_data, RData} when is_number(RData) ->
+            %% Sending numbers down the pipe can cause these errors:
+            %%     [error] Bad value on output port 'tcp_inet'
+            %% there is not much to be done, so generate warning because some numbers
+            %% are ok.
+            %% --> https://stackoverflow.com/questions/38750444/bad-value-on-output-port-tcp-inet
+            io:format(
+                "LIST: [WARN Bad value ERROR possible] Sending ~w ==> [~p]~n",
+                [inet:sockname(S), RData]
+            ),
+            gen_tcp:send(S, RData),
+            handler(S, Details);
         {ered_send_out_data, RData} ->
-            io:format("Sending ~w ==> [~p]~n", [inet:sockname(S), RData]),
+            io:format("LIST: Sending ~w ==> [~p]~n", [inet:sockname(S), RData]),
             gen_tcp:send(S, RData),
             handler(S, Details);
         {tcp, S, Data} ->
-            io:format("Received ~w ==> [~p]~n", [inet:sockname(S), Data]),
+            io:format("LIST: Received ~w ==> [~p]~n", [inet:sockname(S), Data]),
             Router ! {route, {list, SessionId, Port, InterfaceIp, Data}},
             handler(S, Details);
         {tcp_passive, S} ->
             handler(S, Details);
         {ered_done_with_socket} ->
             inet:close(S),
-            io:format("Socket closed by server~n", []),
+            io:format("LIST: Socket closed by server~n", []),
             Router ! {del_session, {list, SessionId, Port, InterfaceIp}};
         {tcp_error, S, Reason} ->
-            io:format("Socket error ~w closed [~w] ~p~n", [S, self(), Reason]),
+            io:format("LIST: Socket error ~w closed [~w] ~p~n", [
+                S, self(), Reason
+            ]),
             Router ! {del_session, {list, SessionId, Port, InterfaceIp}};
         {tcp_closed, S} ->
-            io:format("Socket ~w closed [~w]~n", [S, self()]),
+            io:format("LIST: Socket ~w closed [~w]~n", [S, self()]),
             Router ! {del_session, {list, SessionId, Port, InterfaceIp}};
         R ->
-            io:format(
-                "TCP LISTENER Socket UNEXPCTED ~p closed [~w]~n",
-                [R, self()]
-            )
+            Router ! {del_session, {list, SessionId, Port, InterfaceIp}},
+            io:format("LIST: TCP Socket UNEXPCTED ~p closed [~w]~n", [R, self()])
     end.

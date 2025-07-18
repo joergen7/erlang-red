@@ -63,7 +63,7 @@
     ws_from/1
 ]).
 
--define(AllChecksOK, {ok, ok, ok, ok, ok}).
+-define(AllThreeChecksOK, {ok, ok, ok}).
 -define(AllFourChecksOK, {ok, ok, ok, ok}).
 
 -define(IsServer, <<"server">> := <<"server">>).
@@ -82,10 +82,9 @@ start(#{?IsServer} = NodeDef, WsName) ->
     case {
         check_config(<<"tls">>,      <<"">>,       NodeDef, WsName),
         check_config(<<"host">>,     <<"">>,       NodeDef, WsName),
-        check_config(<<"datamode">>, <<"stream">>, NodeDef, WsName),
-        check_config(<<"newline">>,  <<"">>,       NodeDef, WsName)
+        check_config(<<"datamode">>, <<"stream">>, NodeDef, WsName)
     } of
-        ?AllFourChecksOK ->
+        ?AllThreeChecksOK ->
             ered_node:start(?PUT_WS(NodeDef#{conn_count => 0}), ?MODULE);
         _ ->
             ered_node:start(NodeDef, ered_node_ignore)
@@ -96,10 +95,9 @@ start(#{?IsClient} = NodeDef, WsName) ->
         check_config(<<"tls">>,      <<"">>,       NodeDef, WsName),
         check_config(<<"datatype">>, <<"utf8">>,   NodeDef, WsName),
         check_config(<<"datamode">>, <<"stream">>, NodeDef, WsName),
-        check_config(<<"newline">>,  <<"\\n">>,    NodeDef, WsName),
         check_config(<<"trim">>,     true,         NodeDef, WsName)
     } of
-        ?AllChecksOK ->
+        ?AllFourChecksOK ->
             ered_node:start(?PUT_WS(NodeDef#{conn_count => 0}), ?MODULE);
         _ ->
             ered_node:start(NodeDef, ered_node_ignore)
@@ -139,7 +137,7 @@ handle_event(
     of
         connecting ->
             node_status(WsName, NodeDef, "connecting", "blue", "ring");
-        connected ->
+        {connected, _SessionId} ->
             node_status(WsName, NodeDef, "connected", "green", "dot");
         R ->
             node_status(WsName, NodeDef, jstr("~p", [R]), "blue", "ring")
@@ -186,7 +184,7 @@ handle_event({tcpc_closed, _Tuple}, #{?GET_WS, ?GetHost, ?GetPort} = NodeDef) ->
     of
         connecting ->
             node_status(WsName, NodeDef, "connecting", "blue", "ring");
-        connected ->
+        {connected, _SessionId} ->
             node_status(WsName, NodeDef, "connected", "green", "dot");
         R ->
             node_status(WsName, NodeDef, jstr("~p", [R]), "blue", "ring")

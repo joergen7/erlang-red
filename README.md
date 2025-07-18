@@ -79,6 +79,7 @@ This is a non-complete list of [nodes](src/nodes/) that partially or completely 
 | [switch](src/nodes/ered_node_switch.erl) | most operators work along with basic JSONata expressions  | [Flow](https://flows.red-erik.org/f/3edda6bd788f88c2) |
 | [tcp in](src/nodes/ered_node_tcp_in.erl) | Tcp in node supports starting a TCP/IP server listening on a specific port.  | [Flow](https://flows.red-erik.org/f/bff27e059752cb60) |
 | [tcp out](src/nodes/ered_node_tcp_out.erl) | Tcp out node that currently only supports the reply-to node to respond to an existing tcp in connections.  | [Flow](https://flows.red-erik.org/f/bff27e059752cb60) |
+| [tcp request](src/nodes/ered_node_tcp_request.erl) | Tcp request node for connecting and communicating with Tcp listners. | [Flow](https://flows.red-erik.org/f/84a5a362cafe703f) |
 | [template](src/nodes/ered_node_template.erl) | mustache templating is working but parsing into JSON or YAML isn't supported | [Flow](https://flows.red-erik.org/f/3ed472eab9503b4f) |
 | [trigger](src/nodes/ered_node_trigger.erl) | the default settings should work | [Flow](https://flows.red-erik.org/f/1566e453a88578a9) |
 

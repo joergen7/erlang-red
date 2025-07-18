@@ -36,6 +36,18 @@ handler(S, {SessionId, Router, HostName, PortNum} = Details) ->
     io:format("CONN: now looping on ~p with ~w~n", [self(), S]),
     inet:setopts(S, [{active, once}]),
     receive
+        {ered_send_out_data, RData} when is_number(RData) ->
+            %% Sending numbers down the pipe can cause these errors:
+            %%     [error] Bad value on output port 'tcp_inet'
+            %% there is not much to be done, so generate warning because some numbers
+            %% are ok.
+            %% --> https://stackoverflow.com/questions/38750444/bad-value-on-output-port-tcp-inet
+            io:format(
+                "CONN: [WARN bad value ERROR possible, ==> number] Send: ~w ==> [~p]~n",
+                [inet:sockname(S), RData]
+            ),
+            gen_tcp:send(S, RData),
+            handler(S, Details);
         {ered_send_out_data, RData} ->
             io:format("CONN: Sending ~w ==> [~p]~n", [inet:sockname(S), RData]),
             gen_tcp:send(S, RData),
@@ -60,7 +72,10 @@ handler(S, {SessionId, Router, HostName, PortNum} = Details) ->
             io:format("CONN: Socket ~w closed [~w]~n", [S, self()]),
             Router ! {del_session, {conn, SessionId, HostName, PortNum}};
         Msg ->
-            io:format("CONN: Received Unknown: ~p~n", [Msg])
+            io:format("CONN: TCP Socket UNEXPCTED ~p closed [~w]~n", [
+                Msg, self()
+            ]),
+            Router ! {del_session, {conn, SessionId, HostName, PortNum}}
     end.
 
 retrier(SessionId, HostName, PortNum, Router, Backoff) ->

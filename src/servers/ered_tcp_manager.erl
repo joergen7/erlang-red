@@ -21,7 +21,7 @@
 %%   2. there are connectors that connect to a server and expect data to come in
 %%   3. there are multiple connectors connected to the same host/port combi
 %%   4. there are multiple listeners listening for connections on same port
-%%   5. all data goes to all connectors and listeners <<<---- the triggery bit
+%%   5. all data goes to all connectors and listeners <<<---- the tricky bit
 %%
 %% this is a little bit different to the orignal Node-RED implementation but
 %% this is more inclusive, i.e., multiple tcp-in listeners on the same port
@@ -58,6 +58,8 @@
     register_listener/3,
     register_connector/3,
     send/2,
+    send_all_sessions/1,
+    send_to_sessions/2,
     state/0,
     session_id/0
 ]).
@@ -113,6 +115,22 @@ unregister_listener(PortNum, PidTcpInNode) ->
 ) -> ok | {error, no_process}.
 send(SessionId, Data) ->
     gen_server:call(?MODULE, {send, SessionId, Data}).
+
+%%
+%% Send data to all sessions of a specific type
+-spec send_to_sessions(
+    Type :: listener | connector,
+    Data :: binary()
+) -> ok.
+send_to_sessions(Type, Data) ->
+    gen_server:call(?MODULE, {send_all_sessions, Type, Data}).
+
+%% Send data to all sessions of a specific type
+-spec send_all_sessions(
+    Data :: binary()
+) -> ok.
+send_all_sessions(Data) ->
+    gen_server:call(?MODULE, {send_all_sessions, all, Data}).
 
 %%
 %% close an existing connection
@@ -194,6 +212,29 @@ handle_call(
         _ ->
             {reply, {error, lost_connection}, State}
     end;
+handle_call(
+    {send_all_sessions, listener, Data},
+    _From,
+    #{sessions := Sessions} = State
+) ->
+    Pids = [Pid || {_S, Pid, {list, _P}} <- Sessions],
+    [ProcessId ! {ered_send_out_data, Data} || ProcessId <- Pids],
+    {reply, ok, State};
+handle_call(
+    {send_all_sessions, connector, Data},
+    _From,
+    #{sessions := Sessions} = State
+) ->
+    Pids = [Pid || {_S, Pid, {conn, _H, _P}} <- Sessions],
+    [ProcessId ! {ered_send_out_data, Data} || ProcessId <- Pids],
+    {reply, ok, State};
+handle_call(
+    {send_all_sessions, all, Data},
+    _From,
+    #{sessions := Sessions} = State
+) ->
+    [ProcessId ! {ered_send_out_data, Data} || {_S, ProcessId, _} <- Sessions],
+    {reply, ok, State};
 %%
 %%
 handle_call(
@@ -218,7 +259,11 @@ handle_call(
             ered_tcp_connector:start(HostName, PortNum, self()),
             {reply, connecting, State#{tcpnodes => TcpNodes}};
         {true, _} ->
-            {reply, connected, State#{tcpnodes => TcpNodes}};
+            SessionId =
+                element(
+                    1, lists:keyfind({conn, HostName, PortNum}, 3, Sessions)
+                ),
+            {reply, {connected, SessionId}, State#{tcpnodes => TcpNodes}};
         {_, true} ->
             {reply, connecting, State#{tcpnodes => TcpNodes}}
     end;

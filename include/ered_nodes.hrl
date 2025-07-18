@@ -26,6 +26,7 @@ end#{
     '_ws' => WsName
 }).
 -define(GET_WS, '_ws' := WsName).
+-define(SET_WS, '_ws' => WsName).
 
 %%
 %% Check for supervision
@@ -42,3 +43,5 @@ end#{
 -define(TopicFromMsg, get_prop_value_from_map(<<"topic">>, Msg, "")).
 
 -define(NodePid, '_node_pid_' := NodePid).
+
+-define(GetPayload, <<"payload">> := Payload).
