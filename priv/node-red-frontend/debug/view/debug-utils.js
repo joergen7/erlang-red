@@ -404,6 +404,9 @@ RED.debug = (function() {
 window.importOrShowFlow = (elem) => {
    window.doFlowImportForSidebarUnittesting($(elem).data('flowid'))
 }
+window.openSearch = (elem) => {
+   RED.search.show($(elem).data('nodeid'))
+}
 window.doFlowImportForSidebarUnittesting = (flowid) => {
 
   if ( RED.nodes.workspace(flowid) ) {
@@ -562,7 +565,7 @@ window.doFlowImportForSidebarUnittesting = (flowid) => {
                 });
             }
         } else if (name) {
-            $('<span class="red-ui-debug-msg-name">'+name+`</span>`).appendTo(metaRow);
+            $(`<span onclick="javascript:window.openSearch(this)" class="red-ui-debug-msg-name" data-nodeid="${o.id}">${name}</span>`).appendTo(metaRow);
             $(`<span onmouseover=""  data-flowid='${o.z}' onclick='javascript:window.importOrShowFlow(this)' class="red-ui-debug-msg-name" style="cursor: pointer; float: right; margin-right: 30px;">[${o.z}]</span>`).appendTo(metaRow);
         }
 
