@@ -33473,7 +33473,11 @@ RED.sidebar.help = (function() {
                 crl.setAttribute('id', `monitordotclick-${nodeId}`)
 
                 crl.setAttribute('style', "cursor: pointer;")
-                crl.setAttribute('fill', 'lightgreen')
+                if ( node.type == "debug" ) {
+                    crl.setAttribute('fill', 'lightgreen')
+                } else {
+                    crl.setAttribute('fill', 'rgb(135, 169, 128)')
+                }
 
                 grp.append(crl)
 
@@ -42478,7 +42482,6 @@ RED.editor = (function() {
             // TODO spellchecker --> https://github.com/purocean/monaco-spellchecker
             // TODO this could be the spot where a reference to the monaco editor is stored
             // TODO for later use.
-            console.log(editor)
             initImageDrag(elem, editor);
          }
     }
