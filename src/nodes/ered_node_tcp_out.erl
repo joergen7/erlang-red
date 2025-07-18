@@ -44,6 +44,9 @@
     convert_to_num/1
 ]).
 
+-define(IsClient, <<"beserver">> := <<"client">>).
+-define(IsReply, <<"beserver">> := <<"reply">>).
+
 %%
 %%
 % erlfmt:ignore - alignment
@@ -58,7 +61,7 @@ start(#{?IsReply} = NodeDef, WsName) ->
           check_config(<<"end">>,      false,       NodeDef, WsName)
          } of
         {ok, ok, ok, ok, ok} ->
-            ered_node:start(NodeDef#{?SET_WS, ?EmptyBacklog}, ?MODULE);
+            ered_node:start(NodeDef#{?SetWsName, ?EmptyBacklog}, ?MODULE);
         _ ->
             %% seemlessly return an ignore node if the configuration doesn't
             %% match. This allows other flows and nodes to continue to work
@@ -75,7 +78,7 @@ start(#{?IsClient} = NodeDef, WsName) ->
           check_config(<<"end">>,      false,       NodeDef, WsName)
          } of
         {ok, ok, ok} ->
-            ered_node:start(NodeDef#{?SET_WS, ?EmptyBacklog}, ?MODULE);
+            ered_node:start(NodeDef#{?SetWsName, ?EmptyBacklog}, ?MODULE);
         _ ->
             %% seemlessly return an ignore node if the configuration doesn't
             %% match. This allows other flows and nodes to continue to work
@@ -94,16 +97,12 @@ handle_event(
     {registered, WsName, _MyPid},
     #{
         ?IsClient,
-        <<"port">> := PortStr,
-        <<"host">> := Server
+        ?GetPort,
+        ?GetHost
     } = NodeDef
 ) ->
     case
-        ered_tcp_manager:register_connector(
-            Server,
-            convert_to_num(PortStr),
-            self()
-        )
+        ered_tcp_manager:register_connector(Host, convert_to_num(Port), self())
     of
         {connected, SessionId} ->
             node_status(WsName, NodeDef, "connected", "green", "dot"),
@@ -115,7 +114,7 @@ handle_event(
 handle_event(
     {tcpc_initiated, {SessionId, _Host, _Port}},
     #{
-        ?GET_WS,
+        ?GetWsName,
         ?GetBacklog
     } = NodeDef
 ) ->
@@ -133,15 +132,11 @@ handle_event(
     #{
         ?IsClient,
         ?GetSessionId,
-        <<"port">> := PortStr,
-        <<"host">> := Server
+        ?GetPort,
+        ?GetHost
     } = NodeDef
 ) ->
-    ered_tcp_manager:unregister_connector(
-        Server,
-        convert_to_num(PortStr),
-        self()
-    ),
+    ered_tcp_manager:unregister_connector(Host, convert_to_num(Port), self()),
     ered_tcp_manager:close(SessionId),
     node_status(WsName, NodeDef, "disconnected", "grey", "ring"),
     maps:remove('_sessionid', NodeDef#{?EmptyBacklog});
@@ -152,33 +147,20 @@ handle_event(_, NodeDef) ->
 %%
 handle_msg(
     {incoming, #{?GetPayload} = Msg},
-    #{
-        ?IsClient,
-        ?GetSessionId,
-        ?GetBacklog
-    } = NodeDef
+    #{?IsClient, ?GetSessionId, ?GetBacklog} = NodeDef
 ) ->
     [ered_tcp_manager:send(SessionId, P) || P <- [Payload | Backlog]],
     {handled, NodeDef#{?EmptyBacklog}, Msg};
 handle_msg(
     {incoming, #{?GetPayload} = Msg},
-    #{
-        ?IsClient,
-        ?GetBacklog
-    } = NodeDef
+    #{?IsClient, ?GetBacklog} = NodeDef
 ) ->
-    {handled, NodeDef#{'_backlog' => [Payload | Backlog]}, Msg};
+    {handled, NodeDef#{?DefineBacklog([Payload | Backlog])}, Msg};
 handle_msg(
     {incoming, Msg},
     #{?IsReply} = NodeDef
 ) ->
-    case maps:get(<<"beserver">>, NodeDef) of
-        <<"reply">> ->
-            handle_reply_mode(Msg, NodeDef);
-        Unsupported ->
-            ErrMsg = jstr("unsupported beserver mode ~p", [Unsupported]),
-            unsupported(NodeDef, Msg, ErrMsg)
-    end,
+    handle_reply_mode(Msg, NodeDef),
     {handled, NodeDef, dont_send_complete_msg};
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
@@ -188,24 +170,35 @@ handle_msg(_, NodeDef) ->
 
 %%
 %%
-handle_reply_mode(#{<<"payload">> := Payload} = Msg, NodeDef) ->
-    case maps:find(<<"_session">>, Msg) of
-        {ok, TcpSession} ->
-            case check_tcp_session(TcpSession) of
-                {ok, SessionId} ->
-                    ered_tcp_manager:send(
-                        SessionId,
-                        maps:get(<<"payload">>, Msg)
-                    ),
-                    handle_reset(maps:find(<<"reset">>, Msg), SessionId);
-                {error, ErrMsg} ->
-                    send_out_debug_msg(NodeDef, Msg, ErrMsg, error)
-            end;
-        _ ->
-            %% Specific Node-RED bevahiour, send **all** tcp in nodes
-            %% this message.
-            ered_tcp_manager:send_all_sessions(Payload)
-    end.
+handle_reply_mode(
+    #{?GetPayload, <<"_session">> := TcpSession, <<"reset">> := ResetValue} =
+      Msg,
+    NodeDef
+) ->
+    case check_tcp_session(TcpSession) of
+        {ok, SessionId} ->
+            ered_tcp_manager:send(SessionId, Payload),
+            handle_reset(ResetValue, SessionId);
+        {error, ErrMsg} ->
+            send_out_debug_msg(NodeDef, Msg, ErrMsg, error)
+    end;
+handle_reply_mode(
+    #{?GetPayload, <<"_session">> := TcpSession} = Msg,
+    NodeDef
+) ->
+    case check_tcp_session(TcpSession) of
+        {ok, SessionId} ->
+            ered_tcp_manager:send(SessionId, Payload);
+        {error, ErrMsg} ->
+            send_out_debug_msg(NodeDef, Msg, ErrMsg, error)
+    end;
+handle_reply_mode(
+    #{?GetPayload},
+    _NodeDef
+) ->
+    %% Specific Node-RED bevahiour, send **all** tcp in nodes
+    %% this message.
+    ered_tcp_manager:send_all_sessions(Payload).
 
 %%
 %%
@@ -216,11 +209,11 @@ check_tcp_session(#{<<"id">> := SessionId}) ->
 
 %%
 %%
-handle_reset({ok, true}, SessionId) ->
+handle_reset(true, SessionId) ->
     ered_tcp_manager:close(SessionId);
-handle_reset({ok, <<"true">>}, SessionId) ->
+handle_reset(<<"true">>, SessionId) ->
     ered_tcp_manager:close(SessionId);
-handle_reset({ok, "true"}, SessionId) ->
+handle_reset("true", SessionId) ->
     ered_tcp_manager:close(SessionId);
 handle_reset(_, _) ->
     ignore.

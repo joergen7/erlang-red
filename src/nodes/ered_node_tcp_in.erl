@@ -3,6 +3,7 @@
 -behaviour(ered_node).
 
 -include("ered_nodes.hrl").
+-include("ered_tcpnodes.hrl").
 
 -export([start/2]).
 -export([handle_msg/2]).
@@ -60,17 +61,11 @@
 
 -import(ered_nodered_comm, [
     node_status/5,
-    ws_from/1
+    unsupported/3
 ]).
-
--define(AllThreeChecksOK, {ok, ok, ok}).
--define(AllFourChecksOK, {ok, ok, ok, ok}).
 
 -define(IsServer, <<"server">> := <<"server">>).
 -define(IsClient, <<"server">> := <<"client">>).
-
--define(GetPort, <<"port">> := Port).
--define(GetHost, <<"host">> := Host).
 
 %%
 %%
@@ -84,8 +79,8 @@ start(#{?IsServer} = NodeDef, WsName) ->
         check_config(<<"host">>,     <<"">>,       NodeDef, WsName),
         check_config(<<"datamode">>, <<"stream">>, NodeDef, WsName)
     } of
-        ?AllThreeChecksOK ->
-            ered_node:start(?PUT_WS(NodeDef#{conn_count => 0}), ?MODULE);
+        {ok, ok, ok} ->
+            ered_node:start(NodeDef#{?SetWsName, conn_count => 0}, ?MODULE);
         _ ->
             ered_node:start(NodeDef, ered_node_ignore)
     end;
@@ -97,31 +92,31 @@ start(#{?IsClient} = NodeDef, WsName) ->
         check_config(<<"datamode">>, <<"stream">>, NodeDef, WsName),
         check_config(<<"trim">>,     true,         NodeDef, WsName)
     } of
-        ?AllFourChecksOK ->
-            ered_node:start(?PUT_WS(NodeDef#{conn_count => 0}), ?MODULE);
+        {ok, ok, ok, ok} ->
+            ered_node:start(NodeDef#{?SetWsName, conn_count => 0}, ?MODULE);
         _ ->
             ered_node:start(NodeDef, ered_node_ignore)
     end;
 %% unknown server configuration.
-start(#{<<"server">> := _ServerType} = NodeDef, WsName) ->
-    check_config(<<"server">>, <<"Unsupported">>, NodeDef, WsName),
+start(#{<<"server">> := Unsupported} = NodeDef, WsName) ->
+    ErrMsg = jstr("unsupported server mode ~p", [Unsupported]),
+    unsupported(NodeDef, {websocket, WsName}, ErrMsg),
     ered_node:start(NodeDef, ered_node_ignore).
 
 %%
 %% Node Lifecycle handler
 %%
 % registering a listener
-handle_event({registered, _WsName, MyPid}, #{?IsServer} = NodeDef) ->
+handle_event(
+    {registered, _WsName, MyPid},
+    #{?IsServer, ?GetHost, ?GetPort} = NodeDef
+) ->
     %% TODO here we leave the scoping across WsName, a server can only bind
     %% TODO once on a port and to decide which Websocket receives which packets
     %% TODO of data is too much.
-    R = ered_tcp_manager:register_listener(
-        maps:get(<<"host">>, NodeDef),
-        convert_to_num(maps:get(<<"port">>, NodeDef)),
-        MyPid
-    ),
-
-    case R of
+    case
+        ered_tcp_manager:register_listener(Host, convert_to_num(Port), MyPid)
+    of
         ok ->
             update_conn_count(NodeDef, 0);
         {error, Reason} ->
@@ -136,11 +131,11 @@ handle_event(
         ered_tcp_manager:register_connector(Host, convert_to_num(Port), MyPid)
     of
         connecting ->
-            node_status(WsName, NodeDef, "connecting", "blue", "ring");
+            ?NodeStatus("connecting", "blue", "ring");
         {connected, _SessionId} ->
-            node_status(WsName, NodeDef, "connected", "green", "dot");
+            ?NodeStatus("connected", "green", "dot");
         R ->
-            node_status(WsName, NodeDef, jstr("~p", [R]), "blue", "ring")
+            ?NodeStatus(jstr("~p", [R]), "blue", "ring")
     end,
     NodeDef;
 %%
@@ -171,23 +166,26 @@ handle_event({tcpl_closed, Tuple}, NodeDef) ->
 handle_event({tcpc_data, Tuple}, NodeDef) ->
     send_out_msg(conn, Tuple, <<"connected">>, NodeDef),
     NodeDef;
-handle_event({tcpc_initiated, _Tuple}, #{?GET_WS} = NodeDef) ->
-    node_status(WsName, NodeDef, <<"connected">>, "green", "dot"),
+handle_event({tcpc_initiated, _Tuple}, #{?GetWsName} = NodeDef) ->
+    ?NodeStatus("connected", "green", "dot"),
     NodeDef;
-handle_event({tcpc_retry, _Tuple}, #{?GET_WS} = NodeDef) ->
-    node_status(WsName, NodeDef, <<"connecting">>, "blue", "ring"),
+handle_event({tcpc_retry, _Tuple}, #{?GetWsName} = NodeDef) ->
+    ?NodeStatus("connecting", "blue", "ring"),
     NodeDef;
-handle_event({tcpc_closed, _Tuple}, #{?GET_WS, ?GetHost, ?GetPort} = NodeDef) ->
+handle_event(
+    {tcpc_closed, _Tuple},
+    #{?GetWsName, ?GetHost, ?GetPort} = NodeDef
+) ->
     ered_tcp_manager:unregister_connector(Host, convert_to_num(Port), self()),
     case
         ered_tcp_manager:register_connector(Host, convert_to_num(Port), self())
     of
         connecting ->
-            node_status(WsName, NodeDef, "connecting", "blue", "ring");
+            ?NodeStatus("connecting", "blue", "ring");
         {connected, _SessionId} ->
-            node_status(WsName, NodeDef, "connected", "green", "dot");
+            ?NodeStatus("connected", "green", "dot");
         R ->
-            node_status(WsName, NodeDef, jstr("~p", [R]), "blue", "ring")
+            ?NodeStatus(jstr("~p", [R]), "blue", "ring")
     end,
     NodeDef;
 %%
@@ -213,45 +211,42 @@ stay_positive(V) ->
 
 %%
 %%
-post_status_error(NodeDef, Error) ->
-    node_status(
-        ws_from(NodeDef),
-        NodeDef,
-        io_lib:format("~p", [Error]),
-        "red",
-        "dot"
-    ),
+post_status_error(#{?GetWsName} = NodeDef, Error) ->
+    ?NodeStatus(io_lib:format("~p", [Error]), "red", "dot"),
     NodeDef#{conn_count => 0}.
 
-update_conn_count(NodeDef, Cnt) ->
-    node_status(
-        ws_from(NodeDef),
-        NodeDef,
-        io_lib:format("~p connections", [stay_positive(Cnt)]),
-        "",
-        ""
-    ),
+update_conn_count(#{?GetWsName} = NodeDef, Cnt) ->
+    ?NodeStatus(io_lib:format("~p connections", [stay_positive(Cnt)]), "", ""),
     NodeDef#{conn_count => stay_positive(Cnt)}.
 
 %%
 %%
-send_out_msg(conn, {Payload, SessionId, _Hostname, _Port}, Status, NodeDef) ->
-    {outgoing, Msg} = create_outgoing_msg(ws_from(NodeDef)),
+send_out_msg(
+    conn,
+    {Payload, SessionId, _Hostname, _Port},
+    Status,
+    #{?GetTopic, ?GetWsName} = NodeDef
+) ->
+    {outgoing, Msg} = create_outgoing_msg(WsName),
     Msg2 = Msg#{
         <<"_session">> => #{
             <<"type">> => <<"tcp">>,
             <<"id">> => SessionId,
             <<"status">> => Status
         },
-        <<"topic">> => maps:get(<<"topic">>, NodeDef),
-        <<"payload">> => Payload
+        ?SetTopic,
+        ?SetPayload
     },
     send_msg_to_connected_nodes(NodeDef, Msg2).
 
 send_out_msg({SessionId, InterfaceIp}, Status, NodeDef) ->
     send_out_msg({[], SessionId, InterfaceIp}, Status, NodeDef);
-send_out_msg({Payload, SessionId, InterfaceIp}, Status, NodeDef) ->
-    {outgoing, Msg} = create_outgoing_msg(ws_from(NodeDef)),
+send_out_msg(
+    {Payload, SessionId, InterfaceIp},
+    Status,
+    #{?GetTopic, ?GetWsName} = NodeDef
+) ->
+    {outgoing, Msg} = create_outgoing_msg(WsName),
     Msg2 = Msg#{
         <<"_session">> => #{
             <<"type">> => <<"tcp">>,
@@ -259,7 +254,7 @@ send_out_msg({Payload, SessionId, InterfaceIp}, Status, NodeDef) ->
             <<"status">> => Status
         },
         <<"ip">> => InterfaceIp,
-        <<"topic">> => maps:get(<<"topic">>, NodeDef),
-        <<"payload">> => Payload
+        ?SetTopic,
+        ?SetPayload
     },
     send_msg_to_connected_nodes(NodeDef, Msg2).

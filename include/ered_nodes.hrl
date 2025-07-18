@@ -28,9 +28,20 @@ end#{
 -define(GET_WS, '_ws' := WsName).
 -define(SET_WS, '_ws' => WsName).
 
+%% Readable variation of the above - there is no need to scream.
+-define(AddWsName(Map), begin
+    Map
+end#{
+    '_ws' => WsName
+}).
+-define(GetWsName, '_ws' := WsName).
+-define(SetWsName, '_ws' => WsName).
+
 %%
 %% Check for supervision
 -define(BEING_SUPERVISED, '_being_supervised' := true).
+
+-define(NodeStatus(EM, CLR, SHP), node_status(WsName, NodeDef, EM, CLR, SHP)).
 
 %%
 %% Message types
@@ -40,8 +51,17 @@ end#{
 -define(MSG_INCOMING, {incoming, Msg}).
 -define(MSG_REGISTERED, {registered, WsName, NodePid}).
 
--define(TopicFromMsg, get_prop_value_from_map(<<"topic">>, Msg, "")).
-
 -define(NodePid, '_node_pid_' := NodePid).
+-define(GetNodePid, '_node_pid_' := NodePid).
 
 -define(GetPayload, <<"payload">> := Payload).
+-define(SetPayload, <<"payload">> => Payload).
+-define(AddPayload(V), <<"payload">> => V).
+
+-define(TopicFromMsg, get_prop_value_from_map(<<"topic">>, Msg, "")).
+-define(AddTopic(V), <<"topic">> => V).
+-define(GetTopic, <<"topic">> := Topic).
+-define(SetTopic, <<"topic">> => Topic).
+
+-define(GetIdStr, <<"id">> := IdStr).
+-define(GetTypeStr, <<"type">> := TypeStr).

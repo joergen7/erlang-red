@@ -63,36 +63,35 @@ handle_event(_, NodeDef) ->
 %%
 %%
 % erlfmt:ignore - alginment
-handle_incoming(NodeDef, Msg) ->
-    {ok, Prop}     = maps:find(<<"field">>,     NodeDef),
-    {ok, PropType} = maps:find(<<"fieldType">>, NodeDef),
-    {ok, Syntax}   = maps:find(<<"syntax">>,    NodeDef),
-    {ok, Template} = maps:find(<<"template">>,  NodeDef),
-    {ok, Output}   = maps:find(<<"output">>,    NodeDef),
+handle_msg(
+  {incoming, Msg},
+  #{
+    <<"field">>     := Prop,
+    <<"fieldType">> := PropType,
+    <<"syntax">>    := Syntax,
+    <<"template">>  := Template,
+    <<"output">>    := Output
+   } = NodeDef
+) ->
+    {NewNodeDef, NewMsg} =
+        case doit(Prop, PropType, Template, Syntax, Output, Msg) of
+            {ok, Msg2} ->
+                send_msg_to_connected_nodes(NodeDef, Msg2),
+                {NodeDef, Msg2};
+            unsupported ->
+                ErrMsg = jstr("Unsupported configuration: ~p", [NodeDef]),
+                unsupported(NodeDef, Msg, ErrMsg),
 
-    case doit(Prop, PropType, Template, Syntax, Output, Msg) of
-        {ok, Msg2} ->
-            send_msg_to_connected_nodes(NodeDef, Msg2),
-            {NodeDef, Msg2};
-        unsupported ->
-            ErrMsg = jstr("Unsupported configuration: ~p", [NodeDef]),
-            unsupported(NodeDef, Msg, ErrMsg),
+                %% Ok, we push the content into the msg object but warn as
+                %% well. Not modifying the message and sending it on would
+                %% be an error but not supporting formatting is kind of ...
+                %% an error really but since I don't raise an error here, set
+                %% the content in the msg.
+                Msg2 = set_prop_value(Prop, Template, Msg),
+                send_msg_to_connected_nodes(NodeDef, Msg2),
+                {NodeDef, Msg2}
+        end,
+    {handled, NewNodeDef, NewMsg};
 
-            %% Ok, we push the content into the msg object but warn as
-            %% well. Not modifying the message and sending it on would
-            %% be an error but not supporting formatting is kind of ...
-            %% an error really but since I don't raise an error here, set
-            %% the content in the msg.
-            Msg2 = set_prop_value(Prop, Template, Msg),
-
-            send_msg_to_connected_nodes(NodeDef, Msg2),
-            {NodeDef, Msg2}
-    end.
-
-%%
-%%
-handle_msg({incoming, Msg}, NodeDef) ->
-    {NodeDef2, Msg2} = handle_incoming(NodeDef, Msg),
-    {handled, NodeDef2, Msg2};
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.

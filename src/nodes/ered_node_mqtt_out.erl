@@ -85,7 +85,7 @@ handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
                     try
                         case gen_server:call(MqttMgrPid, connect) of
                             {ok, _Props} ->
-                                ?STATUS("connected", "green", "dot"),
+                                ?NodeStatus("connected", "green", "dot"),
                                 maps:remove('_timer', NodeDef);
                             _ ->
                                 TRef = erlang:start_timer(
@@ -104,7 +104,7 @@ handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
                             %% the manager.
                             %% What we do is capture the DOWN event of the
                             %% manager, restart it and then add a another timer.
-                            ?STATUS("connecting", "yellow", "dot"),
+                            ?NodeStatus("connecting", "yellow", "dot"),
                             NodeDef
                     end;
                 _ ->
@@ -113,7 +113,7 @@ handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
                         self(),
                         {connect_to_broker, MqttMgrPid}
                     ),
-                    ?STATUS("connecting", "yellow", "dot"),
+                    ?NodeStatus("connecting", "yellow", "dot"),
                     NodeDef#{'_timer' => TRef}
             end;
         _ ->
@@ -256,7 +256,7 @@ setup_mqtt_manager(
 ) ->
     case retrieve_config_node(CfgNodeId) of
         {ok, Cfg} ->
-            ?STATUS("connecting", "yellow", "dot"),
+            ?NodeStatus("connecting", "yellow", "dot"),
 
             MqttMgrPid = create_mqtt_manager(Cfg),
 
@@ -273,11 +273,11 @@ setup_mqtt_manager(
                 '_mqtt_mgr_id' => MqttMgrPid
             });
         _ ->
-            ?STATUS("connecting (no cfg)", "yellow", "dot"),
+            ?NodeStatus("connecting (no cfg)", "yellow", "dot"),
             NodeDef
     end;
 setup_mqtt_manager(
     NodeDef, WsName
 ) ->
-    ?STATUS("connecting (no broker)", "yellow", "dot"),
+    ?NodeStatus("connecting (no broker)", "yellow", "dot"),
     NodeDef.

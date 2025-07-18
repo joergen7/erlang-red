@@ -1,5 +1,7 @@
 -module(ered_node_trigger).
 
+-include("ered_nodes.hrl").
+
 -behaviour(ered_node).
 
 -export([start/2]).
@@ -33,16 +35,85 @@
 -import(ered_nodered_comm, [
     node_status/5,
     node_status_clear/2,
-    unsupported/3,
-    ws_from/1
+    unsupported/3
 ]).
 
 start(NodeDef, _WsName) ->
     ered_node:start(NodeDef, ?MODULE).
 
+%%
+%%
 handle_event(_, NodeDef) ->
     NodeDef.
 
+%%
+%%
+handle_msg(
+    {incoming, #{?GetWsName} = Msg},
+    #{<<"wires">> := Wires, <<"outputs">> := Outputs} = NodeDef
+) ->
+    case
+        opx_to_payload(
+            maps:find(<<"op1">>, NodeDef),
+            maps:find(<<"op1type">>, NodeDef)
+        )
+    of
+        {dontsend, _} ->
+            node_status(WsName, NodeDef, "", "blue", "dot"),
+            Delay = compute_delay(NodeDef, Msg),
+            ThisPid = self(),
+            Fun = fun() -> gen_server:cast(ThisPid, {outgoing, Msg}) end,
+            timer:apply_after(Delay, Fun),
+            {handled, NodeDef, Msg};
+        {ok, Value} ->
+            Msg2 = Msg#{?AddPayload(Value)},
+            node_status(WsName, NodeDef, "", "blue", "dot"),
+            send_msg_based_on_output_count(
+                Msg2, Wires, send_first_msg, Outputs
+            ),
+            Delay = compute_delay(NodeDef, Msg2),
+            ThisPid = self(),
+            Fun = fun() -> gen_server:cast(ThisPid, {outgoing, Msg2}) end,
+            timer:apply_after(Delay, Fun),
+            {handled, NodeDef, Msg2};
+        {error, ErrMsg} ->
+            unsupported(NodeDef, Msg, ErrMsg),
+            {handled, NodeDef, Msg}
+    end;
+%%
+%% outgoing triggers the second message
+handle_msg(
+    {outgoing, #{?GetWsName} = Msg},
+    #{<<"wires">> := Wires, <<"outputs">> := Outputs} = NodeDef
+) ->
+    node_status_clear(WsName, NodeDef),
+    case
+        opx_to_payload(
+            maps:find(<<"op2">>, NodeDef),
+            maps:find(<<"op2type">>, NodeDef)
+        )
+    of
+        {dontsend, _} ->
+            {handled, NodeDef, Msg};
+        {ok, Value} ->
+            Msg2 = Msg#{?AddPayload(Value)},
+            send_msg_based_on_output_count(
+                Msg2, Wires, send_second_msg, Outputs
+            ),
+            {handled, NodeDef, Msg2};
+        {error, ErrMsg} ->
+            unsupported(NodeDef, Msg, ErrMsg),
+            {handled, NodeDef, Msg}
+    end;
+%%
+%% Most import to define this, else this node will crash with any
+%% unrecognised message.
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.
+
+%%
+%% ------------------ Helpers
+%%
 compute_delay(NodeDef, Msg, {ok, true}) ->
     case maps:find(<<"delay">>, Msg) of
         {ok, Delay} ->
@@ -100,68 +171,3 @@ send_msg_based_on_output_count(Msg, [_ | MoreWires], send_second_msg, 2) ->
     send_msg_on(MoreWires, Msg);
 send_msg_based_on_output_count(Msg, [Wires | _], send_second_msg, 1) ->
     send_msg_on(Wires, Msg).
-
-%%
-%%
-handle_msg({incoming, Msg}, NodeDef) ->
-    case
-        opx_to_payload(
-            maps:find(<<"op1">>, NodeDef),
-            maps:find(<<"op1type">>, NodeDef)
-        )
-    of
-        {dontsend, _} ->
-            node_status(ws_from(Msg), NodeDef, "", "blue", "dot"),
-            Delay = compute_delay(NodeDef, Msg),
-            ThisPid = self(),
-            Fun = fun() -> gen_server:cast(ThisPid, {outgoing, Msg}) end,
-            timer:apply_after(Delay, Fun),
-            {handled, NodeDef, Msg};
-        {ok, Value} ->
-            Msg2 = maps:put(<<"payload">>, Value, Msg),
-            node_status(ws_from(Msg), NodeDef, "", "blue", "dot"),
-            send_msg_based_on_output_count(
-                Msg2,
-                maps:get(<<"wires">>, NodeDef),
-                send_first_msg,
-                maps:get(<<"outputs">>, NodeDef)
-            ),
-            Delay = compute_delay(NodeDef, Msg2),
-            ThisPid = self(),
-            Fun = fun() -> gen_server:cast(ThisPid, {outgoing, Msg2}) end,
-            timer:apply_after(Delay, Fun),
-            {handled, NodeDef, Msg2};
-        {error, ErrMsg} ->
-            unsupported(NodeDef, Msg, ErrMsg),
-            {handled, NodeDef, Msg}
-    end;
-%%
-%% outgoing triggers the second message
-handle_msg({outgoing, Msg}, NodeDef) ->
-    node_status_clear(ws_from(Msg), NodeDef),
-    case
-        opx_to_payload(
-            maps:find(<<"op2">>, NodeDef),
-            maps:find(<<"op2type">>, NodeDef)
-        )
-    of
-        {dontsend, _} ->
-            {handled, NodeDef, Msg};
-        {ok, Value} ->
-            Msg2 = maps:put(<<"payload">>, Value, Msg),
-            send_msg_based_on_output_count(
-                Msg2,
-                maps:get(<<"wires">>, NodeDef),
-                send_second_msg,
-                maps:get(<<"outputs">>, NodeDef)
-            ),
-            {handled, NodeDef, Msg2};
-        {error, ErrMsg} ->
-            unsupported(NodeDef, Msg, ErrMsg),
-            {handled, NodeDef, Msg}
-    end;
-%%
-%% Most import to define this, else this node will crash with any
-%% unrecognised message.
-handle_msg(_, NodeDef) ->
-    {unhandled, NodeDef}.

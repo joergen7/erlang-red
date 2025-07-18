@@ -1,5 +1,7 @@
 -module(ered_node_status).
 
+-include("ered_nodes.hrl").
+
 -behaviour(ered_node).
 
 -export([start/2]).
@@ -68,10 +70,10 @@ start(NodeDef, _WsName) ->
 
 %%
 %%
-handle_event({registered, WsName, _Pid}, NodeDef) ->
-    {ok, NodePid} = maps:find('_node_pid_', NodeDef),
-    {ok, NodesToListenTo} = maps:find(<<"scope">>, NodeDef),
-
+handle_event(
+    {registered, WsName, _Pid},
+    #{?GetNodePid, <<"scope">> := NodesToListenTo} = NodeDef
+) ->
     [
         ered_ws_event_exchange:subscribe(
             WsName, TgtNodeId, status, NodePid
@@ -79,8 +81,10 @@ handle_event({registered, WsName, _Pid}, NodeDef) ->
      || TgtNodeId <- NodesToListenTo
     ],
     NodeDef;
-handle_event({stop, WsName}, NodeDef) ->
-    {ok, NodePid} = maps:find('_node_pid_', NodeDef),
+handle_event(
+    {stop, WsName},
+    #{?GetNodePid} = NodeDef
+) ->
     ered_ws_event_exchange:unsubscribe(WsName, NodePid),
     NodeDef;
 handle_event(_, NodeDef) ->
@@ -88,33 +92,26 @@ handle_event(_, NodeDef) ->
 
 %%
 %%
-handle_websocket({status, WsName, NodeId, Txt, Clr, Shp}, NodeDef) ->
+handle_msg({ws_event, {status, WsName, NodeId, Txt, Clr, Shp}}, NodeDef) ->
     {outgoing, Msg} = create_outgoing_msg(WsName),
+
     %% TODO should really find the name and type of the source node
     %% TODO but on the other hand, with the node id, the frontend can
     %% TODO do that itself.
-    send_msg_to_connected_nodes(
-        NodeDef,
-        Msg#{
-            <<"source">> => #{
-                <<"id">> => NodeId,
-                <<"type">> => <<"">>,
-                <<"name">> => <<"">>
-            },
-            <<"status">> => #{
-                <<"fill">> => jstr(Clr),
-                <<"shape">> => jstr(Shp),
-                <<"text">> => jstr(Txt)
-            }
+    Msg2 = Msg#{
+        <<"source">> => #{
+            <<"id">> => NodeId,
+            <<"type">> => <<"">>,
+            <<"name">> => <<"">>
+        },
+        <<"status">> => #{
+            <<"fill">> => jstr(Clr),
+            <<"shape">> => jstr(Shp),
+            <<"text">> => jstr(Txt)
         }
-    ),
-    NodeDef;
-handle_websocket(_, NodeDef) ->
-    NodeDef.
+    },
 
-%%
-%%
-handle_msg({ws_event, Details}, NodeDef) ->
-    {handled, handle_websocket(Details, NodeDef), empty};
+    send_msg_to_connected_nodes(NodeDef, Msg2),
+    {handled, NodeDef, Msg2};
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.

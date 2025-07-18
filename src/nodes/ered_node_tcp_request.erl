@@ -74,7 +74,7 @@ start(NodeDef, WsName) ->
           check_config(<<"tls">>,     <<"">>,       NodeDef, WsName)
     } of
         {ok, ok, ok, ok} ->
-            ered_node:start(NodeDef#{?SET_WS, ?EmptyBacklog}, ?MODULE);
+            ered_node:start(NodeDef#{?SetWsName, ?EmptyBacklog}, ?MODULE);
         _ ->
             ered_node:start(NodeDef, ered_node_ignore)
     end.
@@ -97,7 +97,9 @@ handle_event(
            self())
     of
         {connected, SessionId} ->
-            erlang:start_timer(convert_to_num(TimeoutMS), self(), treq_disconnect),
+            erlang:start_timer(
+              convert_to_num(TimeoutMS), self(), treq_disconnect
+            ),
             node_status(WsName, NodeDef, "connected", "green", "dot"),
             NodeDef#{?SetSessionId};
         connecting ->
@@ -107,7 +109,7 @@ handle_event(
 
 handle_event(
   {tcpc_initiated, {SessionId, _Host, _Port}},
-  #{ ?GET_WS,
+  #{ ?GetWsName,
      ?GetBacklog,
      <<"splitc">> := TimeoutMS
    } = NodeDef
@@ -119,7 +121,7 @@ handle_event(
 
 handle_event(
   {tcpc_data, {Data, _SessionID, _Host, _Port}},
-  #{?GET_WS, <<"ret">> := <<"string">> } = NodeDef
+  #{?GetWsName, <<"ret">> := <<"string">> } = NodeDef
 ) when is_list(Data) ->
     {outgoing, Msg} = create_outgoing_msg(WsName),
     send_msg_to_connected_nodes(
@@ -130,7 +132,7 @@ handle_event(
 
 handle_event(
   {tcpc_data, {Data, _SessionID, _Host, _Port}},
-  #{?GET_WS} = NodeDef
+  #{?GetWsName} = NodeDef
 ) ->
     {outgoing, Msg} = create_outgoing_msg(WsName),
     send_msg_to_connected_nodes(NodeDef, Msg#{ <<"payload">> => Data }),
@@ -138,7 +140,7 @@ handle_event(
 
 handle_event(
   treq_disconnect,
-  #{ ?GET_WS,
+  #{ ?GetWsName,
      ?GetSessionId,
      ?GetBacklog,
      <<"port">>   := PortStr,
@@ -180,7 +182,7 @@ handle_event(_Event, NodeDef) ->
 %%
 %% --> send & forget --> immediately close connection after sending data
 handle_msg(
-    {incoming, #{?GET_WS, ?GetPayload} = Msg},
+    {incoming, #{?GetWsName, ?GetPayload} = Msg},
     #{
         <<"out">> := <<"immed">>, <<"port">> := PortStr, <<"server">> := Server
     } = NodeDef
@@ -215,7 +217,7 @@ handle_msg(
         ?GetBacklog
     } = NodeDef
 ) ->
-    {handled, NodeDef#{'_backlog' => [Payload | Backlog]}, Msg};
+    {handled, NodeDef#{?DefineBacklog([Payload | Backlog])}, Msg};
 handle_msg(_Msg, NodeDef) ->
     {unhandled, NodeDef}.
 

@@ -39,11 +39,93 @@
 ]).
 %%
 %%
+start(#{<<"repair">> := true} = NodeDef, WsName) ->
+    unsupported(NodeDef, {websocket, WsName}, "recreate message sequence"),
+    ered_node:start(NodeDef, ered_node_ignore);
 start(NodeDef, _WsName) ->
     ered_node:start(NodeDef, ?MODULE).
 
 %%
 %%
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
+%% Handler for incoming messages
+%%
+handle_msg(
+    {incoming, Msg},
+    #{<<"rules">> := Rules, <<"wires">> := Wires} = NodeDef
+) ->
+    case
+        obtain_compare_to_value(
+            maps:find(<<"propertyType">>, NodeDef),
+            maps:find(<<"property">>, NodeDef),
+            Msg
+        )
+    of
+        {ok, Val} ->
+            case maps:find(<<"checkall">>, NodeDef) of
+                {ok, <<"true">>} ->
+                    %% last flag indicates that nothing has yet matched -
+                    %% required for the otherwise ('else') operator.
+                    handle_check_all_rules(
+                        Rules,
+                        Val,
+                        Wires,
+                        NodeDef,
+                        Msg,
+                        false
+                    );
+                _ ->
+                    handle_stop_after_one(
+                        Rules,
+                        Val,
+                        Wires,
+                        NodeDef,
+                        Msg
+                    )
+            end;
+        property_not_found_on_msg ->
+            case maps:find(<<"checkall">>, NodeDef) of
+                {ok, <<"true">>} ->
+                    %% last flag indicates that nothing has yet matched -
+                    %% required for the otherwise ('else') operator.
+                    handle_check_all_rules(
+                        Rules,
+                        not_defined_on_msg,
+                        Wires,
+                        NodeDef,
+                        Msg,
+                        false
+                    );
+                _ ->
+                    handle_stop_after_one(
+                        Rules,
+                        not_defined_on_msg,
+                        Wires,
+                        NodeDef,
+                        Msg
+                    )
+            end;
+        {error, ErrMsg} ->
+            post_exception_or_debug(NodeDef, Msg, ErrMsg);
+        {unsupported, ErrMsg} ->
+            unsupported(NodeDef, Msg, ErrMsg);
+        {exception, ErrMsg} ->
+            post_exception_or_debug(NodeDef, Msg, ErrMsg)
+    end,
+
+    {handled, NodeDef, dont_send_complete_msg};
+%%
+%%
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.
+
+%%
+%% ----------------------- Helpers
+%%
+
 obtain_operator_value(<<"jsonata">>, OpVal, Msg) ->
     case erlang_red_jsonata:execute(OpVal, Msg) of
         {ok, Result} ->
@@ -140,14 +222,13 @@ is_not_empty(_) ->
 handle_check_all_rules([], _, _, _, _, _) ->
     ok;
 handle_check_all_rules(
-    [Rule | Rules],
+    [#{<<"t">> := Op} = _Rule | Rules],
     not_defined_on_msg = Val,
     [Wires | MoreWires],
     NodeDef,
     Msg,
     HadMatch
 ) ->
-    {ok, Op} = maps:find(<<"t">>, Rule),
     %% else operator has no vt nor v values.
     case {Op, HadMatch} of
         {<<"else">>, false} ->
@@ -164,10 +245,13 @@ handle_check_all_rules(
             )
     end;
 handle_check_all_rules(
-    [Rule | Rules], Val, [Wires | MoreWires], NodeDef, Msg, HadMatch
+    [#{<<"t">> := Op} = Rule | Rules],
+    Val,
+    [Wires | MoreWires],
+    NodeDef,
+    Msg,
+    HadMatch
 ) ->
-    {ok, Op} = maps:find(<<"t">>, Rule),
-
     %% else, true, false, null empty, ...  operators have no vt nor v values.
     case {Op, HadMatch} of
         {<<"else">>, false} ->
@@ -281,9 +365,12 @@ handle_check_all_rules(
 handle_stop_after_one([], _, _, _, _) ->
     ok;
 handle_stop_after_one(
-    [Rule | Rules], not_defined_on_msg = Val, [Wires | MoreWires], NodeDef, Msg
+    [#{<<"t">> := Op} = _Rule | Rules],
+    not_defined_on_msg = Val,
+    [Wires | MoreWires],
+    NodeDef,
+    Msg
 ) ->
-    {ok, Op} = maps:find(<<"t">>, Rule),
     case Op of
         <<"null">> ->
             send_msg_on(Wires, Msg);
@@ -292,9 +379,13 @@ handle_stop_after_one(
         _ ->
             handle_stop_after_one(Rules, Val, MoreWires, NodeDef, Msg)
     end;
-handle_stop_after_one([Rule | Rules], Val, [Wires | MoreWires], NodeDef, Msg) ->
-    {ok, Op} = maps:find(<<"t">>, Rule),
-
+handle_stop_after_one(
+    [#{<<"t">> := Op} = Rule | Rules],
+    Val,
+    [Wires | MoreWires],
+    NodeDef,
+    Msg
+) ->
     %% else, true, false, null empty, ...  operators have no vt nor v values.
     case Op of
         %% else operator has no vt nor v values.
@@ -388,88 +479,3 @@ obtain_compare_to_value({ok, PropType}, {ok, PropName}, _Msg) ->
         jstr("unsupported property: ~p with type ~p", [PropName, PropType])};
 obtain_compare_to_value(Err1, Err2, _Msg) ->
     {error, jstr("error finding property Err1: ~p Err2: ~p", [Err1, Err2])}.
-
-%%
-%%
-handle_event(_, NodeDef) ->
-    NodeDef.
-
-%%
-%% Handler for incoming messages
-%%
-handle_msg({incoming, Msg}, NodeDef) ->
-    %% flag unsupported features - recreate message sequence whatever that does
-    case maps:find(<<"repair">>, NodeDef) of
-        {ok, true} ->
-            unsupported(NodeDef, Msg, "recreate message sequence");
-        _ ->
-            ignore
-    end,
-
-    {ok, Rules} = maps:find(<<"rules">>, NodeDef),
-    {ok, Wires} = maps:find(<<"wires">>, NodeDef),
-
-    case
-        obtain_compare_to_value(
-            maps:find(<<"propertyType">>, NodeDef),
-            maps:find(<<"property">>, NodeDef),
-            Msg
-        )
-    of
-        {ok, Val} ->
-            case maps:find(<<"checkall">>, NodeDef) of
-                {ok, <<"true">>} ->
-                    %% last flag indicates that nothing has yet matched -
-                    %% required for the otherwise ('else') operator.
-                    handle_check_all_rules(
-                        Rules,
-                        Val,
-                        Wires,
-                        NodeDef,
-                        Msg,
-                        false
-                    );
-                _ ->
-                    handle_stop_after_one(
-                        Rules,
-                        Val,
-                        Wires,
-                        NodeDef,
-                        Msg
-                    )
-            end;
-        property_not_found_on_msg ->
-            case maps:find(<<"checkall">>, NodeDef) of
-                {ok, <<"true">>} ->
-                    %% last flag indicates that nothing has yet matched -
-                    %% required for the otherwise ('else') operator.
-                    handle_check_all_rules(
-                        Rules,
-                        not_defined_on_msg,
-                        Wires,
-                        NodeDef,
-                        Msg,
-                        false
-                    );
-                _ ->
-                    handle_stop_after_one(
-                        Rules,
-                        not_defined_on_msg,
-                        Wires,
-                        NodeDef,
-                        Msg
-                    )
-            end;
-        {error, ErrMsg} ->
-            post_exception_or_debug(NodeDef, Msg, ErrMsg);
-        {unsupported, ErrMsg} ->
-            unsupported(NodeDef, Msg, ErrMsg);
-        {exception, ErrMsg} ->
-            post_exception_or_debug(NodeDef, Msg, ErrMsg)
-    end,
-
-    {handled, NodeDef, dont_send_complete_msg};
-%%
-%%
-handle_msg(_, NodeDef) ->
-    {unhandled, NodeDef}.

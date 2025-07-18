@@ -20,8 +20,7 @@
 ]).
 -import(ered_nodered_comm, [
     debug/3,
-    node_status/5,
-    ws_from/1
+    node_status/5
 ]).
 
 %%
@@ -38,9 +37,10 @@ handle_event(_, NodeDef) ->
 
 %%
 %%
-handle_msg({incoming, Msg}, NodeDef) ->
-    {IdStr, TypeStr} = ?NODE_ID_AND_TYPE(NodeDef),
-
+handle_msg(
+    {incoming, #{?GetWsName} = Msg},
+    #{?GetIdStr, ?GetTypeStr} = NodeDef
+) ->
     %%
     %% This output is for eunit testing. This does in fact does end
     %% up in the Node-RED frontend as a notice, but that's only
@@ -56,18 +56,19 @@ handle_msg({incoming, Msg}, NodeDef) ->
     %%
     %% this output is for Node-RED frontend when doing unit testing
     %% inside node red.
-    debug(ws_from(Msg), create_data_for_debug(NodeDef, TypeStr), warning),
+    debug(WsName, create_data_for_debug(NodeDef, TypeStr), warning),
 
     %%
     %% again for node red, show a status value for the corresponding node.
-    node_status(ws_from(Msg), NodeDef, "type not implemented", "grey", "dot"),
+    node_status(WsName, NodeDef, "type not implemented", "grey", "dot"),
 
     {handled, NodeDef, Msg};
 %%
 %%
-handle_msg({outgoing, Msg}, NodeDef) ->
-    {IdStr, TypeStr} = ?NODE_ID_AND_TYPE(NodeDef),
-
+handle_msg(
+    {outgoing, #{?GetWsName} = Msg},
+    #{?GetIdStr, ?GetTypeStr} = NodeDef
+) ->
     %%
     %% This output is for eunit testing. This does in fact does end
     %% up in the Node-RED frontend as a notice, but that's only
@@ -83,11 +84,11 @@ handle_msg({outgoing, Msg}, NodeDef) ->
     %%
     %% this output is for Node-RED frontend when doing unit testing
     %% inside node red.
-    debug(ws_from(Msg), create_data_for_debug(NodeDef, TypeStr), warning),
+    debug(WsName, create_data_for_debug(NodeDef, TypeStr), warning),
 
     %%
     %% again for node red, show a status value for the corresponding node.
-    node_status(ws_from(Msg), NodeDef, "type not implemented", "grey", "dot"),
+    node_status(WsName, NodeDef, "type not implemented", "grey", "dot"),
 
     {handled, NodeDef, Msg};
 %%
@@ -96,12 +97,13 @@ handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
 
 %%
-%% erlfmt:ignore equals and arrows should line up here.
+%% --------------- helpers
+%%
 create_data_for_debug(NodeDef, TypeStr) ->
     D = ?BASE_DATA,
 
     D#{
-       <<"topic">>  => <<"">>,
-       <<"msg">>    => jstr("node type '~s' is not implemented", [TypeStr]),
-       <<"format">> => <<"string">>
+        ?AddTopic(<<>>),
+        <<"msg">> => jstr("node type '~s' is not implemented", [TypeStr]),
+        <<"format">> => <<"string">>
     }.

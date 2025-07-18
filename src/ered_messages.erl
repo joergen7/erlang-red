@@ -209,6 +209,8 @@ encode_json(Value) ->
 %%    {error, ErrorMsg}
 %%
 get_prop({ok, Prop}, Msg) ->
+    ered_nested_maps:find(Prop, Msg);
+get_prop(Prop, Msg) ->
     ered_nested_maps:find(Prop, Msg).
 
 %%
@@ -224,8 +226,11 @@ retrieve_prop_value(PropName, Msg) ->
 
 %% Set a value in a nested map. This supports using nesting parameters to
 %% set a value somewhere in a map.
--spec set_prop_value(PropName :: string(), Value :: any(), Msg :: map()) ->
-    map().
+-spec set_prop_value(
+    PropName :: string() | binary(),
+    Value :: any(),
+    Msg :: map()
+) -> map().
 set_prop_value(PropName, Value, Msg) ->
     case ered_nested_maps:update(PropName, Msg, Value) of
         {ok, NewMsg, _Path} ->
