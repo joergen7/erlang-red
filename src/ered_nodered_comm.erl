@@ -95,7 +95,7 @@ unittest_result(WsName, FlowId, success) ->
 %%
 %% erlfmt:ignore lined up and to attention
 unsupported(NodeDef, {websocket, WsName}, ErrMsg) ->
-    unsupported(NodeDef, #{ '_ws' => WsName}, ErrMsg);
+    unsupported(NodeDef, #{'_ws' => WsName}, ErrMsg);
 unsupported(NodeDef, Msg, ErrMsg) ->
     D = ?BASE_DATA,
     Data = D#{
