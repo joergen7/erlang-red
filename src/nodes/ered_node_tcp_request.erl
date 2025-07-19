@@ -85,16 +85,14 @@ start(NodeDef, WsName) ->
 handle_event(
   {registered, WsName, _MyPid},
   #{
-    <<"out">>    := <<"time">>,
-    <<"splitc">> := TimeoutMS,
-    <<"port">>   := PortStr,
-    <<"server">> := Server
+     <<"out">>    := <<"time">>,
+     <<"splitc">> := TimeoutMS,
+     ?GetPort,
+     ?GetServer
    } = NodeDef
 ) ->
-    case ered_tcp_manager:register_connector(
-           Server,
-           convert_to_num(PortStr),
-           self())
+    case
+        ered_tcp_manager:register_connector(Server, convert_to_num(Port), self())
     of
         {connected, SessionId} ->
             erlang:start_timer(
@@ -143,16 +141,12 @@ handle_event(
   #{ ?GetWsName,
      ?GetSessionId,
      ?GetBacklog,
-     <<"port">>   := PortStr,
-     <<"server">> := Server
+     ?GetPort,
+     ?GetServer
    } = NodeDef
 ) ->
     [ered_tcp_manager:send(SessionId, P) || P <- Backlog],
-    ered_tcp_manager:unregister_connector(
-      Server,
-      convert_to_num(PortStr),
-      self()
-     ),
+    ered_tcp_manager:unregister_connector(Server, convert_to_num(Port), self()),
     ered_tcp_manager:close(SessionId),
     node_status(WsName, NodeDef, "disconnected", "grey", "ring"),
     maps:remove('_sessionid', NodeDef#{?EmptyBacklog});
@@ -160,15 +154,11 @@ handle_event(
 handle_event(
   {stop, WsName},
   #{ ?GetSessionId,
-     <<"port">>   := PortStr,
-     <<"server">> := Server
+     ?GetPort,
+     ?GetServer
    } = NodeDef
 ) ->
-    ered_tcp_manager:unregister_connector(
-      Server,
-      convert_to_num(PortStr),
-      self()
-     ),
+    ered_tcp_manager:unregister_connector(Server, convert_to_num(Port), self()),
     ered_tcp_manager:close(SessionId),
     node_status(WsName, NodeDef, "disconnected", "grey", "ring"),
     maps:remove('_sessionid', NodeDef#{?EmptyBacklog});
@@ -184,10 +174,12 @@ handle_event(_Event, NodeDef) ->
 handle_msg(
     {incoming, #{?GetWsName, ?GetPayload} = Msg},
     #{
-        <<"out">> := <<"immed">>, <<"port">> := PortStr, <<"server">> := Server
+        <<"out">> := <<"immed">>,
+        ?GetPort,
+        ?GetServer
     } = NodeDef
 ) ->
-    case tcp_connect(Server, PortStr) of
+    case tcp_connect(Server, Port) of
         {ok, Sock} ->
             gen_tcp:send(Sock, Payload),
             inet:close(Sock),

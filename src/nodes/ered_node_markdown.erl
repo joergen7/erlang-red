@@ -1,5 +1,7 @@
 -module(ered_node_markdown).
 
+-include("ered_nodes.hrl").
+
 -behaviour(ered_node).
 
 -export([start/2]).
@@ -34,13 +36,13 @@ handle_event(_, NodeDef) ->
 
 %%
 %%
-handle_msg({incoming, Msg}, NodeDef) ->
-    Bcontent = ensure_binary(maps:get(<<"payload">>, Msg)),
+handle_msg({incoming, #{?GetPayload} = Msg}, NodeDef) ->
+    Bcontent = ensure_binary(Payload),
 
     try
         case 'Elixir.ErlangRedHelpers':markdown_to_html(Bcontent) of
             {ok, HtmlC, _} ->
-                Msg2 = maps:put(<<"payload">>, HtmlC, Msg),
+                Msg2 = Msg#{?AddPayload(HtmlC)},
                 send_msg_to_connected_nodes(NodeDef, Msg2),
                 {handled, NodeDef, Msg2};
             Error ->

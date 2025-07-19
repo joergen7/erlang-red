@@ -8,3 +8,4 @@
 
 -define(GetPort, <<"port">> := Port).
 -define(GetHost, <<"host">> := Host).
+-define(GetServer, <<"server">> := Server).

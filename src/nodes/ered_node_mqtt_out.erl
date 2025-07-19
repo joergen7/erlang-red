@@ -29,8 +29,7 @@
 ]).
 -import(ered_nodered_comm, [
     node_status/5,
-    post_exception_or_debug/3,
-    ws_from/1
+    post_exception_or_debug/3
 ]).
 -import(ered_messages, [
     convert_to_num/1,
@@ -53,7 +52,7 @@ handle_event({registered, WsName, _NodePid}, NodeDef) ->
 %% mqtt manager pid is available
 handle_event(
     {mqtt_disconnected, _Reason, _Properties},
-    #{?MQTT_MGR_PID} = NodeDef
+    #{?MQTT_MGR_PID, ?GetWsName} = NodeDef
 ) ->
     case is_process_alive(MqttMgrPid) of
         true ->
@@ -64,20 +63,18 @@ handle_event(
             ),
             maps:put('_timer', TRef, NodeDef);
         _ ->
-            setup_mqtt_manager(NodeDef, ws_from(NodeDef))
+            setup_mqtt_manager(NodeDef, WsName)
     end;
 %%
 %% No mqtt manager pid
 handle_event(
     {mqtt_disconnected, _Reason, _Properties},
-    NodeDef
+    #{?GetWsName} = NodeDef
 ) ->
-    setup_mqtt_manager(NodeDef, ws_from(NodeDef));
+    setup_mqtt_manager(NodeDef, WsName);
 %%
 %%
-handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
-    WsName = ws_from(NodeDef),
-
+handle_event({connect_to_broker, MqttMgrPid}, #{?GetWsName} = NodeDef) ->
     case is_process_alive(MqttMgrPid) of
         true ->
             case gen_server:call(MqttMgrPid, start_mqtt) of
@@ -121,8 +118,11 @@ handle_event({connect_to_broker, MqttMgrPid}, NodeDef) ->
     end;
 %%
 %%
-handle_event({'DOWN', _MonitorRef, _Type, _Object, _Info}, NodeDef) ->
-    setup_mqtt_manager(NodeDef, ws_from(NodeDef));
+handle_event(
+    {'DOWN', _MonitorRef, _Type, _Object, _Info},
+    #{?GetWsName} = NodeDef
+) ->
+    setup_mqtt_manager(NodeDef, WsName);
 %%
 %% stop event - with timer or without, with mqtt mgr process or not.
 handle_event(?MSG_STOP, #{?TIMER, ?MQTT_MGR_PID} = NodeDef) ->
@@ -147,7 +147,7 @@ handle_msg(
     {incoming,
         #{
             <<"topic">> := MsgTopic,
-            <<"payload">> := Payload
+            ?GetPayload
         } = Msg},
     #{
         <<"topic">> := NodeTopic,
@@ -174,7 +174,7 @@ handle_msg(
 handle_msg(
     {incoming,
         #{
-            <<"payload">> := Payload
+            ?GetPayload
         } = Msg},
     #{
         <<"topic">> := NodeTopic,
@@ -220,8 +220,8 @@ handle_msg(_, NodeDef) ->
 %% -------------- Helpers
 %%
 
-update_status(false, NodeDef, Txt, Clr, Shp) ->
-    node_status(ws_from(NodeDef), NodeDef, Txt, Clr, Shp);
+update_status(false, #{?GetWsName} = NodeDef, Txt, Clr, Shp) ->
+    node_status(WsName, NodeDef, Txt, Clr, Shp);
 update_status(_, _, _, _, _) ->
     ignore.
 
@@ -268,7 +268,7 @@ setup_mqtt_manager(
                 {connect_to_broker, MqttMgrPid}
             ),
 
-            ?PUT_WS(NodeDef#{
+            ?AddWsName(NodeDef#{
                 '_timer' => TRef,
                 '_mqtt_mgr_id' => MqttMgrPid
             });

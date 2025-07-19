@@ -1,5 +1,7 @@
 -module(ered_node_join).
 
+-include("ered_nodes.hrl").
+
 -behaviour(ered_node).
 
 -export([start/2]).
@@ -47,23 +49,128 @@
 
 %%
 %%
+start(
+    #{
+        <<"mode">> := Mode,
+        <<"build">> := Build,
+        <<"count">> := Count,
+        <<"propertyType">> := PropType
+    } = NodeDef,
+    WsName
+) ->
+    case use_manual(Mode, Build, PropType, Count, NodeDef) of
+        {ok, V} ->
+            ered_node:start(V, ?MODULE);
+        {false, V} ->
+            ErrMsg = jstr("Node Config ~p", [NodeDef]),
+            unsupported(NodeDef, {websocket, WsName}, ErrMsg),
+            ered_node:start(V, ered_node_ignore)
+    end;
 start(NodeDef, WsName) ->
-    Mode = maps:get(<<"mode">>, NodeDef),
-    Build = maps:get(<<"build">>, NodeDef),
-    Count = maps:get(<<"count">>, NodeDef),
-    PropType = maps:get(<<"propertyType">>, NodeDef),
+    ErrMsg = jstr("Node Config ~p", [NodeDef]),
+    unsupported(NodeDef, {websocket, WsName}, ErrMsg),
+    ered_node:start(NodeDef, ered_node_ignore).
 
+%%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
+%%
+%% Handle manually collecting a specific property name.
+%% Just received the final message, ready to generated a message
+handle_msg(
+    {incoming, Msg},
+    #{
+        '_is_manually_collecting' := {1, {prop, PropName}, Lst},
+        <<"count">> := Count
+    } = NodeDef
+) ->
+    %% because these values are sent off to the complete node,
+    %% need to keep a copy of the original message.
+    Lst2 = [{retrieve_prop_value(PropName, Msg), Msg} | Lst],
+
+    %% now that we are ready to send out our message, we are completed
+    %% with the message that make up that message (!!) so those
+    %% messages should be sent to a complete node - if there is one
+    %% See this post for details:
+    %%   https://discourse.nodered.org/t/complete-node-msg-before-or-after-computation/96648/5
+    [post_completed(NodeDef, M) || {_, M} <- lists:reverse(Lst2)],
+
+    %% Need to reverse the order of the returned array - because
+    %% we've been pushing onto the head and not the tail.
+    Msg2 = Msg#{?AddPayload([V || {V, _} <- lists:reverse(Lst2)])},
+    send_msg_to_connected_nodes(NodeDef, Msg2),
+
+    {ok, Cnt} = convert_to_int(Count),
+    %% reset the counter, ready to receive more messages
     NodeDef2 =
-        case use_manual(Mode, Build, PropType, Count, NodeDef) of
-            {ok, V} ->
-                V;
-            {false, V} ->
-                ErrMsg = jstr("Node Config ~p", [NodeDef]),
-                unsupported(NodeDef, {websocket, WsName}, ErrMsg),
-                V
-        end,
-    ered_node:start(NodeDef2, ?MODULE).
+        NodeDef#{'_is_manually_collecting' => {Cnt, {prop, PropName}, []}},
 
+    {handled, NodeDef2, dont_send_complete_msg};
+%% Not yet collected all messages, add message to list
+handle_msg(
+    {incoming, Msg},
+    #{
+        '_is_manually_collecting' := {Cnt, {prop, PropName}, Lst}
+    } = NodeDef
+) ->
+    NodeDef2 = NodeDef#{
+        '_is_manually_collecting' =>
+            {Cnt - 1, {prop, PropName}, [
+                {retrieve_prop_value(PropName, Msg), Msg} | Lst
+            ]}
+    },
+    {handled, NodeDef2, dont_send_complete_msg};
+%%
+%% Collecting the entire Message object
+%%
+%% Recieved final message
+handle_msg(
+    {incoming, Msg},
+    #{
+        '_is_manually_collecting' := {1, {entire_msg}, Lst},
+        <<"count">> := Count
+    } = NodeDef
+) ->
+    Lst2 = [Msg | Lst],
+
+    %% now that we are ready to send out our message, we are completed
+    %% with the message that make up that message (!!) so those
+    %% messages should be sent to a complete node - if there is one
+    %% See this post for details:
+    %%   https://discourse.nodered.org/t/complete-node-msg-before-or-after-computation/96648/5
+    [post_completed(NodeDef, M) || M <- lists:reverse(Lst2)],
+
+    %% Need to reverse the order of the returned array - because
+    %% we've been pushing onto the head and not the tail.
+    Msg2 = Msg#{?AddPayload(lists:reverse(Lst2))},
+    send_msg_to_connected_nodes(NodeDef, Msg2),
+
+    {ok, Cnt} = convert_to_int(Count),
+
+    NodeDef2 = NodeDef#{'_is_manually_collecting' => {Cnt, {entire_msg}, []}},
+    {handled, NodeDef2, dont_send_complete_msg};
+handle_msg(
+    {incoming, Msg},
+    #{
+        '_is_manually_collecting' := {Cnt, {entire_msg}, Lst}
+    } = NodeDef
+) ->
+    NodeDef2 = NodeDef#{
+        '_is_manually_collecting' =>
+            {Cnt - 1, {entire_msg}, [Msg | Lst]}
+    },
+    {handled, NodeDef2, dont_send_complete_msg};
+%%
+%%
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.
+
+%%
+%%
+%% --------------- helpers
 %%
 %%
 convert_to_int(Val) when is_integer(Val) ->
@@ -86,7 +193,13 @@ convert_to_int(Val) ->
 
 %%
 %%
-use_manual(<<"custom">>, <<"array">>, <<"msg">>, Count, NodeDef) ->
+use_manual(
+    <<"custom">>,
+    <<"array">>,
+    <<"msg">>,
+    Count,
+    #{<<"property">> := PropName} = NodeDef
+) ->
     %% This means take a specific property of the msg, e.g. payload
     %%    "mode": "custom",
     %%    "build": "array",
@@ -96,12 +209,9 @@ use_manual(<<"custom">>, <<"array">>, <<"msg">>, Count, NodeDef) ->
         {ok, 0} ->
             {false, NodeDef};
         {ok, Cnt} ->
-            {ok,
-                maps:put(
-                    '_is_manually_collecting',
-                    {ok, Cnt, maps:find(<<"property">>, NodeDef), []},
-                    NodeDef
-                )};
+            {ok, NodeDef#{
+                '_is_manually_collecting' => {Cnt, {prop, PropName}, []}
+            }};
         _ ->
             {false, NodeDef}
     end;
@@ -110,117 +220,9 @@ use_manual(<<"custom">>, <<"array">>, <<"full">>, Count, NodeDef) ->
         {ok, 0} ->
             {false, NodeDef};
         {ok, Cnt} ->
-            {ok,
-                maps:put(
-                    '_is_manually_collecting',
-                    {ok, Cnt, {entire_msg}, []},
-                    NodeDef
-                )};
+            {ok, NodeDef#{'_is_manually_collecting' => {Cnt, {entire_msg}, []}}};
         _ ->
             {false, NodeDef}
     end;
 use_manual(_, _, _, _, NodeDef) ->
     {false, NodeDef}.
-
-%%
-%%
-handle_event(_, NodeDef) ->
-    NodeDef.
-
-handle_incoming(NodeDef, Msg) ->
-    case maps:find('_is_manually_collecting', NodeDef) of
-        %%
-        %% Handle a specific property
-        %%
-        {ok, {ok, 1, {ok, PropName}, Lst}} ->
-            %% because these values are sent off to the complete node,
-            %% need to keep a copy of the original message.
-            Lst2 = [{retrieve_prop_value(PropName, Msg), Msg} | Lst],
-            %% Need to reverse the order of the returned array - because
-            %% we've been pushing onto the head and not the tail.
-            Msg2 = maps:put(
-                <<"payload">>,
-                [V || {V, _} <- lists:reverse(Lst2)],
-                Msg
-            ),
-
-            %% now that we are ready to send out our message, we are completed
-            %% with the message that make up that message (!!) so those
-            %% messages should be sent to a complete node - if there is one
-            %% See this post for details:
-            %%   https://discourse.nodered.org/t/complete-node-msg-before-or-after-computation/96648/5
-            [post_completed(NodeDef, M) || {_, M} <- lists:reverse(Lst2)],
-
-            send_msg_to_connected_nodes(NodeDef, Msg2),
-
-            {ok, Count} = maps:find(<<"count">>, NodeDef),
-            {ok, Cnt} = convert_to_int(Count),
-            NodeDef2 = maps:put(
-                '_is_manually_collecting',
-                {ok, Cnt, {ok, PropName}, []},
-                NodeDef
-            ),
-            {NodeDef2, dont_send_complete_msg};
-        {ok, {ok, Cnt, {ok, PropName}, Lst}} ->
-            NodeDef2 = maps:put(
-                '_is_manually_collecting',
-                {ok, Cnt - 1, {ok, PropName}, [
-                    {retrieve_prop_value(PropName, Msg), Msg} | Lst
-                ]},
-                NodeDef
-            ),
-
-            %% dont_send is an message to the post_completed callback
-            %% to ignore this msg. This is becuase the join node didn't
-            %% send anything - yet.
-            {NodeDef2, dont_send_complete_msg};
-        %%
-        %% Handle the entire message object
-        %%
-        {ok, {ok, 1, {entire_msg}, Lst}} ->
-            Lst2 = [Msg | Lst],
-
-            %% Need to reverse the order of the returned array - because
-            %% we've been pushing onto the head and not the tail.
-            Msg2 = maps:put(<<"payload">>, lists:reverse(Lst2), Msg),
-
-            %% now that we are ready to send out our message, we are completed
-            %% with the message that make up that message (!!) so those
-            %% messages should be sent to a complete node - if there is one
-            %% See this post for details:
-            %%   https://discourse.nodered.org/t/complete-node-msg-before-or-after-computation/96648/5
-            [post_completed(NodeDef, M) || M <- lists:reverse(Lst2)],
-
-            send_msg_to_connected_nodes(NodeDef, Msg2),
-
-            {ok, Count} = maps:find(<<"count">>, NodeDef),
-            {ok, Cnt} = convert_to_int(Count),
-
-            NodeDef2 = maps:put(
-                '_is_manually_collecting',
-                {ok, Cnt, {entire_msg}, []},
-                NodeDef
-            ),
-            {NodeDef2, dont_send_complete_msg};
-        {ok, {ok, Cnt, {entire_msg}, Lst}} ->
-            NodeDef2 = maps:put(
-                '_is_manually_collecting',
-                {ok, Cnt - 1, {entire_msg}, [Msg | Lst]},
-                NodeDef
-            ),
-
-            %% dont_send is an message to the post_completed callback
-            %% to ignore this msg. This is becuase the join node didn't
-            %% send anything - yet.
-            {NodeDef2, dont_send_complete_msg};
-        _ ->
-            {NodeDef, dont_send_complete_msg}
-    end.
-
-%%
-%%
-handle_msg({incoming, Msg}, NodeDef) ->
-    {NodeDef2, Msg2} = handle_incoming(NodeDef, Msg),
-    {handled, NodeDef2, Msg2};
-handle_msg(_, NodeDef) ->
-    {unhandled, NodeDef}.

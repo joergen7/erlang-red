@@ -1,5 +1,7 @@
 -module(ered_node_link_out).
 
+-include("ered_nodes.hrl").
+
 -behaviour(ered_node).
 
 -export([start/2]).
@@ -31,9 +33,63 @@
 start(NodeDef, _WsName) ->
     ered_node:start(NodeDef, ?MODULE).
 
-send_to_link_call({ok, NodeId}, Msg) ->
-    NodePid = nodeid_to_pid(ws_from(Msg), NodeId),
-    case NodePid of
+%%
+%%
+handle_event(_, NodeDef) ->
+    NodeDef.
+
+%%
+%%
+handle_msg(
+    {incoming, Msg},
+    #{<<"mode">> := <<"link">>} = NodeDef
+) ->
+    case maps:find(<<"links">>, NodeDef) of
+        {ok, Links} ->
+            %% this are all link in nodes and they have no incoming
+            %% wires so we can send them their messages using the
+            %% "incoming" message type this is what send_msg_on does.
+            send_msg_on(Links, Msg);
+        _ ->
+            ignore
+    end,
+    {handled, NodeDef, dont_send_complete_msg};
+handle_msg(
+    {incoming, Msg},
+    #{<<"mode">> := <<"return">>} = NodeDef
+) ->
+    case maps:find('_linkSource', Msg) of
+        {ok, Ary} ->
+            case last_value(Ary, []) of
+                empty ->
+                    ignore;
+                {ok, LinkBack, NewAry} ->
+                    send_to_link_call(
+                        maps:find(<<"node">>, LinkBack),
+                        maps:put('_linkSource', NewAry, Msg)
+                    )
+            end;
+        _ ->
+            ignore
+    end,
+    {handled, NodeDef, Msg};
+handle_msg(
+    {incoming, #{?GetWsName} = Msg},
+    #{<<"mode">> := Mode} = NodeDef
+) ->
+    ErrMsg = jstr("Unknown Mode: '~s'", [Mode]),
+    this_should_not_happen(NodeDef, io_lib:format("~p ~p\n", [ErrMsg, Msg])),
+    debug(WsName, debug_string(NodeDef, ErrMsg), notice),
+    ?NodeStatus(ErrMsg, "red", "dot"),
+    {handled, NodeDef, Msg};
+handle_msg(_, NodeDef) ->
+    {unhandled, NodeDef}.
+
+%%
+%% ------------------ helpers
+%%
+send_to_link_call({ok, NodeId}, #{?GetWsName} = Msg) ->
+    case nodeid_to_pid(WsName, NodeId) of
         {error, _} ->
             ignore;
         {ok, Pid} ->
@@ -51,62 +107,3 @@ last_value([H | []], Rest) ->
     {ok, H, lists:reverse(Rest)};
 last_value([H | Ary], Rest) ->
     last_value(Ary, [H | Rest]).
-
-%%
-%%
-handle_event(_, NodeDef) ->
-    NodeDef.
-
-%%
-%%
-handle_incoming(NodeDef, Msg) ->
-    case maps:find(<<"mode">>, NodeDef) of
-        {ok, <<"link">>} ->
-            case maps:find(<<"links">>, NodeDef) of
-                {ok, Links} ->
-                    %% this are all link in nodes and they have no incoming
-                    %% wires so we can send them their messages using the
-                    %% "incoming" message type this is what send_msg_on does.
-                    send_msg_on(Links, Msg);
-                _ ->
-                    ignore
-            end,
-            {NodeDef, dont_send_complete_msg};
-        {ok, <<"return">>} ->
-            %% careful, what this does is take the last entry and respond
-            %% to that. link calls can be nested hence this logic
-            case maps:find('_linkSource', Msg) of
-                {ok, Ary} ->
-                    case last_value(Ary, []) of
-                        empty ->
-                            ignore;
-                        {ok, LinkBack, NewAry} ->
-                            send_to_link_call(
-                                maps:find(<<"node">>, LinkBack),
-                                maps:put('_linkSource', NewAry, Msg)
-                            )
-                    end;
-                _ ->
-                    ignore
-            end,
-            {NodeDef, Msg};
-        {ok, Mode} ->
-            ErrMsg = jstr("Unknown Mode: '~s'", [Mode]),
-            this_should_not_happen(
-                NodeDef,
-                io_lib:format("~p ~p\n", [ErrMsg, Msg])
-            ),
-            debug(ws_from(Msg), debug_string(NodeDef, ErrMsg), notice),
-            node_status(ws_from(Msg), NodeDef, ErrMsg, "red", "dot"),
-            {NodeDef, Msg};
-        _ ->
-            {NodeDef, Msg}
-    end.
-
-%%
-%%
-handle_msg({incoming, Msg}, NodeDef) ->
-    {NodeDef2, Msg2} = handle_incoming(NodeDef, Msg),
-    {handled, NodeDef2, Msg2};
-handle_msg(_, NodeDef) ->
-    {unhandled, NodeDef}.

@@ -172,7 +172,7 @@ handle_msg(_, NodeDef) ->
 %%
 handle_reply_mode(
     #{?GetPayload, <<"_session">> := TcpSession, <<"reset">> := ResetValue} =
-      Msg,
+        Msg,
     NodeDef
 ) ->
     case check_tcp_session(TcpSession) of
