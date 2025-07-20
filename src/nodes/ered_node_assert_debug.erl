@@ -34,7 +34,9 @@ start(NodeDef, _WsName) ->
 handle_event(
     {registered, WsName, _Pid},
     #{
-        <<"inverse">> := true, <<"nodeid">> := TgtNodeId, ?NodePid
+        <<"inverse">> := true,
+        <<"nodeid">> := TgtNodeId,
+        ?NodePid
     } = NodeDef
 ) ->
     %% inverse means that there should be **no** debug message, this

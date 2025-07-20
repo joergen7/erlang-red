@@ -4,6 +4,7 @@
 
 -export([
     check_config/4,
+    check_node_config/3,
     get_node_name/2,
     get_prop_value_from_map/2,
     get_prop_value_from_map/3,
@@ -43,6 +44,32 @@
 %% Ensure a nodes configuration is supported. This is usually used in the
 %% start(..) function of a node module. If a configuration is not supported,
 %% the node is replaced by an ignore node.
+
+check_node_config([{Property, SupportedValue} | Rest], NodeDef, WsName) ->
+    check_node_config(
+        Rest,
+        NodeDef,
+        WsName,
+        check_config(Property, SupportedValue, NodeDef, WsName)
+    ).
+
+check_node_config([], _NodeDef, _WsName, RVale) ->
+    RVale;
+check_node_config([{Property, SupportedValue} | Rest], NodeDef, WsName, ok) ->
+    check_node_config(
+        Rest,
+        NodeDef,
+        WsName,
+        check_config(Property, SupportedValue, NodeDef, WsName)
+    );
+check_node_config(
+    [{Property, SupportedValue} | Rest], NodeDef, WsName, false
+) ->
+    check_config(Property, SupportedValue, NodeDef, WsName),
+    check_node_config(Rest, NodeDef, WsName, false).
+
+%%
+%%
 check_config(ParaName, OnlySupportedValue, NodeDef, WsName) ->
     case maps:get(ParaName, NodeDef) of
         OnlySupportedValue ->
@@ -52,7 +79,8 @@ check_config(ParaName, OnlySupportedValue, NodeDef, WsName) ->
                 "config: attr: ~s => value: ~s",
                 [ParaName, Unsupported]
             ),
-            unsupported(NodeDef, {websocket, WsName}, ErrMsg)
+            unsupported(NodeDef, {websocket, WsName}, ErrMsg),
+            false
     end.
 
 %%

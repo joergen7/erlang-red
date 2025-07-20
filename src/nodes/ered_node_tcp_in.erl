@@ -49,7 +49,7 @@
 %% TODO: <<< this line is intentionally left blank. >>>
 %%
 -import(ered_nodes, [
-    check_config/4,
+    check_node_config/3,
     jstr/2,
     send_msg_to_connected_nodes/2
 ]).
@@ -74,25 +74,25 @@
 start(#{?IsServer} = NodeDef, WsName) ->
     %% TODO: this is the todo list for this node - support the various
     %% TODO: configuration possibilities.
-    case {
-        check_config(<<"tls">>,      <<"">>,       NodeDef, WsName),
-        check_config(<<"host">>,     <<"">>,       NodeDef, WsName),
-        check_config(<<"datamode">>, <<"stream">>, NodeDef, WsName)
-    } of
-        {ok, ok, ok} ->
+    case check_node_config([
+        {<<"tls">>,      <<"">>},
+        {<<"host">>,     <<"">>},
+        {<<"datamode">>, <<"stream">>}
+    ], NodeDef, WsName) of
+        ok ->
             ered_node:start(NodeDef#{?SetWsName, conn_count => 0}, ?MODULE);
         _ ->
             ered_node:start(NodeDef, ered_node_ignore)
     end;
 %% server connect to
 start(#{?IsClient} = NodeDef, WsName) ->
-    case {
-        check_config(<<"tls">>,      <<"">>,       NodeDef, WsName),
-        check_config(<<"datatype">>, <<"utf8">>,   NodeDef, WsName),
-        check_config(<<"datamode">>, <<"stream">>, NodeDef, WsName),
-        check_config(<<"trim">>,     true,         NodeDef, WsName)
-    } of
-        {ok, ok, ok, ok} ->
+    case check_node_config([
+        {<<"tls">>,      <<"">>},
+        {<<"datatype">>, <<"utf8">>},
+        {<<"datamode">>, <<"stream">>},
+        {<<"trim">>,     true}
+    ], NodeDef, WsName) of
+        ok ->
             ered_node:start(NodeDef#{?SetWsName, conn_count => 0}, ?MODULE);
         _ ->
             ered_node:start(NodeDef, ered_node_ignore)

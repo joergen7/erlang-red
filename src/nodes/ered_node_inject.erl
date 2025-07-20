@@ -43,7 +43,7 @@
 %%
 
 -import(ered_nodes, [
-    check_config/4,
+    check_node_config/3,
     get_prop_value_from_map/2,
     get_prop_value_from_map/3,
     jstr/1,
@@ -71,12 +71,12 @@
 % erlfmt:ignore - alignment
 start(NodeDef, WsName) ->
     %% TODO support repeat and once and crontab
-    case {
-        check_config(<<"repeat">>,  <<"">>, NodeDef, WsName),
-        check_config(<<"crontab">>, <<"">>, NodeDef, WsName),
-        check_config(<<"once">>,    false,  NodeDef, WsName)
-    } of
-        {ok,ok,ok} ->
+    case check_node_config([
+        {<<"repeat">>,  <<"">>},
+        {<<"crontab">>, <<"">>},
+        {<<"once">>,    false}
+    ], NodeDef, WsName) of
+        ok ->
             ered_node:start(NodeDef, ?MODULE);
         _ ->
             ered_node:start(NodeDef, ered_node_ignore)

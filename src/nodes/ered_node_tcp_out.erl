@@ -29,15 +29,14 @@
 %% }
 
 -import(ered_nodes, [
-    check_config/4,
+    check_node_config/3,
     jstr/2
 ]).
 
 -import(ered_nodered_comm, [
     node_status/5,
     send_out_debug_msg/4,
-    unsupported/3,
-    ws_from/1
+    unsupported/3
 ]).
 
 -import(ered_messages, [
@@ -53,14 +52,14 @@
 start(#{?IsReply} = NodeDef, WsName) ->
     %% TODO: this is the todo list for this node - support the various
     %% TODO: configuration possibilities.
-    case {
-          check_config(<<"tls">>,      <<"">>,      NodeDef, WsName),
-          check_config(<<"host">>,     <<"">>,      NodeDef, WsName),
-          check_config(<<"port">>,     <<"">>,      NodeDef, WsName),
-          check_config(<<"base64">>,   false,       NodeDef, WsName),
-          check_config(<<"end">>,      false,       NodeDef, WsName)
-         } of
-        {ok, ok, ok, ok, ok} ->
+    case check_node_config([
+          {<<"tls">>,    <<"">>},
+          {<<"host">>,   <<"">>},
+          {<<"port">>,   <<"">>},
+          {<<"base64">>, false},
+          {<<"end">>,    false}
+    ], NodeDef, WsName) of
+        ok ->
             ered_node:start(NodeDef#{?SetWsName, ?EmptyBacklog}, ?MODULE);
         _ ->
             %% seemlessly return an ignore node if the configuration doesn't
@@ -72,12 +71,12 @@ start(#{?IsReply} = NodeDef, WsName) ->
 start(#{?IsClient} = NodeDef, WsName) ->
     %% TODO: this is the todo list for this node - support the various
     %% TODO: configuration possibilities.
-    case {
-          check_config(<<"tls">>,      <<"">>,      NodeDef, WsName),
-          check_config(<<"base64">>,   false,       NodeDef, WsName),
-          check_config(<<"end">>,      false,       NodeDef, WsName)
-         } of
-        {ok, ok, ok} ->
+    case check_node_config([
+          {<<"tls">>,    <<"">>},
+          {<<"base64">>, false},
+          {<<"end">>,    false}
+    ], NodeDef, WsName) of
+        ok ->
             ered_node:start(NodeDef#{?SetWsName, ?EmptyBacklog}, ?MODULE);
         _ ->
             %% seemlessly return an ignore node if the configuration doesn't

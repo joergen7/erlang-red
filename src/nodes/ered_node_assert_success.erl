@@ -35,11 +35,12 @@ start(NodeDef, _WsName) ->
 %%
 %%
 %% erlfmt:ignore equals and arrows should line up here.
-handle_event({stop,WsName}, NodeDef) ->
+handle_event(
+  {stop, WsName},
+  #{<<"id">> := IdStr, <<"type">> := TypeStr} = NodeDef
+) ->
     case maps:find('_mc_incoming',NodeDef) of
         {ok,0} ->
-            {IdStr, TypeStr} = ?NODE_ID_AND_TYPE(NodeDef),
-
             this_should_not_happen(
               NodeDef,
               io_lib:format("Assert Error: Node was not reached [~p](~p)\n",
@@ -56,9 +57,9 @@ handle_event({stop,WsName}, NodeDef) ->
             },
 
             debug(WsName, Data, error),
-            node_status(WsName, NodeDef, "assert failed", "red", "dot");
+            ?NodeStatus("assert failed", "red", "dot");
         _ ->
-            node_status(WsName, NodeDef, "assert succeed", "green", "ring")
+            ?NodeStatus("assert succeed", "green", "ring")
     end,
     NodeDef;
 

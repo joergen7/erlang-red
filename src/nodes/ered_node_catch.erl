@@ -31,7 +31,16 @@
     subscribe_to_exception_entire_flow/3,
     subscribe_to_exception_from_node/3
 ]).
+-import(ered_nodered_comm, [
+    unsupported/3
+]).
 
+start(#{<<"scope">> := <<"group">>} = NodeDef, WsName) ->
+    unsupported(NodeDef, {websocket, WsName}, "unsupported scope 'group'"),
+    ered_node:start(NodeDef, ered_node_ignore);
+start(#{<<"uncaught">> := true} = NodeDef, WsName) ->
+    unsupported(NodeDef, {websocket, WsName}, "unsupported setting 'uncaught'"),
+    ered_node:start(NodeDef, ered_node_ignore);
 start(NodeDef, _WsName) ->
     ered_node:start(NodeDef, ?MODULE).
 

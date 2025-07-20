@@ -1,5 +1,7 @@
 -module(ered_node_http_response).
 
+-include("ered_nodes.hrl").
+
 -behaviour(ered_node).
 
 -export([start/2]).
@@ -15,8 +17,7 @@
     jstr/2
 ]).
 -import(ered_nodered_comm, [
-    unsupported/3,
-    ws_from/1
+    unsupported/3
 ]).
 -import(ered_messages, [
     convert_to_num/1,
@@ -36,14 +37,13 @@ handle_event(_, NodeDef) ->
 %%
 %% This sends a message to the ered_http_node_http_in_handler telling it
 %% to send the payload to the client.
-handle_msg({incoming, Msg}, NodeDef) ->
+handle_msg(
+    {incoming, #{?GetWsName, ?GetPayload, <<"reqpid">> := ReqPid} = Msg},
+    NodeDef
+) ->
     StatusCode = retrieve_status_code(NodeDef, Msg),
     Headers = retrieve_headers(NodeDef, Msg),
-    {ok, ReqPid} = maps:find(<<"reqpid">>, Msg),
-
-    ReqPid !
-        {reply, StatusCode, Headers, ws_from(Msg),
-            maps:get(<<"payload">>, Msg)},
+    ReqPid ! {reply, StatusCode, Headers, WsName, Payload},
 
     {handled, NodeDef, Msg};
 handle_msg(_, NodeDef) ->
@@ -67,12 +67,13 @@ retrieve_status_code(NodeDef, Msg) ->
 %% Retrieve headers from either the NodeDef or Msg, NodeDef has preference.
 %% erlfmt:ignore alignment
 retrieve_headers(NodeDef, Msg) ->
-    Hdrs = case {maps:find(<<"headers">>, Msg),
-                 maps:find(<<"headers">>, NodeDef)} of
-               {{ok, MsgHdrs}, {ok, #{}}}    -> MsgHdrs;
-               {{ok, _},       {ok, NdHdrs}} -> NdHdrs;
-               {_,             {ok, NdHdrs}} -> NdHdrs;
-               {{ok, MsgHdrs}, _}            -> MsgHdrs;
-               {_, _}                        -> #{}
-           end,
+    Hdrs =
+        case {maps:find(<<"headers">>, Msg),
+              maps:find(<<"headers">>, NodeDef)} of
+            {{ok, MsgHdrs}, {ok, #{}}}    -> MsgHdrs;
+            {{ok, _},       {ok, NdHdrs}} -> NdHdrs;
+            {_,             {ok, NdHdrs}} -> NdHdrs;
+            {{ok, MsgHdrs}, _}            -> MsgHdrs;
+            {_, _}                        -> #{}
+        end,
     map_keys_to_binary(Hdrs).

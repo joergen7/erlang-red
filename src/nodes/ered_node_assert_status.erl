@@ -60,7 +60,7 @@ handle_event(
     {stop, WsName},
     #{?TestSuccess, ?NodePid} = NodeDef
 ) ->
-    node_status(WsName, NodeDef, "assert succeed", "green", "ring"),
+    ?NodeStatus("assert succeed", "green", "ring"),
     ered_ws_event_exchange:unsubscribe(WsName, NodePid),
     NodeDef;
 handle_event(

@@ -39,7 +39,7 @@
 %%
 
 -import(ered_nodes, [
-    check_config/4,
+    check_node_config/3,
     jstr/2,
     send_msg_to_connected_nodes/2
 ]).
@@ -67,13 +67,13 @@ start(#{ <<"out">> := <<"sit">> } = NodeDef, WsName) ->
     ered_node:start(NodeDef, ered_node_ignore);
 
 start(NodeDef, WsName) ->
-    case {
-          check_config(<<"ret">>,     <<"string">>, NodeDef, WsName),
-          check_config(<<"newline">>, <<"">>,       NodeDef, WsName),
-          check_config(<<"trim">>,    false,        NodeDef, WsName),
-          check_config(<<"tls">>,     <<"">>,       NodeDef, WsName)
-    } of
-        {ok, ok, ok, ok} ->
+    case check_node_config([
+          {<<"ret">>,     <<"string">>},
+          {<<"newline">>, <<"">>},
+          {<<"trim">>,    false},
+          {<<"tls">>,     <<"">>}
+    ], NodeDef, WsName) of
+        ok ->
             ered_node:start(NodeDef#{?SetWsName, ?EmptyBacklog}, ?MODULE);
         _ ->
             ered_node:start(NodeDef, ered_node_ignore)

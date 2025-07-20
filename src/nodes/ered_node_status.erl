@@ -48,7 +48,6 @@
     create_outgoing_msg/1
 ]).
 -import(ered_nodes, [
-    check_config/4,
     jstr/1,
     send_msg_to_connected_nodes/2
 ]).

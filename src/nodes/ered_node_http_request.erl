@@ -1,5 +1,7 @@
 -module(ered_node_http_request).
 
+-include("ered_nodes.hrl").
+
 -behaviour(ered_node).
 
 -export([start/2]).
@@ -30,8 +32,11 @@
 
 %%
 %%
-start(NodeDef, _WsName) ->
-    ered_node:start(NodeDef, ?MODULE).
+start(#{<<"headers">> := []} = NodeDef, _WsName) ->
+    ered_node:start(NodeDef, ?MODULE);
+start(#{<<"headers">> := _Headers} = NodeDef, WsName) ->
+    unsupported(NodeDef, {websocket, WsName}, "header specs not supported"),
+    ered_node:start(NodeDef, ered_node_ignore).
 
 %%
 %%
@@ -40,46 +45,12 @@ handle_event(_, NodeDef) ->
 
 %%
 %%
-handle_msg({incoming, Msg}, NodeDef) ->
-    case {maps:find(<<"headers">>, NodeDef), maps:find(<<"headers">>, Msg)} of
-        {{ok, []}, {ok, []}} ->
-            no_headers_set;
-        {{ok, []}, error} ->
-            no_headers_set;
-        {{ok, []}, {ok, [_ | _]}} ->
-            unsupported(
-                NodeDef,
-                Msg,
-                jstr("message: headers unsupported")
-            );
-        {{ok, [_ | _]}, {ok, []}} ->
-            unsupported(
-                NodeDef,
-                Msg,
-                jstr("node definition: headers unsupported")
-            );
-        {{ok, [_ | _]}, error} ->
-            unsupported(
-                NodeDef,
-                Msg,
-                jstr("node definition: headers unsupported")
-            );
-        {{ok, [_ | _]}, {ok, [_ | _]}} ->
-            unsupported(
-                NodeDef,
-                Msg,
-                jstr("node definition: headers unsupported")
-            ),
-            unsupported(
-                NodeDef,
-                Msg,
-                jstr("message: headers unsupported")
-            )
-    end,
+handle_msg({incoming, Msg}, #{<<"method">> := NodeMeth} = NodeDef) ->
+    unsupported_headers_warnings(NodeDef, Msg),
 
     Url = get_prop_from_nodedef_or_msg(<<"url">>, NodeDef, Msg),
     Method =
-        case maps:get(<<"method">>, NodeDef) of
+        case NodeMeth of
             <<"use">> ->
                 get_prop_value_from_map(<<"method">>, Msg);
             _ ->
@@ -99,10 +70,12 @@ handle_msg({incoming, Msg}, NodeDef) ->
         _ ->
             case perform_request(Method, Url, NodeDef, Msg) of
                 {ok, {{_, StatusCode, _ReasonPhrase}, _, Body}} ->
-                    Msg2 = maps:put(<<"statusCode">>, StatusCode, Msg),
-                    Msg3 = maps:put(<<"payload">>, jstr(Body), Msg2),
-                    send_msg_to_connected_nodes(NodeDef, Msg3),
-                    {handled, NodeDef, Msg3};
+                    Msg2 = Msg#{
+                        <<"statusCode">> => StatusCode,
+                        ?AddPayload(jstr(Body))
+                    },
+                    send_msg_to_connected_nodes(NodeDef, Msg2),
+                    {handled, NodeDef, Msg2};
                 {error, Reason} ->
                     ErrMsg = jstr("Http request failed: ~p", [Reason]),
                     post_exception_or_debug(NodeDef, Msg, ErrMsg),
@@ -113,7 +86,30 @@ handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
 
 %%
+%% -------------- helpers
 %%
+unsupported_headers_warnings(NodeDef, Msg) ->
+    case
+        {
+            maps:find(<<"headers">>, NodeDef),
+            maps:find(<<"headers">>, Msg)
+        }
+    of
+        {{ok, []}, {ok, []}} ->
+            ok;
+        {{ok, []}, error} ->
+            ok;
+        {{ok, []}, {ok, _T}} ->
+            unsupported(NodeDef, Msg, "message: headers unsupported");
+        {{ok, _S}, {ok, []}} ->
+            unsupported(NodeDef, Msg, "node definition: headers unsupported");
+        {{ok, _S}, error} ->
+            unsupported(NodeDef, Msg, "node definition: headers unsupported");
+        {{ok, _S}, {ok, _T}} ->
+            unsupported(NodeDef, Msg, "node definition: headers unsupported"),
+            unsupported(NodeDef, Msg, "message: headers unsupported")
+    end.
+
 mth_to_atom(Method) when is_binary(Method) ->
     binary_to_atom(string:lowercase(Method));
 mth_to_atom(Method) when is_list(Method) ->
@@ -131,14 +127,14 @@ get_prop_from_nodedef_or_msg(PropName, NodeDef, Msg) ->
             get_prop_value_from_map(PropName, NodeDef)
     end.
 
-perform_request(Method = <<"POST">>, Url, _NodeDef, Msg) ->
+perform_request(Method = <<"POST">>, Url, _NodeDef, #{?GetWsName} = Msg) ->
     case maps:find(<<"payload">>, Msg) of
         {ok, Payload} ->
             httpc:request(
                 mth_to_atom(Method),
                 {Url,
                     [
-                        {"Cookie", io_lib:format("wsname=~s", [ws_from(Msg)])}
+                        {"Cookie", io_lib:format("wsname=~s", [WsName])}
                     ],
                     "application/json", Payload},
                 [],
@@ -149,7 +145,7 @@ perform_request(Method = <<"POST">>, Url, _NodeDef, Msg) ->
                 mth_to_atom(Method),
                 {Url,
                     [
-                        {"Cookie", io_lib:format("wsname=~s", [ws_from(Msg)])}
+                        {"Cookie", io_lib:format("wsname=~s", [WsName])}
                     ],
                     "application/json", ""},
                 [],
@@ -172,5 +168,5 @@ perform_request(Method = <<"GET">>, Url, NodeDef, Msg) ->
             post_exception_or_debug(NodeDef, Msg, ErrMsg)
     end;
 perform_request(_Method, _Url, NodeDef, Msg) ->
-    unsupported(NodeDef, Msg, jstr("unsuported method")),
+    unsupported(NodeDef, Msg, "unsuported method"),
     {error, unsupported_method}.
