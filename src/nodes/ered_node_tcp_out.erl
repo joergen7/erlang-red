@@ -103,7 +103,7 @@ handle_event(
     case
         ered_tcp_manager:register_connector(Host, convert_to_num(Port), self())
     of
-        {connected, SessionId} ->
+        connected ->
             node_status(WsName, NodeDef, "connected", "green", "dot"),
             NodeDef#{?SetSessionId};
         connecting ->
