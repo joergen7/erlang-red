@@ -111,11 +111,7 @@ unsupported_headers_warnings(NodeDef, Msg) ->
     end.
 
 mth_to_atom(Method) when is_binary(Method) ->
-    binary_to_atom(string:lowercase(Method));
-mth_to_atom(Method) when is_list(Method) ->
-    list_to_atom(string:lowercase(Method));
-mth_to_atom(Method) ->
-    Method.
+    binary_to_atom(string:lowercase(Method)).
 
 %%
 %% get prop from NodeDef or Msg
