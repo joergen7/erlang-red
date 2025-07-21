@@ -8,6 +8,8 @@ ARG RUNNER_IMAGE="alpine:${ALPINE_VERSION}"
 
 FROM ${BUILDER_IMAGE} AS builder
 
+ENV ERL_FLAGS="+c false"
+
 RUN apk update && \
     apk add alpine-sdk bash curl cmake perl linux-headers rebar3 && \
 	rm -rf /var/cache/apk/*

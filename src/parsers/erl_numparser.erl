@@ -52,8 +52,6 @@ to_number(Value) ->
                 {error, _} = ParserError ->
                     ParserError
             end;
-        {error, _} = LeexError ->
-            LeexError;
         {error, E, _} ->
             {error, E}
     end.

@@ -64,11 +64,6 @@ handle_msg(
                     unsupported ->
                         ErrMsg = jstr("Unsupported Action: ~p", [Action]),
                         unsupported(NodeDef, Msg, ErrMsg),
-                        {handled, NodeDef, Msg};
-                    What ->
-                        post_exception_or_debug(
-                            NodeDef, Msg, jstr("What?: ~p", [What])
-                        ),
                         {handled, NodeDef, Msg}
                 end
             catch
