@@ -6,6 +6,7 @@ ENV SHELL=/bin/bash
 ## Else Elixir will complain
 ENV LANG=C.UTF-8
 ENV ELIXIR_ERL_OPTIONS="+fnu"
+ENV ERL_FLAGS="+c false"
 
 RUN apt-get update && apt-get -y install \
     emacs \
