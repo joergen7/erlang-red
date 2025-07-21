@@ -173,13 +173,8 @@ deep_delete(Container, [{idx, Idx} | Path]) when
             error:_ ->
                 throw(made_no_change)
         end,
-
-    case Result of
-        {ok, Value} ->
-            {ok, setnth(Idx + 1, Container, Value)};
-        _ ->
-            throw(made_no_change)
-    end;
+    {ok, Value} = Result,
+    {ok, setnth(Idx + 1, Container, Value)};
 deep_delete(Container, [Key | Path]) when is_map(Container) ->
     Result =
         case maps:find(Key, Container) of
@@ -188,13 +183,8 @@ deep_delete(Container, [Key | Path]) when is_map(Container) ->
             error ->
                 throw(made_no_change)
         end,
-
-    case Result of
-        {ok, Value} ->
-            {ok, Container#{Key => Value}};
-        _ ->
-            throw(made_no_change)
-    end;
+    {ok, Value} = Result,
+    {ok, Container#{Key => Value}};
 deep_delete(_Container, _Path) ->
     % doghouse again, something went horribly wrong with the type of container.
     throw(made_no_change).
