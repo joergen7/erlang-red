@@ -133,9 +133,7 @@ handle_event(
         connecting ->
             ?NodeStatus("connecting", "blue", "ring");
         {connected, _SessionId} ->
-            ?NodeStatus("connected", "green", "dot");
-        R ->
-            ?NodeStatus(jstr("~p", [R]), "blue", "ring")
+            ?NodeStatus("connected", "green", "dot")
     end,
     NodeDef;
 %%
@@ -183,9 +181,7 @@ handle_event(
         connecting ->
             ?NodeStatus("connecting", "blue", "ring");
         {connected, _SessionId} ->
-            ?NodeStatus("connected", "green", "dot");
-        R ->
-            ?NodeStatus(jstr("~p", [R]), "blue", "ring")
+            ?NodeStatus("connected", "green", "dot")
     end,
     NodeDef;
 %%
