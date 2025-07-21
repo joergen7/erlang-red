@@ -64,13 +64,15 @@
     session_id/0
 ]).
 
--spec register_connector(HostNameOrIp,
-			 PortNum,
-			 PidTcpInNode) -> Result
-when HostNameOrIp :: binary(),
-     PortNum      :: 0..65535,
-     PidTcpInNode :: pid() | atom(),
-     Result       :: {connected, binary()} | connecting.
+-spec register_connector(
+    HostNameOrIp,
+    PortNum,
+    PidTcpInNode
+) -> Result when
+    HostNameOrIp :: binary(),
+    PortNum :: 0..65535,
+    PidTcpInNode :: pid() | atom(),
+    Result :: {connected, binary()} | connecting.
 
 register_connector(HostNameOrIp, PortNum, PidOrName) ->
     gen_server:call(

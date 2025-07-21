@@ -224,8 +224,10 @@ evaluate_erlang(Expression) when is_list(Expression) ->
 evaluate_erlang(Expression) ->
     case is_code_parsable(Expression) of
         {ok, Parsed} ->
-	    {value, Result, _} = erl_eval:exprs(Parsed, [], {value, fun handle_local_function/2}),
-	    {ok, Result};
+            {value, Result, _} = erl_eval:exprs(
+                Parsed, [], {value, fun handle_local_function/2}
+            ),
+            {ok, Result};
         Error ->
             Error
     end.
