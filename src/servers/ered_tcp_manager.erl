@@ -70,7 +70,7 @@
 when HostNameOrIp :: binary(),
      PortNum      :: 0..65535,
      PidTcpInNode :: pid() | atom(),
-     Result       :: {connected, _} | connecting.
+     Result       :: {connected, binary()} | connecting.
 
 register_connector(HostNameOrIp, PortNum, PidOrName) ->
     gen_server:call(
