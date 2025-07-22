@@ -44,10 +44,14 @@ send_off_debug(_Type, NodeDef, Msg) ->
 do_msgtrace_for_node(
   #{ <<"id">> := NodeId } = NodeDef,
   Pid,
-  #{ '_ws' := WsName } = State
+  #{ '_ws' := WsName } = _State
 ) ->
     send_on_if_ws(WsName, {msgtracing, NodeId}),
-    node_status(WsName, NodeDef, jstr("~p msg received",[Pid]), "green", "ring"),
+    node_status(
+      WsName,
+      NodeDef,
+      jstr("~p msg received", [Pid]), "green", "ring"
+    ),
     spawn(fun() -> clear_status_after_one_sec(WsName, NodeId) end).
 
 %%
