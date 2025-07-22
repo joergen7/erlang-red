@@ -1,4 +1,4 @@
-Erlang-Red - A Node-RED backend coded in Erlang
+Erlang-Red - BEAM/Erlang backend for Node-RED
 =====
 
 An experiment to replace Node-REDs existing NodeJS backend with an Erlang equivalent that is 100% compatible to existing flow code.
