@@ -5,7 +5,7 @@
   <body>
     <img src="/red/images/node-red.svg" alt="RED logo"/>
     <h1>Erlang-RED</h1>
-    <a href="/node-red">Running instance</a>
+    <a href="/erlang-red">Running instance</a>
     {% if name %}
     <hr/>
     <h2>{{ status }} release: {{ name }}-{{ version }}</h2>
@@ -17,4 +17,3 @@
     {% endif %}
   </body>
 </html>
-

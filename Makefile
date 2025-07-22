@@ -32,6 +32,16 @@ fly-io-enter:
 	docker exec -it $$(docker ps -f ancestor=fly-er -q) sh
 
 ##
+## hub.docker image
+HUB_RELEASE=0.2.0 ## should match rebar
+hub-docker-build:
+	docker build -f Dockerfile.hub -t gorenje/erlang-red:${HUB_RELEASE} .
+hub-docker-run: hub-docker-build
+	docker run -it -p 6060:8080 -t gorenje/erlang-red:${HUB_RELEASE}
+hub-docker-push: hub-docker-build
+	docker push gorenje/erlang-red:${HUB_RELEASE}
+
+##
 ## Elixir compile example
 elixir-build:
 	docker build -f Dockerfile.elixir -t er-elixir .

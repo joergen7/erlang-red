@@ -5,6 +5,24 @@ An experiment to replace Node-REDs existing NodeJS backend with an Erlang equiva
 
 The goal is bring the advantages of low-code visual [flow-based programming](https://jpaulm.github.io/fbp/index.html) to a programming language that is designed for message passing and concurrency from the ground up, hence Erlang. More details described in the corresponding [blog post](https://blog.openmindmap.org/erlang-red).
 
+Why?
+---
+
+[Node-RED](https://nodered.org) is great for creating data flows that actually describe concurrent processing, it is just a shame the NodeJS is single threaded. So why not use something that is multi-process from the ground up? Concurrency is guaranteed and included.
+
+Also Erlang isn't the most understandable of programming language - unless one has fallen into in a [cauldron](https://en.wikipedia.org/wiki/Obelix) of Prolog, spiced with Lisp.
+
+So won't it be great to have the simplicity of low-code visual flow based programming and the performance (and concurrency) of Erlang?
+
+Trying Erlang-Red
+---
+
+Thanks to [@mwmiller](https://github.com/mwmiller), Erlang-Red can be tested at [ered.fly.dev](https://ered.fly.dev/node-red) or locally using docker:
+
+    prompt> docker run -t -p 6060:8080 gorenje/erlang-red:0.2.0
+
+Will start Erlang-Red on [localhost:6060/erlang-red](http://localhost:6060/erlang-red) and drop into an Eshell console.
+
 Breadboard Programming
 ---
 
@@ -16,14 +34,6 @@ A [telnet session](https://flows.red-erik.org/f/bff27e059752cb60) flow describes
 
 Implementation of the [MQTT specs](https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html) to create an [MQTT broker](https://flows.red-erik.org/f/dc897f402c53697f) in Erlang-Red. The broker is created as a flow and at the same time, a client is created using the Erlang-Red MQTT nodes so that the broker implementation can be tested. Again a breadboard: thing of the MQTT nodes as an [oscilloscope](https://en.wikipedia.org/wiki/Oscilloscope) testing the voltage!
 
-Why?
----
-
-[Node-RED](https://nodered.org) is great for creating data flows that actually describe concurrent processing, it is just a shame the NodeJS is single threaded. So why not use something that is multi-process from the ground up? Concurrency is guaranteed and included.
-
-Also Erlang isn't the most understandable of programming language - unless one has fallen into in a [cauldron](https://en.wikipedia.org/wiki/Obelix) of Prolog, spiced with Lisp.
-
-So won't it be great to have the simplicity of low-code visual flow based programming and the performance (and concurrency) of Erlang?
 
 Development Strategy
 ---

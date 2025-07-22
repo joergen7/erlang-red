@@ -166,7 +166,10 @@ flow_editor_routes() ->
         %%
         %% Sock'em in the eye websockets
         %%
-        {"/node-red/comms", ered_http_nodered_websocket, #{
+        {"/node-red/comms", ered_http_redirect,
+            {permanently, "/erlang-red/comms"}},
+
+        {"/erlang-red/comms", ered_http_nodered_websocket, #{
             stats_interval => 30000,
             % milliseconds
             bulk_send_interval => 127
@@ -240,10 +243,12 @@ flow_editor_routes() ->
         {"/credentials/[...]", ered_http_nodered_empty_json, []},
         {"/context/[...]", ered_http_nodered_empty_json, []},
 
-        {"/node-red", cowboy_static,
+        {"/node-red", ered_http_redirect, {permanently, "/erlang-red"}},
+
+        {"/erlang-red", cowboy_static,
             {priv_file, erlang_red, "node-red-frontend/index.html"}},
 
-        %%% Wrapper site on '/' - flow editor is on '/node-red'
+        %%% Wrapper site on '/' - flow editor is on '/erlang-red'
         {"/", ered_http_release_status, []},
 
         {"/media/[...]", cowboy_static,

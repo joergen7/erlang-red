@@ -1,0 +1,52 @@
+# Try to maintain user-servicable parts up front
+ARG ELIXIR_VERSION=1.18.3
+ARG OTP_VERSION=27.3.4
+ARG ALPINE_VERSION=3.21.3
+
+ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-alpine-${ALPINE_VERSION}"
+ARG RUNNER_IMAGE="alpine:${ALPINE_VERSION}"
+
+FROM ${BUILDER_IMAGE} AS builder
+
+RUN apk update && \
+    apk add alpine-sdk bash curl cmake perl linux-headers rebar3 && \
+	rm -rf /var/cache/apk/*
+
+WORKDIR /builder
+
+## First get and create the dependencies
+COPY rebar.config .
+COPY rebar.lock .
+
+RUN rebar3 get-deps
+RUN rebar3 compile
+
+## Changes to the source does not rebuild the dependencies
+COPY .git .git/
+COPY src src/
+COPY include include/
+COPY priv priv/
+
+RUN rebar3 as prod release -n erlang_red
+
+FROM ${RUNNER_IMAGE}
+
+WORKDIR "/erlang-red"
+RUN apk update && apk add libncursesw libstdc++ openssl mosquitto && \
+	rm -rf /var/cache/apk/*
+RUN chown nobody /
+
+# Only copy the final release from the build stage
+COPY --from=builder --chown=nobody:root /builder/_build/prod/rel/erlang_red ./
+
+## needed for erlexec
+ENV SHELL=/bin/sh
+
+USER nobody
+
+ENV ERL_FLAGS="+c false"
+
+## PORT is now respected by cowboy
+ENV PORT=8080
+EXPOSE 8080
+CMD ["/erlang-red/bin/erlang_red", "console"]
