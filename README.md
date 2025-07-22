@@ -1,7 +1,7 @@
 Erlang-Red - BEAM/Erlang backend for Node-RED
 =====
 
-An experiment to replace Node-REDs existing NodeJS backend with an Erlang equivalent that is 100% compatible to existing flow code.
+Experimental Erlang backend to replace Node-REDs existing NodeJS backend, aiming for 100% compatible with existing flow code.
 
 The goal is bring the advantages of low-code visual [flow-based programming](https://jpaulm.github.io/fbp/index.html) to a programming language that is designed for message passing and concurrency from the ground up, hence Erlang. More details described in the corresponding [blog post](https://blog.openmindmap.org/erlang-red).
 
@@ -19,9 +19,16 @@ Trying Erlang-Red
 
 Thanks to [@mwmiller](https://github.com/mwmiller), Erlang-Red can be tested at [ered.fly.dev](https://ered.fly.dev/node-red) or locally using docker:
 
-    prompt> docker run -t -p 6060:8080 gorenje/erlang-red:0.2.0
+    docker run --tty --publish 6060:8080 gorenje/erlang-red:0.2.0
 
-Will start Erlang-Red on [localhost:6060/erlang-red](http://localhost:6060/erlang-red) and drop into an Eshell console.
+Starts Erlang-Red listening on [localhost:6060/erlang-red](http://localhost:6060/erlang-red) and drops into an Eshell console for BEAM introspection. 
+
+[Erlang-Red at Docker Hub](https://hub.docker.com/r/gorenje/erlang-red).
+
+Online Example
+---
+
+Sample [MQTT Broker](https://ered.fly.dev/erlang-red?tstid=dc897f402c53697f) with [explanation](https://flows.red-erik.org/f/dc897f402c53697f).
 
 Breadboard Programming
 ---
