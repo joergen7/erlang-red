@@ -2,6 +2,16 @@
 
 -behaviour(cowboy_handler).
 
+% erlfmt:ignore - alignment
+-define(DefineResponse(Status),
+    cowboy_req:reply(Status, #{<<"location">> =>
+        case Qs of
+            <<>> ->  Location;
+            _ ->     Location ++ "?" ++ Qs
+        end
+    }, Req)
+).
+
 %%
 %% Redirect one path to another path, either permament(301) or temporarily(303)
 %%
@@ -11,11 +21,7 @@
 
 init(Req, {permanently, Location} = State) ->
     #{qs := Qs} = Req,
-    Resp =
-        cowboy_req:reply(301, #{<<"location">> => Location ++ "?" ++ Qs}, Req),
-    {ok, Resp, State};
+    {ok, ?DefineResponse(301), State};
 init(Req, {temporarily, Location} = State) ->
     #{qs := Qs} = Req,
-    Resp =
-        cowboy_req:reply(307, #{<<"location">> => Location ++ "?" ++ Qs}, Req),
-    {ok, Resp, State}.
+    {ok, ?DefineResponse(307), State}.
