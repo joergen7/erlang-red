@@ -15,7 +15,7 @@
   0},
  {<<"erlang_red_helpers">>,
   {git,"https://github.com/gorenje/erlang-red-elixir-helpers",
-       {ref,"41448b577fbeebdaa6c00317e21ed8e9364d6a19"}},
+       {ref,"7be3a9dc596270bdda54eeb49f98e8d1b5dc10be"}},
   0},
  {<<"erlang_red_jsonata">>,
   {git,"https://github.com/gorenje/erlang-red-jsonata",
