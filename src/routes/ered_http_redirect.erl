@@ -13,15 +13,15 @@
 ).
 
 %%
-%% Redirect one path to another path, either permament(301) or temporarily(303)
+%% Redirect one path to another path, including the query string if defined.
+%%
+%% Currently: either permament(301) or temporarily(303)
 %%
 -export([
     init/2
 ]).
 
-init(Req, {permanently, Location} = State) ->
-    #{qs := Qs} = Req,
+init(#{qs := Qs} = Req, {permanently, Location} = State) ->
     {ok, ?DefineResponse(301), State};
-init(Req, {temporarily, Location} = State) ->
-    #{qs := Qs} = Req,
+init(#{qs := Qs} = Req, {temporarily, Location} = State) ->
     {ok, ?DefineResponse(307), State}.
