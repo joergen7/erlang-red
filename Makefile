@@ -33,7 +33,7 @@ fly-io-enter:
 
 ##
 ## hub.docker image
-HUB_RELEASE=0.2.0 ## should match rebar
+HUB_RELEASE := $(shell grep vsn src/erlang_red.app.src | awk 'match($$0, /[0-9]+.[0-9]+.[0-9]+/) { printf substr($$0, RSTART, RLENGTH) }')
 hub-docker-build:
 	docker build -f Dockerfile.hub -t gorenje/erlang-red:${HUB_RELEASE} .
 hub-docker-run: hub-docker-build
