@@ -184,6 +184,47 @@ does_rule_match(Op, Type, OpVal, MsgVal, NodeDef, Msg) ->
             post_exception_or_debug(NodeDef, Msg, ErrMsg),
             false
     end.
+%%
+%%
+get_caseless(false) ->
+    [];
+get_caseless(true) ->
+    [caseless].
+
+does_regex_match(
+    #{
+        <<"case">> := IgnoreCase,
+        <<"v">> := OpVal,
+        <<"vt">> := OpType
+    } = _Rule,
+    MsgVal,
+    NodeDef,
+    Msg
+) ->
+    case obtain_operator_value(OpType, OpVal, Msg) of
+        {ok, OpCompVal} ->
+            {ok, RegExp} = re:compile(
+                OpCompVal,
+                [dollar_endonly, dotall, extended] ++ get_caseless(IgnoreCase)
+            ),
+            case re:run(MsgVal, RegExp) of
+                match ->
+                    true;
+                {match, _} ->
+                    true;
+                _ ->
+                    false
+            end;
+        {error, ErrMsg} ->
+            post_exception_or_debug(NodeDef, Msg, ErrMsg),
+            false;
+        {unsupported, ErrMsg} ->
+            unsupported(NodeDef, Msg, ErrMsg),
+            false;
+        {exception, ErrMsg} ->
+            post_exception_or_debug(NodeDef, Msg, ErrMsg),
+            false
+    end.
 
 %%
 %%
@@ -324,6 +365,18 @@ handle_check_all_rules(
                         Rules, Val, MoreWires, NodeDef, Msg, HadMatch
                     )
             end;
+        {<<"regex">>, _} ->
+            case does_regex_match(Rule, Val, NodeDef, Msg) of
+                true ->
+                    send_msg_on(Wires, Msg),
+                    handle_check_all_rules(
+                        Rules, Val, MoreWires, NodeDef, Msg, true
+                    );
+                false ->
+                    handle_check_all_rules(
+                        Rules, Val, MoreWires, NodeDef, Msg, HadMatch
+                    )
+            end;
         {<<"null">>, _} ->
             %% Javascript has "null" "undefined" "NaN" and "Infinity"
             %% JSON has "true", "false", and "null" - the latter being the
@@ -422,6 +475,13 @@ handle_stop_after_one(
             end;
         <<"empty">> ->
             case is_empty(Val) of
+                true ->
+                    send_msg_on(Wires, Msg);
+                false ->
+                    handle_stop_after_one(Rules, Val, MoreWires, NodeDef, Msg)
+            end;
+        <<"regex">> ->
+            case does_regex_match(Rule, Val, NodeDef, Msg) of
                 true ->
                     send_msg_on(Wires, Msg);
                 false ->
