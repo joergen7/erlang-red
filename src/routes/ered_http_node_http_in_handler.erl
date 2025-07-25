@@ -55,7 +55,7 @@ init(Req, State) ->
     %% this endpoint has no websocket cookie so it's impossible to know
     %% which node should receive the request. The reply below actually
     %% sets the wsname cookie so that any subsequent request contains a
-    %% wsname but that's the second and on request, not the first request.
+    %% wsname but that's the second request, not the first request.
     %%
     %% The good news is that in fact, this isn't a problem since anyone
     %% accessing the server and creating a http in node that is meant to run
@@ -65,7 +65,7 @@ init(Req, State) ->
     %%
     %% Why bother with this websocket scoping in the first place?
     %% Well its good for running tests and having multiple users try out
-    %% ErlangRED without having connections interfere with one another.
+    %% Erlang-Red without having connections interfere with one another.
     %%
     %% This isn't a production solution especially since in production you
     %% want the same people to access the same code - i.e. multiuser edits
@@ -113,8 +113,11 @@ init(Req, State) ->
                             %% This is basically a stale cookie, no handler
                             %% but the client has an old websocket cookie
                             %% set - ignore cookie value.
-                            ?FATALERROR(Method, Path, "Stale Cookie"),
-                            {cowboy_loop, push_out_msg(Req, HttpInPid, WsName),
+                            %% ?FATALERROR(Method, Path, "Stale Cookie"),
+                            {cowboy_loop,
+                                push_out_msg(
+                                    Req, HttpInPid, WsName
+                                ),
                                 State, hibernate};
                         {_, HttpInPidForCookie, CookieWsName} ->
                             {cowboy_loop,
@@ -155,6 +158,48 @@ read_body(Req0, Acc) ->
     end.
 
 %%
+%% Taken from https://ninenines.eu/docs/en/cowboy/2.13/guide/multipart/
+multipart(Req0, Files) ->
+    case {cowboy_req:read_part(Req0), Files} of
+        {{ok, Headers, Req1}, _} ->
+            {Req, Files1} =
+                case cow_multipart:form_data(Headers) of
+                    {data, FieldName} ->
+                        io:format(
+                            "UNSUPPORTED: Found data: [~p]~n",
+                            [FieldName]
+                        ),
+                        {ok, _Body, Req2} = cowboy_req:read_part_body(Req1),
+                        {Req2, Files};
+                    {file, FieldName, Filename, CType} ->
+                        {Req2, Buffer} = stream_file(Req1, []),
+                        File = #{
+                            <<"fieldname">> => FieldName,
+                            <<"originalname">> => Filename,
+                            %% ignore - encoding is not reliable
+                            <<"encoding">> => <<"7bit">>,
+                            <<"mimetype">> => CType,
+                            <<"buffer">> => Buffer,
+                            <<"size">> => byte_size(Buffer)
+                        },
+                        {Req2, [File | Files]}
+                end,
+            multipart(Req, Files1);
+        {{done, Req}, []} ->
+            {no_files, Req};
+        {{done, Req}, _Files} ->
+            {files, Req, Files}
+    end.
+
+stream_file(Req0, Chunks) ->
+    case cowboy_req:read_part_body(Req0) of
+        {ok, LastBodyChunk, Req} ->
+            {Req, list_to_binary(lists:reverse([LastBodyChunk | Chunks]))};
+        {more, BodyChunk, Req} ->
+            stream_file(Req, [BodyChunk | Chunks])
+    end.
+
+%%
 %%
 to_binary_keys(Map) ->
     to_binary_keys(maps:to_list(Map), []).
@@ -165,30 +210,74 @@ to_binary_keys([H | T], Lst) ->
 
 % erlfmt:ignore - alignment
 push_out_msg(Req, HttpInPid, WsName) ->
+    BaseReqObj = #{
+        <<"url">>         => cowboy_req:path(Req),
+        <<"uri">>         => iolist_to_binary(cowboy_req:uri(Req)),
+        <<"hostname">>    => cowboy_req:host(Req),
+        <<"originalUrl">> => cowboy_req:path(Req),
+        <<"method">>      => cowboy_req:method(Req),
+        <<"headers">>     => cowboy_req:headers(Req),
+        <<"params">>      => to_binary_keys(cowboy_req:bindings(Req)),
+        <<"cookies">>     => cowboy_req:parse_cookies(Req),
+        <<"query">>       => maps:from_list(cowboy_req:parse_qs(Req))
+    },
+
+    push_out_msg(
+      Req,
+      HttpInPid,
+      WsName,
+      cowboy_req:parse_header(<<"content-type">>, Req),
+      BaseReqObj
+     ).
+
+%%
+%%
+push_out_msg(
+    Req,
+    HttpInPid,
+    WsName,
+    {<<"multipart">>, <<"form-data">>, _},
+    BaseReqObj
+) ->
+    case multipart(Req, []) of
+        {files, Req2, LstOfFiles} ->
+            %% create a base Msg with _msgid and _ws as attributes
+            {outgoing, Msg} = create_outgoing_msg(WsName),
+
+            %% add the this pid so that a reply can be sent to the client
+            Msg2 = Msg#{
+                <<"reqpid">> => self(),
+                <<"req">> => BaseReqObj#{
+                    <<"files">> => LstOfFiles,
+                    <<"body">> => #{}
+                },
+                <<"payload">> => #{}
+            },
+            gen_server:cast(HttpInPid, {outgoing, Msg2}),
+            Req2;
+        {_, Req2} ->
+            Req2
+    end;
+%%
+%%
+push_out_msg(
+    Req,
+    HttpInPid,
+    WsName,
+    _ContentType,
+    BaseReqObj
+) ->
     %% add the bindings of any parameters in the path plus other stuff
     %% into the req object
     {ok, Body, Req2} = read_entire_body(Req),
-
-    ReqObj = #{
-        <<"url">>         => cowboy_req:path(Req2),
-        <<"uri">>         => iolist_to_binary(cowboy_req:uri(Req2)),
-        <<"body">>        => Body,
-        <<"hostname">>    => cowboy_req:host(Req2),
-        <<"originalUrl">> => cowboy_req:path(Req2),
-        <<"method">>      => cowboy_req:method(Req2),
-        <<"headers">>     => cowboy_req:headers(Req2),
-        <<"params">>      => to_binary_keys(cowboy_req:bindings(Req2)),
-        <<"cookies">>     => cowboy_req:parse_cookies(Req2),
-        <<"query">>       => maps:from_list(cowboy_req:parse_qs(Req2))
-    },
 
     %% create a base Msg with _msgid and _ws as attributes
     {outgoing, Msg} = create_outgoing_msg(WsName),
 
     %% add the this pid so that a reply can be sent to the client
     Msg2 = Msg#{
-        <<"reqpid">>  => self(),
-        <<"req">>     => ReqObj,
+        <<"reqpid">> => self(),
+        <<"req">> => BaseReqObj#{<<"body">> => Body},
         <<"payload">> => Body
     },
 
