@@ -239,8 +239,13 @@ send_one_msg_per_row(NodeDef, Msg, [Row | MoreRows], ColNames, Idx, Len) ->
 create_columns_values(Row) ->
     list_to_binary(lists:join(",", Row)).
 
+-spec obtain_columns(AllRows, HdrIn) -> Result
+	      when AllRows :: [_|_],
+		   HdrIn   :: boolean() | <<>>,
+		   Result  :: {_, [_]}.
+
 obtain_columns([FirstRow | HeadlessData], true) ->
-    {[F || F <- FirstRow], HeadlessData};
+    {FirstRow, HeadlessData};
 obtain_columns([FirstRow | _RestData] = AllRows, _HdrIn) ->
     {
         [
