@@ -208,11 +208,9 @@ does_regex_match(
                 [dollar_endonly, dotall, extended] ++ get_caseless(IgnoreCase)
             ),
             case re:run(MsgVal, RegExp) of
-                match ->
-                    true;
                 {match, _} ->
                     true;
-                _ ->
+                nomatch ->
                     false
             end;
         {error, ErrMsg} ->
