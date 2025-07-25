@@ -5,7 +5,7 @@ build-docker-container:
 	docker build -f Dockerfile.dev -t erlang-shell .
 
 start-docker-shell: build-docker-container
-	docker run -it -v /mnt/github/erlang-red:/code -p 9090:8080 -w /code --rm erlang-shell bash
+	docker run -it -v $(shell pwd):/code -v $(shell pwd)/data:/data -p 9090:8080 -w /code --rm erlang-shell bash
 
 enter-docker-shell:
 	docker exec -it $$(docker ps -f ancestor=erlang-shell -q) bash
@@ -33,7 +33,7 @@ fly-io-enter:
 
 ##
 ## hub.docker image
-HUB_RELEASE := $(shell grep vsn src/erlang_red.app.src | awk 'match($$0, /[0-9]+.[0-9]+.[0-9]+/) { printf substr($$0, RSTART, RLENGTH) }')
+HUB_RELEASE := $(shell awk '/vsn/ && match($$0, /[0-9]+.[0-9]+.[0-9]+/) { printf substr($$0, RSTART, RLENGTH) }' src/erlang_red.app.src)
 hub-docker-build:
 	docker build -f Dockerfile.hub -t gorenje/erlang-red:${HUB_RELEASE} .
 hub-docker-run: hub-docker-build
