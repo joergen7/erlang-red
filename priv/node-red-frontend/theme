@@ -1,6 +1,6 @@
 {
   "page": {
-    "title": "Erlang-RED",
+    "title": "Erlang-Red",
     "favicon": "favicon.ico",
     "tabicon": {
       "icon": "red/images/node-red-icon-black.svg",
@@ -8,7 +8,7 @@
     }
   },
   "header": {
-    "title": "Erlang-RED",
+    "title": "Erlang-Red",
     "image": "red/images/node-red.svg"
   },
   "asset": {
