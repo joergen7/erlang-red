@@ -277,7 +277,7 @@ clear_status_after_one_sec(WsName, NodeDef) ->
 %% massaged into form.
 %% See https://www.erlang.org/doc/apps/compiler/compile.html for details.
 compiler_list_to_json_list({_Line, _Module, _Desc} = Eroro) ->
-    errorinfo_tuple_to_list(Eroro);
+    errorinfo_tuple_to_list(Eroro).
 errorinfo_tuple_to_list({Line, Module, Desc}) ->
     [
         % subtract 2 because there is a wrapper function around the code.
