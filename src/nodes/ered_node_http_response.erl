@@ -21,6 +21,7 @@
 ]).
 -import(ered_messages, [
     convert_to_num/1,
+    encode_json/1,
     map_keys_to_binary/1
 ]).
 
@@ -40,10 +41,19 @@ handle_event(_, NodeDef) ->
 handle_msg(
     {incoming, #{?GetWsName, ?GetPayload, <<"reqpid">> := ReqPid} = Msg},
     NodeDef
-) ->
+) when is_list(Payload); is_binary(Payload) ->
     StatusCode = retrieve_status_code(NodeDef, Msg),
     Headers = retrieve_headers(NodeDef, Msg),
     ReqPid ! {reply, StatusCode, Headers, WsName, Payload},
+
+    {handled, NodeDef, Msg};
+handle_msg(
+    {incoming, #{?GetWsName, ?GetPayload, <<"reqpid">> := ReqPid} = Msg},
+    NodeDef
+) when is_map(Payload) ->
+    StatusCode = retrieve_status_code(NodeDef, Msg),
+    Headers = retrieve_headers(NodeDef, Msg),
+    ReqPid ! {reply, StatusCode, Headers, WsName, encode_json(Payload)},
 
     {handled, NodeDef, Msg};
 handle_msg(_, NodeDef) ->

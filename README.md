@@ -21,7 +21,7 @@ Thanks to [@mwmiller](https://github.com/mwmiller), Erlang-Red can be tested at 
 
     docker run --tty --publish 6060:8080 gorenje/erlang-red:0.2.0
 
-Starts Erlang-Red listening on [localhost:6060/erlang-red](http://localhost:6060/erlang-red) and drops into an Eshell console for BEAM introspection. 
+Starts Erlang-Red listening on [localhost:6060/erlang-red](http://localhost:6060/erlang-red) and drops into an Eshell console for BEAM introspection.
 
 [Erlang-Red at Docker Hub](https://hub.docker.com/r/gorenje/erlang-red).
 
@@ -75,6 +75,7 @@ This is a non-complete list of [nodes](src/nodes/) that partially or completely 
 | [debug](src/nodes/ered_node_debug.erl) | only debugs the entire message, individal msg properties aren't supported. msg count as status is supported. | [Flow](https://flows.red-erik.org/f/b2a67e301fabab0e) |
 | [delay](src/nodes/ered_node_delay.erl) | supported static delay not dynamic delay set via `msg.delay` | [Flow](https://flows.red-erik.org/f/9d11bfc3a6d88535) |
 | [exec](src/nodes/ered_node_exec.erl) | executing and killing commands is supported  but only for commands in spawn mode and set on the node. Appending arguments to commands isn't supported. Timeouts are supported. Kill messages are also supported. | [Flow](https://flows.red-erik.org/f/090eb2d5d71fd45f) |
+| [file](src/nodes/ered_node_file.erl) | write and delete files anywhere on disk | TBD |
 | [file in](src/nodes/ered_node_file_in.erl) | working for files located in `/priv` | [Flow](https://flows.red-erik.org/f/538be5947c639b32) |
 | [function](src/nodes/ered_node_function.erl) | working for any Erlang. Stop and start also respected. Timeout and more than one output port isn't supported. | [Flow](https://flows.red-erik.org/f/3bba732ae17b01a9) |
 | [http in](src/nodes/ered_node_http_in.erl) | working for GET and POST, not available for PUT,DELETE etc | [Flow](https://flows.red-erik.org/f/64445798b59d2630) |
