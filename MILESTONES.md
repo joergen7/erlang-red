@@ -1,5 +1,60 @@
 Milestones
 ---
+*Milestone Seven - m7*
+
+Code Name: The Non-Plural Milestone.
+
+1. Docker image @ hub.docker.com
+
+    Started using proper release numbers and with that, decided to create a docker image that is available at [hub.docker.com](https://hub.docker.com/r/gorenje/erlang-red). That makes it simpler to try out Erlang-Red using a single command:
+
+    `docker run --tty --publish 8080:8080 gorenje/erlang-red:0.2.2`
+
+    That will start the web-server on localhost:8080 and also drop the container into a Erlang shell. Thanks to [@joaohf](https://github.com/gorenje/erlang-red/commit/a6e931ef44e46578e2b406274d4a075fe43dcb99), the size of the container was much reduced, now down to 21 MB compressed.
+
+2. New Nodes: ClientCode, Tcp Request and File
+
+    ClientCode node is a hybrid frontend-backend node, it should definitely not be used in production but for certain development purposes it can be a fun node to use. The node is part of the [introspection](https://flows.nodered.org/node/@gregoriusrippenstein/node-red-contrib-introspection) package and provides a structured method to trigger fronted actions (in the browser) via backend flow events. Example usage is [drag & drop](https://flows.red-erik.org/f/ba3d72801a820b0f) activation.
+
+    Tcp request node is the last of the tcp node collection and is a bidirectional node to be able to send and receive tcp packets. File node is the counterpart to the file-in node, the file node is used to write and delete files to disk.
+
+
+3. Http-In multipart support
+
+    Initial support for file-based HTTP multipart content. This was amazingly [simple](https://github.com/gorenje/erlang-red/blob/0a52a9b3c89f72d6f7ccb94a2acd01fb456a1324/src/routes/ered_http_node_http_in_handler.erl#L160-L200) is Cowboy is so amazingly simple - once you understand it! Cowboy is really nicely designed, even if a [redirect](https://github.com/gorenje/erlang-red/blob/0a52a9b3c89f72d6f7ccb94a2acd01fb456a1324/src/routes/ered_http_redirect.erl) isn't builtin - or at least, I didn't find it.
+
+
+4. Code cleanup and refactoring and Macros
+
+    Began going through my naive Erlang code and making it less-understandable by using macros and function argument matching. Makes everything compactor but also, sometimes, less understandable. I can already smell the second wave of refactoring rolling on over the shore.
+
+    I really do have a love-hate relationship with Macros - ?IWonderWhy. I [defined a bunch](https://github.com/gorenje/erlang-red/blob/0a52a9b3c89f72d6f7ccb94a2acd01fb456a1324/include/ered_nodes.hrl) began using them and then, a few days later, I regretted it. But I'm sure that has something to do with the weather. If I get the naming right and get the right mix between functions definitions and macros, it probably work out.
+
+    I have also been told not to use bang `!` because that's not a done thing in Erlang. I actually use it for internal-internal things, such as the [tcp router](https://github.com/gorenje/erlang-red/blob/0a52a9b3c89f72d6f7ccb94a2acd01fb456a1324/src/servers/ered_tcp_manager.erl) which maintains open ports and shares data amongst listeners. Personally I don't see where the issue should be in using a construct that *defines* the language. In certain sense it's similar to saying I'm not allowed to use the letter 'a' for variable names.
+
+    ```
+    -spec register_connector(
+        HostNameOrIp,
+        PortNum,
+        PidTcpInNode
+    ) -> Result when
+        HostNameOrIp :: binary(),
+        PortNum :: 0..65535,
+        PidTcpInNode :: pid() | atom(),
+        Result :: {connected, binary()} | connecting.
+    ```
+
+    Btw why is that `when` and not `where`? If I define the types of the parameters, then surely it's *where* the hostname or ip is of this type and not *when*.
+
+    We're all inconsistent but not when it comes to criticising others inconsistencies.
+
+5. Title change - Erlang-RED becomes Erlang-Red
+
+    I decided that capitalising on red isn't really for me, in fact, my ears got tired of all that shouting. So I decided to use some more of the other half of the ASCII standard.
+
+    But as Shakespeare said: "What is in a name? Does not a rose by any other name still smell as sweet?".
+
+    Speaking of inconsistencies, I decided to drop the 'v' prefix in version numbers, instead just using the version as tag. This is of course is inconsistent with the 'm' prefix in milestone tags. I didn't see a consensus in the usage of 'v' or not, so I decided that a rebar config looks better with the tag name does not contain a 'v'.
 
 *Milestones Six - m6*
 
