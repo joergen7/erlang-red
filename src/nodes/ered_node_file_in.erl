@@ -10,6 +10,15 @@
 %% Read file contents from disk and stream the data into the flow. Well
 %% not stream but dump into a message.
 %%
+%% Attributes of interest:
+%%   "filename": "priv/testdata/helloworld.txt",
+%%   "filenameType": "str",
+%%   "format": "utf8",
+%%   "chunk": false,
+%%   "sendError": false,
+%%   "encoding": "none",
+%%   "allProps": false,
+%%
 
 -import(ered_nodes, [
     jstr/1,
@@ -22,7 +31,7 @@
     debug/3,
     send_out_debug_msg/4,
     post_exception_or_debug/3,
-    ws_from/1
+    unsupported/3
 ]).
 
 -import(ered_messages, [
@@ -31,51 +40,22 @@
 
 %%
 %%
+start(#{<<"filenameType">> := <<"env">>} = NodeDef, WsName) ->
+    unsupported(NodeDef, {websocket, WsName}, "filename from env variable"),
+    ered_node:start(NodeDef, ered_node_ignore);
+
 start(NodeDef, _WsName) ->
     ered_node:start(NodeDef, ?MODULE).
-
-debug_msg(NodeDef, Msg, {filename_type_not_supported, FileNameType}) ->
-    ErrMsg = jstr(
-        "File name type not supported: ~p",
-        [FileNameType]
-    ),
-    send_out_debug_msg(NodeDef, Msg, ErrMsg, error);
-debug_msg(NodeDef, Msg, {no_file_specified}) ->
-    ErrMsg = jstr("No file specified"),
-    send_out_debug_msg(NodeDef, Msg, ErrMsg, warning).
-
-%% Attributes of interest:
-%%   "filename": "priv/testdata/helloworld.txt",
-%%   "filenameType": "str",
-%%   "format": "utf8",
-%%   "chunk": false,
-%%   "sendError": false,
-%%   "encoding": "none",
-%%   "allProps": false,
-%%
-get_filename(<<"str">>, NodeDef, _Msg) ->
-    maps:find(<<"filename">>, NodeDef);
-get_filename(<<"msg">>, NodeDef, Msg) ->
-    case get_prop(maps:find(<<"filename">>, NodeDef), Msg) of
-        {ok, V, _} ->
-            %% simulate the return value of maps:find/2
-            {ok, V};
-        E ->
-            E
-    end;
-get_filename(FileNameType, NodeDef, Msg) ->
-    debug_msg(NodeDef, Msg, {filename_type_not_supported, FileNameType}),
-    failed.
 
 %%
 %%
 handle_event(_, NodeDef) ->
     NodeDef.
 
+%%
+%%
 handle_incoming(NodeDef, Msg) ->
-    {ok, FileNameType} = maps:find(<<"filenameType">>, NodeDef),
-
-    case get_filename(FileNameType, NodeDef, Msg) of
+    case get_filename(NodeDef, Msg) of
         {ok, <<>>} ->
             debug_msg(NodeDef, Msg, {no_file_specified}),
             {NodeDef, Msg};
@@ -110,3 +90,59 @@ handle_msg({incoming, Msg}, NodeDef) ->
     {handled, NodeDef2, Msg2};
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
+
+%%
+%% ----------------- Helpers
+%%
+get_filename(
+    #{
+        <<"filenameType">> := <<"msg">>,
+        <<"filename">> := Prop
+    } = NodeDef,
+    Msg
+) ->
+    case get_prop(Prop, Msg) of
+        {ok, V, _} ->
+            {ok, V};
+        R ->
+            ErrMsg = jstr("property not found ~p", [Prop]),
+            post_exception_or_debug(NodeDef, Msg, ErrMsg),
+            R
+    end;
+get_filename(
+    #{
+        <<"filenameType">> := <<"jsonata">>,
+        <<"filename">> := Value
+    } = NodeDef,
+    Msg
+) ->
+    case erlang_red_jsonata:execute(Value, Msg) of
+        {ok, Result} ->
+            {ok, Result};
+        {error, Error} ->
+            unsupported(NodeDef, Msg, jstr("jsonata term: ~p", [Error])),
+            {error, Error};
+        {exception, ErrMsg} ->
+            post_exception_or_debug(NodeDef, Msg, ErrMsg),
+            {error, ErrMsg}
+    end;
+get_filename(
+    #{
+        <<"filenameType">> := <<"str">>,
+        <<"filename">> := Value
+    } = _NodeDef,
+    _Msg
+) ->
+    {ok, Value}.
+
+%%
+%%
+debug_msg(NodeDef, Msg, {filename_type_not_supported, FileNameType}) ->
+    ErrMsg = jstr(
+        "File name type not supported: ~p",
+        [FileNameType]
+    ),
+    send_out_debug_msg(NodeDef, Msg, ErrMsg, error);
+debug_msg(NodeDef, Msg, {no_file_specified}) ->
+    ErrMsg = jstr("No file specified"),
+    send_out_debug_msg(NodeDef, Msg, ErrMsg, warning).
