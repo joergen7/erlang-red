@@ -331,4 +331,27 @@ client_code_exec(
         <<"payload">> := Payload
     } = Msg
 ) ->
+    ?CreateClientCodeMsg;
+%% no topic.
+client_code_exec(
+    #{
+        <<"id">> := NodeId,
+        <<"clientcode">> := ClientCode
+    },
+    #{
+        <<"payload">> := Payload
+    } = Msg
+) ->
+    Topic = <<>>,
+    ?CreateClientCodeMsg;
+%% no topic and no payload
+client_code_exec(
+    #{
+        <<"id">> := NodeId,
+        <<"clientcode">> := ClientCode
+    },
+    Msg
+) ->
+    Topic = <<>>,
+    Payload = <<>>,
     ?CreateClientCodeMsg.
