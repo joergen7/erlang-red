@@ -19,9 +19,9 @@ Trying Erlang-Red
 
 Thanks to [@mwmiller](https://github.com/mwmiller), Erlang-Red can be tested at [ered.fly.dev](https://ered.fly.dev/node-red) or locally using docker:
 
-    docker run --tty --publish 6060:8080 gorenje/erlang-red:0.2.0
+    docker run --tty --publish 8080:8080 gorenje/erlang-red:0.2.2
 
-Starts Erlang-Red listening on [localhost:6060/erlang-red](http://localhost:6060/erlang-red) and drops into an Eshell console for BEAM introspection.
+Starts Erlang-Red listening on [localhost:8080/erlang-red](http://localhost:8080/erlang-red) and drops into an Eshell console for BEAM introspection.
 
 [Erlang-Red at Docker Hub](https://hub.docker.com/r/gorenje/erlang-red).
 
