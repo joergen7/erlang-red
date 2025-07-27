@@ -49,6 +49,7 @@
 -import(ered_messages, [
     convert_to_num/1,
     decode_json/1,
+    encode_json/1,
     escape_specials/1,
     get_prop/2,
     is_same/2,
@@ -190,7 +191,7 @@ eql_msg_op(Prop, SrcVal, <<"bin">>, ReqVal, _Msg) ->
     end;
 eql_msg_op(Prop, SrcVal, <<"json">>, ReqVal, _Msg) ->
     DecodedVal = decode_json(ReqVal),
-    case is_same(DecodedVal, SrcVal) of
+    case is_same(DecodedVal, decode_json(encode_json(SrcVal))) of
         true ->
             true;
         _ ->
@@ -201,7 +202,7 @@ eql_msg_op(Prop, SrcVal, <<"json">>, ReqVal, _Msg) ->
             {failed,
                 jstr(
                     "Prop '~p':~n~nExp:~n~n'~p'~n~nWas:~n~n'~p'~n~n",
-                    [Prop, DecodedVal, SrcVal]
+                    [Prop, DecodedVal, decode_json(encode_json(SrcVal))]
                 )}
     end;
 eql_msg_op(Prop, SrcVal, <<"str">>, ReqVal, _Msg) ->

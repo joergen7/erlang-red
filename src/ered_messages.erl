@@ -325,6 +325,8 @@ escape_specials(Str) when is_integer(Str) ->
     escape_specials(integer_to_binary(Str));
 escape_specials(Str) when is_atom(Str) ->
     escape_specials(atom_to_binary(Str));
+escape_specials(Str) when is_tuple(Str) ->
+    [escape_specials(A) || A <- tuple_to_list(Str)];
 escape_specials(Str) ->
     re:replace(
         re:replace(
