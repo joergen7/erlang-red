@@ -312,6 +312,7 @@ Much thanks to
 - [@mwmiller](https://github.com/mwmiller) for providing a fly server for running a [live version](https://ered.fly.dev/node-red) of Erlang-Red,
 - [@joaohf](https://erlangforums.com/u/joaohf/summary) many tips on coding Erlang and structuring an Erlang project, and
 - [@Maria-12648430](https://erlangforums.com/u/maria-12648430/summary) for debugging my initial attempt to create a gen_server for nodes.
+- [@joergen7](https://github.com/joergen7) for the Erlang insights and explaining dialyzer to me and the importance of clean code
 
 Human Intelligence
 ---
