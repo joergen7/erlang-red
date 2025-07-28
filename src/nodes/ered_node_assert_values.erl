@@ -36,8 +36,7 @@
 -import(ered_nodered_comm, [
     assert_failure/3,
     debug/3,
-    node_status/5,
-    ws_from/1
+    node_status/5
 ]).
 -import(ered_nodes, [
     get_prop_value_from_map/2,
@@ -450,27 +449,27 @@ count_failures([{_Msg, Failures} | Lst], Cnt) ->
 
 %%
 %%
-set_node_status(true, NodeDef, Msg) ->
-    node_status(ws_from(Msg), NodeDef, <<"assert succeed">>, "green", "ring");
-set_node_status(false, NodeDef, Msg) ->
+set_node_status(true, NodeDef, #{?GetWsName} = _Msg) ->
+    node_status(WsName, NodeDef, <<"assert succeed">>, "green", "ring");
+set_node_status(false, NodeDef, #{?GetWsName} = Msg) ->
     ErrMsg = jstr("~p check(s) failed", [maps:get(<<"failure_count">>, Msg)]),
-    node_status(ws_from(Msg), NodeDef, ErrMsg, "red", "dot").
+    node_status(WsName, NodeDef, ErrMsg, "red", "dot").
 
 %%
 %%
 post_failures([], _, _) ->
     done;
-post_failures([{unsupported, Rule} | Lst], NodeDef, Msg) ->
+post_failures([{unsupported, Rule} | Lst], NodeDef, #{?GetWsName} = Msg) ->
     ErrMsg = jstr("Assert values: unsupported Rule: '~p'", [Rule]),
     %%
     %% Unlike other nodes (i.e. change, switch), this is an assertion
     %% failure. Can't be silently ignoring tests.
-    assert_failure(NodeDef, ws_from(Msg), ErrMsg),
+    assert_failure(NodeDef, WsName, ErrMsg),
     post_failures(Lst, NodeDef, Msg);
-post_failures([{failure, _Rule, ErrMsg} | Lst], NodeDef, Msg) ->
+post_failures([{failure, _Rule, ErrMsg} | Lst], NodeDef, #{?GetWsName} = Msg) ->
     this_should_not_happen(
         NodeDef,
         io_lib:format("~p ~p\n", [ErrMsg, Msg])
     ),
-    debug(ws_from(Msg), debug_data(NodeDef, ErrMsg), error),
+    debug(WsName, debug_data(NodeDef, ErrMsg), error),
     post_failures(Lst, NodeDef, Msg).
