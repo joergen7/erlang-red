@@ -181,7 +181,7 @@ encoder(Other, Encode) ->
 %%
 encode_json(Value) ->
     try
-        json:encode(Value, fun(Val, Encode) -> encoder(Val, Encode) end)
+        json:encode(Value, fun encoder/2)
     catch
         error:E ->
             io:format("JSON ENCODING ERROR [~p] [~p]~n", [E, Value]),
