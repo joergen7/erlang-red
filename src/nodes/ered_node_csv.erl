@@ -1,5 +1,6 @@
 -module(ered_node_csv).
 
+-include("ered_nodes.hrl").
 -behaviour(ered_node).
 
 -export([start/2]).
@@ -11,7 +12,7 @@
 %% splitting arrays. There is still much to be done here.
 %%
 %% NOTE: this node *isn't* implemented for performance, this node is implemented
-%% NOTE: to showcase the ability of Erlang-RED to bring developers together.
+%% NOTE: to showcase the ability of Erlang-Red to bring developers together.
 %% NOTE: things like handling the parsing of strings to numbers can be
 %% NOTE: done better ... also using atoms as map keys is not a good idea but
 %% NOTE: I do this because thats how JSON content is decoded so comparison
@@ -49,10 +50,37 @@
     to_bool/1
 ]).
 
+-define(AddColumns(V), <<"columns">> => V).
+
 %%
 %%
-start(NodeDef, _WsName) ->
-    ered_node:start(NodeDef, ?MODULE).
+start(
+    #{<<"sep">> := <<>>} = NodeDef,
+    WsName
+) ->
+    %% empty column separator not supported
+    unsupported(NodeDef, {websocket, WsName}, "configuration: empty sep"),
+    ered_node:start(NodeDef, ered_node_ignore);
+%%
+start(
+    #{
+        <<"include_empty_strings">> := <<>>,
+        <<"include_null_values">> := <<>>,
+        <<"spec">> := <<"rfc">>
+    } = NodeDef,
+    _WsName
+) ->
+    ered_node:start(NodeDef, ?MODULE);
+%%
+start(#{<<"spec">> := <<"rfc">>} = NodeDef, WsName) ->
+    %% either null values or empty strings option defined, not supported
+    unsupported(NodeDef, {websocket, WsName}, "empty strings | null values"),
+    ered_node:start(NodeDef, ered_node_ignore);
+%%
+start(NodeDef, WsName) ->
+    %% format isn't rfc -- not supported
+    unsupported(NodeDef, {websocket, WsName}, "csv format"),
+    ered_node:start(NodeDef, ered_node_ignore).
 
 %%
 %%
@@ -61,52 +89,43 @@ handle_event(_, NodeDef) ->
 
 %%
 %%
-handle_msg({incoming, Msg}, NodeDef) ->
-    case
-        {
-            maps:get(<<"include_empty_strings">>, NodeDef),
-            maps:get(<<"include_null_values">>, NodeDef)
-        }
-    of
-        {<<>>, <<>>} ->
-            case maps:get(<<"spec">>, NodeDef) of
-                <<"rfc">> ->
-                    case maps:get(<<"sep">>, NodeDef) of
-                        <<>> ->
-                            unsupported(
-                                NodeDef,
-                                Msg,
-                                "configuration: empty sep"
-                            ),
-                            {handled, NodeDef, dont_send_complete_msg};
-                        Sep ->
-                            case maps:get(<<"payload">>, Msg, <<>>) of
-                                <<>> ->
-                                    {handled, NodeDef, Msg};
-                                Payload when is_binary(Payload) ->
-                                    handle_decode(Sep, Payload, NodeDef, Msg);
-                                Payload ->
-                                    handle_encode(
-                                        Sep,
-                                        maps:get(<<"ret">>, NodeDef),
-                                        Payload,
-                                        NodeDef,
-                                        Msg
-                                    )
-                            end
-                    end;
-                _ ->
-                    unsupported(NodeDef, Msg, "configuration: spec"),
-                    {handled, NodeDef, dont_send_complete_msg}
-            end;
-        _ ->
-            unsupported(
-                NodeDef,
-                Msg,
-                "configuration: empty strings | null values"
-            ),
-            {handled, NodeDef, dont_send_complete_msg}
-    end;
+handle_msg(
+    {incoming, #{?GetPayload} = Msg},
+    #{
+        <<"sep">> := _ColumnSeparator,
+        <<"ret">> := _LineSeparator
+    } = NodeDef
+) when Payload =:= <<>> ->
+    %% empty payload
+    {handled, NodeDef, Msg};
+%%
+handle_msg(
+    {incoming, #{?GetPayload} = Msg},
+    #{
+        <<"sep">> := ColumnSeparator,
+        <<"ret">> := _LineSeparator
+    } = NodeDef
+) when is_binary(Payload) ->
+    %% payload is binary data --> decode the data
+    handle_decode(ColumnSeparator, Payload, NodeDef, Msg);
+%%
+handle_msg(
+    {incoming, #{?GetPayload} = Msg},
+    #{
+        <<"sep">> := ColumnSeparator,
+        <<"ret">> := LineSeparator
+    } = NodeDef
+) when is_list(Payload) ->
+    %% payload is a list of stuff --> encode the data
+    handle_encode(ColumnSeparator, LineSeparator, Payload, NodeDef, Msg);
+%%
+handle_msg(
+    {incoming, Msg},
+    NodeDef
+) ->
+    %% no payload defined on the message, ignore and pretend all is good.
+    {handled, NodeDef, Msg};
+%%
 handle_msg(_, NodeDef) ->
     {unhandled, NodeDef}.
 
@@ -120,18 +139,18 @@ handle_encode(Sep, <<"\\r\\n">>, Payload, NodeDef, Msg) ->
     handle_encode(Sep, <<"\r\n">>, Payload, NodeDef, Msg);
 % Payload is a list of lists - good!
 handle_encode(Sep, LineSep, Payload = [H | _T], NodeDef, Msg) when is_list(H) ->
-    Msg2 = maps:put(
-        <<"payload">>,
-        list_to_binary(
-            ered_csv_parser_store:encode_something(
-                Payload,
-                Sep,
-                <<"\"">>,
-                LineSep
+    Msg2 = Msg#{
+        ?AddPayload(
+            list_to_binary(
+                ered_csv_parser_store:encode_something(
+                    Payload,
+                    Sep,
+                    <<"\"">>,
+                    LineSep
+                )
             )
-        ),
-        Msg
-    ),
+        )
+    },
     send_msg_to_connected_nodes(NodeDef, Msg2),
     {handled, NodeDef, Msg2};
 % Payload is single array of values - this is also handled by the Node-RED
@@ -140,14 +159,28 @@ handle_encode(Sep, LineSep, Payload = [H | _T], NodeDef, Msg) when is_list(H) ->
 handle_encode(Sep, LineSep, Payload, NodeDef, Msg) ->
     handle_encode(Sep, LineSep, [Payload], NodeDef, Msg).
 
+%%
+%%
 handle_decode(Sep, Payload, NodeDef, Msg) ->
     handle_rfc(NodeDef, Msg, Payload, Sep).
 
+%%
+%%
 handle_rfc(NodeDef, Msg, _Payload, <<>>) ->
     {handled, NodeDef, Msg};
 handle_rfc(NodeDef, Msg, Payload, <<"\\t">>) ->
     handle_rfc(NodeDef, Msg, Payload, <<"\t">>);
-handle_rfc(NodeDef, Msg, Payload, Sep) ->
+handle_rfc(
+  #{
+    <<"multi">> := MultiOrOne,
+    <<"skip">> := SkipRowCount,
+    <<"hdrin">> := FirstRowIsHeader,
+    <<"strings">> := ParseStringsToNumbers
+   } = NodeDef,
+  Msg,
+  Payload,
+  Sep
+) ->
     DataOrig = ered_csv_parser_store:parse_string(
         Sep,
         <<"\"">>,
@@ -159,46 +192,32 @@ handle_rfc(NodeDef, Msg, Payload, Sep) ->
     % skip line can be done here since the header hasn't yet been defined
     % just as Node-RED does it: skip first, then define header. Which means
     % that a line of content can also be used as a header line.
-    DataStrings = skip_rows(
-        DataOrig,
-        convert_to_num(maps:get(<<"skip">>, NodeDef))
-    ),
+    DataStrings = skip_rows(DataOrig, convert_to_num(SkipRowCount)),
 
     % remove the first line if necessary
     {ColNames, HeadlessData} = obtain_columns(
-        DataStrings,
-        maps:get(<<"hdrin">>, NodeDef)
+        DataStrings, FirstRowIsHeader
     ),
 
     % convert things to numeric values if necessary
-    NumericData = parse_nums(HeadlessData, maps:get(<<"strings">>, NodeDef)),
+    NumericData = parse_nums(HeadlessData, ParseStringsToNumbers),
 
-    case maps:get(<<"multi">>, NodeDef) of
+    case MultiOrOne of
         <<"one">> ->
-            %% send_one_msg_per_row also generates a {handle, ...} tuple
+            %% send_one_msg_per_row generates a {handle, ...} tuple
             send_one_msg_per_row(
                 NodeDef,
-                maps:put(
-                    <<"columns">>,
-                    create_columns_values(ColNames),
-                    Msg
-                ),
+                Msg#{
+                     ?AddColumns(create_columns_values(ColNames))
+                },
                 NumericData,
                 ColNames
             );
         <<"mult">> ->
-            FinalContent = create_maps(NumericData, ColNames),
-
-            Msg2 = maps:put(
-                <<"payload">>,
-                FinalContent,
-                maps:put(
-                    <<"columns">>,
-                    create_columns_values(ColNames),
-                    Msg
-                )
-            ),
-
+            Msg2 = Msg#{
+                ?AddPayload(create_maps(NumericData, ColNames)),
+                ?AddColumns(create_columns_values(ColNames))
+            },
             send_msg_to_connected_nodes(NodeDef, Msg2),
             {handled, NodeDef, Msg2}
     end.
@@ -219,19 +238,15 @@ send_one_msg_per_row(NodeDef, Msg, Data, ColNames) ->
 
 send_one_msg_per_row(NodeDef, Msg, [], _A, _B, _C) ->
     {handled, NodeDef, Msg};
-send_one_msg_per_row(NodeDef, Msg, [Row | MoreRows], ColNames, Idx, Len) ->
-    Msg2 = maps:put(
-        <<"parts">>,
-        generate_parts(Idx, Len, maps:get('_msgid', Msg)),
-        Msg
-    ),
-    Msg3 = maps:put(
-        <<"payload">>,
-        maps:from_list(lists:zip(ColNames, Row)),
-        Msg2
-    ),
-    send_msg_to_connected_nodes(NodeDef, Msg3),
-    post_completed(NodeDef, Msg3),
+send_one_msg_per_row(
+  NodeDef, #{'_msgid' := MsgId} = Msg, [Row | MoreRows], ColNames, Idx, Len
+) ->
+    Msg2 = Msg#{
+        ?AddParts(generate_parts(Idx, Len, MsgId)),
+        ?AddPayload(maps:from_list(lists:zip(ColNames, Row)))
+    },
+    send_msg_to_connected_nodes(NodeDef, Msg2),
+    post_completed(NodeDef, Msg2),
     send_one_msg_per_row(NodeDef, Msg, MoreRows, ColNames, Idx + 1, Len).
 
 %%
@@ -239,14 +254,15 @@ send_one_msg_per_row(NodeDef, Msg, [Row | MoreRows], ColNames, Idx, Len) ->
 create_columns_values(Row) ->
     list_to_binary(lists:join(",", Row)).
 
--spec obtain_columns(AllRows, HdrIn) -> Result
-	      when AllRows :: [_|_],
-		   HdrIn   :: boolean() | <<>>,
-		   Result  :: {_, [_]}.
-
+%%
+%%
+-spec obtain_columns(
+    AllRows :: list(),
+    FirstRowIsHeaderRow :: boolean() | <<>>
+) -> Result :: {list(), [list()]}.
 obtain_columns([FirstRow | HeadlessData], true) ->
     {FirstRow, HeadlessData};
-obtain_columns([FirstRow | _RestData] = AllRows, _HdrIn) ->
+obtain_columns([FirstRow | _RestData] = AllRows, _FirstRowIsHeaderRow) ->
     {
         [
             list_to_binary(io_lib:format("col~p", [Idx]))

@@ -65,3 +65,5 @@ end#{
 
 -define(GetIdStr, <<"id">> := IdStr).
 -define(GetTypeStr, <<"type">> := TypeStr).
+
+-define(AddParts(V), <<"parts">> => V).
