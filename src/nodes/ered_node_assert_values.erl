@@ -437,7 +437,7 @@ succeed_or_not(#{'_failures' := FailureLst} = NodeDef, WsName) ->
 post_final_failures([], _, _) ->
     done;
 post_final_failures([{Msg, Failures} | FailureLst], NodeDef, WsName) ->
-    post_failures(Failures, NodeDef, ?PUT_WS(Msg)),
+    post_failures(Failures, NodeDef, ?AddWsName(Msg)),
     post_final_failures(FailureLst, NodeDef, WsName).
 
 %%

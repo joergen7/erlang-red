@@ -1,5 +1,6 @@
 -module(ered_node).
 
+-include("ered_nodes.hrl").
 -behaviour(gen_server).
 
 -export([
@@ -70,7 +71,7 @@ init({Module, NodeDef}) ->
 %% list for which it is responsible, It then stops and starts these nodes
 %% as required.
 handle_call({being_supervised, _WsName} = Msg, _From, {Module, NodeDef}) ->
-    NodeDef2 = Module:handle_event(Msg, NodeDef#{'_being_supervised' => true}),
+    NodeDef2 = Module:handle_event(Msg, NodeDef#{?SetBeingSupervised}),
     {reply, ok, {Module, NodeDef2}};
 handle_call({registered, _WsName, _Pid} = Msg, _From, {Module, NodeDef}) ->
     NodeDef2 = Module:handle_event(Msg, NodeDef),

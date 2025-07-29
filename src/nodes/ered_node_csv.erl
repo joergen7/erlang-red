@@ -171,15 +171,15 @@ handle_rfc(NodeDef, Msg, _Payload, <<>>) ->
 handle_rfc(NodeDef, Msg, Payload, <<"\\t">>) ->
     handle_rfc(NodeDef, Msg, Payload, <<"\t">>);
 handle_rfc(
-  #{
-    <<"multi">> := MultiOrOne,
-    <<"skip">> := SkipRowCount,
-    <<"hdrin">> := FirstRowIsHeader,
-    <<"strings">> := ParseStringsToNumbers
-   } = NodeDef,
-  Msg,
-  Payload,
-  Sep
+    #{
+        <<"multi">> := MultiOrOne,
+        <<"skip">> := SkipRowCount,
+        <<"hdrin">> := FirstRowIsHeader,
+        <<"strings">> := ParseStringsToNumbers
+    } = NodeDef,
+    Msg,
+    Payload,
+    Sep
 ) ->
     DataOrig = ered_csv_parser_store:parse_string(
         Sep,
@@ -208,7 +208,7 @@ handle_rfc(
             send_one_msg_per_row(
                 NodeDef,
                 Msg#{
-                     ?AddColumns(create_columns_values(ColNames))
+                    ?AddColumns(create_columns_values(ColNames))
                 },
                 NumericData,
                 ColNames
@@ -239,7 +239,7 @@ send_one_msg_per_row(NodeDef, Msg, Data, ColNames) ->
 send_one_msg_per_row(NodeDef, Msg, [], _A, _B, _C) ->
     {handled, NodeDef, Msg};
 send_one_msg_per_row(
-  NodeDef, #{'_msgid' := MsgId} = Msg, [Row | MoreRows], ColNames, Idx, Len
+    NodeDef, #{'_msgid' := MsgId} = Msg, [Row | MoreRows], ColNames, Idx, Len
 ) ->
     Msg2 = Msg#{
         ?AddParts(generate_parts(Idx, Len, MsgId)),

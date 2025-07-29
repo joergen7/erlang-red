@@ -43,7 +43,6 @@
 start(#{<<"filenameType">> := <<"env">>} = NodeDef, WsName) ->
     unsupported(NodeDef, {websocket, WsName}, "filename from env variable"),
     ered_node:start(NodeDef, ered_node_ignore);
-
 start(NodeDef, _WsName) ->
     ered_node:start(NodeDef, ?MODULE).
 

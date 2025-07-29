@@ -262,7 +262,7 @@ delete_prop(PropName, Msg) ->
 %%
 %% Generate an empty message map with just an _msgid
 create_outgoing_msg(WsName) ->
-    {outgoing, ?PUT_WS(#{'_msgid' => generate_id()})}.
+    {outgoing, ?AddWsName(#{'_msgid' => generate_id()})}.
 
 %%
 %%

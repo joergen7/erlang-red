@@ -118,7 +118,7 @@
     io_lib:format("fun(NodeDef,Msg) -> ~n ~s ~n end.", [Code])
 ).
 
--define(EXECUTE_CODE_SYNC,
+-define(ExecuteCodeInSync,
     execute_sync(
         ?WrapInFunction(Code),
         NodeDef,
@@ -130,15 +130,15 @@
 %% build the software. However, this is not true if the node is being supervised.
 %% In that case, if *any* subprocess goes down, then the node process goes
 %% down to indicate to the supervisor that failure has happened.
--define(EXIT_WHEN_SUPERVISED(Why),
+-define(ExitWhenSupervised(Why),
     case maps:find('_being_supervised', NodeDef) of
         {ok, true} ->
             exit(self(), Why);
         _ ->
             post_exception_or_debug(
                 NodeDef,
-                maps:put(<<"cause">>, Why, Msg),
-                <<"unexpected exit">>
+                Msg#{<<"cause">> => Why},
+                "unexpected exit"
             )
     end
 ).
@@ -186,7 +186,7 @@ handle_event(
     validate_erlang_code(NodeDef, WsName),
     %% Start up code is **expected** to return a NodeDef map, return that
     %% as the return value of this function.
-    ?EXECUTE_CODE_SYNC;
+    ?ExecuteCodeInSync;
 %%
 %% Execute the "On Stop" code when the node is stopped. Which is the same
 %% as when this node is killed....
@@ -199,7 +199,7 @@ handle_event({stop, _WsName}, #{<<"finalize">> := <<>>} = NodeDef) ->
 handle_event({stop, WsName}, #{<<"finalize">> := Code} = NodeDef) ->
     %% Finalise code is **expected** to return a NodeDef map, return that
     %% as the return value of this function.
-    ?EXECUTE_CODE_SYNC;
+    ?ExecuteCodeInSync;
 %%
 %% The down event is generated when the spawned process that is executing the
 %% code goes down.
@@ -223,7 +223,7 @@ handle_event({'DOWN', func_code_mgr, msg, Msg, timeout_killing}, NodeDef) ->
     % us or do we handle it? Answer: if something takes too long, then it's
     % a reason to exit but only if we're being supervised by the loving grace
     % of something great than ourselves.
-    ?EXIT_WHEN_SUPERVISED(timeout),
+    ?ExitWhenSupervised(timeout),
     NodeDef;
 handle_event({'DOWN', func_code_mgr, msg, Msg, Reason}, NodeDef) ->
     % exit but only exit if there is a supervisor watching over us, this
@@ -231,7 +231,7 @@ handle_event({'DOWN', func_code_mgr, msg, Msg, Reason}, NodeDef) ->
     % The node is responsible for updating the frontend, so the process should
     % only go down if there is a coordinated restart, i.e., a supervisor
     % watching over us with loving grace.
-    ?EXIT_WHEN_SUPERVISED(Reason),
+    ?ExitWhenSupervised(Reason),
     NodeDef;
 handle_event(_, NodeDef) ->
     NodeDef.
@@ -258,7 +258,7 @@ validate_erlang_code(#{<<"func">> := Code} = NodeDef, WsName) ->
             node_status(WsName, NodeDef, "parsed", "green", "dot"),
             spawn(fun() -> clear_status_after_one_sec(WsName, NodeDef) end);
         {error, {error, ErrorList}} ->
-            Msg = ?PUT_WS(#{
+            Msg = ?AddWsName(#{
                 error => compiler_list_to_json_list(ErrorList)
             }),
             post_exception_or_debug(NodeDef, Msg, <<"compile failed">>),

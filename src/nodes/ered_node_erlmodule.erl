@@ -79,7 +79,7 @@ install(
             node_status(WsName, NodeDef, "installed", "yellow", "dot"),
             spawn(fun() -> clear_status_after_one_sec(WsName, NodeDef) end),
             install_compiled_module_code(NodeId, ModuleName, Binary),
-            Msg = ?PUT_WS(#{
+            Msg = ?AddWsName(#{
                 warning => compiler_list_to_json_list(WarnList)
             }),
             send_out_debug_warning(NodeDef, Msg);
@@ -87,11 +87,11 @@ install(
             node_status(WsName, NodeDef, "module name mismatch", "red", "dot"),
             post_exception_or_debug(
                 NodeDef,
-                ?PUT_WS(#{}),
-                <<"compile failed, module names do not match">>
+                ?AddWsName(#{}),
+                "compile failed, module names do not match"
             );
         {error, ErrorList, WarnList} ->
-            Msg = ?PUT_WS(#{
+            Msg = ?AddWsName(#{
                 error => compiler_list_to_json_list(ErrorList),
                 warning => compiler_list_to_json_list(WarnList)
             }),
@@ -100,7 +100,7 @@ install(
         R ->
             io:format("ERROR COMPILING: [~p] [~p]~n", [NodeId, R]),
             node_status(WsName, NodeDef, "compile failed", "red", "dot"),
-            post_exception_or_debug(NodeDef, ?PUT_WS(#{}), <<"compile failed">>)
+            post_exception_or_debug(NodeDef, ?AddWsName(#{}), "compile failed")
     end,
 
     file:delete(FileName).

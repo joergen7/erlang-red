@@ -66,28 +66,28 @@ handle_event(
 %% event handler shutdown but we're not being supervised.
 handle_event(
     {'DOWN', _Ref, process, _Pid, _Reason},
-    #{?GET_WS} = NodeDef
+    #{?GetWsName} = NodeDef
 ) ->
     node_status(WsName, NodeDef, "stopped", "red", "dot");
 %%
 handle_event(
     {'EXIT', _From, normal = Reason},
-    #{?GET_WS} = NodeDef
+    #{?GetWsName} = NodeDef
 ) ->
     node_status(WsName, NodeDef, "stopped", "red", "dot"),
     exit(self(), Reason);
 handle_event(
     {'EXIT', _From, Reason},
-    #{?GET_WS} = NodeDef
+    #{?GetWsName} = NodeDef
 ) ->
     node_status(WsName, NodeDef, "killed", "red", "dot"),
     exit(self(), Reason);
 handle_event(
     {gen_server_terminated, Event},
-    #{?GET_WS, '_lookup' := Lookup} = NodeDef
+    #{?GetWsName, '_lookup' := Lookup} = NodeDef
 ) ->
-    Msg = ?PUT_WS(#{error => Event}),
-    post_exception_or_debug(NodeDef, Msg, <<"fatal error">>),
+    Msg = ?AddWsName(#{error => Event}),
+    post_exception_or_debug(NodeDef, Msg, "fatal error"),
     node_status(WsName, NodeDef, "fatal error", "red", "ring"),
     [exit(P, kill) || {_, P} <- maps:to_list(Lookup)],
     handled;

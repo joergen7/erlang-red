@@ -33,7 +33,7 @@
 %%
 %%
 start(NodeDef, WsName) ->
-    ered_node:start(?PUT_WS(NodeDef), ?MODULE).
+    ered_node:start(?AddWsName(NodeDef), ?MODULE).
 
 %%
 %%
@@ -45,9 +45,7 @@ handle_event({registered, WsName, _MyPid}, NodeDef) ->
             node_status(WsName, NodeDef, "started", "green", "dot");
         {error, ErrorList} ->
             [
-                post_exception_or_debug(
-                    NodeDef, #{'_ws' => WsName}, jstr(ErrMsg)
-                )
+                post_exception_or_debug(NodeDef, #{?SetWsName}, jstr(ErrMsg))
              || ErrMsg <- ErrorList
             ],
             node_status(WsName, NodeDef, "invalid", "blue", "ring")
@@ -67,7 +65,7 @@ handle_event({being_supervised, _WsName}, NodeDef) ->
 %% can deal with it.
 handle_event(
     {'DOWN', _Ref, process, _Pid, Reason},
-    #{?BEING_SUPERVISED, ?GET_WS} = NodeDef
+    #{?IsBeingSupervised, ?GetWsName} = NodeDef
 ) ->
     node_status(WsName, NodeDef, "stopped", "red", "dot"),
     exit(self(), Reason),
@@ -76,14 +74,14 @@ handle_event(
 %% event handler shutdown but we're not being supervised.
 handle_event(
     {'DOWN', _Ref, process, _Pid, _Reason},
-    #{?GET_WS} = NodeDef
+    #{?GetWsName} = NodeDef
 ) ->
     node_status(WsName, NodeDef, "stopped", "red", "dot"),
     maps:remove('_eventh_pid', NodeDef);
 %%
 handle_event(
     {'EXIT', _From, Reason},
-    #{?BEING_SUPERVISED, ?EVENTHANDLER_PID, ?GET_WS} = NodeDef
+    #{?IsBeingSupervised, ?EVENTHANDLER_PID, ?GetWsName} = NodeDef
 ) ->
     node_status(WsName, NodeDef, "killed", "red", "ring"),
     exit(EventHandlerPid, Reason),

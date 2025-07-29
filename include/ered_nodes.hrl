@@ -15,20 +15,10 @@
     }
 end).
 
-%%
 %% Avoid a "Warning: expression updates a literal" warning when using this
 %% macro on a Hash directly, i.e., ?PUT_WS(#{....})
 %% inspired by
 %%     https://github.com/WhatsApp/erlfmt/issues/353#issuecomment-1957166129
--define(PUT_WS(Map), begin
-    Map
-end#{
-    '_ws' => WsName
-}).
--define(GET_WS, '_ws' := WsName).
--define(SET_WS, '_ws' => WsName).
-
-%% Readable variation of the above - there is no need to scream.
 -define(AddWsName(Map), begin
     Map
 end#{
@@ -39,7 +29,8 @@ end#{
 
 %%
 %% Check for supervision
--define(BEING_SUPERVISED, '_being_supervised' := true).
+-define(IsBeingSupervised, '_being_supervised' := true).
+-define(SetBeingSupervised, '_being_supervised' => true).
 
 -define(NodeStatus(EM, CLR, SHP), node_status(WsName, NodeDef, EM, CLR, SHP)).
 

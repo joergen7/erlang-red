@@ -24,8 +24,7 @@
     node_status/5,
     node_status_clear/2,
     post_exception_or_debug/3,
-    unsupported/3,
-    ws_from/1
+    unsupported/3
 ]).
 
 -import(ered_messages, [
@@ -33,9 +32,9 @@
 ]).
 
 % erlfmt:ignore
--define(SEND_MSG(NodeDef, Msg, Result, Action, CurrS, PrevS),
+-define(SendOffMsg(NodeDef, Msg, Result, Action, CurrS, PrevS),
     Msg2 = Msg#{
-        <<"payload">> => Result,
+        ?AddPayload(Result),
         <<"_statem">> => #{
           <<"state_prev">> => PrevS,
           <<"state_curr">> => CurrS,
@@ -53,7 +52,7 @@
 %%
 start(NodeDef, WsName) ->
     ered_node:start(
-        ?PUT_WS(NodeDef#{'_func_send_msg' => define_func_send_msg(NodeDef)}),
+        NodeDef#{'_func_send_msg' => define_func_send_msg(NodeDef), ?SetWsName},
         ?MODULE
     ).
 
@@ -100,9 +99,9 @@ handle_event({being_supervised, _WsName}, NodeDef) ->
 handle_event(
     {'EXIT', _From, Reason},
     #{
-        '_statem_pid' := Pid,
-        '_ws' := WsName,
-        '_being_supervised' := true
+        ?GetWsName,
+        ?IsBeingSupervised,
+        '_statem_pid' := Pid
     } = NodeDef
 ) ->
     node_status(WsName, NodeDef, "killed", "red", "ring"),
@@ -124,10 +123,11 @@ handle_event(
 handle_event(
     {'DOWN', _Ref, process, _Pid, Reason},
     #{
-        '_being_supervised' := true
+        ?GetWsName,
+        ?IsBeingSupervised
     } = NodeDef
 ) ->
-    node_status(ws_from(NodeDef), NodeDef, "stopped", "red", "dot"),
+    node_status(WsName, NodeDef, "stopped", "red", "dot"),
     exit(self(), Reason),
     maps:remove('_statem_pid', NodeDef);
 handle_event(_, NodeDef) ->
@@ -140,9 +140,9 @@ handle_event(_, NodeDef) ->
 handle_msg(
     {incoming,
         #{
+            ?GetWsName,
             <<"action">> := Action,
-            <<"payload">> := Payload,
-            '_ws' := WsName
+            <<"payload">> := Payload
         } = Msg},
     #{
         '_statem_pid' := Pid,
@@ -157,8 +157,8 @@ handle_msg(
 handle_msg(
     {incoming,
         #{
-            <<"action">> := Action,
-            '_ws' := WsName
+            ?GetWsName,
+            <<"action">> := Action
         } = Msg},
     #{
         '_statem_pid' := Pid,
@@ -197,11 +197,11 @@ send_message_on_state_change(NodeDef, Msg, Result, Action, CurrS, PrevS) ->
         true ->
             {handled, NodeDef, dont_send_complete_msg};
         _ ->
-            ?SEND_MSG(NodeDef, Msg, Result, Action, CurrS, PrevS)
+            ?SendOffMsg(NodeDef, Msg, Result, Action, CurrS, PrevS)
     end.
 
 always_send_message(NodeDef, Msg, Result, Action, CurrS, PrevS) ->
-    ?SEND_MSG(NodeDef, Msg, Result, Action, CurrS, PrevS).
+    ?SendOffMsg(NodeDef, Msg, Result, Action, CurrS, PrevS).
 
 statem_call(Pid, CallPayload) ->
     {
