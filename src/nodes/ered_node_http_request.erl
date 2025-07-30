@@ -26,16 +26,39 @@
     unsupported/3
 ]).
 
--import(ered_nodered_comm, [
-    ws_from/1
-]).
 
 %%
 %%
-start(#{<<"headers">> := []} = NodeDef, _WsName) ->
+start(#{
+        <<"headers">> := [],
+        <<"method">> := <<"use">>
+       } = NodeDef,
+      _WsName
+) ->
     ered_node:start(NodeDef, ?MODULE);
-start(#{<<"headers">> := _Headers} = NodeDef, WsName) ->
-    unsupported(NodeDef, {websocket, WsName}, "header specs not supported"),
+start(#{
+        <<"headers">> := [],
+        <<"method">> := <<"GET">>,
+        <<"paytoqs">> := <<"ignore">>
+       } = NodeDef,
+      _WsName
+) ->
+    ered_node:start(NodeDef, ?MODULE);
+start(#{
+        <<"headers">> := [],
+        <<"method">> := <<"POST">>
+       } = NodeDef,
+      _WsName
+) ->
+    ered_node:start(NodeDef, ?MODULE);
+
+start(NodeDef, WsName) ->
+    unsupported(
+      NodeDef,
+      {websocket, WsName},
+      "header definitions, payload as querystring not " ++
+          "supported. Only POST and GET supported."
+    ),
     ered_node:start(NodeDef, ered_node_ignore).
 
 %%
@@ -69,10 +92,11 @@ handle_msg({incoming, Msg}, #{<<"method">> := NodeMeth} = NodeDef) ->
             {handled, NodeDef, Msg};
         _ ->
             case perform_request(Method, Url, NodeDef, Msg) of
-                {ok, {{_, StatusCode, _ReasonPhrase}, _, Body}} ->
+                {ok, {{_Protocol, StatusCode, _ReasonPhrase}, Headers, Body}} ->
                     Msg2 = Msg#{
+                        ?AddPayload(jstr(Body)),
                         <<"statusCode">> => StatusCode,
-                        ?AddPayload(jstr(Body))
+                        <<"headers">> => headers_to_map(Headers)
                     },
                     send_msg_to_connected_nodes(NodeDef, Msg2),
                     {handled, NodeDef, Msg2};
@@ -88,6 +112,11 @@ handle_msg(_, NodeDef) ->
 %%
 %% -------------- helpers
 %%
+headers_to_map(Headers) ->
+    %% convert keys to binary and then the header list to a map
+    maps:from_list([{list_to_binary(K), list_to_binary(V)}
+                    || {K,V} <- Headers]).
+
 unsupported_headers_warnings(NodeDef, Msg) ->
     case
         {
@@ -123,7 +152,7 @@ get_prop_from_nodedef_or_msg(PropName, NodeDef, Msg) ->
             get_prop_value_from_map(PropName, NodeDef)
     end.
 
-perform_request(Method = <<"POST">>, Url, _NodeDef, #{?GetWsName} = Msg) ->
+perform_request(<<"POST">> = Method, Url, _NodeDef, #{?GetWsName} = Msg) ->
     case maps:find(<<"payload">>, Msg) of
         {ok, Payload} ->
             httpc:request(
@@ -148,21 +177,15 @@ perform_request(Method = <<"POST">>, Url, _NodeDef, #{?GetWsName} = Msg) ->
                 []
             )
     end;
-perform_request(Method = <<"GET">>, Url, NodeDef, Msg) ->
-    case maps:find(<<"paytoqs">>, NodeDef) of
-        {ok, <<"ignore">>} ->
-            httpc:request(
-                mth_to_atom(Method),
-                {Url, [
-                    {"Cookie", io_lib:format("wsname=~s", [ws_from(Msg)])}
-                ]},
-                [],
-                []
-            );
-        _ ->
-            ErrMsg = jstr("unsuported config for payload handling", []),
-            post_exception_or_debug(NodeDef, Msg, ErrMsg)
-    end;
+perform_request(<<"GET">> = Method, Url, _NodeDef, #{?GetWsName} = _Msg) ->
+    httpc:request(
+      mth_to_atom(Method),
+      {Url, [
+             {"Cookie", io_lib:format("wsname=~s", [WsName])}
+            ]},
+      [],
+      []
+     );
 perform_request(_Method, _Url, NodeDef, Msg) ->
-    unsupported(NodeDef, Msg, "unsuported method"),
+    unsupported(NodeDef, Msg, "unsupported method"),
     {error, unsupported_method}.
