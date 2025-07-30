@@ -23,9 +23,10 @@
 -export([
     start_link/0,
     stop/0,
+    add_handler/2,
     node_received_msg/3,
     remove_handler/1,
-    add_handler/2
+    state/0
 ]).
 
 -export([
@@ -53,6 +54,9 @@ remove_handler(Module) ->
 
 add_handler(Module, NodeDetails) ->
     gen_event:add_handler(?MODULE, Module, NodeDetails).
+
+state() ->
+    gen_event:which_handlers(?MODULE).
 
 % gen_event behaviour callbacks - for the event manger internals.
 init(_Args) ->
