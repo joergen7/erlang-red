@@ -731,5 +731,19 @@
         ],
         "user": false,
         "version": "0.0.8"
+    },
+    {
+        "enabled": true,
+        "id": "node-red-contrib-i2c/i2c",
+        "local": true,
+        "module": "node-red-contrib-i2c",
+        "name": "i2c",
+        "types": [
+            "i2c scan",
+            "i2c in",
+            "i2c out"
+        ],
+        "user": false,
+        "version": "0.9.0"
     }
 ]

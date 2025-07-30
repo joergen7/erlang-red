@@ -15010,3 +15010,200 @@ Functionality:
     <p>It is configured with html, linkify and typographer options turned on.</p>
 
 </script>
+<!-- --- [red-module:node-red-contrib-i2c/i2c] --- -->
+
+<script type="text/html" data-template-name="i2c scan">
+    <div class="form-row">
+        <label for="node-input-busno"><i class="fa fa-random"></i> Bus Number</label>
+        /dev/i2c-<input id="node-input-busno" class="I2C-in-address" placeholder="[msg.bus]" min=0 max=7 style="width:40px; height:16px;">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+  	<div class="form-tips">Scan for connected devices on I2C.</div>
+</script>
+
+
+
+<script type="text/javascript">
+    RED.nodes.registerType('i2c scan', {
+        category: 'i2c bus',
+        defaults: {
+            name: {value:""},
+            busno: {value:"1"}
+        },
+        color:"#E35253",
+        inputs:1,
+        outputs:2,
+        icon: "serial.png",
+        label: function() { return this.name||'i2c Scan'; },
+        labelStyle: function() { return this.name?"node_label_italic":""; },
+        oneditprepare: function() {
+            if (this.busno === undefined) {
+                $("#node-input-busno").val(1);
+            }
+            $("#node-input-busno").spinner({
+                min:0,
+                max:7
+            });
+        }
+    });
+</script>
+
+
+<script type="text/html" data-template-name="i2c in">
+    <div class="form-row">
+        <label for="node-input-busno"><i class="fa fa-random"></i> Bus Number</label>
+        /dev/i2c-<input id="node-input-busno" class="I2C-in-address" placeholder="[msg.bus]" min=0 max=7 style="width:40px; height:16px;">
+    </div>
+    <div class="form-row">
+        <label for="node-input-address"><i class="fa fa-address-card-o"></i> Bus Address</label>
+        <input type="number" id="node-input-address" class="I2C-in-address" placeholder="[msg.address]" min=3 max=127>
+    </div>
+    <div class="form-row">
+        <label for="node-input-command"><i class="fa fa-empire"></i> Command</label>
+        <input type="number" id="node-input-command" class="I2C-in-command" placeholder="[msg.command]" min=0 max=255>
+    </div>
+   <div class="form-row">
+        <label for="node-input-count" alt="How many bytes will be returned"><i class="fa fa-sign-in"></i> Bytes</label>
+        <input type="number" id="node-input-count" class="I2C-in-count" placeholder="number or msg.bytes" min=0 max=31>
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+
+
+<script type="text/javascript">
+    RED.nodes.registerType('i2c in', {
+        category: 'i2c bus',
+        defaults: {
+            name: {value:""},
+            busno: {value:"1"},
+            address: {value:"",required:false},
+            command: {value:"",required:false},
+            count: {value:"1",required:true}
+        },
+        color:"#E35253",
+        inputs:1,
+        outputs:1,
+        icon: "serial.png",
+        label: function() { return this.name||"i2c in"; },
+        labelStyle: function() { return this.name?"node_label_italic":""; },
+        oneditprepare: function() {
+            if (this.busno === undefined) {
+                $("#node-input-busno").val(1);
+            }
+            $("#node-input-busno").spinner({
+                min:0,
+                max:7
+            });
+        }
+    });
+</script>
+
+
+<script type="text/html" data-template-name="i2c out">
+    <div class="form-row">
+        <label for="node-input-busno"><i class="fa fa-random"></i> Bus Number</label>
+        /dev/i2c-<input id="node-input-busno" class="I2C-in-address" placeholder="[msg.bus]" min=0 max=7 style="width:40px; height:16px;">
+    </div>
+    <div class="form-row">
+        <label for="node-input-address"><i class="fa fa-address-card-o"></i> Bus Address</label>
+        <input type="number" id="node-input-address" class="I2C-out-address" placeholder="[msg.address]" min=3 max=127>
+    </div>
+    <div class="form-row">
+        <label for="node-input-command"><i class="fa fa-empire"></i> Command</label>
+        <input type="number" id="node-input-command" class="I2C-out-command" placeholder="[msg.command]" min=0 max=255>
+    </div>
+    <div class="form-row">
+        <label for="node-input-payload"><i class="fa fa-envelope"></i> Payload</span></label>
+        <input type="text" id="node-input-payload" style="width:70%">
+        <input type="hidden" id="node-input-payloadType">
+    </div>
+    <div class="form-row">
+        <label for="node-input-count" alt="Send number of bytes"><i class="fa fa-sign-out"></i> Send bytes</label>
+        <input type="number" id="node-input-count" class="I2C-out-count" placeholder="number or msg.bytes" min=0 max=31>
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+
+
+<script type="text/javascript">
+    RED.nodes.registerType('i2c out', {
+        category: 'i2c bus',
+        defaults: {
+            name: {value:""},
+            busno: {value:"1"},
+            address: {value:"",required:false},
+            command: {value:"", required:false},
+            payload: {value:"payload", required:false, validate: RED.validators.typedInput("payloadType")},
+            payloadType: {value:"msg"},
+            count: {value:"1", required:false}
+        },
+        color:"#E35253",
+        inputs:1,
+        outputs:1,
+        icon: "serial.png",
+        align: "right",
+        label: function() { return this.name||'i2c out'; },
+        labelStyle: function() { return this.name?"node_label_italic":"";},
+        oneditprepare: function() {
+            if (this.payloadType == null) {
+                this.payloadType = "msg";
+            } else if (this.payloadType === 'string' ) {
+                this.payloadType = "str";
+            }
+
+            if (this.busno === undefined) {
+                $("#node-input-busno").val(1);
+            }
+            $("#node-input-busno").spinner({
+                min:0,
+                max:7
+            });
+
+            $("#node-input-payload").typedInput({
+                default: 'msg',
+                typeField: $("#node-input-payloadType"),
+                types:['msg','flow','global','str','num','bool','json','bin']
+            });
+            $("#node-input-payload").typedInput('type',this.payloadType);
+            $("#node-input-payloadType").val(this.payloadType);
+            if ($("#node-input-payload").typedInput('type') === 'msg' &&
+                $("#node-input-payload").typedInput('value') === ''
+            ) {
+                $("#node-input-payload").typedInput('value','payload');
+            }
+
+            $("#node-input-payload").on('change',function() {
+                if ($("#node-input-payload").typedInput('type') === 'msg' &&
+                    $("#node-input-payload").typedInput('value') === ''
+                ) {
+                    $("#node-input-payload").typedInput('value','payload');
+                }
+            });
+        }
+    });
+</script>
+<script type="text/html" data-help-name="i2c scan">
+    <p>Scans local host for i2c devices.</p>
+    <p>The first output contains an array of any addresses found.</p>
+    <p>The second output sends each address as a separate message.</p>
+</script><script type="text/html" data-help-name="i2c in">
+    <p>Reads data from a local I2C port.</p>
+    <p>It will put a buffer object into the <code>msg.payload</code>.</p>
+</script><script type="text/html" data-help-name="i2c out">
+    <p>Provides a connection to an outbound I2C address.</p>
+    <p>Only the <code>msg.payload</code> is sent.</p>
+    <p>address <b>0</b> means that you will broadcast to all I2C-units on the I2C bus.</p>
+    <p>The <b>Send bytes</b> is used to set the number of bytes that will be used when the payload is a number.</p>
+    <p>The <b>payload</b> and <b>msg.payload</b> can be a Buffer, Array, String or Integer.</p>
+</script>
