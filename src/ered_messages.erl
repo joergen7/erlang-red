@@ -173,18 +173,21 @@ encoder(Other, Encode) when is_binary(Other) ->
     try
         json:encode_value(Other, Encode)
     catch
-        error:_ ->
+        error:E:S ->
+            io:format("Json Encoding Error ~p ~p~n", [ E, S ] ),
             json:encode_value(binary_to_list(Other), Encode)
     end;
 encoder(Other, Encode) ->
     json:encode_value(Other, Encode).
+
 %%
 encode_json(Value) ->
     try
         json:encode(Value, fun encoder/2)
     catch
-        error:E ->
+        error:E:S ->
             io:format("JSON ENCODING ERROR [~p] [~p]~n", [E, Value]),
+            io:format("Stack [~p]~n", [S]),
             json:encode(#{payload => "encoding error, check logs"})
     end.
 
