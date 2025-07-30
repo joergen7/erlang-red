@@ -336,6 +336,7 @@ node_type_to_module(<<"erlgenserver">>)      -> ered_node_erlgenserver;
 node_type_to_module(<<"ClientCode">>)        -> ered_node_clientcode;
 node_type_to_module(<<"tcp request">>)       -> ered_node_tcp_request;
 node_type_to_module(<<"file">>)              -> ered_node_file;
+node_type_to_module(<<"i2c out">>)           -> ered_node_i2c_out;
 %%
 %% Assert nodes for testing functionality of the nodes. These are the first
 %% Node-RED and Erlang-RED nodes - they have implmentations for both because

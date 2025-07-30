@@ -5,7 +5,8 @@
     {applications, [
         kernel,
         stdlib,
-        cowboy
+        cowboy,
+        circuits_i2c
     ]},
     {env, []},
     {mod, {erlang_red, []}},

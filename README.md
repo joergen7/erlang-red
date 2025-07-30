@@ -81,6 +81,7 @@ This is a non-complete list of [nodes](src/nodes/) that partially or completely 
 | [http in](src/nodes/ered_node_http_in.erl) | working for GET and POST, not available for PUT,DELETE etc | [Flow](https://flows.red-erik.org/f/64445798b59d2630) |
 | [http request](src/nodes/ered_node_http_request.erl) | basic support for doing rrequests, anything complex probably won't work | [Flow](https://flows.red-erik.org/f/27804627fb8f56bd) |
 | [http response](src/nodes/ered_node_http_response.erl) | working | [Flow](https://flows.red-erik.org/f/44f12f6e4a455084) |
+| [i2c out](src/nodes/ered_node_i2c_out.erl) | Very initial and very basic I^2^C out node | [Flow](https://flows.red-erik.org/f/ea246f68766c8632) |
 | [inject](src/nodes/ered_node_inject.erl) | working for most types except for flow, global ... | [Flow](https://flows.red-erik.org/f/7e1d04570c6bdff9) |
 | [join](src/nodes/ered_node_join.erl) | *manual arrays of count X* is working, `parts` isn't supported  | [Flow](https://flows.red-erik.org/f/987cd33b9cda8529) |
 | [json](src/nodes/ered_node_json.erl) | working | [Flow](https://flows.red-erik.org/f/c4690c0a085d6ef5) |
