@@ -58,6 +58,7 @@
     convert_to_num/1,
     decode_json/1,
     get_prop/2,
+    jsbuffer_to_binary/1,
     set_prop_value/3,
     timestamp/0,
     to_bool/1
@@ -119,6 +120,8 @@ handle_msg(_, NodeDef) ->
 
 %%
 %%
+value_for_proptype(<<"bin">>, Val, Prop, _NodeDef, Msg) ->
+    set_prop_value(Prop, jsbuffer_to_binary(Val), Msg);
 value_for_proptype(<<"date">>, _Val, Prop, _NodeDef, Msg) ->
     set_prop_value(Prop, timestamp(), Msg);
 value_for_proptype(<<"json">>, Val, Prop, _NodeDef, Msg) ->
