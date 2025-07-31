@@ -1,6 +1,6 @@
 {application, erlang_red, [
     {description, "Breadboard programming w/ Erlang inspired by Node-RED"},
-    {vsn, "0.2.2"},
+    {vsn, "0.2.3"},
     {registered, [erlang_red_sup]},
     {applications, [
         kernel,
@@ -25,6 +25,6 @@
         ered_erlmodule_exchange,
         ered_tcp_manager
     ]},
-    {licenses, ["GPL-3.0"]},
+    {licenses, ["Apache-2.0", "GPL-v3", "Don't Do Evil"]},
     {links, []}
 ]}.
